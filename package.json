@@ -1,0 +1,11 @@
+{
+  "name": "haisen-fish-market",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "mock-api": "node mock-api/server.js"
+  },
+  "devDependencies": {
+    "json-server": "0.17.4"
+  }
+}
