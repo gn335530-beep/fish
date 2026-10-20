@@ -1,0 +1,180 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "username": "0912345678",
+      "password": "seller123",
+      "display_name": "陳阿海",
+      "role": "SELLER",
+      "is_verified": true,
+      "completed_orders": 186,
+      "bank_code": "",
+      "bank_account": "",
+      "bank_account_name": ""
+    },
+    {
+      "id": 2,
+      "username": "0987654321",
+      "password": "buyer123",
+      "display_name": "小魚買家",
+      "role": "BUYER",
+      "is_verified": true,
+      "completed_orders": 3,
+      "bank_code": "",
+      "bank_account": "",
+      "bank_account_name": ""
+    },
+    {
+      "id": 3,
+      "username": "0912345673",
+      "password": "3456789",
+      "display_name": "hi",
+      "role": "BUYER",
+      "is_verified": false,
+      "completed_orders": 0,
+      "bank_code": "",
+      "bank_account": "",
+      "bank_account_name": ""
+    }
+  ],
+  "fish_data": [
+    {
+      "id": 1,
+      "seller_id": 1,
+      "fish_type": "現流紅魽",
+      "species_id": "amberjack",
+      "species_latin": "Seriola dumerili",
+      "quantity": 3,
+      "weight": 5.77,
+      "price_per_taijin": 520,
+      "price_per_kg": 866.67,
+      "region": "澎湖",
+      "sea": "澎湖東海・姑婆嶼海域",
+      "location": "澎湖縣馬公市・第三漁港",
+      "caught_time": "05:40",
+      "created_at": "2026-10-20T05:40:00.000Z",
+      "status": "PENDING_PAYMENT",
+      "process": "已宰殺",
+      "process_note": "捕獲後立即放血、去內臟，碎冰保鮮。",
+      "shipping": [
+        "買家自取",
+        "賣家代送（代送去餐廳）"
+      ],
+      "payment": [
+        "貨到付款",
+        "轉帳"
+      ],
+      "deposit_on": false,
+      "deposit_amount": 0,
+      "images": [
+        "images/amberjack.png"
+      ],
+      "tail_weights": [
+        6.3,
+        5.8,
+        5.2
+      ],
+      "weight_mode": "individual",
+      "tags": [
+        "當日現流",
+        "職人一支釣"
+      ],
+      "seller": {
+        "display_name": "陳阿海",
+        "username": "0912345678"
+      },
+      "buyer_id": 3,
+      "buyer_name": "王耀銜"
+    },
+    {
+      "id": 2,
+      "seller_id": 1,
+      "fish_type": "現流嘉鱲（真鯛）",
+      "species_id": "seabream",
+      "species_latin": "Pagrus major",
+      "quantity": 2,
+      "weight": 2.25,
+      "price_per_taijin": 680,
+      "price_per_kg": 1133.33,
+      "region": "澎湖",
+      "sea": "澎湖西嶼・內垵海域",
+      "location": "澎湖縣西嶼鄉・內垵漁港",
+      "caught_time": "06:05",
+      "created_at": "2026-10-20T06:05:00.000Z",
+      "status": "AVAILABLE",
+      "process": "已宰殺",
+      "process_note": "釣獲後立即放血、去鰓去內臟，全程低溫保鮮。",
+      "shipping": [
+        "買家自取",
+        "賣家代送（代送去餐廳）"
+      ],
+      "payment": [
+        "貨到付款",
+        "轉帳"
+      ],
+      "deposit_on": false,
+      "deposit_amount": 0,
+      "images": [
+        "images/seabream.png"
+      ],
+      "tail_weights": [
+        2.4,
+        2.1
+      ],
+      "weight_mode": "individual",
+      "tags": [
+        "當日現流",
+        "高級宴席魚"
+      ],
+      "seller": {
+        "display_name": "陳阿海",
+        "username": "0912345678"
+      }
+    },
+    {
+      "id": 3,
+      "seller_id": 1,
+      "fish_type": "現流玳瑁石斑",
+      "species_id": "grouper",
+      "species_latin": "Epinephelus quoyanus",
+      "quantity": 2,
+      "weight": 2.9,
+      "price_per_taijin": 780,
+      "price_per_kg": 1300,
+      "region": "南部",
+      "sea": "屏東・小琉球礁區",
+      "location": "屏東縣琉球鄉・白沙尾漁港",
+      "caught_time": "05:55",
+      "created_at": "2026-10-20T05:55:00.000Z",
+      "status": "AVAILABLE",
+      "process": "活體",
+      "process_note": "以活魚艙蓄養，到貨仍為活體。",
+      "shipping": [
+        "買家自取",
+        "賣家代送（代送去餐廳）"
+      ],
+      "payment": [
+        "貨到付款",
+        "轉帳"
+      ],
+      "deposit_on": true,
+      "deposit_amount": 300,
+      "images": [
+        "images/grouper.jpg"
+      ],
+      "tail_weights": [
+        3.1,
+        2.7
+      ],
+      "weight_mode": "individual",
+      "tags": [
+        "當日現流",
+        "珊瑚礁魚"
+      ],
+      "seller": {
+        "display_name": "陳阿海",
+        "username": "0912345678"
+      }
+    }
+  ]
+}
