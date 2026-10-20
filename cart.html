@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>購物車 / 下單 — 海人直送</title>
+<meta name="description" content="海人直送購物車與下單：今日現流漁獲結帳、到貨時間說明、地區與運送方式選擇，可勾選餐廳並填寫餐廳名稱。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&family=Noto+Serif+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css?v=12">
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap nav__inner">
+    <a href="index.html" class="brand"><span class="brand__mark">海</span><span>海人直送<small></small></span></a>
+    <nav class="nav__links">
+      <a href="index.html">首頁</a>
+      <a href="products.html">今日漁獲</a>
+      <a href="seller.html">我要賣魚</a>
+    </nav>
+    <div class="nav__right">
+      <div class="nav__search">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+        <input type="text" placeholder="搜尋魚種、地區" aria-label="搜尋">
+      </div>
+      <a href="login.html" class="nav-user nav-user--out" id="nav-user-slot" aria-label="登入或註冊"><svg class="nav-user__ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M4.6 20c1.2-3.9 4-5.9 7.4-5.9s6.2 2 7.4 5.9"/></svg><span class="nav-user__name">登入／註冊</span></a>
+      <div class="nav-menu" id="nav-menu" hidden>
+        <div class="nav-menu__inner" id="nav-menu-inner"></div>
+      </div>
+      <a href="cart.html" class="icon-btn" aria-label="購物車">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7h12l-1.2 12.2a1.5 1.5 0 0 1-1.5 1.3H8.7a1.5 1.5 0 0 1-1.5-1.3L6 7z"/><path d="M9 7V5.6a3 3 0 0 1 6 0V7"/></svg>
+        <span class="count" data-cart-count style="display:none">0</span>
+      </a>
+      <button class="icon-btn nav__toggle" aria-label="選單" aria-expanded="false" aria-controls="nav-menu"><svg viewBox="0 0 24 24" aria-hidden="true"><line x1="3" y1="7" x2="21" y2="7"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="17" x2="21" y2="17"/></svg></button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <nav class="crumbs"><a href="index.html">首頁</a><span>/</span><span>購物車 / 下單</span></nav>
+</div>
+
+<section class="section" style="padding-top:12px">
+  <div class="wrap">
+    <div class="section-head" style="margin-bottom:40px">
+      <span class="eyebrow">Cart &amp; Checkout</span>
+      <h2>購物車</h2>
+    </div>
+
+    <div class="cart-layout">
+      <!-- 商品 -->
+      <div>
+        <div id="cart-items"></div>
+
+        <!-- 到貨時間說明 -->
+        <div style="margin-top:56px">
+          <h3 style="font-size:1.05rem;margin-bottom:6px">到貨時間說明</h3>
+          <p style="font-size:.84rem;color:var(--muted);margin-bottom:8px">今日漁獲今日結單，隔日清晨低溫直送。偏遠地區或海況不佳時將另行通知。</p>
+          <div class="arrival">
+            <div class="arrival__step">
+              <div class="n">STEP 01 · 今日下單</div>
+              <b>訂單成立</b>
+              <span>下單後即向釣客確認供貨，售完為止、不再接單。</span>
+            </div>
+            <div class="arrival__step">
+              <div class="n">STEP 02 · 隔日 05:00</div>
+              <b>低溫包裝出貨</b>
+              <span>全程 0–4°C 冷藏鏈包裝，附捕獲時間與海域標籤。</span>
+            </div>
+            <div class="arrival__step">
+              <div class="n">STEP 03 · 隔日 08:00–12:00</div>
+              <b>到貨</b>
+              <span>可於下方備註指定時段；自取者由釣客另行約定時間。</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 收件資訊 -->
+        <div style="margin-top:56px">
+          <h3 style="font-size:1.05rem;margin-bottom:26px">收件資訊</h3>
+          <form id="checkout" onsubmit="return placeOrder(event)">
+            <div class="field-row">
+              <div class="field"><label>收件人 <span class="req">*</span></label><input class="input" type="text" id="ck-name" placeholder="王先生" required></div>
+              <div class="field"><label>聯絡電話 <span class="req">*</span></label><input class="input" type="tel" id="ck-phone" placeholder="0912-345-678" required></div>
+            </div>
+
+            <div class="field">
+              <label>收件地區 <span class="req">*</span></label>
+              <div class="region-chips" id="ck-region-chips"></div>
+              <div class="field-err" id="e-ck-region">請選擇收件地區</div>
+            </div>
+
+            <div class="field">
+              <label class="check" style="text-transform:none;letter-spacing:.02em;font-size:.86rem;color:var(--ink-2)">
+                <input type="checkbox" id="ck-is-restaurant"> 餐廳（餐廳名稱）
+              </label>
+              <div id="restaurant-name-wrap" style="display:none;margin-top:14px">
+                <input class="input" type="text" id="ck-restaurant" placeholder="請填寫餐廳名稱，例如：海之味日式料理">
+              </div>
+            </div>
+
+            <div class="field"><label>收件地址 <span class="req">*</span></label><input class="input" type="text" id="ck-addr" placeholder="台北市大安區…" required></div>
+
+            <div class="field-row">
+              <div class="field"><label>運送方式 <span class="req">*</span></label>
+                <select class="select" id="ck-ship">
+                  <option value="賣家代送（代送去餐廳）">賣家代送（代送去餐廳）</option>
+                  <option value="買家自取">買家自取（與釣客約定）</option>
+                </select>
+              </div>
+              <div class="field"><label>希望到貨時段</label>
+                <select class="select" id="ck-window"><option>隔日 08:00–10:00</option><option>隔日 10:00–12:00</option><option>隔日 12:00–14:00</option></select>
+              </div>
+            </div>
+
+            <div class="field"><label>付款方式 <span class="req">*</span></label>
+              <select class="select" id="ck-pay">
+                <option value="貨到付款">貨到付款</option>
+                <option value="轉帳">轉帳</option>
+              </select>
+            </div>
+
+            <div class="field"><label>備註</label><textarea class="textarea" id="ck-note" placeholder="例如：需去鱗分切、指定到貨日、處理方式"></textarea></div>
+          </form>
+        </div>
+      </div>
+
+      <!-- 摘要 -->
+      <aside class="summary">
+        <h3>訂單摘要</h3>
+        <div id="sum-lines" style="min-height:40px"></div>
+        <div class="summary__row"><span>小計</span><span id="sum-sub">$0</span></div>
+        <div class="summary__row total"><span>應付總額</span><b id="sum-total">$0</b></div>
+        <button class="btn btn--primary btn--block" style="margin-top:22px" id="place-btn" onclick="document.getElementById('checkout').requestSubmit()">確認下單</button>
+        <a href="products.html" class="btn btn--ghost btn--block" style="margin-top:12px">繼續挑選今日漁獲</a>
+        <div class="note" style="margin-top:24px">
+          <div>隔日清晨低溫出貨、08:00–12:00 到貨。<b>失溫全額退費</b>保證。</div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- 成功彈窗 -->
+<div class="modal" id="order-modal">
+  <div class="modal__card">
+    <div class="modal__ic">Order Confirmed</div>
+    <h3>訂單已成立</h3>
+    <p>釣客將確認供貨，隔日清晨低溫出貨。可透過「與釣客聊聊」追蹤訂單。</p>
+    <div class="summary-list" id="order-summary"></div>
+    <button class="btn btn--primary btn--block" onclick="document.getElementById('order-modal').classList.remove('show')">關閉</button>
+  </div>
+</div>
+
+<!-- ============ 頁尾 ============ -->
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer__grid">
+      <div>
+        <div class="brand"><span class="brand__mark">海</span><span>海人直送<small></small></span></div>
+        <p>個人釣客上網販售當日現流漁獲的平台<br>今天釣到什麼就賣什麼</p>
+      </div>
+      <div><h4>買家</h4><a href="products.html">今日漁獲列表</a><a href="products.html">依魚類與地區篩選</a><a href="cart.html">購物車 / 下單</a></div>
+      <div><h4>賣家</h4><a href="seller.html">今日漁獲上架</a><a href="seller.html">市場行情參考</a><a href="login.html">釣客登入</a></div>
+      <div><h4>關於</h4><a href="index.html">服務條款</a><a href="index.html">隱私政策</a><a href="index.html">聯絡我們</a></div>
+    </div>
+    <div class="footer__bottom">
+      <span>© 2026 海人直送 </span>
+    </div>
+  </div>
+</footer>
+
+<script src="js/api.js?v=13"></script>
+<script src="app.js?v=13"></script>
+<script>
+let ckRegion = getRegion();
+
+/* 收件地區 chips */
+function renderCkRegions(){
+  document.getElementById("ck-region-chips").innerHTML = REGIONS.map(r=>
+    `<button type="button" class="region-chip ${ckRegion===r?'on':''}" data-ck-region="${r}">${r}</button>`
+  ).join("");
+  document.querySelectorAll("[data-ck-region]").forEach(b=>{
+    b.addEventListener("click", ()=>{
+      ckRegion = b.dataset.ckRegion;
+      setRegion(ckRegion);
+      renderCkRegions();
+      document.getElementById("e-ck-region").classList.remove("show");
+    });
+  });
+}
+
+/* 餐廳勾選 */
+document.getElementById("ck-is-restaurant").addEventListener("change", e=>{
+  document.getElementById("restaurant-name-wrap").style.display = e.target.checked ? "block" : "none";
+});
+
+function renderCart(){
+  const c = getCart();
+  const keys = Object.keys(c);
+  const box = document.getElementById("cart-items");
+
+  if(keys.length === 0){
+    box.innerHTML = `<div style="padding:64px 0;text-align:center;border-bottom:1px solid var(--rule-2)">
+      <p style="font-family:var(--font-display);font-size:1.15rem;margin-bottom:10px">購物車是空的</p>
+      <p style="font-size:.86rem;color:var(--muted);margin-bottom:26px">今日漁獲數量有限，售完為止。</p>
+      <a href="products.html" class="btn btn--primary">看今日漁獲</a>
+    </div>`;
+    updateSummary();
+    return;
+  }
+
+  box.innerHTML = keys.map(key=>{
+    const id = key;
+    const p = CATCH[id];
+    if(!p) return "";
+    const unit = priceFor(id);
+    return `<div class="cart-item">
+      <div class="cart-item__img"><img src="${p.img}" alt="${p.name}"></div>
+      <div>
+        <h4><a href="${catchHref(id)}">${p.name}</a></h4>
+        <div class="meta">${p.location} · ${p.caught} · 共 ${tailCount(id)} 尾 · 各尾約 ${tailRange(id).w} ${p.unit}</div>
+        <div class="meta" style="margin-top:6px">${money(unit)} / ${p.unit}${soldOut(id)?'　<span style="color:var(--coral)">已售完</span>':''}</div>
+        <button class="btn btn--quiet" style="margin-top:12px" onclick="removeItem('${key}')">移除</button>
+      </div>
+      <div style="text-align:right">
+        <div class="qty-inline">
+          <button type="button" onclick="chg('${key}',-1)" aria-label="減少">−</button>
+          <input type="number" value="${c[key]}" min="1" max="${p.remaining}" onchange="chg('${key}',0,Number(this.value))" aria-label="數量">
+          <button type="button" onclick="chg('${key}',1)" aria-label="增加">＋</button>
+        </div>
+        <div style="font-family:var(--font-display);font-size:1.1rem;font-weight:600;margin-top:12px">${money(unit * c[key])}</div>
+      </div>
+    </div>`;
+  }).join("");
+
+  updateSummary();
+}
+
+function chg(key, delta, abs){
+  const c = getCart();
+  const cur = c[key] || 1;
+  const max = CATCH[key] ? CATCH[key].remaining : 1;
+  let next = (abs !== undefined) ? abs : cur + delta;
+  if(next < 1) next = 1;
+  if(next > max) next = max;
+  setQty(key, next);
+  renderCart();
+}
+function removeItem(key){ setQty(key, 0); toast("已移除商品"); renderCart(); }
+
+function updateSummary(){
+  const c = getCart();
+  const keys = Object.keys(c);
+  let sub = 0;
+  keys.forEach(key=>{ if(CATCH[key]) sub += priceFor(key) * c[key]; });
+
+  document.getElementById("sum-lines").innerHTML = keys.length
+    ? keys.map(k=>{
+        const p = CATCH[k];
+        return `<div style="display:flex;justify-content:space-between;font-size:.8rem;color:var(--muted);padding:3px 0"><span>${p.name} × ${c[k]}</span></div>`;
+      }).join("")
+    : '<p style="font-size:.82rem;color:var(--muted-2)">尚無商品</p>';
+
+  document.getElementById("sum-sub").textContent = money(sub);
+  document.getElementById("sum-total").textContent = money(sub);
+
+  document.getElementById("place-btn").disabled = keys.length === 0;
+}
+
+async function placeOrder(e){
+  e.preventDefault();
+  const c = getCart();
+  if(Object.keys(c).length === 0){ toast("購物車是空的"); return false; }
+
+  if(!ckRegion){
+    document.getElementById("e-ck-region").classList.add("show");
+    toast("請選擇收件地區");
+    return false;
+  }
+
+  const name = document.getElementById("ck-name").value || "貴賓";
+  const addr = document.getElementById("ck-addr").value || "—";
+  const isRest = document.getElementById("ck-is-restaurant").checked;
+  const restName = document.getElementById("ck-restaurant").value;
+  const ship = document.getElementById("ck-ship").value;
+  const win = document.getElementById("ck-window").value;
+  const pay = document.getElementById("ck-pay").value;
+  const no = "HS" + new Date().toISOString().slice(0,10).replace(/-/g,"") + "-" + String(Math.floor(Math.random()*9000)+1000);
+
+  let sub = 0, count = 0;
+  const lines = [];
+  for(const key in c){
+    const p = CATCH[key];
+    if(!p) continue;
+    const up = priceFor(key);
+    sub += up * c[key]; count += c[key];
+    lines.push(`<div><span>${p.name} × ${c[key]} ${p.unit}</span><b>${money(up*c[key])}</b></div>`);
+  }
+  document.getElementById("order-summary").innerHTML =
+    `<div><span>訂單編號</span><b>${no}</b></div>
+     <div><span>收件人</span><b>${name}${isRest && restName ? "（餐廳：" + restName + "）" : ""}</b></div>
+     <div><span>收件地區</span><b>${ckRegion}</b></div>
+     <div><span>收件地址</span><b>${addr}</b></div>
+     <div><span>運送方式</span><b>${ship}</b></div>
+     <div><span>到貨時段</span><b>${win}</b></div>
+     <div><span>付款方式</span><b>${pay}</b></div>
+     <div><span>品項</span><b>${lines.length} 種 · 共 ${count} 尾</b></div>
+     <div><span>應付總額</span><b>${money(sub)}</b></div>`;
+
+  /* [API 對接點] 買家下單 → 將各品項標記為「待付款」並記錄買家（鎖定庫存）。
+     METHOD  : PUT
+     ENDPOINT: /api/fish/data/{id}
+     PARAMS  : { status: "PENDING_PAYMENT", buyer_id, buyer_name }
+     資料庫  : fish_data(status, buyer_id, buyer_name)
+     說明    : 後端無獨立訂單表，以下單即更新漁獲狀態表示交易成立。
+               屬非阻斷流程，即使標記失敗仍顯示訂單成立畫面。 */
+  if(window.HaisenAPI && window.HaisenAPI.getToken()){
+    const me = window.HaisenAPI.getUser() || {};
+    try{
+      await Promise.all(Object.keys(c).map(k=>{
+        const p = CATCH[k];
+        if(!p || !p.inventoryId) return Promise.resolve();
+        return window.HaisenAPI.updateFish(p.inventoryId, {
+          status: "PENDING_PAYMENT",
+          buyer_id: me.id,
+          buyer_name: name
+        });
+      }));
+    }catch(err){
+      console.warn("[HAISEN] 訂單狀態同步失敗：", err && err.message);
+    }
+  }
+
+  document.getElementById("order-modal").classList.add("show");
+  localStorage.removeItem(CART_KEY);
+  updateCartCount();
+  renderCart();
+  return false;
+}
+
+renderCkRegions();
+renderCart();
+</script>
+</body>
+</html>

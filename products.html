@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>今日漁獲 — 海人直送</title>
+<meta name="description" content="各地個人釣客今日上架的現流漁獲。依魚類與地區篩選，查看可購買尾數與各尾重量、產地與捕獲時間，售完為止。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&family=Noto+Serif+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css?v=12">
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap nav__inner">
+    <a href="index.html" class="brand"><span class="brand__mark">海</span><span>海人直送<small></small></span></a>
+    <nav class="nav__links">
+      <a href="index.html">首頁</a>
+      <a href="products.html" class="active">今日漁獲</a>
+      <a href="seller.html">我要賣魚</a>
+    </nav>
+    <div class="nav__right">
+      <div class="nav__search">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+        <input type="text" id="nav-search" placeholder="搜尋魚種、地區" aria-label="搜尋">
+      </div>
+      <a href="login.html" class="nav-user nav-user--out" id="nav-user-slot" aria-label="登入或註冊"><svg class="nav-user__ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M4.6 20c1.2-3.9 4-5.9 7.4-5.9s6.2 2 7.4 5.9"/></svg><span class="nav-user__name">登入／註冊</span></a>
+      <div class="nav-menu" id="nav-menu" hidden>
+        <div class="nav-menu__inner" id="nav-menu-inner"></div>
+      </div>
+      <a href="cart.html" class="icon-btn" aria-label="購物車">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7h12l-1.2 12.2a1.5 1.5 0 0 1-1.5 1.3H8.7a1.5 1.5 0 0 1-1.5-1.3L6 7z"/><path d="M9 7V5.6a3 3 0 0 1 6 0V7"/></svg>
+        <span class="count" data-cart-count style="display:none">0</span>
+      </a>
+      <button class="icon-btn nav__toggle" aria-label="選單" aria-expanded="false" aria-controls="nav-menu"><svg viewBox="0 0 24 24" aria-hidden="true"><line x1="3" y1="7" x2="21" y2="7"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="17" x2="21" y2="17"/></svg></button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <nav class="crumbs"><a href="index.html">首頁</a><span>/</span><span>今日漁獲</span></nav>
+</div>
+
+<section class="section" style="padding-top:12px">
+  <div class="wrap">
+    <div class="section-head" style="margin-bottom:34px">
+      <span class="eyebrow">Today's Catch</span>
+      <h2>今日漁獲</h2>
+      <p class="lead" style="margin-top:14px">各地個人釣客今日上架的現流漁獲，共 <b id="total-count">7</b> 種，數量有限、售完為止。可依魚類與地區篩選，避免商品過遠無法運送。</p>
+    </div>
+
+    <!-- 地區選擇 -->
+    <div class="region-bar">
+      <span class="region-bar__label">我的地區</span>
+      <div class="region-chips" id="region-chips"></div>
+      <span class="region-bar__hint" id="region-hint">選擇地區後，將優先顯示可運送給你的漁獲</span>
+    </div>
+
+    <div class="layout" style="margin-top:44px">
+      <!-- 篩選側欄 -->
+      <aside class="filters">
+        <h4>魚類</h4>
+        <label class="check"><input type="checkbox" class="f-cat" value="fish" checked> 魚類</label>
+        <label class="check"><input type="checkbox" class="f-cat" value="ceph" checked> 頭足類（小卷／軟絲）</label>
+
+        <h4>地區</h4>
+        <div id="f-regions"></div>
+
+        <h4>價格區間</h4>
+        <input type="range" class="range" min="150" max="2000" value="2000" id="price-range">
+        <div style="display:flex;justify-content:space-between;font-size:.74rem;color:var(--muted);margin-top:8px;font-family:var(--font-mono)">
+          <span>$150</span><span id="price-max">$2,000</span>
+        </div>
+
+        <h4>其他</h4>
+        <label class="check"><input type="checkbox" id="f-instock"> 僅顯示尚有庫存</label>
+        <label class="check"><input type="checkbox" id="f-sashimi"> 生食級</label>
+        <label class="check"><input type="checkbox" id="f-selfpick"> 可買家自取</label>
+
+        <button class="btn btn--ghost btn--sm btn--block" style="margin-top:28px" id="reset-filters">重設篩選</button>
+      </aside>
+
+      <!-- 漁獲區 -->
+      <div>
+        <div class="toolbar">
+          <div class="toolbar__count">今日供應 <b id="shown-count">7</b> 種現流</div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <span style="font-size:.74rem;color:var(--muted);letter-spacing:.12em;text-transform:uppercase">排序</span>
+            <select class="select" id="sort" style="width:auto;padding:6px 26px 6px 2px;font-size:.84rem">
+              <option value="fresh">捕獲時間（最新）</option>
+              <option value="price-asc">價格：低 → 高</option>
+              <option value="price-desc">價格：高 → 低</option>
+              <option value="stock">剩餘數量（多 → 少）</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid grid--3" id="catch-grid"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 頁尾 ============ -->
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer__grid">
+      <div>
+        <div class="brand"><span class="brand__mark">海</span><span>海人直送<small></small></span></div>
+        <p>個人釣客上網販售當日現流漁獲的平台<br>今天釣到什麼就賣什麼</p>
+      </div>
+      <div><h4>買家</h4><a href="products.html">今日漁獲列表</a><a href="products.html">依魚類與地區篩選</a><a href="cart.html">購物車 / 下單</a></div>
+      <div><h4>賣家</h4><a href="seller.html">今日漁獲上架</a><a href="seller.html">市場行情參考</a><a href="login.html">釣客登入</a></div>
+      <div><h4>關於</h4><a href="index.html">服務條款</a><a href="index.html">隱私政策</a><a href="index.html">聯絡我們</a></div>
+    </div>
+    <div class="footer__bottom">
+      <span>© 2026 海人直送 </span>
+    </div>
+  </div>
+</footer>
+
+<script src="js/api.js?v=13"></script>
+<script src="app.js?v=13"></script>
+<script>
+const FRESH_ORDER = {amberjack:1, seabream:2, grouper:3, tuna:4, seabass:5, mackerel:6, squid:7};
+const CEPH = ["squid"];
+
+/* 地區 chips */
+function renderRegionChips(){
+  const cur = getRegion();
+  document.getElementById("region-chips").innerHTML =
+    `<button class="region-chip ${cur===''?'on':''}" data-region="">全部地區</button>` +
+    REGIONS.map(r=>`<button class="region-chip ${cur===r?'on':''}" data-region="${r}">${r}</button>`).join("");
+  document.querySelectorAll("#region-chips .region-chip").forEach(b=>{
+    b.addEventListener("click", ()=>{
+      setRegion(b.dataset.region);
+      renderRegionChips();
+      renderRegionChecks();
+      render();
+    });
+  });
+  const hint = document.getElementById("region-hint");
+  hint.textContent = cur ? ("已設定為「" + cur + "」，優先顯示可運送漁獲") : "選擇地區後，將優先顯示可運送給你的漁獲";
+}
+
+/* 地區 checkbox（篩選） */
+function renderRegionChecks(){
+  const cur = getRegion();
+  document.getElementById("f-regions").innerHTML = REGIONS.map(r=>
+    `<label class="check"><input type="checkbox" class="f-region" value="${r}" ${(!cur||cur===r)?'checked':''}> ${r}</label>`
+  ).join("");
+  document.querySelectorAll(".f-region").forEach(el=> el.addEventListener("change", render));
+}
+
+function activeFilter(){
+  const cats = [...document.querySelectorAll(".f-cat:checked")].map(e=>e.value);
+  const regions = [...document.querySelectorAll(".f-region:checked")].map(e=>e.value);
+  return {
+    cats, regions,
+    maxPrice: Number(document.getElementById("price-range").value),
+    inStock: document.getElementById("f-instock").checked,
+    sashimi: document.getElementById("f-sashimi").checked,
+    selfpick: document.getElementById("f-selfpick").checked,
+    q: (document.getElementById("nav-search").value || "").trim().toLowerCase()
+  };
+}
+
+function passes(id, f){
+  const p = CATCH[id];
+  const isCeph = CEPH.includes(id);
+  if(!f.cats.includes(isCeph ? "ceph" : "fish")) return false;
+  if(f.regions.length && !f.regions.includes(p.region)) return false;
+  if(p.price > f.maxPrice) return false;
+  if(f.inStock && soldOut(id)) return false;
+  if(f.sashimi && !p.tags.includes("生食級")) return false;
+  if(f.selfpick && !p.shipping.includes("買家自取")) return false;
+  if(f.q){
+    const hay = (p.name + p.latin + p.sea + p.location + p.region + p.seller.name).toLowerCase();
+    if(hay.indexOf(f.q) === -1) return false;
+  }
+  return true;
+}
+
+function render(){
+  const sort = document.getElementById("sort").value;
+  const f = activeFilter();
+  let arr = CATCH_ORDER.filter(id=>passes(id, f));
+  if(sort === "price-asc") arr.sort((a,b)=>CATCH[a].price-CATCH[b].price);
+  else if(sort === "price-desc") arr.sort((a,b)=>CATCH[b].price-CATCH[a].price);
+  else if(sort === "stock") arr.sort((a,b)=>CATCH[b].remaining-CATCH[a].remaining);
+  else arr.sort((a,b)=>FRESH_ORDER[a]-FRESH_ORDER[b]);
+
+  const grid = document.getElementById("catch-grid");
+  grid.innerHTML = arr.length
+    ? arr.map(catchCardHTML).join("")
+    : '<p style="grid-column:1/-1;color:var(--muted);font-size:.9rem;padding:48px 0">沒有符合條件的今日漁獲，請調整篩選條件或地區。</p>';
+  document.getElementById("shown-count").textContent = arr.length;
+}
+
+document.getElementById("sort").addEventListener("change", render);
+["price-range","f-instock","f-sashimi","f-selfpick"].forEach(id=>{
+  document.getElementById(id).addEventListener("input", e=>{
+    if(id === "price-range") document.getElementById("price-max").textContent = "$" + Number(e.target.value).toLocaleString();
+    render();
+  });
+});
+document.querySelectorAll(".f-cat").forEach(el=> el.addEventListener("change", render));
+document.getElementById("nav-search").addEventListener("input", render);
+document.getElementById("reset-filters").addEventListener("click", ()=>{
+  document.querySelectorAll(".f-cat").forEach(el=> el.checked = true);
+  setRegion("");
+  renderRegionChips(); renderRegionChecks();
+  document.getElementById("f-instock").checked = false;
+  document.getElementById("f-sashimi").checked = false;
+  document.getElementById("f-selfpick").checked = false;
+  document.getElementById("price-range").value = 2000;
+  document.getElementById("price-max").textContent = "$2,000";
+  document.getElementById("nav-search").value = "";
+  render();
+});
+
+renderRegionChips();
+renderRegionChecks();
+render();
+/* [資料綁定] 後端漁獲載入完成後重繪清單、地區 chips 與篩選。 */
+document.addEventListener("haisen:catch-ready", ()=>{ renderRegionChips(); renderRegionChecks(); render(); });
+</script>
+</body>
+</html>
