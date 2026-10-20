@@ -1,0 +1,121 @@
+/* ---------- 結單倒數（細窄橫帶） ---------- */
+.countdown-bar{
+  background:var(--surface);
+  border-bottom:1px solid var(--rule-2);
+  padding:11px 0;font-size:.79rem;color:var(--muted);
+  letter-spacing:.06em;
+}
+.countdown-bar .wrap{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap}
+.countdown-bar .cd-dot{width:5px;height:5px;border-radius:50%;background:var(--coral);flex:none;animation:pulse 2s infinite}
+.countdown-bar b{color:var(--ink);font-weight:600}
+.countdown-bar .cd-clk{
+  font-family:var(--font-mono);font-weight:600;font-size:.82rem;letter-spacing:.1em;
+  color:var(--ink);
+}
+.countdown-bar .sep{color:var(--rule)}
+.countdown-bar .cd-ic{display:none}
+
+/* ---------- Hero（編輯式大圖） ---------- */
+.hero{
+  position:relative;background:var(--ink);color:#fff;overflow:hidden;
+  min-height:76vh;display:flex;align-items:flex-end;
+}
+.hero__bg{position:absolute;inset:0;background-size:cover;background-position:center;opacity:1}
+.hero__scrim{position:absolute;inset:0;background:linear-gradient(to top,rgba(16,20,19,.92) 0%,rgba(16,20,19,.62) 45%,rgba(16,20,19,.24) 100%)}
+.hero__inner{position:relative;padding:120px 0 76px;max-width:720px}
+.hero h1{color:#fff;letter-spacing:.02em}
+.hero .lead{color:rgba(255,255,255,.76);margin-top:24px;max-width:52ch}
+.hero__cta{display:flex;gap:16px;margin-top:40px;flex-wrap:wrap}
+.hero__cta .btn{border-color:transparent}
+.hero__cta .btn--ghost{color:#fff;border-color:rgba(255,255,255,.42)}
+.hero__cta .btn--ghost:hover{border-color:#fff;background:rgba(255,255,255,.06)}
+.hero__ket{
+  font-size:11px;font-weight:600;letter-spacing:.3em;text-transform:uppercase;
+  color:rgba(255,255,255,.66);margin-bottom:26px;display:flex;align-items:center;gap:12px;
+}
+.hero__ket i{width:34px;height:1px;background:rgba(255,255,255,.5);display:inline-block}
+.hero__sign{
+  margin-top:52px;padding-top:26px;border-top:1px solid rgba(255,255,255,.18);
+  display:flex;gap:48px;flex-wrap:wrap;
+}
+.hero__sign div{font-size:.78rem;color:rgba(255,255,255,.6);letter-spacing:.04em}
+.hero__sign b{display:block;color:#fff;font-family:var(--font-display);font-size:.98rem;font-weight:600;letter-spacing:.06em;margin-bottom:3px}
+
+/* ---------- 雙模式切換（底線式） ---------- */
+.mode-switch{display:inline-flex;gap:26px;border-bottom:1px solid var(--rule);padding-bottom:0}
+.mode-switch button{
+  position:relative;padding:8px 0 12px;font-size:.8rem;font-weight:600;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--muted-2);transition:color .2s;
+}
+.mode-switch button::after{
+  content:"";position:absolute;left:0;right:0;bottom:-1px;height:1px;background:var(--ink);
+  transform:scaleX(0);transform-origin:left;transition:transform .28s ease;
+}
+.mode-switch button.on{color:var(--ink)}
+.mode-switch button.on::after{transform:scaleX(1)}
+.mode-switch--hero{border-color:rgba(255,255,255,.26);margin-bottom:30px}
+.mode-switch--hero button{color:rgba(255,255,255,.55)}
+.mode-switch--hero button.on{color:#fff}
+.mode-switch--hero button::after{background:#fff}
+.mode-switch--block{display:flex;width:100%}
+.mode-switch--block button{flex:1;text-align:center}
+
+/* ---------- Grid ---------- */
+.grid{display:grid;gap:1px;background:var(--rule-2)}
+.grid--2{grid-template-columns:repeat(2,1fr)}
+.grid--3{grid-template-columns:repeat(3,1fr)}
+.grid--4{grid-template-columns:repeat(4,1fr)}
+.grid--gap{gap:40px;background:none}
+
+/* ---------- 卡片（無陰影、極簡、細線分隔） ---------- */
+.card{
+  background:var(--paper);display:flex;flex-direction:column;
+  padding:0;overflow:hidden;
+}
+.card__media{position:relative;aspect-ratio:4/5;background:var(--paper-2);overflow:hidden}
+.card__media img{width:100%;height:100%;object-fit:cover;transition:transform .8s cubic-bezier(.2,.7,.2,1)}
+.card:hover .card__media img{transform:scale(1.035)}
+.card__tags{position:absolute;top:14px;left:14px;display:flex;gap:6px;flex-wrap:wrap}
+.card__tags .badge{background:rgba(247,245,240,.92);border-color:transparent;backdrop-filter:blur(4px)}
+.card__fav{
+  position:absolute;top:12px;right:12px;width:30px;height:30px;
+  display:grid;place-items:center;color:#fff;font-size:1rem;
+  opacity:0;transition:opacity .2s;
+}
+.card:hover .card__fav{opacity:.9}
+.card__body{padding:22px 2px 4px;display:flex;flex-direction:column;gap:8px;flex:1}
+.card__seller{
+  font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted-2);font-weight:600;
+}
+.card__title{font-family:var(--font-display);font-size:1.12rem;font-weight:600;color:var(--ink);line-height:1.5}
+.card__meta{font-size:.8rem;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap;letter-spacing:.02em}
+.card__meta span{display:inline-flex;align-items:center;gap:6px}
+.card__price{display:flex;align-items:baseline;gap:10px;margin-top:auto;padding-top:14px}
+.card__price b{font-family:var(--font-display);font-size:1.24rem;color:var(--ink);font-weight:600}
+.card__price b .unit{font-size:.72rem;color:var(--muted);font-weight:500;font-family:var(--font-sans);letter-spacing:.04em}
+.card__price s{font-size:.82rem;color:var(--muted-2)}
+.trend{font-size:.75rem;font-weight:600;letter-spacing:.04em}
+.trend--up{color:var(--coral)}
+.trend--down{color:var(--accent-3)}
+
+/* ---------- 分類磚（大圖、無圓角） ---------- */
+.cat{
+  position:relative;overflow:hidden;aspect-ratio:3/4;
+  display:flex;align-items:flex-end;padding:26px;color:#fff;
+}
+.cat img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .8s ease}
+.cat::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(16,20,19,.82),rgba(16,20,19,.06) 62%)}
+.cat:hover img{transform:scale(1.04)}
+.cat__txt{position:relative;z-index:2}
+.cat__txt b{font-family:var(--font-display);font-size:1.05rem;display:block;font-weight:600;letter-spacing:.04em}
+.cat__txt span{font-size:.72rem;color:rgba(255,255,255,.72);letter-spacing:.12em;text-transform:uppercase}
+
+/* ---------- 特色區塊（極簡，數字標示） ---------- */
+.feature{display:flex;gap:20px;align-items:flex-start}
+.feature__ic{
+  flex:none;width:auto;height:auto;background:none;border-radius:0;
+  font-family:var(--font-display);font-size:.82rem;color:var(--muted-2);
+  letter-spacing:.1em;padding-top:3px;
+}
+.feature h3{font-size:.98rem;margin-bottom:6px;font-family:var(--font-display)}
+.feature p{font-size:.85rem;color:var(--muted);line-height:1.9}

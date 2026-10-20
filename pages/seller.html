@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我要賣魚 — 今日漁獲上架 | 海人直送</title>
+<meta name="description" content="個人釣客上架今日漁獲：先完成魚種搜尋與市場行情參考、設定定價，再填寫販售尾數與平均重量或各尾重量、處理方式與照片，最後填寫地區與地址。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&family=Noto+Serif+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/base.css">
+<link rel="stylesheet" href="../assets/css/layout.css">
+<link rel="stylesheet" href="../assets/css/components.css">
+<link rel="stylesheet" href="../assets/css/market.css">
+<link rel="stylesheet" href="../assets/css/seller.css">
+<link rel="stylesheet" href="../assets/css/features.css">
+<link rel="stylesheet" href="../assets/css/chat-auth.css">
+<link rel="stylesheet" href="../assets/css/account.css">
+<link rel="stylesheet" href="../assets/css/navigation.css">
+<link rel="stylesheet" href="../assets/css/profile.css">
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap nav__inner">
+    <a href="index.html" class="brand"><span class="brand__mark">海</span><span>海人直送<small></small></span></a>
+    <nav class="nav__links">
+      <a href="index.html">首頁</a>
+      <a href="products.html">今日漁獲</a>
+      <a href="seller.html" class="active">我要賣魚</a>
+    </nav>
+    <div class="nav__right">
+      <div class="nav__search">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+        <input type="text" placeholder="搜尋魚種、地區" aria-label="搜尋">
+      </div>
+      <a href="login.html" class="nav-user nav-user--out" id="nav-user-slot" aria-label="登入或註冊"><svg class="nav-user__ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M4.6 20c1.2-3.9 4-5.9 7.4-5.9s6.2 2 7.4 5.9"/></svg><span class="nav-user__name">登入／註冊</span></a>
+      <div class="nav-menu" id="nav-menu" hidden>
+        <div class="nav-menu__inner" id="nav-menu-inner"></div>
+      </div>
+      <a href="cart.html" class="icon-btn" aria-label="購物車">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7h12l-1.2 12.2a1.5 1.5 0 0 1-1.5 1.3H8.7a1.5 1.5 0 0 1-1.5-1.3L6 7z"/><path d="M9 7V5.6a3 3 0 0 1 6 0V7"/></svg>
+        <span class="count" data-cart-count style="display:none">0</span>
+      </a>
+      <button class="icon-btn nav__toggle" aria-label="選單" aria-expanded="false" aria-controls="nav-menu"><svg viewBox="0 0 24 24" aria-hidden="true"><line x1="3" y1="7" x2="21" y2="7"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="17" x2="21" y2="17"/></svg></button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <nav class="crumbs"><a href="index.html">首頁</a><span>/</span><span>我要賣魚</span></nav>
+</div>
+
+<section class="section" style="padding-top:12px;padding-bottom:44px">
+  <div class="wrap">
+    <div class="section-head section-head--split" style="margin-bottom:0">
+      <div style="max-width:660px">
+        <span class="eyebrow">For Anglers</span>
+        <h2>今日漁獲上架</h2>
+        <p class="lead" style="margin-top:16px"><b>請填寫販售數量與平均重量，或勾選逐尾輸入重量，並完成價格與魚種</b><br></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" style="padding-top:12px">
+  <div class="wrap">
+    <div class="layout layout--seller">
+      <!-- 左：上架表單 -->
+      <div>
+        <form id="listing" novalidate>
+          <!-- 01 魚種與市場行情 / 02 設定定價 / 03 販售尾數與重量 / 04 處理方式與照片 -->
+          <div style="margin-bottom:12px"><span class="eyebrow" style="margin-bottom:10px">01 · 魚種與市場行情</span></div>
+
+          <div class="field" id="f-species">
+            <label>釣獲魚種 <span class="req">*</span></label>
+            <div class="species-search">
+              <input class="input" type="text" id="species-input" placeholder="輸入關鍵字搜尋魚種，例如：紅鰹、石斑、小卷" autocomplete="off">
+              <div class="species-results" id="species-results"></div>
+            </div>
+            <!-- 均價緊鄰魚種欄位 -->
+            <div class="species-market" id="species-market">
+              <div class="species-market__main">
+                <span class="species-market__label">澎湖魚市即時均價</span>
+                <b id="sm-avg">$486<span class="u"> / 台斤</span></b>
+              </div>
+              <div class="species-market__row">
+                <span>今日最高 <b id="sm-high">$528</b></span>
+                <span>今日最低 <b id="sm-low">$452</b></span>
+                <span>較上週 <b id="sm-wow">-1.2%</b></span>
+              </div>
+            </div>
+            <div class="quick-species" id="quick-species"></div>
+            <div class="hint" id="species-picked">尚未選擇魚種（必填）· 可輸入關鍵字搜尋，或點選下方常出售魚類</div>
+            <div class="field-err" id="e-species">請選擇釣獲魚種</div>
+          </div>
+
+          <div style="margin:44px 0 12px"><span class="eyebrow" style="margin-bottom:10px">02 · 設定定價</span></div>
+
+          <div class="field" id="f-price">
+            <label>今日售價（元 / 台斤） <span class="req">*</span></label>
+            <input class="input" type="number" id="price" step="10" min="0" placeholder="例如：520">
+            <div class="field-err" id="e-price">請填寫售價，且必須為大於 0 的數字</div>
+            <div class="field-warn" id="w-price"></div>
+            <div class="hint" id="price-hint">參考魚市均價：—</div>
+          </div>
+
+          <div style="margin:44px 0 12px"><span class="eyebrow" style="margin-bottom:10px">03 · 販售數量與重量</span></div>
+
+          <div class="field" id="f-tails">
+            <label>販售數量 <span class="req">*</span></label>
+            <input class="input" type="number" id="tail-count" step="1" min="1" max="20" value="1" placeholder="例如：3">
+            <div class="opt-group">
+              <label class="opt opt--check" id="individual-weights-option">
+                <input type="checkbox" id="individual-weights">
+                <span>各別輸入每尾的重量</span>
+              </label>
+            </div>
+            <div class="hint">未勾選時填寫平均重量；勾選後需分別填寫每尾重量。</div>
+            <div class="field-err" id="e-tails">請填寫販售數量，且必須為至少 1 的整數</div>
+          </div>
+          <div class="field" id="f-average-weight">
+            <label>平均重量（台斤） <span class="req">*</span></label>
+            <input class="input" type="number" id="average-weight" step="0.1" min="0" placeholder="例如：5.5">
+            <div class="field-err" id="e-average-weight">請填寫平均重量，且必須為大於 0 的數字</div>
+          </div>
+          <div class="tails" id="tails" hidden></div>
+
+          <div style="margin:44px 0 12px"><span class="eyebrow" style="margin-bottom:10px">04 · 處理方式與照片</span></div>
+
+          <div class="field" id="f-process">
+            <label>處理方式 <span class="opt-tag">選填</span></label>
+            <div class="opt-group" id="process-opts">
+              <button type="button" class="opt" data-process="活體">活體</button>
+              <button type="button" class="opt" data-process="已宰殺">已宰殺</button>
+            </div>
+            <div class="field-err" id="e-process">請選擇處理方式</div>
+          </div>
+
+          <div class="field">
+            <label>處理方式備註 <span class="opt-tag">選填</span></label>
+            <textarea class="textarea" id="process-note" placeholder="例如：捕獲後立即放血、去內臟，碎冰保鮮 3 分鐘內完成。"></textarea>
+            <div class="hint">說明你的處理習慣（放血、去內臟、碎冰時間等），會顯示於商品頁，提升買家信任。</div>
+          </div>
+
+          <div class="field" id="f-photos">
+            <label>漁獲照片 <span class="opt-tag">選填</span></label>
+            <div class="upload" id="upload">
+              <input type="file" class="upload__input" id="file" accept="image/*" multiple>
+              <div class="upload__ic">＋</div>
+              <b>點擊或拖放照片到這裡</b>
+              <span>支援 JPG / PNG / WEBP，單檔上限 5MB，最多 8 張</span>
+            </div>
+            <div class="upload-err" id="upload-err"></div>
+            <div class="thumbs" id="thumbs"></div>
+            <div class="upload-meta">
+              <span>已選 <b id="photo-count">0</b> 張 · 共 <b id="photo-size">0 KB</b></span>
+              <span>封面：<b id="cover-name">尚未選擇</b></span>
+            </div>
+            <div class="field-err" id="e-photos">請至少上傳 1 張漁獲照片</div>
+          </div>
+
+          <!-- 05 地區與地址 -->
+          <div style="margin:44px 0 12px"><span class="eyebrow" style="margin-bottom:10px">05 · 地區與地址 <span class="opt-tag">選填</span></span></div>
+
+          <div class="field-row">
+            <div class="field" id="f-city">
+              <label>縣市 <span class="opt-tag">選填</span></label>
+              <select class="select input" id="city">
+                <option value="">請選擇縣市</option>
+              </select>
+              <div class="field-err" id="e-city">請選擇縣市</div>
+            </div>
+            <div class="field" id="f-district">
+              <label>鄉鎮市區 <span class="opt-tag">選填</span></label>
+              <select class="select input" id="district" disabled>
+                <option value="">請先選擇縣市</option>
+              </select>
+              <div class="field-err" id="e-district">請選擇鄉鎮市區</div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>詳細位置／地標 <span class="opt-tag">選填</span></label>
+            <input class="input" type="text" id="location" placeholder="例如：第三漁港、鎖港里活動中心旁">
+            <div class="hint" id="addr-preview">所屬地區：</div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label>捕獲海域 <span class="opt-tag">選填</span></label>
+              <input class="input" type="text" id="sea" placeholder="例如：澎湖東海‧姑婆嶼海域">
+            </div>
+            <div class="field">
+              <label>捕獲時間 <span class="opt-tag">選填</span></label>
+              <input class="input" type="time" id="caught" value="05:40">
+            </div>
+          </div>
+
+          <!-- 06 運送與付款 -->
+          <div style="margin:44px 0 12px"><span class="eyebrow" style="margin-bottom:10px">06 · 運送與付款 <span class="opt-tag">選填</span></span></div>
+
+          <div class="field" id="f-shipping">
+            <label>運送方式 <span class="opt-tag">選填</span></label>
+            <div class="opt-group" id="shipping-opts">
+              <button type="button" class="opt opt--multi" data-ship="約定面交">約定面交</button>
+              <button type="button" class="opt opt--multi" data-ship="賣家代送（代送去餐廳）">賣家代送（代送去餐廳）</button>
+            </div>
+            <div class="hint">可複選。「約定面交」由買家或賣家至指定地點取貨；「賣家代送（代送去餐廳）」由賣家自行配送。</div>
+            <div class="field-err" id="e-shipping">請至少選擇一種運送方式</div>
+          </div>
+
+          <div class="field" id="f-payment">
+            <label>付款方式 <span class="opt-tag">選填</span></label>
+            <div class="opt-group" id="payment-opts">
+              <button type="button" class="opt opt--multi" data-pay="貨到付款">貨到付款</button>
+              <button type="button" class="opt opt--multi" data-pay="轉帳">轉帳</button>
+            </div>
+            <div class="field-err" id="e-payment">請至少選擇一種付款方式</div>
+          </div>
+
+          <div class="field">
+            <label>定金 <span class="opt-tag">選填</span></label>
+            <div class="deposit-box">
+              <label class="check"><input type="checkbox" id="deposit-on"> 向買家收取定金</label>
+              <div class="deposit-fields" id="deposit-fields">
+                <div class="field" style="margin:0" id="f-deposit">
+                  <label style="text-transform:none;letter-spacing:.04em;font-size:.8rem">定金金額（元）</label>
+                  <input class="input" type="number" id="deposit-amount" step="50" min="0" placeholder="例如：300">
+                  <div class="field-err" id="e-deposit">請填寫大於 0 的定金金額</div>
+                </div>
+                <div class="field" style="margin:0">
+                  <label style="text-transform:none;letter-spacing:.04em;font-size:.8rem">說明</label>
+                  <div class="hint" style="margin-top:12px">收取定金可降低棄單風險，金額將於到貨付款時折抵。</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn--primary btn--block" id="submit-btn" style="margin-top:26px" disabled>確認上架今日漁獲</button>
+          <p style="font-size:.76rem;color:var(--muted-2);text-align:center;margin-top:14px">送出後將立即開放買家瀏覽與下單。</p>
+        </form>
+      </div>
+
+      <!-- 右：行情面板（可摺疊） -->
+      <aside>
+        <details class="acc" open>
+          <summary class="acc__head"><span>行情參考</span><span class="acc__badge">依今日均價</span></summary>
+          <div class="acc__body">
+            <div class="price-live">
+              <div class="price-live__label">澎湖魚市即時均價 · 馬公第三漁港</div>
+              <div class="price-live__val" id="mk-avg">$486<span class="unit"> / 台斤</span></div>
+              <div class="price-live__row">
+                <div>今日最高<b id="mk-high">$528</b></div>
+                <div>今日最低<b id="mk-low">$452</b></div>
+                <div>較上週<b id="mk-wow">-1.2%</b></div>
+              </div>
+            </div>
+            <div id="advice" style="margin-top:18px"></div>
+          </div>
+        </details>
+
+        <details class="acc">
+          <summary class="acc__head"><span>近 90 日歷史售價走勢</span><span class="acc__badge" id="hist-species">紅鰹</span></summary>
+          <div class="acc__body">
+            <div id="chart-hist"></div>
+            <div class="chart-legend">
+              <span><i style="background:#14343F"></i>澎湖魚市成交均價</span>
+            </div>
+          </div>
+        </details>
+
+        <details class="acc">
+          <summary class="acc__head"><span>同海域其他釣客今日行情</span></summary>
+          <div class="acc__body">
+            <table class="table" id="compet"></table>
+          </div>
+        </details>
+
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- 成功彈窗 -->
+<div class="modal" id="ok-modal">
+  <div class="modal__card">
+    <div class="modal__ic">Listing Published</div>
+    <h3>今日漁獲已上架！</h3>
+    <p>已開放買家瀏覽與下單。買家可透過「與釣客聊聊」向你確認魚況。</p>
+    <div class="summary-list" id="ok-summary"></div>
+    <button class="btn btn--primary btn--block" onclick="document.getElementById('ok-modal').classList.remove('show')">完成</button>
+    <button class="btn btn--ghost btn--block" style="margin-top:10px" onclick="document.getElementById('ok-modal').classList.remove('show');openDrawer('seller')">查看我的上架紀錄</button>
+  </div>
+</div>
+
+<!-- ============ 頁尾 ============ -->
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer__grid">
+      <div>
+        <div class="brand"><span class="brand__mark">海</span><span>海人直送<small></small></span></div>
+        <p>個人釣客上網販售當日現流漁獲的平台<br>今天釣到什麼就賣什麼</p>
+      </div>
+      <div><h4>買家</h4><a href="products.html">今日漁獲列表</a><a href="products.html">依魚類與地區篩選</a><a href="cart.html">購物車 / 下單</a></div>
+      <div><h4>賣家</h4><a href="seller.html">今日漁獲上架</a><a href="seller.html">市場行情參考</a><a href="login.html">釣客登入</a></div>
+      <div><h4>關於</h4><a href="index.html">服務條款</a><a href="index.html">隱私政策</a><a href="index.html">聯絡我們</a></div>
+    </div>
+    <div class="footer__bottom">
+      <span>© 2026 海人直送 </span>
+    </div>
+  </div>
+</footer>
+
+
+
+
+
+<script src="../assets/js/config.js"></script>
+<script src="../assets/js/api/client.js"></script>
+<script src="../assets/js/api/auth.js"></script>
+<script src="../assets/js/api/fish.js"></script>
+<script src="../assets/js/api/fish-mapper.js"></script>
+<script src="../assets/js/app/01-data.js"></script>
+<script src="../assets/js/app/02-cart-account.js"></script>
+<script src="../assets/js/app/03-catalog.js"></script>
+<script src="../assets/js/app/04-chat.js"></script>
+<script src="../assets/js/app/05-listings.js"></script>
+<script src="../assets/js/app/06-drawer.js"></script>
+<script src="../assets/js/app/07-drawer-panels.js"></script>
+<script src="../assets/js/app/08-api-init.js"></script>
+<script src="../assets/js/pages/seller-market.js"></script>
+<script src="../assets/js/pages/seller-species.js"></script>
+<script src="../assets/js/pages/seller-photos.js"></script>
+<script src="../assets/js/pages/seller-options.js"></script>
+<script src="../assets/js/pages/seller-address.js"></script>
+<script src="../assets/js/pages/seller-validation.js"></script>
+<script src="../assets/js/pages/seller-submit.js"></script>
+</body>
+</html>
