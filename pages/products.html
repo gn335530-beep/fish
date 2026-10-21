@@ -18,6 +18,7 @@
 <link rel="stylesheet" href="../assets/css/account.css">
 <link rel="stylesheet" href="../assets/css/navigation.css">
 <link rel="stylesheet" href="../assets/css/profile.css">
+<link rel="stylesheet" href="../assets/css/grid.css">
 </head>
 <body>
 
@@ -66,9 +67,9 @@
       <span class="region-bar__hint" id="region-hint">選擇地區後，將優先顯示可運送給你的漁獲</span>
     </div>
 
-    <div class="layout" style="margin-top:44px">
+    <div class="layout grid-12 grid-12--wide" style="margin-top:44px">
       <!-- 篩選側欄 -->
-      <aside class="filters">
+      <aside class="filters col-span-12 col-lg-span-3">
         <h4>魚類</h4>
         <label class="check"><input type="checkbox" class="f-cat" value="fish" checked> 魚類</label>
         <label class="check"><input type="checkbox" class="f-cat" value="ceph" checked> 頭足類（小卷／軟絲）</label>
@@ -91,7 +92,7 @@
       </aside>
 
       <!-- 漁獲區 -->
-      <div>
+      <div class="col-span-12 col-lg-span-9">
         <div class="toolbar">
           <div class="toolbar__count">今日供應 <b id="shown-count">7</b> 種現流</div>
           <div style="display:flex;align-items:center;gap:12px">
