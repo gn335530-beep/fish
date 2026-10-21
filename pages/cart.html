@@ -18,6 +18,7 @@
 <link rel="stylesheet" href="../assets/css/account.css">
 <link rel="stylesheet" href="../assets/css/navigation.css">
 <link rel="stylesheet" href="../assets/css/profile.css">
+<link rel="stylesheet" href="../assets/css/grid.css">
 </head>
 <body>
 
@@ -58,9 +59,9 @@
       <h2>購物車</h2>
     </div>
 
-    <div class="cart-layout">
+    <div class="cart-layout grid-12 grid-12--wide">
       <!-- 商品 -->
-      <div>
+      <div class="col-span-12 col-lg-span-8">
         <div id="cart-items"></div>
 
         <!-- 到貨時間說明 -->
@@ -137,7 +138,7 @@
       </div>
 
       <!-- 摘要 -->
-      <aside class="summary">
+      <aside class="summary col-span-12 col-lg-span-4">
         <h3>訂單摘要</h3>
         <div id="sum-lines" style="min-height:40px"></div>
         <div class="summary__row"><span>小計</span><span id="sum-sub">$0</span></div>

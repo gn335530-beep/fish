@@ -18,6 +18,7 @@
 <link rel="stylesheet" href="../assets/css/account.css">
 <link rel="stylesheet" href="../assets/css/navigation.css">
 <link rel="stylesheet" href="../assets/css/profile.css">
+<link rel="stylesheet" href="../assets/css/grid.css">
 </head>
 <body>
 
@@ -65,9 +66,9 @@
 
 <section class="section" style="padding-top:12px">
   <div class="wrap">
-    <div class="layout layout--seller">
+    <div class="layout layout--seller grid-12 grid-12--wide">
       <!-- 左：上架表單 -->
-      <div>
+      <div class="col-span-12 col-lg-span-7">
         <form id="listing" novalidate>
           <!-- 01 魚種與市場行情 / 02 設定定價 / 03 販售尾數與重量 / 04 處理方式與照片 -->
           <div style="margin-bottom:12px"><span class="eyebrow" style="margin-bottom:10px">01 · 魚種與市場行情</span></div>
@@ -243,7 +244,7 @@
       </div>
 
       <!-- 右：行情面板（可摺疊） -->
-      <aside>
+      <aside class="col-span-12 col-lg-span-5">
         <details class="acc" open>
           <summary class="acc__head"><span>行情參考</span><span class="acc__badge">依今日均價</span></summary>
           <div class="acc__body">

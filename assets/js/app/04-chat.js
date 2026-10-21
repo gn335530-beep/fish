@@ -164,6 +164,72 @@ function closeChat(){
   if(el) el.classList.remove("show");
 }
 
+function ensureAssistantBot(){
+  if(document.getElementById("assistant-bot")) return;
+
+  const widget = document.createElement("div");
+  widget.id = "assistant-bot";
+  widget.className = "assistant-bot";
+  widget.innerHTML = `
+    <section class="assistant-bot__panel" id="assistant-bot-panel" role="dialog" aria-label="海人小幫手" hidden>
+      <header class="assistant-bot__head">
+        <span class="assistant-bot__symbol" aria-hidden="true">✦</span>
+        <div><b>海人小幫手</b><span>模擬客服・功能建置中</span></div>
+        <button class="assistant-bot__close" type="button" aria-label="關閉小幫手">✕</button>
+      </header>
+      <div class="assistant-bot__messages" id="assistant-bot-messages" aria-live="polite"></div>
+      <form class="assistant-bot__form">
+        <input type="text" aria-label="輸入訊息" placeholder="輸入訊息（模擬）" autocomplete="off">
+        <button type="submit">送出</button>
+      </form>
+    </section>
+    <button class="assistant-bot__toggle" type="button" aria-label="開啟海人小幫手" aria-expanded="false" aria-controls="assistant-bot-panel" title="海人小幫手">✦</button>`;
+  document.body.appendChild(widget);
+
+  const panel = widget.querySelector("#assistant-bot-panel");
+  const toggle = widget.querySelector(".assistant-bot__toggle");
+  const close = widget.querySelector(".assistant-bot__close");
+  const form = widget.querySelector(".assistant-bot__form");
+  const input = form.querySelector("input");
+  const messages = widget.querySelector("#assistant-bot-messages");
+
+  function addMessage(text, from){
+    const message = document.createElement("p");
+    message.className = "assistant-bot__message assistant-bot__message--" + from;
+    message.textContent = text;
+    messages.appendChild(message);
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+  function setOpen(open){
+    panel.hidden = !open;
+    toggle.setAttribute("aria-expanded", String(open));
+    toggle.setAttribute("aria-label", open ? "關閉海人小幫手" : "開啟海人小幫手");
+    if(open && messages.childElementCount === 0){
+      addMessage("你好！我是海人小幫手，目前提供模擬對話。正式功能即將上線。", "bot");
+    }
+    if(open) input.focus();
+  }
+
+  toggle.addEventListener("click", ()=> setOpen(panel.hidden));
+  close.addEventListener("click", ()=> setOpen(false));
+  form.addEventListener("submit", event=>{
+    event.preventDefault();
+    const text = input.value.trim();
+    if(!text) return;
+    addMessage(text, "user");
+    input.value = "";
+    window.setTimeout(()=>{
+      addMessage("收到你的訊息！目前是模擬客服，正式功能即將上線。", "bot");
+    }, 500);
+  });
+  document.addEventListener("keydown", event=>{
+    if(event.key === "Escape" && !panel.hidden) setOpen(false);
+  });
+}
+
+ensureAssistantBot();
+
 /* ============================================================
    個人選單（右上角）· 個人抽屜（個人資訊 / 賣家資訊 / 聊聊）
    ============================================================ */
