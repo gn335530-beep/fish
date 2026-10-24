@@ -25,9 +25,9 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use(require("./routes/auth"));
 app.use(require("./routes/products"));
+app.use(require("./routes/species"));
 app.use(require("./routes/chat"));
 app.use(require("./routes/chat-messages"));
-app.use(require("./routes/fish"));
 app.use(require("./routes/uploads"));
 
 /* 只開放自訂的 /api 與 /uploads，避免直接以 json-server 預設路由改寫資料。 */

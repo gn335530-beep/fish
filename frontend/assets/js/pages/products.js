@@ -1,5 +1,6 @@
 /* 漁獲列表：資料只來自 GET /api/products，篩選與排序都在前端做。 */
 let PRODUCTS = [];
+let SPECIES_BY_ID = {};
 let productsFailed = false;
 let priceReady = false;
 let lastPriceMax = 0;
@@ -51,8 +52,13 @@ function activeFilter() {
   };
 }
 
+function categoryOf(p) {
+  const item = SPECIES_BY_ID[p.species_id];
+  return item && item.category ? item.category : "fish";
+}
+
 function passes(p, f) {
-  if (!f.cats.includes(isCephalopod(p) ? "ceph" : "fish")) return false;
+  if (!f.cats.includes(categoryOf(p))) return false;
   if (filterRegion && !sameCity(p.region, filterRegion)) return false;
   if (Number(p.price || 0) > f.maxPrice) return false;
   if (f.inStock && productAvailable(p) <= 0) return false;
@@ -80,8 +86,7 @@ function sortProducts(list) {
 }
 
 function showState(text, isError) {
-  document.getElementById("catch-grid").innerHTML =
-    '<p class="state-msg' + (isError ? " state-msg--error" : "") + '">' + productEscape(text) + '</p>';
+  document.getElementById("catch-grid").innerHTML = productStateHTML(text, isError);
 }
 
 function render() {
@@ -99,7 +104,13 @@ function render() {
 async function loadProducts() {
   renderRegionChips();
   try {
-    PRODUCTS = await window.HaisenAPI.listProducts();
+    const results = await Promise.all([
+      window.HaisenAPI.listProducts(),
+      window.HaisenAPI.listSpecies().catch(function () { return []; })
+    ]);
+    PRODUCTS = results[0];
+    SPECIES_BY_ID = {};
+    results[1].forEach(function (item) { SPECIES_BY_ID[item.id] = item; });
     productsFailed = false;
     document.getElementById("total-count").textContent = String(PRODUCTS.length);
     initPriceRange();
@@ -109,9 +120,7 @@ async function loadProducts() {
     PRODUCTS = [];
     document.getElementById("total-count").textContent = "—";
     document.getElementById("shown-count").textContent = "—";
-    showState(error.status === 0
-      ? "無法連線到伺服器，請確認後端已啟動"
-      : "商品載入失敗：" + error.message, true);
+    showState(productErrorText(error, "商品"), true);
   }
 }
 

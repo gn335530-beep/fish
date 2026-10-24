@@ -8,6 +8,7 @@ import { renderInbox } from "./views/inbox.js";
 import { escapeHtml } from "./views/html.js";
 import { startPolling, refreshRooms, pollNow } from "./poll.js";
 import { initFlow, ensureRoom, submitText, submitPhoto, publishDraft, resetDraft, explainProduct } from "./flow.js";
+import { loadSpecies } from "./ai/species.js";
 
 const panel = mountPanel({
   onSubmit: handleSubmit,
@@ -161,6 +162,11 @@ async function boot() {
   render();
   if (!api.isLoggedIn()) return;
 
+  try {
+    await loadSpecies();
+  } catch (error) {
+    notify(error);
+  }
   try {
     const user = await api.fetchMe();
     update({ user: user });

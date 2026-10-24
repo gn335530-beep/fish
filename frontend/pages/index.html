@@ -94,11 +94,11 @@
       <div>
         <span class="eyebrow">Today's Catch</span>
         <h2>今日漁獲</h2>
-        <p class="lead" style="margin-top:14px">各地釣客今日上架的新鮮漁獲，數量有限、售完為止。</p>
+        <p class="lead" style="margin-top:14px">各地釣客今日上架的新鮮漁獲，今日共 <b id="today-catch-count">0</b> 筆，數量有限、售完為止。</p>
       </div>
       <a href="products.html" class="btn btn--quiet">查看全部今日漁獲</a>
     </div>
-    <div class="grid grid--4" id="today-catch"></div>
+    <div class="grid grid--4" id="today-catch"><p class="state-msg">載入漁獲中…</p></div>
   </div>
 </section>
 <!-- ============ 平台怎麼運作 ============ -->
@@ -184,11 +184,11 @@
 <script src="../assets/js/config.js?v=v3"></script>
 <script src="../assets/js/api/client.js?v=v3"></script>
 <script src="../assets/js/api/auth.js?v=v3"></script>
-<script src="../assets/js/api/fish.js?v=v3"></script>
-<script src="../assets/js/api/fish-mapper.js?v=v3"></script>
-<script src="../assets/js/app/01-data.js?v=v3"></script>
+<script src="../assets/js/api/products.js?v=v3"></script>
+<script src="../assets/js/api/species.js?v=v3"></script>
 <script src="../assets/js/app/02-account.js?v=v3"></script>
-<script src="../assets/js/app/03-catalog.js?v=v3"></script>
+<script src="../assets/js/app/03-ui.js?v=v3"></script>
+<script src="../assets/js/app/05-product-view.js?v=v3"></script>
 <script type="module" src="../assets/js/demo/main.js?v=v3"></script>
 <script src="../assets/js/app/06-drawer.js?v=v3"></script>
 <script src="../assets/js/app/07-drawer-panels.js?v=v3"></script>

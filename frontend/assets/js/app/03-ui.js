@@ -1,36 +1,4 @@
-/* ---------- 漁獲卡片（買家視角） ---------- */
-function catchCardHTML(id){
-  const p = CATCH[id];
-  const out = soldOut(id);
-  return `<article class="card catch-card">
-    <a href="${catchHref(id)}" class="card__media">
-      <img src="${p.img}" alt="${p.name}">
-      <div class="card__tags">
-        <span class="badge">${p.region}</span>
-        ${out?'<span class="badge badge--coral">已售完</span>':`<span class="badge badge--coral">可購買 ${p.remaining} 尾</span>`}
-      </div>
-    </a>
-    <div class="card__body">
-      <div class="card__seller">釣客 ${p.seller.name}</div>
-      <h3 class="card__title"><a href="${catchHref(id)}">${p.name}</a></h3>
-      <div class="card__meta"><span>${p.caught}</span></div>
-      <div class="card__meta"><span>${p.location}</span></div>
-      <div class="card__meta"><span>共 ${tailCount(id)} 尾 · 各尾約 ${tailRange(id).w} ${p.unit}</span></div>
-      <div class="card__price">
-        <b>${money(p.price)}<span class="unit"> / ${p.unit}</span></b>
-      </div>
-      <a href="${catchHref(id)}" class="btn btn--ghost btn--sm" style="margin-top:14px">查看詳情</a>
-    </div>
-  </article>`;
-}
-function renderCatchCards(containerId, ids){
-  const el = document.getElementById(containerId);
-  if(!el) return;
-  const list = ids || CATCH_ORDER;
-  el.innerHTML = list.map(id=>catchCardHTML(id)).join("");
-}
-
-/* ---------- 導覽 ---------- */
+/* 共用 UI：導覽列事件、開啟助手與 toast。 */
 function initNav(){
   const t = document.querySelector(".nav__toggle");
   if(t) t.addEventListener("click", e=>{ e.stopPropagation(); toggleNavMenu(); });
