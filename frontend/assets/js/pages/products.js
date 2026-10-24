@@ -1,102 +1,138 @@
-const FRESH_ORDER = {amberjack:1, seabream:2, grouper:3, tuna:4, seabass:5, mackerel:6, squid:7};
-const CEPH = ["squid"];
+/* 漁獲列表：資料只來自 GET /api/products，篩選與排序都在前端做。 */
+let PRODUCTS = [];
+let productsFailed = false;
+let priceReady = false;
+let lastPriceMax = 0;
+let filterRegion = normalizeRegion(getRegion());
 
-/* 地區 chips */
-function renderRegionChips(){
-  const cur = getRegion();
-  document.getElementById("region-chips").innerHTML =
-    `<button class="region-chip ${cur===''?'on':''}" data-region="">全部地區</button>` +
-    REGIONS.map(r=>`<button class="region-chip ${cur===r?'on':''}" data-region="${r}">${r}</button>`).join("");
-  document.querySelectorAll("#region-chips .region-chip").forEach(b=>{
-    b.addEventListener("click", ()=>{
-      setRegion(b.dataset.region);
+function renderRegionChips() {
+  const box = document.getElementById("region-chips");
+  box.innerHTML =
+    '<button type="button" class="region-chip ' + (filterRegion ? "" : "on") + '" data-region="">全部</button>' +
+    CITY_ORDER.map(function (city) {
+      return '<button type="button" class="region-chip ' + (filterRegion === city ? "on" : "") +
+        '" data-region="' + city + '">' + city + '</button>';
+    }).join("");
+
+  box.querySelectorAll("[data-region]").forEach(function (button) {
+    button.addEventListener("click", function () {
+      filterRegion = normalizeRegion(button.dataset.region);
+      setRegion(filterRegion);
       renderRegionChips();
-      renderRegionChecks();
       render();
     });
   });
-  const hint = document.getElementById("region-hint");
-  hint.textContent = cur ? ("已設定為「" + cur + "」，優先顯示可運送漁獲") : "選擇地區後，將優先顯示可運送給你的漁獲";
+
+  document.getElementById("region-hint").textContent = filterRegion
+    ? "只顯示「" + filterRegion + "」的商品"
+    : "選擇縣市後，只顯示該縣市的商品";
 }
 
-/* 地區 checkbox（篩選） */
-function renderRegionChecks(){
-  const cur = getRegion();
-  document.getElementById("f-regions").innerHTML = REGIONS.map(r=>
-    `<label class="check"><input type="checkbox" class="f-region" value="${r}" ${(!cur||cur===r)?'checked':''}> ${r}</label>`
-  ).join("");
-  document.querySelectorAll(".f-region").forEach(el=> el.addEventListener("change", render));
+function initPriceRange(force) {
+  const input = document.getElementById("price-range");
+  const prices = PRODUCTS.map(function (p) { return Number(p.price) || 0; });
+  const max = Math.max(1000, ...prices);
+  input.max = String(max);
+  if (force || !priceReady || Number(input.value) === lastPriceMax || Number(input.value) > max) {
+    input.value = String(max);
+  }
+  priceReady = true;
+  lastPriceMax = max;
+  document.getElementById("price-max").textContent = productMoney(max);
 }
 
-function activeFilter(){
-  const cats = [...document.querySelectorAll(".f-cat:checked")].map(e=>e.value);
-  const regions = [...document.querySelectorAll(".f-region:checked")].map(e=>e.value);
+function activeFilter() {
+  const search = document.getElementById("nav-search");
   return {
-    cats, regions,
+    cats: [...document.querySelectorAll(".f-cat:checked")].map(function (el) { return el.value; }),
     maxPrice: Number(document.getElementById("price-range").value),
     inStock: document.getElementById("f-instock").checked,
-    sashimi: document.getElementById("f-sashimi").checked,
-    selfpick: document.getElementById("f-selfpick").checked,
-    q: (document.getElementById("nav-search").value || "").trim().toLowerCase()
+    q: (search.value || "").trim().toLowerCase()
   };
 }
 
-function passes(id, f){
-  const p = CATCH[id];
-  const isCeph = CEPH.includes(id);
-  if(!f.cats.includes(isCeph ? "ceph" : "fish")) return false;
-  if(f.regions.length && !f.regions.includes(p.region)) return false;
-  if(p.price > f.maxPrice) return false;
-  if(f.inStock && soldOut(id)) return false;
-  if(f.sashimi && !p.tags.includes("生食級")) return false;
-  if(f.selfpick && !p.shipping.includes("買家自取")) return false;
-  if(f.q){
-    const hay = (p.name + p.latin + p.sea + p.location + p.region + p.seller.name).toLowerCase();
-    if(hay.indexOf(f.q) === -1) return false;
+function passes(p, f) {
+  if (!f.cats.includes(isCephalopod(p) ? "ceph" : "fish")) return false;
+  if (filterRegion && !sameCity(p.region, filterRegion)) return false;
+  if (Number(p.price || 0) > f.maxPrice) return false;
+  if (f.inStock && productAvailable(p) <= 0) return false;
+  if (f.q) {
+    const hay = [p.title, p.fish_species, p.species_id, p.region, p.location, p.condition]
+      .join(" ").toLowerCase();
+    if (hay.indexOf(f.q) === -1) return false;
   }
   return true;
 }
 
-function render(){
-  const sort = document.getElementById("sort").value;
-  const f = activeFilter();
-  let arr = CATCH_ORDER.filter(id=>passes(id, f));
-  if(sort === "price-asc") arr.sort((a,b)=>CATCH[a].price-CATCH[b].price);
-  else if(sort === "price-desc") arr.sort((a,b)=>CATCH[b].price-CATCH[a].price);
-  else if(sort === "stock") arr.sort((a,b)=>CATCH[b].remaining-CATCH[a].remaining);
-  else arr.sort((a,b)=>FRESH_ORDER[a]-FRESH_ORDER[b]);
+function sameCity(region, city) {
+  const normalize = function (value) { return String(value || "").replace(/臺/g, "台"); };
+  return normalize(region).indexOf(normalize(city)) !== -1;
+}
 
-  const grid = document.getElementById("catch-grid");
-  grid.innerHTML = arr.length
-    ? arr.map(catchCardHTML).join("")
-    : '<p style="grid-column:1/-1;color:var(--muted);font-size:.9rem;padding:48px 0">沒有符合條件的今日漁獲，請調整篩選條件或地區。</p>';
-  document.getElementById("shown-count").textContent = arr.length;
+function sortProducts(list) {
+  const sort = document.getElementById("sort").value;
+  return list.slice().sort(function (a, b) {
+    if (sort === "price-asc") return Number(a.price || 0) - Number(b.price || 0);
+    if (sort === "price-desc") return Number(b.price || 0) - Number(a.price || 0);
+    if (sort === "stock") return productAvailable(b) - productAvailable(a);
+    return new Date(b.catch_time || b.created_at || 0) - new Date(a.catch_time || a.created_at || 0);
+  });
+}
+
+function showState(text, isError) {
+  document.getElementById("catch-grid").innerHTML =
+    '<p class="state-msg' + (isError ? " state-msg--error" : "") + '">' + productEscape(text) + '</p>';
+}
+
+function render() {
+  if (productsFailed) return;
+  const filter = activeFilter();
+  const list = sortProducts(PRODUCTS.filter(function (p) { return passes(p, filter); }));
+  document.getElementById("shown-count").textContent = String(list.length);
+  if (!list.length) {
+    showState("沒有符合條件的今日漁獲，請調整篩選條件或地區。");
+    return;
+  }
+  renderProductCards("catch-grid", list);
+}
+
+async function loadProducts() {
+  renderRegionChips();
+  try {
+    PRODUCTS = await window.HaisenAPI.listProducts();
+    productsFailed = false;
+    document.getElementById("total-count").textContent = String(PRODUCTS.length);
+    initPriceRange();
+    render();
+  } catch (error) {
+    productsFailed = true;
+    PRODUCTS = [];
+    document.getElementById("total-count").textContent = "—";
+    document.getElementById("shown-count").textContent = "—";
+    showState(error.status === 0
+      ? "無法連線到伺服器，請確認後端已啟動"
+      : "商品載入失敗：" + error.message, true);
+  }
 }
 
 document.getElementById("sort").addEventListener("change", render);
-["price-range","f-instock","f-sashimi","f-selfpick"].forEach(id=>{
-  document.getElementById(id).addEventListener("input", e=>{
-    if(id === "price-range") document.getElementById("price-max").textContent = "$" + Number(e.target.value).toLocaleString();
-    render();
-  });
+document.getElementById("price-range").addEventListener("input", function (event) {
+  document.getElementById("price-max").textContent = productMoney(event.target.value);
+  render();
 });
-document.querySelectorAll(".f-cat").forEach(el=> el.addEventListener("change", render));
+document.getElementById("f-instock").addEventListener("change", render);
+document.querySelectorAll(".f-cat").forEach(function (el) { el.addEventListener("change", render); });
 document.getElementById("nav-search").addEventListener("input", render);
-document.getElementById("reset-filters").addEventListener("click", ()=>{
-  document.querySelectorAll(".f-cat").forEach(el=> el.checked = true);
-  setRegion("");
-  renderRegionChips(); renderRegionChecks();
+document.getElementById("reset-filters").addEventListener("click", function () {
+  document.querySelectorAll(".f-cat").forEach(function (el) { el.checked = true; });
   document.getElementById("f-instock").checked = false;
-  document.getElementById("f-sashimi").checked = false;
-  document.getElementById("f-selfpick").checked = false;
-  document.getElementById("price-range").value = 2000;
-  document.getElementById("price-max").textContent = "$2,000";
+  filterRegion = "";
+  setRegion("");
+  renderRegionChips();
+  initPriceRange(true);
   document.getElementById("nav-search").value = "";
   render();
 });
+document.addEventListener("haisen:products-changed", loadProducts);
 
-renderRegionChips();
-renderRegionChecks();
-render();
-/* [資料綁定] 後端漁獲載入完成後重繪清單、地區 chips 與篩選。 */
-document.addEventListener("haisen:catch-ready", ()=>{ renderRegionChips(); renderRegionChecks(); render(); });
+loadProducts();

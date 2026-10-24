@@ -13,9 +13,6 @@ const PLATFORM = {
   arriveTime: "隔日 08:00–12:00 到貨"
 };
 
-/* ---------- 地區 ---------- */
-const REGIONS = ["北部", "中部", "南部", "東部", "澎湖"];
-
 /* ---------- 魚種資料庫（供賣家搜尋與行情參考；均價為元／台斤） ---------- */
 const SPECIES = [
   {id:"amberjack", name:"紅魽", latin:"Seriola dumerili", market:486},
@@ -168,10 +165,13 @@ window.CATCH = CATCH;
 
 /* ---------- 小工具 ---------- */
 function money(n){ return "$" + Number(n).toLocaleString("en-US"); }
-function getParam(name){
-  try { return new URLSearchParams(location.search).get(name); } catch(e){ return null; }
+/* 首頁的舊資料若有對應商品 id 就連到詳情；示範資料沒有 id 時先回列表。 */
+function catchHref(id){
+  const p = CATCH[id];
+  return p && p.inventoryId
+    ? "product-detail.html?id=" + encodeURIComponent(p.inventoryId)
+    : "products.html";
 }
-function catchHref(id){ return "product-detail.html?id=" + encodeURIComponent(id); }
 function soldOut(id){ return CATCH[id].remaining <= 0; }
 function tailCount(id){ const p = CATCH[id]; return p && p.tails ? p.tails.length : 0; }
 function tailRange(id){
