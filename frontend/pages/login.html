@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>登入 / 註冊 — 海人直送</title>
+<meta name="description" content="海人直送登入與註冊：以電話號碼登入，註冊需填寫暱稱與電話號碼。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&family=Noto+Serif+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/base.css?v=v3">
+<link rel="stylesheet" href="../assets/css/layout.css?v=v3">
+<link rel="stylesheet" href="../assets/css/components.css?v=v3">
+<link rel="stylesheet" href="../assets/css/market.css?v=v3">
+<link rel="stylesheet" href="../assets/css/seller.css?v=v3">
+<link rel="stylesheet" href="../assets/css/features.css?v=v3">
+<link rel="stylesheet" href="../assets/css/chat-auth.css?v=v3">
+<link rel="stylesheet" href="../assets/css/deal-bot.css?v=v3">
+<link rel="stylesheet" href="../assets/css/deal-views.css?v=v3">
+<link rel="stylesheet" href="../assets/css/deal-cards.css?v=v3">
+<link rel="stylesheet" href="../assets/css/account.css?v=v3">
+<link rel="stylesheet" href="../assets/css/navigation.css?v=v3">
+<link rel="stylesheet" href="../assets/css/profile.css?v=v3">
+<link rel="stylesheet" href="../assets/css/grid.css?v=v3">
+</head>
+<body class="auth-body">
+
+<header class="nav">
+  <div class="wrap nav__inner">
+    <a href="index.html" class="brand"><span class="brand__mark">海</span><span>海人直送<small></small></span></a>
+    <nav class="nav__links">
+      <a href="index.html">首頁</a>
+      <a href="products.html">今日漁獲</a>
+      <a href="seller.html">我要賣魚</a>
+    </nav>
+    <div class="nav__right">
+      <a href="login.html" class="nav-user nav-user--out" id="nav-user-slot" aria-label="登入或註冊"><svg class="nav-user__ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M4.6 20c1.2-3.9 4-5.9 7.4-5.9s6.2 2 7.4 5.9"/></svg><span class="nav-user__name">登入／註冊</span></a>
+      <div class="nav-menu" id="nav-menu" hidden>
+        <div class="nav-menu__inner" id="nav-menu-inner"></div>
+      </div>
+      <a href="cart.html" class="icon-btn" aria-label="購物車">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7h12l-1.2 12.2a1.5 1.5 0 0 1-1.5 1.3H8.7a1.5 1.5 0 0 1-1.5-1.3L6 7z"/><path d="M9 7V5.6a3 3 0 0 1 6 0V7"/></svg>
+        <span class="count" data-cart-count style="display:none">0</span>
+      </a>
+      <button class="icon-btn nav__toggle" aria-label="選單" aria-expanded="false" aria-controls="nav-menu"><svg viewBox="0 0 24 24" aria-hidden="true"><line x1="3" y1="7" x2="21" y2="7"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="17" x2="21" y2="17"/></svg></button>
+    </div>
+  </div>
+</header>
+
+<section class="auth">
+  <div class="wrap auth__wrap">
+    <!-- 左：品牌側 -->
+    <div class="auth__aside">
+      <span class="eyebrow">Haisen Direct</span>
+      <h1>今天釣到什麼，<br>就賣什麼。</h1>
+      <p class="lead">個人釣客上網販售當日現流漁獲，買家為一般個人消費者，隔日清晨低溫直送。</p>
+      <div class="auth__points">
+        <div><b>釣客</b>上架今日漁獲、參考澎湖魚市行情定價</div>
+        <div><b>買家</b>依魚類與地區篩選、與釣客聊聊後下單</div>
+      </div>
+    </div>
+
+    <!-- 右：表單卡 -->
+    <div class="auth__card">
+      <div class="auth__tabs" role="tablist">
+        <button type="button" class="auth__tab on" id="tab-login" role="tab">登入</button>
+        <button type="button" class="auth__tab" id="tab-register" role="tab">註冊</button>
+      </div>
+
+      <!-- 登入表單 -->
+      <form id="form-login" novalidate>
+        <div class="field" id="f-li-phone">
+          <label>電話號碼 <span class="req">*</span></label>
+          <input class="input" type="tel" id="li-phone" placeholder="0912-345-678" autocomplete="tel">
+          <div class="field-err" id="e-li-phone">請填寫有效的電話號碼（09 開頭，共 10 碼）</div>
+        </div>
+        <div class="field" id="f-li-pass">
+          <label>密碼 <span class="req">*</span></label>
+          <input class="input" type="password" id="li-pass" placeholder="請輸入密碼" autocomplete="current-password">
+          <div class="field-err" id="e-li-pass">請輸入至少 6 碼密碼</div>
+        </div>
+        <button type="submit" class="btn btn--primary btn--block" id="li-submit" disabled>登入</button>
+        <p class="auth__switch">還沒有帳號？<button type="button" class="link" id="to-register">立即註冊</button></p>
+      </form>
+
+      <!-- 註冊表單 -->
+      <form id="form-register" novalidate style="display:none">
+        <div class="field" id="f-rg-nick">
+          <label>暱稱 <span class="req">*</span></label>
+          <input class="input" type="text" id="rg-nick" placeholder="請輸入你的名字（買家或賣家皆同）" autocomplete="nickname">
+          <div class="field-err" id="e-rg-nick">請填寫暱稱（2–20 字）</div>
+        </div>
+        <div class="field" id="f-rg-phone">
+          <label>電話號碼 <span class="req">*</span></label>
+          <input class="input" type="tel" id="rg-phone" placeholder="0912-345-678" autocomplete="tel">
+          <div class="field-err" id="e-rg-phone">請填寫有效的電話號碼（09 開頭，共 10 碼）</div>
+        </div>
+        <div class="field" id="f-rg-pass">
+          <label>設定密碼 <span class="req">*</span></label>
+          <input class="input" type="password" id="rg-pass" placeholder="至少 6 碼" autocomplete="new-password">
+          <div class="field-err" id="e-rg-pass">請設定至少 6 碼密碼</div>
+        </div>
+        <button type="submit" class="btn btn--primary btn--block" id="rg-submit" disabled>建立帳號</button>
+        <p class="auth__switch">已經有帳號？<button type="button" class="link" id="to-login">前往登入</button></p>
+      </form>
+
+    </div>
+  </div>
+</section>
+
+<!-- 成功彈窗 -->
+<div class="modal" id="auth-modal">
+  <div class="modal__card">
+    <div class="modal__ic" id="auth-modal-ic">Welcome</div>
+    <h3 id="auth-modal-title">登入成功</h3>
+    <p id="auth-modal-text">正在為你導向首頁…</p>
+    <div class="summary-list" id="auth-summary"></div>
+    <a class="btn btn--primary btn--block" id="auth-go" href="index.html">繼續</a>
+  </div>
+</div>
+
+<!-- ============ 頁尾 ============ -->
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer__grid">
+      <div>
+        <div class="brand"><span class="brand__mark">海</span><span>海人直送<small></small></span></div>
+        <p>個人釣客上網販售當日現流漁獲的平台<br>今天釣到什麼就賣什麼</p>
+      </div>
+      <div><h4>買家</h4><a href="products.html">今日漁獲列表</a><a href="products.html">依魚類與地區篩選</a><a href="cart.html">購物車 / 下單</a></div>
+      <div><h4>賣家</h4><a href="seller.html">今日漁獲上架</a><a href="seller.html">市場行情參考</a><a href="login.html">釣客登入</a></div>
+      <div><h4>關於</h4><a href="index.html">服務條款</a><a href="index.html">隱私政策</a><a href="index.html">聯絡我們</a></div>
+    </div>
+    <div class="footer__bottom">
+      <span>© 2026 海人直送 </span>
+    </div>
+  </div>
+</footer>
+
+
+
+
+
+<script src="../assets/js/config.js?v=v3"></script>
+<script src="../assets/js/api/client.js?v=v3"></script>
+<script src="../assets/js/api/auth.js?v=v3"></script>
+<script src="../assets/js/api/fish.js?v=v3"></script>
+<script src="../assets/js/api/fish-mapper.js?v=v3"></script>
+<script src="../assets/js/app/01-data.js?v=v3"></script>
+<script src="../assets/js/app/02-cart-account.js?v=v3"></script>
+<script src="../assets/js/app/03-catalog.js?v=v3"></script>
+<script type="module" src="../assets/js/demo/main.js?v=v3"></script>
+<script src="../assets/js/app/05-listings.js?v=v3"></script>
+<script src="../assets/js/app/06-drawer.js?v=v3"></script>
+<script src="../assets/js/app/07-drawer-panels.js?v=v3"></script>
+<script src="../assets/js/app/08-api-init.js?v=v3"></script>
+<script src="../assets/js/pages/login.js?v=v3"></script>
+</body>
+</html>

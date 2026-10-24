@@ -1,0 +1,57 @@
+/* 對話式交易引擎：商品卡與上架草稿卡。 */
+
+.fm-card {
+  display: grid;
+  gap: 8px;
+  border: 1px solid var(--rule-2);
+  background: var(--paper);
+}
+
+.fm-card__body { display: grid; gap: 4px; align-content: center; padding: 8px 10px 8px 0; }
+.fm-card__body b { font-size: .78rem; }
+.fm-card__body span { color: var(--muted); font-size: .7rem; }
+.fm-card--plain { padding: 10px; font-size: .78rem; }
+.fm-card__thumb { width: 100%; max-height: 140px; object-fit: cover; }
+
+.fm-card--product { grid-template-columns: 72px minmax(0, 1fr); }
+.fm-card--product img { width: 72px; height: 72px; object-fit: cover; }
+.fm-card--product .fm-card__acts { grid-column: 1 / -1; }
+
+.fm-card--draft { padding: 12px; }
+.fm-card--draft > b { font-size: .82rem; }
+
+.fm-card--draft dl {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  font-size: .74rem;
+}
+
+.fm-card--draft dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.fm-card--draft dt { color: var(--muted); }
+.fm-card--draft dd { margin: 0; color: var(--ink); }
+
+.fm-card__acts { display: flex; gap: 6px; }
+
+.fm-card__acts button {
+  flex: 1;
+  padding: 7px 8px;
+  border: 1px solid var(--rule);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: .72rem;
+  cursor: pointer;
+}
+
+.fm-card__acts button:hover { border-color: var(--accent); color: var(--accent); }
+
+.fm-card__primary {
+  background: var(--accent) !important;
+  border-color: var(--accent) !important;
+  color: #fff !important;
+}

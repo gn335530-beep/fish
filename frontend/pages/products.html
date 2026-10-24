@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>今日漁獲 — 海人直送</title>
+<meta name="description" content="各地個人釣客今日上架的現流漁獲。依魚類與地區篩選，查看可購買尾數與各尾重量、產地與捕獲時間，售完為止。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&family=Noto+Serif+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/base.css?v=v3">
+<link rel="stylesheet" href="../assets/css/layout.css?v=v3">
+<link rel="stylesheet" href="../assets/css/components.css?v=v3">
+<link rel="stylesheet" href="../assets/css/market.css?v=v3">
+<link rel="stylesheet" href="../assets/css/seller.css?v=v3">
+<link rel="stylesheet" href="../assets/css/features.css?v=v3">
+<link rel="stylesheet" href="../assets/css/chat-auth.css?v=v3">
+<link rel="stylesheet" href="../assets/css/deal-bot.css?v=v3">
+<link rel="stylesheet" href="../assets/css/deal-views.css?v=v3">
+<link rel="stylesheet" href="../assets/css/deal-cards.css?v=v3">
+<link rel="stylesheet" href="../assets/css/account.css?v=v3">
+<link rel="stylesheet" href="../assets/css/navigation.css?v=v3">
+<link rel="stylesheet" href="../assets/css/profile.css?v=v3">
+<link rel="stylesheet" href="../assets/css/grid.css?v=v3">
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap nav__inner">
+    <a href="index.html" class="brand"><span class="brand__mark">海</span><span>海人直送<small></small></span></a>
+    <nav class="nav__links">
+      <a href="index.html">首頁</a>
+      <a href="products.html" class="active">今日漁獲</a>
+      <a href="seller.html">我要賣魚</a>
+    </nav>
+    <div class="nav__right">
+      <div class="nav__search">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+        <input type="text" id="nav-search" placeholder="搜尋魚種、地區" aria-label="搜尋">
+      </div>
+      <a href="login.html" class="nav-user nav-user--out" id="nav-user-slot" aria-label="登入或註冊"><svg class="nav-user__ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M4.6 20c1.2-3.9 4-5.9 7.4-5.9s6.2 2 7.4 5.9"/></svg><span class="nav-user__name">登入／註冊</span></a>
+      <div class="nav-menu" id="nav-menu" hidden>
+        <div class="nav-menu__inner" id="nav-menu-inner"></div>
+      </div>
+      <a href="cart.html" class="icon-btn" aria-label="購物車">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7h12l-1.2 12.2a1.5 1.5 0 0 1-1.5 1.3H8.7a1.5 1.5 0 0 1-1.5-1.3L6 7z"/><path d="M9 7V5.6a3 3 0 0 1 6 0V7"/></svg>
+        <span class="count" data-cart-count style="display:none">0</span>
+      </a>
+      <button class="icon-btn nav__toggle" aria-label="選單" aria-expanded="false" aria-controls="nav-menu"><svg viewBox="0 0 24 24" aria-hidden="true"><line x1="3" y1="7" x2="21" y2="7"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="17" x2="21" y2="17"/></svg></button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <nav class="crumbs"><a href="index.html">首頁</a><span>/</span><span>今日漁獲</span></nav>
+</div>
+
+<section class="section" style="padding-top:12px">
+  <div class="wrap">
+    <div class="section-head" style="margin-bottom:34px">
+      <span class="eyebrow">Today's Catch</span>
+      <h2>今日漁獲</h2>
+      <p class="lead" style="margin-top:14px">各地個人釣客今日上架的現流漁獲，共 <b id="total-count">7</b> 種，數量有限、售完為止。可依魚類與地區篩選，避免商品過遠無法運送。</p>
+    </div>
+
+    <!-- 地區選擇 -->
+    <div class="region-bar">
+      <span class="region-bar__label">我的地區</span>
+      <div class="region-chips" id="region-chips"></div>
+      <span class="region-bar__hint" id="region-hint">選擇地區後，將優先顯示可運送給你的漁獲</span>
+    </div>
+
+    <div class="layout grid-12 grid-12--wide" style="margin-top:44px">
+      <!-- 篩選側欄 -->
+      <aside class="filters col-span-12 col-lg-span-3">
+        <h4>魚類</h4>
+        <label class="check"><input type="checkbox" class="f-cat" value="fish" checked> 魚類</label>
+        <label class="check"><input type="checkbox" class="f-cat" value="ceph" checked> 頭足類（小卷／軟絲）</label>
+
+        <h4>地區</h4>
+        <div id="f-regions"></div>
+
+        <h4>價格區間</h4>
+        <input type="range" class="range" min="150" max="2000" value="2000" id="price-range">
+        <div style="display:flex;justify-content:space-between;font-size:.74rem;color:var(--muted);margin-top:8px;font-family:var(--font-mono)">
+          <span>$150</span><span id="price-max">$2,000</span>
+        </div>
+
+        <h4>其他</h4>
+        <label class="check"><input type="checkbox" id="f-instock"> 僅顯示尚有庫存</label>
+        <label class="check"><input type="checkbox" id="f-sashimi"> 生食級</label>
+        <label class="check"><input type="checkbox" id="f-selfpick"> 可買家自取</label>
+
+        <button class="btn btn--ghost btn--sm btn--block" style="margin-top:28px" id="reset-filters">重設篩選</button>
+      </aside>
+
+      <!-- 漁獲區 -->
+      <div class="col-span-12 col-lg-span-9">
+        <div class="toolbar">
+          <div class="toolbar__count">今日供應 <b id="shown-count">7</b> 種現流</div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <span style="font-size:.74rem;color:var(--muted);letter-spacing:.12em;text-transform:uppercase">排序</span>
+            <select class="select" id="sort" style="width:auto;padding:6px 26px 6px 2px;font-size:.84rem">
+              <option value="fresh">捕獲時間（最新）</option>
+              <option value="price-asc">價格：低 → 高</option>
+              <option value="price-desc">價格：高 → 低</option>
+              <option value="stock">剩餘數量（多 → 少）</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid grid--3" id="catch-grid"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 頁尾 ============ -->
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer__grid">
+      <div>
+        <div class="brand"><span class="brand__mark">海</span><span>海人直送<small></small></span></div>
+        <p>個人釣客上網販售當日現流漁獲的平台<br>今天釣到什麼就賣什麼</p>
+      </div>
+      <div><h4>買家</h4><a href="products.html">今日漁獲列表</a><a href="products.html">依魚類與地區篩選</a><a href="cart.html">購物車 / 下單</a></div>
+      <div><h4>賣家</h4><a href="seller.html">今日漁獲上架</a><a href="seller.html">市場行情參考</a><a href="login.html">釣客登入</a></div>
+      <div><h4>關於</h4><a href="index.html">服務條款</a><a href="index.html">隱私政策</a><a href="index.html">聯絡我們</a></div>
+    </div>
+    <div class="footer__bottom">
+      <span>© 2026 海人直送 </span>
+    </div>
+  </div>
+</footer>
+
+
+
+
+
+<script src="../assets/js/config.js?v=v3"></script>
+<script src="../assets/js/api/client.js?v=v3"></script>
+<script src="../assets/js/api/auth.js?v=v3"></script>
+<script src="../assets/js/api/fish.js?v=v3"></script>
+<script src="../assets/js/api/fish-mapper.js?v=v3"></script>
+<script src="../assets/js/app/01-data.js?v=v3"></script>
+<script src="../assets/js/app/02-cart-account.js?v=v3"></script>
+<script src="../assets/js/app/03-catalog.js?v=v3"></script>
+<script type="module" src="../assets/js/demo/main.js?v=v3"></script>
+<script src="../assets/js/app/05-listings.js?v=v3"></script>
+<script src="../assets/js/app/06-drawer.js?v=v3"></script>
+<script src="../assets/js/app/07-drawer-panels.js?v=v3"></script>
+<script src="../assets/js/app/08-api-init.js?v=v3"></script>
+<script src="../assets/js/pages/products.js?v=v3"></script>
+</body>
+</html>

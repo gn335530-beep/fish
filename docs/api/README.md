@@ -1,12 +1,12 @@
 # 海人直送 API 規格
 
-本文件整理前端 API 用戶端 `assets/js/api/` 對後端的呼叫契約，以及 `assets/js/app/08-api-init.js` 的載入與登入狀態同步流程。後端實際驗證規則與完整回應欄位仍以伺服器實作為準；本文列出的格式以目前前端程式使用的欄位為依據。
+本文件整理前端 API 用戶端 `frontend/assets/js/api/` 對後端的呼叫契約，以及 `frontend/assets/js/app/08-api-init.js` 的載入與登入狀態同步流程。後端實際驗證規則與完整回應欄位仍以伺服器實作為準；本文列出的格式以目前前端程式使用的欄位為依據。
 
 ## 1. 基本設定
 
 - 預設 API 位址為同源相對路徑，例如 `/api/fish/data`。
-- 若要指定 API 主機，請在載入 `assets/js/api/client.js` 前設定 `window.HAISEN_API_BASE`。
-- API 用戶端必須先於 `assets/js/app/08-api-init.js` 載入。
+- 若要指定 API 主機，請在載入 `frontend/assets/js/api/client.js` 前設定 `window.HAISEN_API_BASE`。
+- API 用戶端必須先於 `frontend/assets/js/app/08-api-init.js` 載入。
 - 請求使用 JSON 格式；需要登入的端點會在請求標頭附加本機保存的存取憑證。
 - 登入 Token 與會員資料分別儲存在 `localStorage` 的 `haisen_token_v1`、`haisen_user_v1`。
 - 價格顯示單位為元／台斤；舊資料若只有元／公斤，前端依 `1 台斤 = 0.6 公斤` 換算。
@@ -19,11 +19,15 @@
 | 登入會員 | `POST` | `/api/auth/login` | 否 |
 | 登入別名（後端支援） | `POST` | `/api/auth/signin` | 否 |
 | 取得目前會員 | `GET` | `/api/auth/me` | 是 |
-| 取得漁獲清單 | `GET` | `/api/fish/data` | 否 |
-| 新增漁獲／上架 | `POST` | `/api/fish/data` | 是 |
-| 更新漁獲 | `PUT` | `/api/fish/data/{id}` | 是 |
-| 刪除漁獲 | `DELETE` | `/api/fish/data/{id}` | 是 |
-| 更新會員銀行資料 | `PUT` | `/api/users/profile` | 是 |
+| 取得商品清單 | `GET` | `/api/products` | 否 |
+| 取得單一商品 | `GET` | `/api/products/{id}` | 否 |
+| 上架商品 | `POST` | `/api/products/create` | 是 |
+| 上傳商品圖片 | `POST` | `/api/uploads` | 是 |
+| 取得漁獲清單（相容層） | `GET` | `/api/fish/data` | 否 |
+| 更新漁獲狀態（相容層，僅購物車使用） | `PUT` | `/api/fish/data/{id}` | 是 |
+| 更新會員暱稱、地址與銀行資料 | `PUT` | `/api/users/profile` | 是 |
+
+> `products` 是商品的唯一真實來源。`/api/fish/data` 為唯讀相容層，供尚未改寫的商品頁與購物車使用；購物車預計於下一輪移除。
 
 `/api/auth/signin` 是後端登入別名；目前前端 `login()` 實際呼叫 `/api/auth/login`。
 
@@ -93,11 +97,11 @@
 
 伺服器端應依後端規格處理及保護銀行資訊；前端程式註記資料庫欄位為 `users(bank_code, bank_account, bank_account_name)`。
 
-## 4. 漁獲端點
+## 4. 商品與相容層端點
 
-### `GET /api/fish/data` — 取得漁獲清單
+### `GET /api/fish/data` — 取得漁獲清單（相容層）
 
-取得漁獲資料。前端預期回應的漁獲陣列位於 `data`：
+從 `products` 轉出舊格式。前端預期回應的漁獲陣列位於 `data`：
 
 ```json
 {
@@ -107,38 +111,11 @@
 }
 ```
 
-呼叫端會將清單資料轉換成網站頁面使用的漁獲物件，並合併到 `assets/js/app/08-api-init.js` 的 `CATCH` 資料。
+呼叫端會將清單資料轉換成網站頁面使用的漁獲物件，並合併到 `frontend/assets/js/app/08-api-init.js` 的 `CATCH` 資料。
 
-### `POST /api/fish/data` — 新增漁獲／上架
+### `PUT /api/fish/data/{id}` — 更新漁獲狀態（相容層）
 
-建立一筆漁獲資料。必須登入；賣家 ID 應由 Token 決定，不應由前端請求本文指定。
-
-目前前端送出的欄位如下：
-
-| 欄位 | 說明 |
-| --- | --- |
-| `fish_type` | 魚種名稱 |
-| `quantity` | 尾數 |
-| `weight` | 平均重量；新版使用台斤 |
-| `price_per_taijin` | 售價，元／台斤 |
-| `species_id`, `species_latin` | 魚種識別碼與拉丁學名 |
-| `region`, `sea`, `location` | 地區、海域、地點 |
-| `caught_time` | 捕獲時間 |
-| `process`, `process_note` | 處理方式與說明 |
-| `shipping[]`, `payment[]` | 可選運送及付款方式 |
-| `deposit_on`, `deposit_amount` | 是否收訂金及訂金金額 |
-| `images[]` | 漁獲圖片 |
-| `tail_weights[]` | 各尾重量；未採逐尾重量時可為 `null` |
-| `weight_mode` | 重量模式，例如 `individual` 或 `average` |
-| `tags[]` | 漁獲標籤 |
-
-價格以元／台斤送出；前端註記後端以 `price_per_kg = price_per_taijin / 0.6` 換算。前端預期建立成功回應包含 `data.id`、`data.seller_id`。
-
-### `PUT /api/fish/data/{id}` — 更新漁獲
-
-依漁獲 ID 更新資料。需登入憑證；本文可傳入要更新的欄位，未傳欄位應維持原值。路徑中的 `id` 會由用戶端 URL 編碼。
-
-前端此處會用於更新售價、漁獲狀態、買家資訊或實重等。例如結帳時，會對購物車中有後端 `inventoryId` 的漁獲送出：
+僅供舊購物車結帳使用。送出：
 
 ```json
 {
@@ -148,11 +125,26 @@
 }
 ```
 
-目前前端沒有獨立建立訂單的 API；結帳會以更新漁獲狀態表示交易流程。狀態同步失敗時，頁面仍會顯示訂單成立畫面。
+後端會把該商品的 `sold_quantity` 設為總尾數，商品即轉為 `SOLD_OUT`。此端點不建立訂單，是購物車移除前的過渡行為。
 
-### `DELETE /api/fish/data/{id}` — 刪除漁獲
+新增與刪除漁獲已不再提供。上架請改用 `POST /api/products/create`，商品資料一律以 `products` 為唯一來源。
 
-依漁獲 ID 刪除資料。需登入憑證；ID 會由用戶端 URL 編碼。
+### 商品欄位
+
+| 欄位 | 說明 |
+| --- | --- |
+| `fish_species` | 魚種名稱 |
+| `species_id`, `species_latin` | 魚種識別碼與拉丁學名 |
+| `weight_kg` | 整批總重（公斤） |
+| `quantity` | 總尾數 |
+| `condition` | `活體`、`放血冰鎮`、`三去處理`、`冷凍` |
+| `photo_url` | 圖片路徑或 `/uploads/...` |
+| `price` | 整批總價（元） |
+| `region`, `location` | 縣市與完整地點 |
+| `catch_time` | 捕獲時間 |
+| `market_reference_price` | 依魚種行情換算的整批參考價 |
+
+`GET /api/products` 會額外回傳 `available`（可售尾數）、`reserved_quantity`（洽談中保留尾數）、`unit_price`（單尾均價）、`avg_weight_kg`（單尾平均重量）與 `status`。
 
 ## 5. 前端公開函式（`window.HaisenAPI`）
 
@@ -182,7 +174,7 @@
 - 漁獲狀態為 `AVAILABLE` 時，`remaining` 設為數量；其他狀態設為 `0`。
 - 圖片、運送方式、付款方式及標籤若無有效陣列，會使用用戶端預設值。
 
-## 6. `assets/js/app/08-api-init.js` API 整合函式
+## 6. `frontend/assets/js/app/08-api-init.js` API 整合函式
 
 ### `loadCatchFromApi()`
 
