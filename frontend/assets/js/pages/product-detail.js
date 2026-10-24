@@ -46,6 +46,10 @@ function renderSpec(p) {
     ["地點", normalizeCityName(p.location) || "—"],
     ["釣獲時間", p.catch_time ? productDate(p.catch_time) : "未提供"]
   ];
+  if (!p.species_id) {
+    rows.push(["料理資料", "暫無"]);
+    rows.push(["行情", "暫無行情"]);
+  }
   document.getElementById("pd-spec").innerHTML = rows.map(function (row) {
     return "<div>" + row[0] + "</div><div>" + productEscape(row[1]) + "</div>";
   }).join("");

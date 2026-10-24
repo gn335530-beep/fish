@@ -163,7 +163,7 @@ export async function explainProduct(product, context) {
       text: product.fish_species + "：" + spice.texture + "，" + spice.bones + "。適合 " + spice.cooking.join("、") + "。"
     });
   } else {
-    replies.push({ text: product.fish_species + "：目前沒有這魚種的料理資料。" });
+    replies.push({ text: product.fish_species + "：料理資料暫無，暫無行情。" });
   }
 
   replies.push({
