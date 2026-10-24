@@ -109,7 +109,6 @@ export async function publishDraft() {
     ui.render();
     ui.scrollEnd();
 
-    if (window.loadCatchFromApi) window.loadCatchFromApi();
     document.dispatchEvent(new CustomEvent("haisen:products-changed"));
     if (window.toast) window.toast("已上架：" + product.title);
   } catch (error) {
@@ -131,7 +130,7 @@ export async function resetDraft() {
 export async function explainProduct(productId) {
   try {
     const product = await api.getProduct(productId);
-    await runReplies(ai.explainProduct(product, state.room.context));
+    await runReplies(await ai.explainProduct(product, state.room.context));
   } catch (error) {
     ui.notify(error);
   }

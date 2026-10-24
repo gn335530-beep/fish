@@ -3,7 +3,7 @@
 import * as api from "../api.js";
 import { INTENT, detectIntent } from "./rules.js";
 import { extractSlots, mergeDraft, nextMissingSlot, draftReady } from "./slots.js";
-import { SPECIES, findSpecies, findRegion } from "./species.js";
+import { speciesList, speciesById, findSpecies, findRegion, ensureSpecies } from "./species.js";
 
 const QUESTIONS = {
   fish_species: "請問釣到的是什麼魚？",
@@ -85,7 +85,7 @@ function cookingMatches(text) {
   const method = COOKING_WORDS.find(function (word) { return text.indexOf(word) !== -1; });
   if (!hasTextureHint && !method) return null;
 
-  return SPECIES.filter(function (spice) {
+  return speciesList().filter(function (spice) {
     if (hasTextureHint && spice.bones.indexOf("多") !== -1) return false;
     if (method && spice.cooking.indexOf(method) === -1) return false;
     return true;
@@ -146,8 +146,11 @@ async function shoppingReply(ctx, text, user) {
 
 /* ---- 商品諮詢 ---- */
 
-export function explainProduct(product, context) {
-  const spice = SPECIES.find(function (item) { return item.id === product.species_id; }) || null;
+export async function explainProduct(product, context) {
+  if (!(await ensureSpecies())) {
+    return { context: context || null, replies: [{ text: "目前無法取得魚種資料，請稍後再試。" }] };
+  }
+  const spice = speciesById(product.species_id);
   const replies = [];
 
   if (spice) {
@@ -171,6 +174,9 @@ export function explainProduct(product, context) {
 export async function handleText(context, text, user) {
   const ctx = normalize(context);
   const source = String(text || "").trim();
+  if (!(await ensureSpecies())) {
+    return { context: ctx, replies: [{ text: "目前無法取得魚種資料，請確認伺服器後再試。" }] };
+  }
 
   if (ctx.mode === "listing" && ctx.draft) return continueListing(ctx, source);
 

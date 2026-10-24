@@ -1,5 +1,4 @@
-/* 商品（products API）的顯示轉換與卡片；與舊 CATCH 模型分開。 */
-const CEPH_IDS = ["squid", "cuttlefish", "octopus"];
+/* 商品（products API）的顯示轉換與卡片。 */
 
 function productEscape(value) {
   return String(value == null ? "" : value).replace(/[&<>"']/g, function (ch) {
@@ -42,8 +41,15 @@ function productStatus(p) {
   return "可售 " + available + " 尾";
 }
 
-function isCephalopod(p) {
-  return CEPH_IDS.indexOf(p.species_id) !== -1;
+function productStateHTML(text, isError) {
+  return '<p class="state-msg' + (isError ? " state-msg--error" : "") + '">' +
+    productEscape(text) + '</p>';
+}
+
+function productErrorText(error, label) {
+  return error.status === 0
+    ? "無法連線到伺服器，請確認後端已啟動"
+    : label + "載入失敗：" + error.message;
 }
 
 function productDateLabel(p) {
