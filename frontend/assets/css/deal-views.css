@@ -1,0 +1,157 @@
+/* 對話式交易引擎：訊息、卡片、空狀態與收件匣。 */
+
+.fm-btn {
+  display: inline-block;
+  padding: 9px 18px;
+  background: var(--accent);
+  color: #fff;
+  font-size: .78rem;
+  text-decoration: none;
+}
+
+.fm-notice {
+  margin-bottom: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--coral);
+  background: #fff5f2;
+  color: var(--coral);
+  font-size: .72rem;
+}
+
+.fm-chat {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fm-msg { display: flex; flex-direction: column; max-width: 86%; }
+.fm-msg--me { align-self: flex-end; align-items: flex-end; }
+.fm-msg--other { align-self: flex-start; align-items: flex-start; }
+
+.fm-msg__meta {
+  margin-bottom: 4px;
+  color: var(--muted-2);
+  font-size: .64rem;
+  letter-spacing: .04em;
+}
+
+.fm-msg__bubble {
+  padding: 10px 12px;
+  border: 1px solid var(--rule-2);
+  background: var(--surface);
+  font-size: .82rem;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.fm-msg--me .fm-msg__bubble {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.fm-msg--system {
+  align-self: center;
+  max-width: 100%;
+  color: var(--muted);
+  font-size: .7rem;
+}
+
+.fm-msg__image {
+  display: block;
+  max-width: 100%;
+}
+
+.fm-empty {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 28px 12px;
+  text-align: center;
+  color: var(--muted);
+  font-size: .8rem;
+  line-height: 1.8;
+}
+
+.fm-empty__note { color: var(--muted-2); font-size: .74rem; }
+
+.fm-chip {
+  padding: 6px 12px;
+  border: 1px solid var(--rule);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: .74rem;
+  cursor: pointer;
+}
+
+.fm-chip:hover { border-color: var(--accent); color: var(--accent); }
+
+.fm-inbox__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  font-size: .82rem;
+}
+
+.fm-link {
+  padding: 4px 8px;
+  background: transparent;
+  border: 1px solid var(--rule);
+  color: var(--muted);
+  font-size: .7rem;
+  cursor: pointer;
+}
+
+.fm-inbox { display: grid; gap: 6px; }
+
+.fm-inbox__item {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--rule-2);
+  background: var(--surface);
+  text-align: left;
+  cursor: pointer;
+}
+
+.fm-inbox__item:hover, .fm-inbox__item.on { border-color: var(--accent); }
+
+.fm-inbox__avatar {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: .78rem;
+}
+
+.fm-inbox__body { min-width: 0; display: grid; gap: 2px; }
+.fm-inbox__top { display: flex; justify-content: space-between; gap: 8px; }
+.fm-inbox__top b { font-size: .78rem; }
+.fm-inbox__top em { color: var(--muted-2); font-size: .64rem; font-style: normal; }
+.fm-inbox__sub { color: var(--accent); font-size: .68rem; }
+.fm-inbox__preview {
+  color: var(--muted);
+  font-size: .7rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fm-inbox__dot {
+  min-width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  background: var(--coral);
+  color: #fff;
+  font-size: .62rem;
+  font-weight: 700;
+}

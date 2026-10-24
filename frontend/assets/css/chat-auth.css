@@ -1,0 +1,93 @@
+/* ---------- 定價建議列（賣家端） ---------- */
+.advice__price{font-family:var(--font-display);font-size:1.05rem;font-weight:600;color:var(--ink);white-space:nowrap}
+
+/* ---------- 魚種欄位旁即時均價 ---------- */
+.species-market{
+  margin-top:14px;border:1px solid var(--rule-2);border-left:2px solid var(--accent);
+  padding:16px 18px;background:var(--paper-2);
+}
+.species-market__main{display:flex;align-items:baseline;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.species-market__label{font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted-2);font-weight:600}
+.species-market__main b{font-family:var(--font-display);font-size:1.5rem;font-weight:600;color:var(--ink)}
+.species-market__main b .u{font-size:.72rem;color:var(--muted);font-family:var(--font-sans);font-weight:400;letter-spacing:.04em}
+.species-market__row{display:flex;gap:22px;flex-wrap:wrap;margin-top:10px;font-size:.78rem;color:var(--muted)}
+.species-market__row b{color:var(--ink);font-family:var(--font-mono);font-weight:500}
+
+/* ---------- 可折疊區塊（accordion） ---------- */
+.acc{border:1px solid var(--rule-2);margin-top:22px;background:var(--paper)}
+.acc__head{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:16px 20px;cursor:pointer;list-style:none;user-select:none;
+}
+.acc__head::-webkit-details-marker{display:none}
+.acc__head span:first-child{font-family:var(--font-display);font-size:.98rem;font-weight:600;color:var(--ink)}
+.acc__head::after{content:"＋";font-size:.9rem;color:var(--muted);margin-left:auto;transition:transform .2s}
+.acc[open] .acc__head::after{content:"－"}
+.acc__badge{font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted-2);border:1px solid var(--rule);padding:3px 9px;border-radius:var(--radius-xs)}
+.acc__body{padding:4px 20px 22px;border-top:1px solid var(--rule-2)}
+.acc__body .price-live{margin-top:18px}
+
+/* ---------- 買家訊息清單（賣家端） ---------- */
+.msg-list{display:flex;flex-direction:column}
+.msg-item{
+  display:flex;align-items:center;gap:12px;padding:14px 0;text-align:left;
+  border-bottom:1px solid var(--rule-2);background:transparent;width:100%;
+}
+.msg-item:last-child{border-bottom:none}
+.msg-item:hover .msg-item__body b{color:var(--accent)}
+.msg-item__av{
+  width:36px;height:36px;flex:none;border:1px solid var(--ink);border-radius:50%;
+  display:grid;place-items:center;font-family:var(--font-display);font-size:.86rem;
+}
+.msg-item__body{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
+.msg-item__body b{font-family:var(--font-display);font-size:.9rem;font-weight:600;transition:color .2s}
+.msg-item__body span{font-size:.78rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.msg-item__dot{width:7px;height:7px;border-radius:50%;background:var(--coral);flex:none}
+
+/* ---------- 單尾數量顯示（詳情頁） ---------- */
+.qty-static{
+  display:inline-flex;align-items:baseline;gap:6px;border:1px solid var(--rule);
+  padding:10px 20px;border-radius:var(--radius-xs);
+}
+.qty-static b{font-family:var(--font-display);font-size:1.15rem;font-weight:600}
+.qty-static span{font-size:.78rem;color:var(--muted)}
+
+/* ---------- 登入 / 註冊 ---------- */
+.auth{padding:64px 0 96px}
+.auth__wrap{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:start}
+.auth__aside h1{font-size:2.4rem;line-height:1.35;margin:18px 0 20px}
+.auth__points{margin-top:34px;display:flex;flex-direction:column;gap:16px}
+.auth__points div{font-size:.88rem;color:var(--muted);line-height:1.8;border-top:1px solid var(--rule-2);padding-top:16px}
+.auth__points b{color:var(--ink);font-family:var(--font-display);margin-right:8px}
+.auth__card{border:1px solid var(--rule);padding:38px 40px;background:var(--paper)}
+.auth__tabs{display:flex;gap:0;border-bottom:1px solid var(--rule-2);margin-bottom:30px}
+.auth__tab{
+  flex:1;padding:14px 0;font-size:.86rem;font-weight:600;letter-spacing:.1em;
+  color:var(--muted);border-bottom:2px solid transparent;background:transparent;transition:all .2s;
+}
+.auth__tab.on{color:var(--ink);border-bottom-color:var(--accent)}
+.auth__switch{margin-top:20px;font-size:.82rem;color:var(--muted);text-align:center}
+.auth__switch .link{color:var(--accent);text-decoration:underline;font-size:.82rem;background:transparent}
+.auth__note{margin-top:24px;font-size:.72rem;color:var(--muted-2);line-height:1.8;text-align:center;border-top:1px solid var(--rule-2);padding-top:18px}
+.auth__card .opt-group{margin-top:4px}
+.auth__card .opt{flex:1;text-align:center;justify-content:center}
+
+@media(max-width:1080px){
+  .entry{grid-template-columns:1fr}
+  .entry__card{min-height:auto;padding:44px 34px}
+  .auth__wrap{grid-template-columns:1fr;gap:44px}
+  .auth__aside h1{font-size:2rem}
+}
+@media(max-width:760px){
+  .entry__card{padding:36px 24px}
+  .entry__card h3{font-size:1.4rem}
+  .region-bar__hint{margin-left:0;width:100%}
+  .deposit-fields{grid-template-columns:1fr}
+  .tail-row__fields{grid-template-columns:1fr;gap:14px}
+  .species-opt{flex-wrap:wrap;gap:4px}
+  .auth{padding:36px 0 64px}
+  .auth__card{padding:28px 22px}
+  .auth__aside h1{font-size:1.7rem}
+  .species-market__row{gap:14px}
+  .species-market__main b{font-size:1.3rem}
+}

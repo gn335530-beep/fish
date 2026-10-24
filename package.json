@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "mock-api": "node mock-api/server.js"
+    "backend": "node backend/server.js",
+    "web": "node tools/serve-frontend.js"
   },
   "devDependencies": {
     "json-server": "0.17.4"
