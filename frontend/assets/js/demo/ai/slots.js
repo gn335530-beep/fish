@@ -40,7 +40,7 @@ function matchCondition(text) {
 
 /* 字典沒有的魚種：從句子中移除意圖、數量、單位與處理方式後，留下名稱。 */
 function guessUnknownSpecies(text) {
-  const noise = /我要買魚|我要買|想買|要買|買魚|我要賣魚|我要賣|想賣|要賣|賣魚|上架|出售|賣掉|剛釣到|剛釣|釣到|捕獲|今天|幫我|請問|不知道|不確定|忘了|我的|想要|想|大概|大約|左右|差不多|怎麼|什麼魚|什麼|如何|多少|價錢|價格|公斤|kg|KG|Kg|台斤|斤|尾|條|隻|份|元|塊|活體|活魚|活跳|蓄養|還活著|放血冰鎮|放血|冰鎮|碎冰|冰水|三去處理|三去|去鱗|去鰓|去內臟|宰殺|處理好|冷凍|凍|照片|上傳|一張|一隻|一條|一尾|兩隻|兩條|兩尾|新鮮|現流|我|你|他|的|約|賣/g;
+  const noise = /我要買魚|我要買|想買|要買|買魚|我要賣魚|我要賣|想賣|要賣|賣魚|上架|出售|賣掉|剛釣到|剛釣|釣到|捕獲|今天|幫我|請問|不知道|不確定|忘了|我的|想要|想|大概|大約|左右|差不多|怎麼|什麼魚|什麼|如何|多少|價錢|價格|公斤|kg|KG|Kg|台斤|斤|尾|條|隻|份|元|塊|活體|活魚|活跳|蓄養|還活著|放血冰鎮|放血|冰鎮|碎冰|冰水|三去處理|三去|去鱗|去鰓|去內臟|宰殺|處理好|冷凍|凍|照片|上傳|一張|一隻|一條|一尾|兩隻|兩條|兩尾|新鮮|現流|最後|這尾|這個|這張|那尾|那個|第|個|我|你|他|的|約|賣/g;
   const candidate = String(text || "")
     .replace(noise, " ")
     .replace(/\d+(?:\.\d+)?/g, " ")
@@ -96,11 +96,11 @@ export function extractSlots(text, assumeSlot) {
     }
   }
 
-  /* 已有尾數時，剩下的小整數可視為公斤；四位數以上留給價格。 */
+  /* 已有尾數時，剩下 20 公斤以內的小整數可視為公斤；較大的整數留給價格。 */
   if (found.weight_kg === undefined && found.quantity !== undefined &&
       (!assumeSlot || assumeSlot === "weight_kg")) {
     const bareKg = /(?:^|\D)(\d{1,3})(?!\d)/.exec(rest);
-    if (bareKg && Number(bareKg[1]) > 0 && Number(bareKg[1]) <= 200) {
+    if (bareKg && Number(bareKg[1]) > 0 && Number(bareKg[1]) <= 20) {
       found.weight_kg = round1(Number(bareKg[1]));
       rest = strip(rest, bareKg[0]);
     }

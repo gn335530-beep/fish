@@ -38,6 +38,28 @@
 
 .fm-card__acts { display: flex; gap: 6px; }
 
+.fm-card__edits {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  font-size: .68rem;
+  color: var(--muted-2);
+}
+
+.fm-card__edits span { margin-right: 2px; }
+
+.fm-card__edits button {
+  padding: 3px 7px;
+  border: 1px solid var(--rule-2);
+  background: transparent;
+  color: var(--muted);
+  font-size: .68rem;
+  cursor: pointer;
+}
+
+.fm-card__edits button:hover { border-color: var(--accent); color: var(--accent); }
+
 .fm-card__acts button {
   flex: 1;
   padding: 7px 8px;
