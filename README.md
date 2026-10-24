@@ -1,6 +1,8 @@
-# 海人直送
+# 一支釣
 
-海人直送是以原生 HTML、CSS 與 JavaScript 建置的漁獲交易網站，後端為 json-server 模擬服務。前端與後端分離於 `frontend/` 與 `backend/`。
+一支釣是以原生 HTML、CSS 與 JavaScript 建置的漁獲交易網站，後端為 json-server 模擬服務。前端與後端分離於 `frontend/` 與 `backend/`。
+
+> 產品規格見 [`docs/spec/`](./docs/spec/README.md)，名詞定義見 [`GLOSSARY.md`](./GLOSSARY.md)。
 
 ## 開發啟動
 
@@ -31,7 +33,7 @@ frontend/                 前端（網站根目錄）
   pages/                  網站頁面
   assets/css/             共用及頁面樣式
   assets/images/          網站圖片
-  assets/js/api/          API 請求、會員、漁獲與資料轉換
+  assets/js/api/          API 請求、會員、商品與魚種
   assets/js/app/          共用互動與狀態功能
   assets/js/pages/        各頁專屬互動
   assets/js/demo/         對話式交易引擎
