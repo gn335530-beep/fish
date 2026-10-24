@@ -19,7 +19,7 @@ npm run backend
 npm run web
 ```
 
-開啟 <http://localhost:8080/>。前端預設連線到同主機的 `3001` 埠；其他 API 設定請參考 [後端說明](./backend/README.md)。
+開啟 <  />。前端預設連線到同主機的 `3001` 埠；其他 API 設定請參考 [後端說明](./backend/README.md)。
 
 > 若使用其他靜態伺服器，請以 `frontend/` 作為網站根目錄，例如：
 > `python -m http.server 8010 --directory frontend`。

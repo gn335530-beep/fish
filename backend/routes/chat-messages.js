@@ -20,7 +20,9 @@ router.post("/api/chat/message", requireUser, function (req, res) {
     fail(res, 404, "CONVERSATION_NOT_FOUND", "找不到對話");
     return;
   }
-  if (!isParticipant(conversation, req.user.id) && body.sender_type !== "ai") {
+  /* 一律先驗參與者。sender_type 由前端規則引擎代寫，不是身分證明：
+     若因為帶了 sender_type = "ai" 就跳過檢查，任何登入者都能寫進別人的房間。 */
+  if (!isParticipant(conversation, req.user.id)) {
     fail(res, 403, "FORBIDDEN", "你沒有這段對話的權限");
     return;
   }
@@ -43,6 +45,17 @@ router.post("/api/chat/message", requireUser, function (req, res) {
     return;
   }
 
+  /* AI 狀態只屬於助手房；交易房不得被寫入 context。 */
+  const hasContext = body.context !== undefined && body.context !== null;
+  if (hasContext && conversation.type !== "assistant") {
+    fail(res, 409, "NOT_ASSISTANT_ROOM", "只有助手房可以更新 AI 狀態");
+    return;
+  }
+  if (hasContext && (typeof body.context !== "object" || Array.isArray(body.context))) {
+    fail(res, 400, "INVALID_CONTEXT", "context 必須是物件");
+    return;
+  }
+
   const now = new Date().toISOString();
   const message = insert("messages", {
     id: nextCode("messages", "msg"),
@@ -59,7 +72,7 @@ router.post("/api/chat/message", requireUser, function (req, res) {
   const readAt = Object.assign({}, conversation.read_at || {});
   readAt[String(req.user.id)] = now;
   const changes = { last_message_at: now, read_at: readAt };
-  if (body.context) changes.context = body.context;
+  if (hasContext) changes.context = body.context;
   patch("conversations", conversation.id, changes);
 
   created(res, message, "訊息已送出");
