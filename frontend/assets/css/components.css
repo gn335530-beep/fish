@@ -29,23 +29,47 @@
 #process-note{min-height:58px;padding:4px 2px 0;line-height:1.6}
 .field-row{display:grid;grid-template-columns:1fr 1fr;gap:34px}
 
-/* 上傳區 */
-.upload{
-  position:relative;border:1px dashed var(--rule);border-radius:var(--radius-xs);
-  padding:44px 24px;text-align:center;background:transparent;
-  transition:border-color .2s,background .2s;cursor:pointer;
-}
-.upload:hover{border-color:var(--accent);background:rgba(20,52,63,.02)}
-.upload__ic{
-  width:34px;height:34px;margin:0 auto 14px;border:1px solid var(--muted-2);border-radius:50%;
-  display:grid;place-items:center;color:var(--muted);font-size:1rem;font-weight:300;
-  transition:transform .2s,border-color .2s;
-}
-.upload b{display:block;color:var(--ink);font-size:.9rem;font-weight:600;letter-spacing:.04em}
-.upload span{display:block;font-size:.76rem;color:var(--muted-2);margin-top:6px;letter-spacing:.04em}
+/* 上傳輸入（頭像與對話面板共用） */
 .upload__input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
-.upload--drop{border-color:var(--accent);background:rgba(20,52,63,.045)}
-.upload--drop .upload__ic{transform:translateY(-4px);border-color:var(--accent)}
+.upload-err{
+  display:none;margin-top:14px;padding:11px 14px;border-left:2px solid var(--coral);
+  color:var(--coral);font-size:.78rem;font-weight:500;letter-spacing:.02em;
+}
+.upload-err.show{display:block}
+
+/* ---------- 欄位驗證 ---------- */
+.field.invalid .input,.field.invalid .select,.field.invalid .textarea{border-color:var(--coral)}
+.field.valid .input,.field.valid .select,.field.valid .textarea{border-color:var(--accent-3)}
+.field-err{
+  display:none;margin-top:8px;font-size:.76rem;color:var(--coral);letter-spacing:.02em;
+}
+.field-err.show{display:block}
+
+/* ---------- 彈窗 ---------- */
+.modal{
+  position:fixed;inset:0;z-index:300;display:none;align-items:center;justify-content:center;
+  background:rgba(16,20,19,.62);backdrop-filter:blur(3px);padding:24px;
+}
+.modal.show{display:flex}
+.modal__card{
+  background:var(--paper);max-width:520px;width:100%;padding:44px;
+  border-top:2px solid var(--accent);text-align:left;animation:pop .3s ease;
+  max-height:90vh;overflow:auto;
+}
+@keyframes pop{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.modal__ic{
+  font-family:var(--font-display);font-size:.76rem;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--accent);margin-bottom:18px;
+}
+.modal__card h3{font-size:1.4rem;margin-bottom:12px}
+.modal__card > p{font-size:.88rem;color:var(--muted);margin-bottom:28px;line-height:1.9}
+.summary-list{border-top:1px solid var(--rule-2);margin-bottom:30px}
+.summary-list div{
+  display:flex;justify-content:space-between;gap:20px;padding:13px 0;
+  font-size:.84rem;border-bottom:1px solid var(--rule-2);
+}
+.summary-list span{color:var(--muted);letter-spacing:.04em}
+.summary-list b{color:var(--ink);text-align:right;font-weight:600}
 
 /* ---------- 面板 ---------- */
 .panel{background:var(--surface);border:1px solid var(--rule-2);border-radius:var(--radius-xs);padding:34px}
@@ -56,24 +80,6 @@
 .panel__head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin-bottom:26px;padding-bottom:16px;border-bottom:1px solid var(--rule-2)}
 .panel__head h3{font-size:1.02rem}
 .panel--dark .panel__head{border-color:var(--rule-dark)}
-
-/* ---------- 行情面板（漁人） ---------- */
-.price-live{
-  background:var(--accent);color:#fff;border-radius:var(--radius-xs);
-  padding:32px;position:relative;overflow:hidden;
-}
-.price-live__label{font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.6);font-weight:600}
-.price-live__val{font-family:var(--font-display);font-size:2.6rem;color:#fff;line-height:1.2;font-weight:600;letter-spacing:.01em;margin-top:6px}
-.price-live__val .unit{font-size:.74rem;color:rgba(255,255,255,.6);font-family:var(--font-sans);font-weight:500;letter-spacing:.08em}
-.price-live__row{display:flex;gap:36px;margin-top:24px;padding-top:20px;border-top:1px solid var(--rule-dark);flex-wrap:wrap}
-.price-live__row div{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.55)}
-.price-live__row b{display:block;color:#fff;font-size:1rem;font-family:var(--font-display);font-weight:600;letter-spacing:.02em;margin-top:4px;text-transform:none}
-
-/* ---------- 圖表 ---------- */
-.chart{width:100%;height:auto;display:block}
-.chart-legend{display:flex;gap:26px;flex-wrap:wrap;font-size:.76rem;color:var(--muted);margin-top:18px;letter-spacing:.06em}
-.chart-legend span{display:inline-flex;align-items:center;gap:9px}
-.chart-legend i{width:18px;height:1px;display:inline-block}
 
 /* ---------- 步驟 ---------- */
 .steps{display:grid;gap:0}

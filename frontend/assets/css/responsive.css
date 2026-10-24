@@ -1,0 +1,48 @@
+/* ============================================================
+   全站響應式規則：集中管理，於所有樣式之後載入
+   ============================================================ */
+
+@media(max-width:1080px){
+  .entry{grid-template-columns:1fr}
+  .entry__card{min-height:auto;padding:44px 34px}
+  .auth__wrap{grid-template-columns:1fr;gap:44px}
+  .auth__aside h1{font-size:2rem}
+  .grid--4{grid-template-columns:repeat(2,1fr)}
+  .grid--3{grid-template-columns:repeat(2,1fr)}
+  .layout{grid-template-columns:1fr;gap:44px}
+  .filters{position:static}
+  .pd{grid-template-columns:1fr;gap:48px}
+  .timeline{grid-template-columns:repeat(2,1fr)}
+  .footer__grid{grid-template-columns:1fr 1fr}
+  .nav__links{gap:22px}
+}
+
+@media(max-width:760px){
+  :root{--gut:20px}
+  body{line-height:1.85}
+  .section{padding:64px 0}
+  .section--tight{padding:44px 0}
+  .nav__links,.nav__search{display:none}
+  .nav__toggle{display:grid}
+  .nav__inner{height:64px;gap:16px}
+  .grid--4,.grid--3,.grid--2{grid-template-columns:1fr}
+  .grid{gap:1px}
+  .field-row{grid-template-columns:1fr;gap:0}
+  .hero{min-height:auto}
+  .hero__inner{padding:72px 0 52px}
+  .hero__sign{gap:26px}
+  .timeline{grid-template-columns:1fr}
+  .tl__item{padding:22px 0 0 0}
+  .spec{grid-template-columns:1fr}
+  .spec div:nth-child(odd){padding-bottom:0;border-bottom:none;padding-right:0}
+  .spec div:nth-child(even){padding-top:4px}
+  .footer__grid{grid-template-columns:1fr;gap:34px}
+  .modal__card{padding:30px 22px}
+  .panel{padding:24px 20px}
+  .entry__card{padding:36px 24px}
+  .entry__card h3{font-size:1.4rem}
+  .region-bar__hint{margin-left:0;width:100%}
+  .auth{padding:36px 0 64px}
+  .auth__card{padding:28px 22px}
+  .auth__aside h1{font-size:1.7rem}
+}

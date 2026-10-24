@@ -1,7 +1,7 @@
 /* ============================================================
    海人直送 HAISEN — app.js  v5.0
    個人釣客上網販售當日漁獲 · 可販售多尾，每尾標示重量 · 買家為一般個人消費者
-   地區篩選 / 聊聊面板（買家↔釣客）/ 購物車 / 行情折線圖
+   魚種資料 / 示意漁獲 / 共用小工具
    ============================================================ */
 
 /* ---------- 平台設定 ---------- */
@@ -47,7 +47,6 @@ const SPECIES = [
   {id:"eel", name:"鰻魚", latin:"Anguilla japonica", market:900},
   {id:"sweetfish", name:"香魚", latin:"Plecoglossus altivelis", market:600}
 ];
-const QUICK_SPECIES = ["amberjack","seabream","grouper","tuna","seabass","mackerel","squid"];
 
 /* ---------- 今日漁獲（示意資料；可販售多尾，每尾有重量） ----------
    注意：此物件為「示意/離線」資料。頁面載入後會由 loadCatchFromApi()
@@ -173,9 +172,7 @@ function getParam(name){
   try { return new URLSearchParams(location.search).get(name); } catch(e){ return null; }
 }
 function catchHref(id){ return "product-detail.html?id=" + encodeURIComponent(id); }
-function priceFor(id){ const p = CATCH[id]; return p ? p.price : 0; }
 function soldOut(id){ return CATCH[id].remaining <= 0; }
-function speciesById(id){ return SPECIES.find(s=>s.id===id) || null; }
 function tailCount(id){ const p = CATCH[id]; return p && p.tails ? p.tails.length : 0; }
 function tailRange(id){
   const p = CATCH[id];

@@ -24,43 +24,7 @@ function profileHTML(u){
     <div class="readonly-field" id="dr-phone-ro">${phone}</div>
     <p class="hint" style="margin-top:8px">電話號碼於註冊時綁定，不可修改。</p>
   </div>
-  <button class="btn btn--primary btn--sm" type="button" id="dr-save">儲存變更</button>
-  <div class="drawer__stat">
-    <div><b>${getListings().length}</b><span>已上架漁獲</span></div>
-    <div><b>${u.orders || 0}</b><span>完成交易</span></div>
-  </div>`;
-}
-function sellerPanelHTML(){
-  const arr = getListings();
-  const head = `
-  <div class="drawer__sec"><h4>賣家資訊</h4>
-    <p class="drawer__note">你上架的漁獲清單。可更新售價、下架或刪除。</p></div>
-  <div class="drawer__acts"><a href="seller.html" class="btn btn--primary btn--sm">＋ 上架新漁獲</a></div>`;
-  if(!arr.length){
-    return head + `<div class="drawer__empty">尚無上架紀錄。<br>到「漁人上架」完成一次上架後，這裡會列出你販售中的漁獲。</div>`;
-  }
-  return head + `<div class="listing-list">` + arr.map(l=>{
-    const up = l.status !== "已下架";
-    const weightDescription = l.weightMode === "average"
-      ? "平均每尾 " + l.weights
-      : l.weightMode === "individual"
-        ? "各尾 " + l.weights
-        : "每尾約 " + l.weights;
-    return `<article class="listing-item">
-      <div class="listing-item__top"><b>${l.species}</b><span class="badge ${up?'':'badge--coral'}">${l.status}</span></div>
-      <div class="listing-item__meta">${l.tails} 尾 · ${weightDescription} 台斤</div>
-      <div class="listing-item__meta">${l.region ? l.region + " · " : ""}${l.city || ""}${l.district || ""}</div>
-      <div class="listing-item__price">
-        <label>售價（元 / 台斤）</label>
-        <input class="input" type="number" step="10" min="0" value="${l.price}" data-price="${l.id}">
-        <button class="btn btn--ghost btn--sm" type="button" data-saveprice="${l.id}">儲存</button>
-      </div>
-      <div class="listing-item__acts">
-        <button class="btn btn--ghost btn--sm" type="button" data-toggle="${l.id}">${up?'下架':'重新上架'}</button>
-        <button class="btn btn--ghost btn--sm" type="button" data-del="${l.id}">刪除</button>
-      </div>
-    </article>`;
-  }).join("") + `</div>`;
+  <button class="btn btn--primary btn--sm" type="button" id="dr-save">儲存變更</button>`;
 }
 function handleAvatarFile(file){
   const err = document.getElementById("dr-av-err");
@@ -108,27 +72,6 @@ function bindDrawerBody(){
     renderAuthNav();
     renderDrawer();
   });
-  document.querySelectorAll("[data-saveprice]").forEach(b => b.addEventListener("click", ()=>{
-    const id = b.dataset.saveprice;
-    const inp = document.querySelector('[data-price="' + id + '"]');
-    const n = Number(inp ? inp.value : 0);
-    if(!n || n <= 0){ toast("請輸入大於 0 的售價"); return; }
-    updateListing(id, {price:n});
-    toast("已更新售價");
-    renderDrawer();
-  }));
-  document.querySelectorAll("[data-toggle]").forEach(b => b.addEventListener("click", ()=>{
-    const id = b.dataset.toggle;
-    const item = getListings().find(x=>x.id===id);
-    updateListing(id, {status: (item && item.status === "已下架") ? "上架中" : "已下架"});
-    toast("已更新上架狀態");
-    renderDrawer();
-  }));
-  document.querySelectorAll("[data-del]").forEach(b => b.addEventListener("click", ()=>{
-    removeListing(b.dataset.del);
-    toast("已刪除上架紀錄");
-    renderDrawer();
-  }));
 }
 function setSimple(fieldId, ok, errId){
   const f = document.getElementById(fieldId);
@@ -141,7 +84,3 @@ function initUserMenu(){
   ensureDrawer();
   refreshNavAvatar();
 }
-
-/* ============================================================
-   後端資料載入（海人直送 × VMS API）
-   ============================================================ */
