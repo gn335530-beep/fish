@@ -3,7 +3,7 @@
 import * as api from "../api.js";
 import { INTENT, detectIntent } from "./rules.js";
 import { extractSlots, mergeDraft, nextMissingSlot, draftReady } from "./slots.js";
-import { speciesList, speciesById, findSpecies, findRegion, ensureSpecies } from "./species.js";
+import { speciesList, speciesById, findSpecies, findRegion, normalizeCityName, ensureSpecies } from "./species.js";
 
 const QUESTIONS = {
   fish_species: "請問釣到的是什麼魚？",
@@ -114,13 +114,18 @@ function productCard(product) {
 async function shoppingReply(ctx, text, user) {
   const spice = findSpecies(text);
   let region = findRegion(text);
-  if (!region && /附近|我這邊|附近有什麼/.test(text) && user && user.city) region = user.city;
+  if (!region && /附近|我這邊|附近有什麼/.test(text) && user && user.city) {
+    region = normalizeCityName(user.city);
+  }
   const cooking = cookingMatches(text);
   const rows = await api.listProducts({ limit: 100 });
 
   let matched = rows.filter(function (p) { return Number(p.available) > 0; });
   if (spice) matched = matched.filter(function (p) { return p.species_id === spice.id; });
-  if (region) matched = matched.filter(function (p) { return String(p.region || "").indexOf(region) !== -1; });
+  if (region) {
+    const key = normalizeCityName(region);
+    matched = matched.filter(function (p) { return normalizeCityName(p.region).indexOf(key) !== -1; });
+  }
   if (cooking) matched = matched.filter(function (p) { return cooking.indexOf(p.species_id) !== -1; });
   matched = matched.slice(0, 5);
 

@@ -9,3 +9,8 @@ const CITY_ORDER = [
 function normalizeRegion(value){
   return CITY_ORDER.indexOf(value) === -1 ? "" : value;
 }
+
+/* 顯示與比對統一用「台」，並容納舊資料的「臺」。 */
+function normalizeCityName(value){
+  return String(value || "").replace(/臺/g, "台");
+}

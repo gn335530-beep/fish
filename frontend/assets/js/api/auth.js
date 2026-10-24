@@ -63,13 +63,5 @@
     API.setUser(null);
   }
 
-  async function updateProfile(bank) {
-    // [API 對接點] 更新銀行資料
-    // METHOD  : PUT
-    // ENDPOINT: /api/users/profile
-    // PARAMS  : { bank_code, bank_account, bank_account_name }
-    // 資料庫  : users(bank_code, bank_account, bank_account_name) 加密後存入
-    return API.request("/api/users/profile", { method: "PUT", body: bank, auth: true });
-  }
-  Object.assign(API, { register: register, login: login, me: me, logout: logout, updateProfile: updateProfile });
+  Object.assign(API, { register: register, login: login, me: me, logout: logout });
 })();
