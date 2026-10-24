@@ -1,5 +1,5 @@
 /* ============================================================
-   v4.0 新增：雙身分入口 / 地區選擇 / 聊聊面板
+   雙身分入口 / 地區選擇 / 聊聊觸發 / 釣客資訊卡
    ============================================================ */
 
 /* ---------- 雙身分入口（首頁） ---------- */
@@ -47,57 +47,6 @@
 .region-chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .region-bar__hint{font-size:.76rem;color:var(--muted-2);margin-left:auto;letter-spacing:.02em}
 
-/* ---------- 聊聊面板 ---------- */
-.chat{
-  position:fixed;right:24px;bottom:24px;z-index:350;
-  width:380px;max-width:calc(100vw - 32px);height:560px;max-height:calc(100vh - 48px);
-  background:var(--paper);border:1px solid var(--rule);border-top:2px solid var(--accent);
-  display:none;flex-direction:column;box-shadow:0 18px 48px rgba(16,20,19,.16);
-}
-.chat.show{display:flex;animation:chatpop .28s ease}
-@keyframes chatpop{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
-.chat__head{
-  display:flex;align-items:center;justify-content:space-between;gap:14px;
-  padding:16px 18px;border-bottom:1px solid var(--rule-2);flex:none;
-}
-.chat__who{display:flex;align-items:center;gap:12px;min-width:0}
-.chat__av{
-  width:36px;height:36px;flex:none;border:1px solid var(--ink);border-radius:50%;
-  display:grid;place-items:center;font-family:var(--font-display);font-size:.9rem;
-}
-.chat__who b{display:block;font-family:var(--font-display);font-size:.94rem;font-weight:600;line-height:1.3}
-.chat__who span{display:block;font-size:.72rem;color:var(--muted-2);letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:210px}
-.chat__close{width:28px;height:28px;display:grid;place-items:center;color:var(--muted);font-size:.9rem;flex:none}
-.chat__close:hover{color:var(--ink)}
-.chat__body{flex:1;overflow-y:auto;padding:20px 18px;display:flex;flex-direction:column;gap:14px;background:var(--paper-2)}
-.chat__empty{font-size:.8rem;color:var(--muted-2);line-height:1.9;text-align:center;margin:auto 0;padding:0 20px}
-.chat__msg{display:flex;flex-direction:column;max-width:82%}
-.chat__msg--me{align-self:flex-end;align-items:flex-end}
-.chat__msg--seller{align-self:flex-start;align-items:flex-start}
-.chat__bubble{
-  padding:11px 15px;font-size:.84rem;line-height:1.75;border-radius:var(--radius-xs);
-  background:var(--surface);border:1px solid var(--rule-2);color:var(--ink);
-}
-.chat__msg--me .chat__bubble{background:var(--accent);border-color:var(--accent);color:#fff}
-.chat__imgwrap{max-width:220px;border:1px solid var(--rule-2);overflow:hidden;background:var(--surface)}
-.chat__imgwrap img{width:100%;display:block}
-.chat__foot{
-  display:flex;align-items:center;gap:10px;padding:12px 14px;border-top:1px solid var(--rule-2);flex:none;
-}
-.chat__img{width:36px;height:36px;flex:none;display:grid;place-items:center;border:1px solid var(--rule);color:var(--muted)}
-.chat__img:hover{border-color:var(--ink);color:var(--ink)}
-.chat__img svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.4}
-.chat__foot input[type=text]{
-  flex:1;min-width:0;border:none;border-bottom:1px solid var(--rule);background:transparent;
-  padding:8px 2px;outline:none;font-size:.84rem;
-}
-.chat__foot input[type=text]:focus{border-color:var(--ink)}
-.chat__send{
-  flex:none;padding:9px 18px;background:var(--accent);color:#fff;border-radius:var(--radius-xs);
-  font-size:.74rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
-}
-.chat__send:hover{background:var(--accent-2)}
-
 /* 聊聊觸發按鈕 */
 .chat-trigger{
   display:inline-flex;align-items:center;gap:10px;padding:13px 24px;
@@ -108,7 +57,7 @@
 .chat-trigger:hover{background:var(--ink);color:#fff}
 .chat-trigger svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.4}
 
-/* 賣家資訊卡 */
+/* 釣客資訊卡 */
 .seller-card{display:flex;gap:18px;align-items:center;padding:22px 0;border-top:1px solid var(--rule-2);border-bottom:1px solid var(--rule-2)}
 .seller-card__av{
   width:52px;height:52px;flex:none;border:1px solid var(--ink);border-radius:50%;
@@ -116,57 +65,6 @@
 }
 .seller-card b{font-family:var(--font-display);font-size:1.02rem;display:block}
 .seller-card span{font-size:.78rem;color:var(--muted);letter-spacing:.03em}
-
-/* 魚種搜尋（賣家上架） */
-.species-search{position:relative}
-.species-results{
-  position:absolute;left:0;right:0;top:100%;z-index:20;background:var(--surface);
-  border:1px solid var(--rule);max-height:260px;overflow-y:auto;display:none;
-}
-.species-results.show{display:block}
-.species-opt{padding:12px 16px;font-size:.86rem;cursor:pointer;border-bottom:1px solid var(--rule-2);display:flex;justify-content:space-between;gap:14px;align-items:baseline}
-.species-opt:last-child{border-bottom:none}
-.species-opt:hover,.species-opt.hl{background:var(--paper-2)}
-.species-opt b{font-weight:600;color:var(--ink)}
-.species-opt small{color:var(--muted-2);font-size:.72rem;font-style:italic}
-.species-opt .mk{font-family:var(--font-mono);font-size:.76rem;color:var(--muted);white-space:nowrap}
-.species-opt--none{padding:14px 16px;font-size:.82rem;color:var(--muted-2)}
-.quick-species{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-.quick-chip{
-  padding:6px 14px;border:1px solid var(--rule);border-radius:var(--radius-xs);
-  font-size:.78rem;color:var(--muted);transition:all .2s;background:transparent;
-}
-.quick-chip:hover{border-color:var(--ink);color:var(--ink)}
-.quick-chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
-
-/* 處理方式 / 運送 / 付款 選項群 */
-.opt-group{display:flex;gap:10px;flex-wrap:wrap}
-.opt{
-  padding:11px 20px;border:1px solid var(--rule);border-radius:var(--radius-xs);
-  font-size:.84rem;color:var(--muted);transition:all .2s;background:transparent;letter-spacing:.03em;
-}
-.opt-group .opt--check{display:inline-flex;align-items:center;position:relative;cursor:pointer;margin-top:14px}
-.opt--check input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer;appearance:none}
-.opt--check:focus-within{outline:2px solid var(--accent);outline-offset:3px}
-.opt:hover{border-color:var(--ink);color:var(--ink)}
-.opt.on{background:var(--accent);border-color:var(--accent);color:#fff}
-.opt--multi.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
-
-/* 定金區塊 */
-.deposit-box{border:1px solid var(--rule-2);padding:20px 22px;margin-top:6px}
-.deposit-box .check{margin-bottom:0}
-.deposit-fields{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:18px;display:none}
-.deposit-fields.show{display:grid}
-
-/* 多尾規格輸入 */
-.tails{margin-top:18px;display:flex;flex-direction:column;gap:0}
-.tails[hidden],#f-average-weight[hidden]{display:none}
-.tail-row{border-top:1px solid var(--rule-2);padding:18px 0}
-.tail-row:first-child{border-top:1px solid var(--rule)}
-.tail-row__no{font-family:var(--font-display);font-size:.9rem;font-weight:600;color:var(--ink);margin-bottom:12px}
-.tail-row__fields{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-.tail-row.invalid .input{border-color:var(--coral)}
-.tail-row .tail-err{margin-top:10px}
 
 /* 已售完遮罩 */
 .card--out .card__media img{opacity:.5}

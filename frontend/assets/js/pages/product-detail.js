@@ -6,12 +6,6 @@ function pickItem(){
   window.ITEM = ITEM;
 }
 
-function doAdd(){
-  if(soldOut(ITEM)){ toast("此漁獲已售完"); return; }
-  addToCart(ITEM, 1);
-  toast("已加入購物車：" + p.name);
-}
-
 function renderDetail(){
   pickItem();
 

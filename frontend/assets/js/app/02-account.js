@@ -3,31 +3,6 @@ const REGION_KEY = "haisen_region_v1";
 function getRegion(){ return localStorage.getItem(REGION_KEY) || ""; }
 function setRegion(r){ localStorage.setItem(REGION_KEY, r || ""); }
 
-/* ---------- 購物車（localStorage） ---------- */
-const CART_KEY = "haisen_cart_v1";
-function getCart(){ try{ return JSON.parse(localStorage.getItem(CART_KEY)) || {}; }catch(e){ return {}; } }
-function saveCart(c){ localStorage.setItem(CART_KEY, JSON.stringify(c)); updateCartCount(); }
-function addToCart(id, qty){
-  qty = qty || 1;
-  const c = getCart();
-  c[id] = (c[id] || 0) + qty;
-  saveCart(c);
-  return c[id];
-}
-function setQty(key, qty){
-  const c = getCart();
-  if(qty <= 0){ delete c[key]; } else { c[key] = qty; }
-  saveCart(c);
-}
-function cartCount(){ return Object.values(getCart()).reduce((a,b)=>a+b,0); }
-function updateCartCount(){
-  const n = cartCount();
-  document.querySelectorAll("[data-cart-count]").forEach(el=>{
-    el.textContent = n;
-    el.style.display = n > 0 ? "grid" : "none";
-  });
-}
-
 /* ---------- 登入狀態（localStorage，跨頁保留） ---------- */
 const USER_KEY = "haisen_user_v1";
 function getUser(){ try{ return JSON.parse(localStorage.getItem(USER_KEY) || "null"); }catch(e){ return null; } }
@@ -63,7 +38,7 @@ function refreshNavAvatar(){
   const el = document.getElementById("nav-user-slot");
   if(el && el.tagName === "BUTTON") el.addEventListener("click", ()=> toggleNavMenu());
 }
-/* 導覽列右上角三條線選單：已登入＝個人資訊／賣家資訊／聊聊／登出；未登入＝登入引導 */
+/* 導覽列右上角三條線選單：已登入＝個人資訊／登出；未登入＝登入引導 */
 function renderAuthNav(){
   const inner = document.getElementById("nav-menu-inner");
   if(!inner) return;
@@ -73,7 +48,6 @@ function renderAuthNav(){
       <div class="nav-menu__label">瀏覽</div>
       <a class="nav-menu__item" href="index.html">首頁</a>
       <a class="nav-menu__item" href="products.html">今日漁獲</a>
-      <a class="nav-menu__item" href="seller.html">我要賣魚</a>
     </div>`;
   if(u && u.nick){
     inner.innerHTML = `
@@ -83,9 +57,7 @@ function renderAuthNav(){
       </div>
       <div class="nav-menu__sec">
         <div class="nav-menu__label">我的</div>
-        <button class="nav-menu__item" type="button" data-menu-tab="profile">個人資訊</button>
-        <button class="nav-menu__item" type="button" data-menu-tab="seller">賣家資訊</button>
-        <button class="nav-menu__item" type="button" data-menu-tab="chat">聊聊</button>
+        <button class="nav-menu__item" type="button" data-open-drawer>個人資訊</button>
       </div>
       ${links}
       <div class="nav-menu__sec">
@@ -105,9 +77,9 @@ function renderAuthNav(){
 function bindNavMenu(){
   const inner = document.getElementById("nav-menu-inner");
   if(!inner) return;
-  inner.querySelectorAll("[data-menu-tab]").forEach(b => b.addEventListener("click", ()=>{
+  inner.querySelectorAll("[data-open-drawer]").forEach(b => b.addEventListener("click", ()=>{
     closeNavMenu();
-    openDrawer(b.dataset.menuTab);
+    openDrawer();
   }));
   const out = document.getElementById("nav-menu-logout");
   if(out) out.addEventListener("click", ()=>{

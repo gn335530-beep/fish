@@ -1,11 +1,10 @@
 /* 舊版漁獲端點：只保留 GET，從 products 轉出舊格式，
-   讓現有商品頁與購物車在移除前仍可運作。 */
+   供尚未改接商品 API 的頁面讀取；不提供任何寫入。 */
 
 const express = require("express");
-const { all, patch, findById } = require("../lib/store");
-const { requireUser } = require("../lib/auth");
-const { decorateProduct, decorateProducts, sweepExpired } = require("../lib/orders");
-const { ok, fail } = require("../lib/http");
+const { all } = require("../lib/store");
+const { decorateProducts, sweepExpired } = require("../lib/orders");
+const { ok } = require("../lib/http");
 
 const router = express.Router();
 
@@ -64,28 +63,6 @@ router.get("/api/fish/data", function (req, res) {
     .map(function (product) { return toLegacy(product, req); })
     .sort(function (a, b) { return new Date(b.created_at) - new Date(a.created_at); });
   ok(res, data, "取得漁獲清單成功");
-});
-
-/* 相容層的更新：舊購物車結帳時會把狀態改成 PENDING_PAYMENT，
-   這裡直接視為整批售出，讓舊流程在移除購物車前仍可運作。 */
-router.put("/api/fish/data/:id", requireUser, function (req, res) {
-  const product = all("products").find(function (p) { return String(p.id) === req.params.id; });
-  if (!product) {
-    fail(res, 404, "PRODUCT_NOT_FOUND", "找不到漁獲資料");
-    return;
-  }
-
-  const body = req.body || {};
-  if (body.status === "PENDING_PAYMENT") {
-    patch("products", product.id, {
-      sold_quantity: Number(product.quantity || 0),
-      legacy_buyer_id: body.buyer_id || null,
-      legacy_buyer_name: body.buyer_name || null
-    });
-  }
-
-  const updated = decorateProduct(findById("products", product.id), all("deals"));
-  ok(res, toLegacy(updated, req), "漁獲資料已更新");
 });
 
 module.exports = router;

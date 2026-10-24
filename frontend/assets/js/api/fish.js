@@ -24,19 +24,11 @@
     return API.request("/api/fish/data", { method: "POST", body: listing, auth: true });
   }
 
-  async function updateFish(id, patch) {
-    // [API 對接點] 更新漁獲（售價/狀態/買家/實重…）
-    // METHOD  : PUT
-    // ENDPOINT: /api/fish/data/{id}
-    // PARAMS  : 任意 fishUpdateRequest 欄位（未帶的欄位保持不變）
-    return API.request("/api/fish/data/" + encodeURIComponent(id), { method: "PUT", body: patch, auth: true });
-  }
-
   async function deleteFish(id) {
     // [API 對接點] 刪除漁獲
     // METHOD  : DELETE
     // ENDPOINT: /api/fish/data/{id}
     return API.request("/api/fish/data/" + encodeURIComponent(id), { method: "DELETE", auth: true });
   }
-  Object.assign(API, { listFish: listFish, createFish: createFish, updateFish: updateFish, deleteFish: deleteFish });
+  Object.assign(API, { listFish: listFish, createFish: createFish, deleteFish: deleteFish });
 })();

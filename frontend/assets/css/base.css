@@ -163,11 +163,6 @@ h4{font-size:.98rem}
 .nav__search input::placeholder{color:var(--muted-2)}
 .icon-btn{position:relative;display:grid;place-items:center;width:30px;height:30px;color:var(--ink)}
 .icon-btn svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.4}
-.icon-btn .count{
-  position:absolute;top:-4px;right:-6px;min-width:16px;height:16px;padding:0 4px;
-  background:var(--accent);color:#fff;border-radius:50%;
-  font-size:.62rem;font-weight:600;display:grid;place-items:center;letter-spacing:0;
-}
 .nav__toggle{display:none}
 .nav-user{display:flex;align-items:center;gap:9px}
 .nav-user__av{width:26px;height:26px;flex:none;border:1px solid var(--ink);border-radius:50%;display:grid;place-items:center;font-family:var(--font-display);font-size:.72rem}

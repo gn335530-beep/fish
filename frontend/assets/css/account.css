@@ -1,5 +1,5 @@
 /* ============================================================
-   v10 新增：右上角個人選單・個人抽屜・上架清單・選填標記
+   v10 新增：右上角個人選單・個人抽屜・選填標記
    ============================================================ */
 
 /* ---------- 右上角個人選單（頭像／昵稱，點擊展開） ---------- */
@@ -17,7 +17,7 @@
 .nav-user--guest{gap:7px;padding:5px 11px}
 .nav-user__ic{width:16px;height:16px;stroke:var(--ink);fill:none;stroke-width:1.4;flex:none}
 
-/* ---------- 個人抽屜（個人資訊 / 賣家資訊 / 聊聊） ---------- */
+/* ---------- 個人抽屜 ---------- */
 .drawer{position:fixed;inset:0;z-index:360;display:none}
 .drawer.show{display:block}
 .drawer__scrim{position:absolute;inset:0;background:rgba(16,20,19,.5);backdrop-filter:blur(3px)}
@@ -40,33 +40,11 @@
 .drawer__who span{display:block;font-size:.74rem;color:var(--muted);font-family:var(--font-mono);letter-spacing:.04em}
 .drawer__close{width:28px;height:28px;display:grid;place-items:center;color:var(--muted);font-size:.9rem;border:1px solid transparent;flex:none}
 .drawer__close:hover{color:var(--ink);border-color:var(--rule)}
-.drawer__tabs{display:flex;border-bottom:1px solid var(--rule-2);padding:0 24px}
-.drawer__tab{position:relative;padding:15px 0;margin-right:26px;font-size:.8rem;font-weight:500;letter-spacing:.08em;color:var(--muted)}
-.drawer__tab.on{color:var(--ink)}
-.drawer__tab.on::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:1px;background:var(--ink)}
 .drawer__body{padding:26px 24px;overflow-y:auto;flex:1;min-height:0}
 .drawer__foot{padding:18px 24px;border-top:1px solid var(--rule-2)}
 .drawer__sec{margin-bottom:20px}
 .drawer__sec h4{font-family:var(--font-display);font-size:1rem;font-weight:600;margin-bottom:8px}
 .drawer__note{font-size:.78rem;color:var(--muted);line-height:1.85}
-.drawer__empty{border:1px dashed var(--rule);padding:26px 20px;text-align:center;font-size:.8rem;color:var(--muted);line-height:1.9}
-.drawer__acts{margin:0 0 18px}
-.drawer__stat{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-top:26px;border-top:1px solid var(--rule-2)}
-.drawer__stat > div{padding:18px 0;border-right:1px solid var(--rule-2)}
-.drawer__stat > div:last-child{border-right:none;padding-left:18px}
-.drawer__stat b{display:block;font-family:var(--font-display);font-size:1.5rem;font-weight:600;line-height:1.2}
-.drawer__stat span{font-size:.72rem;color:var(--muted);letter-spacing:.06em}
-
-/* ---------- 我的上架清單 ---------- */
-.listing-list{display:flex;flex-direction:column;border-top:1px solid var(--rule-2)}
-.listing-item{border-bottom:1px solid var(--rule-2);padding:18px 0}
-.listing-item__top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
-.listing-item__top b{font-family:var(--font-display);font-size:.95rem;font-weight:600}
-.listing-item__meta{font-size:.76rem;color:var(--muted);letter-spacing:.02em}
-.listing-item__price{display:grid;grid-template-columns:1fr auto;gap:8px 10px;align-items:center;margin-top:12px}
-.listing-item__price label{grid-column:1 / -1;font-size:.68rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
-.listing-item__acts{display:flex;gap:8px;margin-top:12px}
-.listing-item__acts .btn{flex:1}
 
 /* ---------- 選填標記 ---------- */
 .opt-tag{
@@ -88,10 +66,6 @@
   .nav-user__av{width:22px;height:22px;font-size:.66rem}
   .drawer__panel{width:100%;max-width:100%;border-left:none}
   .drawer__head{padding:18px 18px}
-  .drawer__tabs{padding:0 18px}
-  .drawer__tab{margin-right:20px;font-size:.76rem}
   .drawer__body{padding:22px 18px}
   .drawer__foot{padding:14px 18px}
-  .drawer__stat > div{padding:14px 0}
-  .listing-item__price{grid-template-columns:1fr}
 }
