@@ -2,6 +2,7 @@
 
 import { escapeHtml, money, resolveImage } from "./html.js";
 import { normalizeCityName } from "../ai/species.js";
+import { DRAFT_FIELDS } from "../ai/editing.js";
 
 function productCard(card) {
   const title = escapeHtml(card.title || "商品");
@@ -27,6 +28,9 @@ function row(label, value) {
 
 function draftCard(card) {
   const draft = card.draft || {};
+  const edits = DRAFT_FIELDS.map(function (field) {
+    return '<button type="button" data-action="edit-slot" data-slot="' + field.slot + '">' + field.label + '</button>';
+  }).join("");
   return '<div class="fm-card fm-card--draft">' +
     '<b>商品草稿</b>' +
     '<dl>' +
@@ -36,6 +40,7 @@ function draftCard(card) {
     row("處理", draft.condition) +
     row("售價", money(draft.price)) +
     '</dl>' +
+    '<div class="fm-card__edits"><span>修改</span>' + edits + '</div>' +
     (draft.photo_url ? '<img class="fm-card__thumb" src="' + escapeHtml(resolveImage(draft.photo_url)) + '" alt="商品照片">' : "") +
     '<div class="fm-card__acts">' +
     '<button type="button" class="fm-card__primary" data-action="publish">確認發布</button>' +

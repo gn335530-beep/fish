@@ -7,7 +7,7 @@ import { renderAssistant, renderLogin } from "./views/assistant.js";
 import { renderInbox } from "./views/inbox.js";
 import { escapeHtml } from "./views/html.js";
 import { startPolling, refreshRooms, pollNow } from "./poll.js";
-import { initFlow, ensureRoom, submitText, submitPhoto, publishDraft, resetDraft, explainProduct } from "./flow.js";
+import { initFlow, ensureRoom, submitText, submitPhoto, publishDraft, resetDraft, explainProduct, beginEdit } from "./flow.js";
 import { loadSpecies } from "./ai/species.js";
 
 const panel = mountPanel({
@@ -113,10 +113,8 @@ async function handleAction(action, data) {
     panel.close();
     return;
   }
-  if (action === "photo") {
-    panel.openFilePicker();
-    return;
-  }
+  if (action === "photo") return panel.openFilePicker();
+  if (action === "edit-slot") return beginEdit(data.slot);
   if (action === "publish") {
     publishDraft();
     return;

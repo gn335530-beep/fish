@@ -4,6 +4,7 @@ import { state, update } from "./store.js";
 import * as api from "./api.js";
 import * as ai from "./ai/service.js";
 import { draftToProduct } from "./ai/slots.js";
+import { beginEdit as beginDraftEdit } from "./ai/editing.js";
 import { uploadImage } from "./upload.js";
 
 let ui = {
@@ -122,6 +123,19 @@ export async function resetDraft() {
     await api.updateContext(state.room.id, { context: context });
     update({ room: Object.assign({}, state.room, { context: context }) });
     await runReplies({ context: context, replies: [{ text: "已清空草稿，重新開始。" }] });
+  } catch (error) {
+    ui.notify(error);
+  }
+}
+
+export async function beginEdit(slot) {
+  const result = beginDraftEdit(state.room && state.room.context, slot);
+  if (!result) {
+    ui.notify(new Error("目前沒有可修改的草稿"));
+    return;
+  }
+  try {
+    await runReplies(result);
   } catch (error) {
     ui.notify(error);
   }

@@ -1,9 +1,12 @@
-/* 規則式 AI：意圖路由、上架槽位追問、基本導購。之後換 LLM 只需改這支。 */
+/* 規則式 AI：意圖路由、上架槽位追問、導購與指涉。之後換 LLM 只需改這支。 */
 
 import * as api from "../api.js";
 import { INTENT, detectIntent } from "./rules.js";
 import { extractSlots, mergeDraft, nextMissingSlot, draftReady } from "./slots.js";
-import { speciesList, speciesById, findSpecies, findRegion, normalizeCityName, ensureSpecies } from "./species.js";
+import { editText, editPhoto } from "./editing.js";
+import { resolveReferent } from "./referents.js";
+import { shoppingReply } from "./shopping.js";
+import { speciesById, ensureSpecies } from "./species.js";
 
 const QUESTIONS = {
   fish_species: "請問釣到的是什麼魚？",
@@ -23,8 +26,18 @@ const ASK_AGAIN = {
   price: "還缺售價，整批預計賣多少元？"
 };
 
+function makeContext(mode, draft, lastCards) {
+  return {
+    mode: mode,
+    draft: draft,
+    last_cards: lastCards,
+    selected_product_id: null,
+    editing: null
+  };
+}
+
 export function resetContext() {
-  return { mode: "idle", draft: null, last_cards: [] };
+  return makeContext("idle", null, []);
 }
 
 function normalize(context) {
@@ -32,7 +45,9 @@ function normalize(context) {
   return {
     mode: source.mode || "idle",
     draft: source.draft || null,
-    last_cards: source.last_cards || []
+    last_cards: source.last_cards || [],
+    selected_product_id: source.selected_product_id || null,
+    editing: source.editing || null
   };
 }
 
@@ -52,7 +67,7 @@ function advance(ctx) {
 
 function startListing(text) {
   const draft = mergeDraft(null, extractSlots(text, null));
-  return advance({ mode: "listing", draft: draft, last_cards: [] });
+  return advance(makeContext("listing", draft, []));
 }
 
 function continueListing(ctx, text) {
@@ -64,89 +79,60 @@ function continueListing(ctx, text) {
   if (!Object.keys(found).length) {
     return { context: ctx, replies: [{ text: ASK_AGAIN[missing] }] };
   }
-  return advance({ mode: "listing", draft: mergeDraft(ctx.draft, found), last_cards: [] });
+  return advance(makeContext("listing", mergeDraft(ctx.draft, found), []));
 }
 
 export function handlePhoto(context, photoUrl) {
   const ctx = normalize(context);
+  const edited = editPhoto(ctx, photoUrl);
+  if (edited) return edited;
   if (ctx.mode !== "listing" || !ctx.draft) {
     return { context: ctx, replies: [{ text: "照片收到，但目前沒有進行中的上架。" }] };
   }
   const draft = mergeDraft(ctx.draft, { photo_url: photoUrl });
-  return advance({ mode: "listing", draft: draft, last_cards: [] });
+  return advance(makeContext("listing", draft, []));
 }
 
-/* ---- 導購 ---- */
+/* ---- 指涉 ---- */
 
-const COOKING_WORDS = ["清蒸", "煮湯", "紅燒", "香煎", "煎", "烤", "川燙", "生魚片", "涼拌", "炒", "滷"];
-
-function cookingMatches(text) {
-  const hasTextureHint = /刺少|長輩|小孩|牙口/.test(text);
-  const method = COOKING_WORDS.find(function (word) { return text.indexOf(word) !== -1; });
-  if (!hasTextureHint && !method) return null;
-
-  return speciesList().filter(function (spice) {
-    if (hasTextureHint && spice.bones.indexOf("多") !== -1) return false;
-    if (method && spice.cooking.indexOf(method) === -1) return false;
-    return true;
-  }).map(function (spice) { return spice.id; });
-}
-
-function productCard(product) {
-  return {
-    type: "product",
-    product_id: product.id,
-    title: product.title,
-    photo_url: product.photo_url,
-    price: product.price,
-    unit_price: product.unit_price,
-    weight_kg: product.weight_kg,
-    quantity: product.quantity,
-    available: product.available,
-    condition: product.condition,
-    region: product.region,
-    location: product.location,
-    catch_time: product.catch_time,
-    seller_id: product.seller_id
-  };
-}
-
-async function shoppingReply(ctx, text, user) {
-  const spice = findSpecies(text);
-  let region = findRegion(text);
-  if (!region && /附近|我這邊|附近有什麼/.test(text) && user && user.city) {
-    region = normalizeCityName(user.city);
-  }
-  const cooking = cookingMatches(text);
-  const rows = await api.listProducts({ limit: 100 });
-
-  let matched = rows.filter(function (p) { return Number(p.available) > 0; });
-  if (spice) matched = matched.filter(function (p) { return p.species_id === spice.id; });
-  if (region) {
-    const key = normalizeCityName(region);
-    matched = matched.filter(function (p) { return normalizeCityName(p.region).indexOf(key) !== -1; });
-  }
-  if (cooking) matched = matched.filter(function (p) { return cooking.indexOf(p.species_id) !== -1; });
-  matched = matched.slice(0, 5);
-
-  if (!matched.length) {
+async function explainAt(ctx, index) {
+  const id = ctx.last_cards[index];
+  try {
+    const product = await api.getProduct(id);
+    if (!product) {
+      return { context: ctx, replies: [{ text: "這筆商品已不存在，請重新查詢。" }] };
+    }
+    const explained = await explainProduct(product, ctx);
     return {
-      context: { mode: "shopping", draft: null, last_cards: [] },
-      replies: [{ text: "目前沒有符合條件的商品。可以換個魚種或地區再試。" }]
+      context: Object.assign({}, explained.context || ctx, {
+        mode: "shopping",
+        selected_product_id: id
+      }),
+      replies: [{ text: "第 " + (index + 1) + " 個商品：" }].concat(explained.replies)
+    };
+  } catch (error) {
+    return {
+      context: ctx,
+      replies: [{ text: error.status === 404 ? "這筆商品已不存在，請重新查詢。" : "無法載入商品，請稍後再試。" }]
     };
   }
+}
 
-  const replies = [{ text: "找到 " + matched.length + " 筆商品。" }];
-  matched.forEach(function (p) { replies.push({ card: productCard(p) }); });
-
-  return {
-    context: {
-      mode: "shopping",
-      draft: null,
-      last_cards: matched.map(function (p) { return p.id; })
-    },
-    replies: replies
-  };
+async function handleReferent(ctx, ref) {
+  if (ref.status === "none") {
+    return { context: ctx, replies: [{ text: "目前沒有上一批商品，請先說想找什麼魚。" }] };
+  }
+  if (ref.status === "out-of-range") {
+    return { context: ctx, replies: [{ text: "上一批只有 " + ref.count + " 個商品，請說第 1 到 " + ref.count + " 個。" }] };
+  }
+  if (ref.status === "ambiguous") {
+    const selected = ctx.selected_product_id ? ctx.last_cards.indexOf(ctx.selected_product_id) : -1;
+    if (selected === -1) {
+      return { context: ctx, replies: [{ text: "上一批有 " + ref.count + " 個商品，請說「第幾個」。" }] };
+    }
+    return explainAt(ctx, selected);
+  }
+  return explainAt(ctx, ref.index);
 }
 
 /* ---- 商品諮詢 ---- */
@@ -183,6 +169,14 @@ export async function handleText(context, text, user) {
     return { context: ctx, replies: [{ text: "目前無法取得魚種資料，請確認伺服器後再試。" }] };
   }
 
+  const edited = editText(ctx, source);
+  if (edited) return edited;
+
+  if (ctx.mode !== "listing") {
+    const referent = resolveReferent(source, ctx.last_cards.length);
+    if (referent) return handleReferent(ctx, referent);
+  }
+
   if (ctx.mode === "listing" && ctx.draft) return continueListing(ctx, source);
 
   const intent = detectIntent(source);
@@ -190,7 +184,7 @@ export async function handleText(context, text, user) {
   if (intent === INTENT.CANCEL) {
     return { context: resetContext(), replies: [{ text: "好，已經重來。想賣魚或找魚都可以直接說。" }] };
   }
-  if (intent === INTENT.BUY) return shoppingReply(ctx, source, user);
+  if (intent === INTENT.BUY) return shoppingReply(source, user);
 
   return {
     context: ctx,
