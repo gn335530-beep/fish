@@ -22,7 +22,7 @@ function loadImage(dataUrl) {
   });
 }
 
-export async function compressImage(file) {
+async function compressImage(file) {
   const dataUrl = await readAsDataUrl(file);
   const image = await loadImage(dataUrl);
   const scale = Math.min(1, MAX_SIDE / Math.max(image.width, image.height));

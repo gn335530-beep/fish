@@ -10,7 +10,7 @@ function showDetailError(title, text) {
   document.getElementById("pd-error-title").textContent = title;
   document.getElementById("pd-error-text").textContent = text;
   document.getElementById("crumb-name").textContent = "找不到商品";
-  document.title = "找不到商品 — 海人直送";
+  document.title = "找不到商品 — 一支釣";
 }
 
 function renderPhoto(p) {
@@ -42,8 +42,8 @@ function renderSpec(p) {
     ["整批價", productMoney(p.price)],
     ["每尾均價", productMoney(p.unit_price)],
     ["可售尾數", productAvailable(p) + " 尾"],
-    ["地區", p.region || "—"],
-    ["地點", p.location || "—"],
+    ["地區", normalizeCityName(p.region) || "—"],
+    ["地點", normalizeCityName(p.location) || "—"],
     ["釣獲時間", p.catch_time ? productDate(p.catch_time) : "未提供"]
   ];
   document.getElementById("pd-spec").innerHTML = rows.map(function (row) {
@@ -54,7 +54,7 @@ function renderSpec(p) {
 function renderDetail(p) {
   const status = productStatus(p);
   renderPhoto(p);
-  document.getElementById("pd-region").textContent = p.region || "地區未提供";
+  document.getElementById("pd-region").textContent = normalizeCityName(p.region) || "地區未提供";
   document.getElementById("pd-condition").textContent = p.condition || "處理方式未提供";
   document.getElementById("pd-status").textContent = status;
   document.getElementById("pd-name").textContent = productTitle(p);
@@ -67,7 +67,7 @@ function renderDetail(p) {
   renderSpec(p);
 
   document.getElementById("crumb-name").textContent = p.fish_species || "漁獲詳情";
-  document.title = productTitle(p) + " — 今日漁獲 | 海人直送";
+  document.title = productTitle(p) + " — 今日漁獲 | 一支釣";
   document.getElementById("pd-view").hidden = false;
 }
 

@@ -61,8 +61,8 @@ function productDateLabel(p) {
 function productCardHTML(p) {
   var href = "product-detail.html?id=" + encodeURIComponent(p.id);
   var photo = window.HaisenAPI.photoUrl(p.photo_url);
-  var region = p.region || "地區未提供";
-  var location = p.location || "地點未提供";
+  var region = normalizeCityName(p.region) || "地區未提供";
+  var location = normalizeCityName(p.location) || "地點未提供";
   var quantity = Number(p.quantity || 0);
   var available = productAvailable(p);
   var media = photo

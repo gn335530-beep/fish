@@ -14,7 +14,7 @@ export async function refreshRooms() {
   return conversations;
 }
 
-export async function refreshMessages() {
+async function refreshMessages() {
   if (!state.room) return [];
   const messages = await api.listMessages(state.room.id, state.lastSeq);
   if (messages.length) {
@@ -47,7 +47,7 @@ export function startPolling() {
   }, INTERVAL);
 }
 
-export function stopPolling() {
+function stopPolling() {
   if (timer) window.clearInterval(timer);
   timer = null;
 }

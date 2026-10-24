@@ -4,7 +4,7 @@ const SHELL = "" +
   '<section class="fm-panel" id="fm-panel" hidden aria-label="一支釣小幫手">' +
   '  <header class="fm-panel__head">' +
   '    <span class="fm-panel__avatar" aria-hidden="true">魚</span>' +
-  '    <div class="fm-panel__title"><b id="fm-title">一支釣小幫手 <em class="fm-build">v3</em></b><span id="fm-status">找魚・上架・交易</span></div>' +
+  '    <div class="fm-panel__title"><b>一支釣小幫手 <em class="fm-build">v3</em></b><span id="fm-status">找魚・上架・交易</span></div>' +
   '    <button type="button" class="fm-icon" data-action="inbox" aria-label="收件匣" title="收件匣">☰</button>' +
   '    <button type="button" class="fm-icon" data-action="minimize" aria-label="縮小" title="縮小">─</button>' +
   '    <button type="button" class="fm-icon" data-action="close" aria-label="關閉" title="關閉">✕</button>' +
@@ -50,7 +50,6 @@ api = {
   isOpen: function () { return !refs.panel.hidden; },
   setBody: function (html) { refs.body.innerHTML = html; },
   setStatus: function (text) { refs.status.textContent = text; },
-  setTitle: function (text) { refs.title.textContent = text; },
   setFooter: function (visible) { refs.form.hidden = !visible; },
   setView: function (view) {
     refs.panel.classList.toggle("fm-panel--wide", view === "deal");
@@ -65,8 +64,6 @@ api = {
     const nearBottom = body.scrollHeight - body.scrollTop - body.clientHeight < 80;
     if (force || nearBottom) body.scrollTop = body.scrollHeight;
   },
-  clearInput: function () { refs.input.value = ""; },
-  focusInput: function () { refs.input.focus(); },
   openFilePicker: function () { refs.file.click(); }
 };
 
@@ -88,8 +85,7 @@ export function mountPanel(options) {
     file: document.getElementById("fm-file"),
     toggle: document.getElementById("fm-toggle"),
     badge: document.getElementById("fm-badge"),
-    status: document.getElementById("fm-status"),
-    title: document.getElementById("fm-title")
+    status: document.getElementById("fm-status")
   };
 
   refs.toggle.addEventListener("click", function () { api.toggle(); });

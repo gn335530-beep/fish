@@ -10,8 +10,8 @@
       '<header class="nav">' +
       '  <div class="wrap nav__inner">' +
       '    <a href="index.html" class="brand">' +
-      '      <span class="brand__mark">海</span>' +
-      '      <span>海人直送<small></small></span>' +
+      '      <span class="brand__mark">一</span>' +
+      '      <span>一支釣<small></small></span>' +
       '    </a>' +
       '    <nav class="nav__links">' +
       '      <a href="index.html" class="' + active("index") + '">首頁</a>' +
@@ -44,14 +44,14 @@
       '  <div class="wrap">' +
       '    <div class="footer__grid">' +
       '      <div>' +
-      '        <div class="brand"><span class="brand__mark">海</span><span>海人直送<small></small></span></div>' +
+      '        <div class="brand"><span class="brand__mark">一</span><span>一支釣<small></small></span></div>' +
       '        <p>個人釣客上網販售當日現流漁獲的平台<br>今天釣到什麼就賣什麼</p>' +
       '      </div>' +
       '      <div><h4>買家</h4><a href="products.html">今日漁獲列表</a><a href="products.html">依魚類與地區篩選</a></div>' +
-      '      <div><h4>賣家</h4><a href="#" data-open-assistant>今日漁獲上架</a><a href="login.html">釣客登入</a></div>' +
+      '      <div><h4>釣客</h4><a href="#" data-open-assistant>今日漁獲上架</a><a href="login.html">釣客登入</a></div>' +
       '      <div><h4>關於</h4><a href="index.html">服務條款</a><a href="index.html">隱私政策</a><a href="index.html">聯絡我們</a></div>' +
       '    </div>' +
-      '    <div class="footer__bottom"><span>© 2026 海人直送 </span></div>' +
+      '    <div class="footer__bottom"><span>© 2026 一支釣 </span></div>' +
       '  </div>' +
       '</footer>';
   }

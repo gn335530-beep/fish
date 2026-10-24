@@ -1,8 +1,8 @@
 /* 槽位抽取：魚種、重量、尾數、處理方式、照片、價格。 */
 
-import { findSpecies } from "./species.js";
+import { findSpecies, normalizeCityName } from "./species.js";
 
-export const SLOT_ORDER = ["fish_species", "weight_kg", "quantity", "condition", "photo_url", "price"];
+const SLOT_ORDER = ["fish_species", "weight_kg", "quantity", "condition", "photo_url", "price"];
 
 const CONDITIONS = [
   { value: "活體", words: ["活體", "活魚", "活跳", "蓄養", "還活著"] },
@@ -11,7 +11,7 @@ const CONDITIONS = [
   { value: "冷凍", words: ["冷凍", "凍"] }
 ];
 
-export function emptyDraft() {
+function emptyDraft() {
   return {
     fish_species: "",
     weight_kg: null,
@@ -22,7 +22,7 @@ export function emptyDraft() {
   };
 }
 
-export function round1(value) {
+function round1(value) {
   return Math.round(Number(value) * 10) / 10;
 }
 
@@ -110,7 +110,7 @@ export function draftToProduct(draft, user) {
     condition: draft.condition,
     photo_url: draft.photo_url,
     price: draft.price,
-    region: (user && user.city) || "",
-    location: (user && user.address) || ""
+    region: normalizeCityName((user && user.city) || ""),
+    location: normalizeCityName((user && user.address) || "")
   };
 }

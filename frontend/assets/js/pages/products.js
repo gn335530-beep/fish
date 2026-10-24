@@ -71,8 +71,7 @@ function passes(p, f) {
 }
 
 function sameCity(region, city) {
-  const normalize = function (value) { return String(value || "").replace(/臺/g, "台"); };
-  return normalize(region).indexOf(normalize(city)) !== -1;
+  return normalizeCityName(region).indexOf(normalizeCityName(city)) !== -1;
 }
 
 function sortProducts(list) {

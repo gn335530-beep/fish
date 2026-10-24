@@ -7,7 +7,6 @@ export const state = {
   messages: [],
   lastSeq: 0,
   view: "assistant",
-  busy: false,
   notice: ""
 };
 
@@ -20,10 +19,6 @@ export function subscribe(listener) {
 export function update(patch) {
   Object.assign(state, patch);
   listeners.forEach(function (listener) { listener(); });
-}
-
-export function resetRoom() {
-  update({ room: null, messages: [], lastSeq: 0 });
 }
 
 /* 未讀總數：只計算對方傳來的訊息。 */
