@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>漁獲詳情 — 今日漁獲 | 海人直送</title>
-<meta name="description" content="個人釣客今日現流漁獲詳情：魚種、照片、可購買尾數與各尾重量、價格、產地地區、運送方式與釣客資訊，可與釣客聊聊確認魚況。">
+<meta name="description" content="個人釣客今日上架的漁獲詳情：照片、魚種、總重、尾數、處理方式、整批價、每尾均價、可售尾數、地區與釣獲時間。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&family=Noto+Serif+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -33,35 +33,32 @@
   <nav class="crumbs"><a href="index.html">首頁</a><span>/</span><a href="products.html">今日漁獲</a><span>/</span><span id="crumb-name">漁獲詳情</span></nav>
 </div>
 
-<section class="section" style="padding-top:12px">
+<section class="section" id="pd-view" style="padding-top:12px" hidden>
   <div class="wrap">
     <div class="pd grid-12 grid-12--wide">
-      <!-- 圖片 -->
       <div class="col-span-12 col-lg-span-6">
-        <div class="pd__gallery">
-          <div class="pd__main"><img src="../assets/images/amberjack.png?v=v3" alt="漁獲" id="pd-main"></div>
-          <div class="pd__thumbs" id="pd-thumbs"></div>
+        <div class="pd__gallery" id="pd-gallery">
+          <div class="pd__main"><img src="" alt="漁獲照片" id="pd-main"></div>
         </div>
+        <div class="media-empty pd__noimg" id="pd-no-photo" hidden>這筆商品沒有照片</div>
       </div>
 
-      <!-- 資訊 -->
       <div class="col-span-12 col-lg-span-6">
         <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
-          <span class="badge" id="pd-region">地區</span>
-          <span class="badge badge--navy">一支釣（手釣）</span>
-          <span class="badge" id="pd-rating">評分 4.9 / 96 則</span>
+          <span class="badge" id="pd-region">地區未提供</span>
+          <span class="badge badge--navy" id="pd-condition"></span>
+          <span class="badge badge--coral" id="pd-status"></span>
         </div>
-        <h1 style="font-size:2rem" id="pd-name">現流紅魽</h1>
-        <div style="font-size:.84rem;color:var(--muted);margin-top:8px;font-style:italic;letter-spacing:.04em" id="pd-latin">Seriola dumerili</div>
+        <h1 style="font-size:2rem" id="pd-name">漁獲</h1>
+        <div style="font-size:.84rem;color:var(--muted);margin-top:8px;font-style:italic;letter-spacing:.04em" id="pd-latin"></div>
 
-        <div class="pd__price"><b id="pd-price">$520<span class="unit"> / 台斤</span></b></div>
-        <p style="color:var(--muted);font-size:.88rem" id="pd-stock-note">可購買 3 尾</p>
+        <div class="pd__price"><b id="pd-price">$0</b><span class="unit" id="pd-unit-price"></span></div>
+        <p style="color:var(--muted);font-size:.88rem" id="pd-stock-note"></p>
 
         <div class="spec" id="pd-spec"></div>
 
         <div style="display:flex;align-items:center;gap:22px;margin:26px 0;flex-wrap:wrap">
-          <div class="qty-static"><b id="pd-qty">3</b><span>尾</span></div>
-          <span style="font-size:.82rem;color:var(--muted);letter-spacing:.06em">可購買 <b id="pd-qty-inline" style="color:var(--ink)">3</b> 尾 · 單價 <b id="subtotal" style="color:var(--ink);font-size:1.05rem;font-family:var(--font-display)">$520</b> / 台斤</span>
+          <div class="qty-static"><b id="pd-qty">0</b><span>尾可售</span></div>
         </div>
 
         <div style="display:flex;gap:12px;flex-wrap:wrap">
@@ -70,65 +67,21 @@
             與釣客聊聊
           </button>
         </div>
-
-        <!-- 運送與付款 -->
-        <div class="spec" id="pd-ship" style="margin-top:30px"></div>
-
       </div>
     </div>
   </div>
 </section>
 
-<!-- ============ 釣客資訊與評價 ============ -->
-<section class="section" style="background:var(--surface)">
-  <div class="wrap">
-    <div class="grid grid--2" style="gap:64px;align-items:start;background:none">
-      <div>
-        <div class="panel__head" style="border:none;padding:0;margin-bottom:26px">
-          <h3>釣客資訊</h3><span class="badge badge--teal">已驗證釣客</span>
-        </div>
-        <div class="seller-card">
-          <div class="seller-card__av" id="seller-av">釣</div>
-          <div>
-            <b id="seller-name">陳阿海</b>
-            <span id="seller-meta">澎湖・澎湖縣馬公市 · 一支釣資歷 20+ 年</span>
-          </div>
-        </div>
-        <div class="spec" style="margin:0">
-          <div>作業方式</div><div>一支釣（手釣）當日往返</div>
-          <div>所在地區</div><div id="seller-region">澎湖</div>
-          <div>累積成交</div><div id="seller-deals">186 筆</div>
-          <div>買家評價</div><div id="seller-rating">4.9 / 5.0（96 則）</div>
-        </div>
-        <button class="chat-trigger" style="margin-top:26px" onclick="FishMatchBot.open()">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8 8 0 0 1-8 8H7l-4 3V12a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8z"/></svg>
-          與釣客聊聊
-        </button>
-      </div>
-
-      <div>
-        <div class="panel__head" style="border:none;padding:0;margin-bottom:26px">
-          <h3>買家評價</h3><span style="font-size:.8rem;color:var(--muted)">96 則</span>
-        </div>
-        <div style="border-bottom:1px solid var(--rule-2);padding-bottom:22px;margin-bottom:22px">
-          <p style="font-size:.88rem;font-family:var(--font-display);line-height:2">收到時魚眼清澈、鰓超紅，一看就是當天釣的。做炙燒入口即化，家人反應很好。</p>
-          <div style="font-size:.74rem;color:var(--muted-2);margin-top:10px;letter-spacing:.08em">王小姐（個人）· 2026-10-05</div>
-        </div>
-        <div style="border-bottom:1px solid var(--rule-2);padding-bottom:22px;margin-bottom:22px">
-          <p style="font-size:.88rem;font-family:var(--font-display);line-height:2">重量標示準確，說 6.3 台斤實際收到 6.2 台斤，很實在。聊聊回覆也很快。</p>
-          <div style="font-size:.74rem;color:var(--muted-2);margin-top:10px;letter-spacing:.08em">陳先生（個人）· 2026-10-01</div>
-        </div>
-        <div>
-          <p style="font-size:.88rem;font-family:var(--font-display);line-height:2">海風大延後一天到貨，但釣客有提前通知，鮮度沒話說，會再回購。</p>
-          <div style="font-size:.74rem;color:var(--muted-2);margin-top:10px;letter-spacing:.08em">林**（個人）· 2026-09-27</div>
-        </div>
-      </div>
-    </div>
+<section class="section" id="pd-error" hidden>
+  <div class="wrap" style="max-width:720px">
+    <span class="eyebrow">Product</span>
+    <h2 id="pd-error-title">找不到這筆商品</h2>
+    <p class="lead" id="pd-error-text">商品可能已下架或連結有誤。</p>
+    <a href="products.html" class="btn btn--primary" style="margin-top:24px">回到今日漁獲</a>
   </div>
 </section>
 
-<!-- ============ 其他漁獲 ============ -->
-<section class="section">
+<section class="section" id="pd-related-section" hidden>
   <div class="wrap">
     <div class="section-head"><span class="eyebrow">More Today's Catch</span><h2>今日其他漁獲</h2></div>
     <div class="grid grid--4" id="related"></div>
@@ -138,17 +91,12 @@
 <!-- 共用頁殼：頁尾 -->
 <div id="site-footer"></div>
 
-
-
-
-
 <script src="../assets/js/config.js?v=v3"></script>
 <script src="../assets/js/api/client.js?v=v3"></script>
 <script src="../assets/js/api/auth.js?v=v3"></script>
-<script src="../assets/js/api/fish.js?v=v3"></script>
-<script src="../assets/js/api/fish-mapper.js?v=v3"></script>
-<script src="../assets/js/app/01-data.js?v=v3"></script>
+<script src="../assets/js/api/products.js?v=v3"></script>
 <script src="../assets/js/app/02-account.js?v=v3"></script>
+<script src="../assets/js/app/05-product-view.js?v=v3"></script>
 <script src="../assets/js/app/03-catalog.js?v=v3"></script>
 <script type="module" src="../assets/js/demo/main.js?v=v3"></script>
 <script src="../assets/js/app/06-drawer.js?v=v3"></script>

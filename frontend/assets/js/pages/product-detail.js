@@ -1,75 +1,110 @@
-let ITEM, p;
-function pickItem(){
-  const REQ = getParam("id");
-  ITEM = (REQ && CATCH[REQ]) ? REQ : "amberjack";
-  p = CATCH[ITEM];
-  window.ITEM = ITEM;
+/* 商品詳情：所有內容取自 GET /api/products/:id。 */
+function detailParam(name) {
+  try { return new URLSearchParams(location.search).get(name); } catch (e) { return null; }
 }
 
-function renderDetail(){
-  pickItem();
-
-  /* 主圖與縮圖 */
-  document.getElementById("pd-main").src = p.img;
-  document.getElementById("pd-main").alt = p.name;
-  const gallery = [p.img, "../assets/images/catch-still.jpg", "../assets/images/seabream.png", "../assets/images/grouper.jpg"];
-  document.getElementById("pd-thumbs").innerHTML = gallery.map((src,i)=>
-    `<div class="${i===0?'on':''}"><img src="${src}" alt="${p.name} 照片 ${i+1}"></div>`
-  ).join("");
-  document.querySelectorAll(".pd__thumbs div").forEach(d=>{
-    d.addEventListener("click", ()=>{
-      document.querySelectorAll(".pd__thumbs div").forEach(x=>x.classList.remove("on"));
-      d.classList.add("on");
-      document.getElementById("pd-main").src = d.querySelector("img").src;
-    });
-  });
-
-  /* 標題與基本資訊 */
-  document.title = p.name + " — 今日漁獲詳情 | 海人直送";
-  document.getElementById("crumb-name").textContent = p.name;
-  document.getElementById("pd-name").textContent = p.name;
-  document.getElementById("pd-latin").textContent = p.latin;
-  document.getElementById("pd-region").textContent = p.region;
-  document.getElementById("pd-rating").textContent = "評分 " + p.seller.rating + " / " + p.seller.deals + " 筆成交";
-  document.getElementById("pd-price").innerHTML = money(p.price) + `<span class="unit"> / ${p.unit}</span>`;
-  document.getElementById("pd-stock-note").innerHTML = soldOut(ITEM)
-    ? '<b style="color:var(--coral)">已售完</b>'
-    : `可購買 <b style="color:var(--ink)">${p.remaining} 尾</b> · 共 ${tailCount(ITEM)} 尾上架`;
-  document.getElementById("subtotal").textContent = money(p.price);
-  document.getElementById("pd-qty").textContent = p.remaining;
-  document.getElementById("pd-qty-inline").textContent = p.remaining;
-
-  /* 規格表（買家視角：魚種、這尾重量、產地、捕獲時間、處理方式） */
-  document.getElementById("pd-spec").innerHTML = `
-    <div>魚種</div><div>${p.name}（${p.latin}）</div>
-    <div>捕獲時間</div><div>${p.caught}</div>
-    <div>產地 / 地區</div><div>${p.location}（${p.region}）</div>
-    <div>捕獲海域</div><div>${p.sea}</div>
-    <div>可購買尾數</div><div><b style="color:var(--ink)">${p.remaining} 尾</b>（共 ${tailCount(ITEM)} 尾上架）</div>
-    <div>各尾重量</div><div>${p.tails.map((t,i)=>`第 ${i+1} 尾：約 ${t.weight} ${p.unit}`).join("<br>")}</div>
-    <div>處理方式</div><div>${p.process}${p.processNote ? "　" + p.processNote : ""}</div>
-    <div>庫存</div><div>${soldOut(ITEM) ? '<b style="color:var(--coral)">已售完</b>' : `可購買 ${p.remaining} 尾`}</div>
-    <div>保存方式</div><div>0–4°C 冷藏，建議 2 日內食用完畢</div>`;
-
-  /* 運送與付款 */
-  document.getElementById("pd-ship").innerHTML = `
-    <div>運送方式</div><div>${p.shipping.join("、")}</div>
-    <div>到貨時間</div><div>隔日 08:00–12:00（可備註指定時段）</div>
-    <div>付款方式</div><div>${p.payment.join("、")}</div>
-    <div>定金</div><div>${p.deposit.on ? ("需付定金 " + money(p.deposit.amount)) : "免定金"}</div>`;
-
-  /* 釣客資訊 */
-  document.getElementById("seller-av").textContent = p.seller.name.slice(0,1);
-  document.getElementById("seller-name").textContent = p.seller.name;
-  document.getElementById("seller-meta").textContent = p.seller.region + "・" + p.seller.location + " · 一支釣資歷 20+ 年";
-  document.getElementById("seller-region").textContent = p.seller.region;
-  document.getElementById("seller-deals").textContent = p.seller.deals + " 筆";
-  document.getElementById("seller-rating").textContent = p.seller.rating + " / 5.0（96 則）";
-
-  /* 其他漁獲 */
-  document.getElementById("related").innerHTML =
-    CATCH_ORDER.filter(id=>id!==ITEM).slice(0,4).map(catchCardHTML).join("");
+function showDetailError(title, text) {
+  document.getElementById("pd-view").hidden = true;
+  document.getElementById("pd-related-section").hidden = true;
+  document.getElementById("pd-error").hidden = false;
+  document.getElementById("pd-error-title").textContent = title;
+  document.getElementById("pd-error-text").textContent = text;
+  document.getElementById("crumb-name").textContent = "找不到商品";
+  document.title = "找不到商品 — 海人直送";
 }
-renderDetail();
-/* [資料綁定] 後端漁獲載入完成後重繪詳情頁（支援新上架商品 id，如 f<id>）。 */
-document.addEventListener("haisen:catch-ready", renderDetail);
+
+function renderPhoto(p) {
+  const photo = window.HaisenAPI.photoUrl(p.photo_url);
+  const gallery = document.getElementById("pd-gallery");
+  const missing = document.getElementById("pd-no-photo");
+  if (!photo) {
+    gallery.hidden = true;
+    missing.hidden = false;
+    return;
+  }
+  document.getElementById("pd-main").src = photo;
+  document.getElementById("pd-main").alt = (p.fish_species || "商品") + " 照片";
+  document.getElementById("pd-main").onerror = function () {
+    gallery.hidden = true;
+    missing.hidden = false;
+  };
+  gallery.hidden = false;
+  missing.hidden = true;
+}
+
+function renderSpec(p) {
+  const rows = [
+    ["魚種", p.fish_species || "—"],
+    ["學名", p.species_latin || "—"],
+    ["總重", productWeight(p) + " kg"],
+    ["尾數", Number(p.quantity || 0) + " 尾"],
+    ["處理方式", p.condition || "—"],
+    ["整批價", productMoney(p.price)],
+    ["每尾均價", productMoney(p.unit_price)],
+    ["可售尾數", productAvailable(p) + " 尾"],
+    ["地區", p.region || "—"],
+    ["地點", p.location || "—"],
+    ["釣獲時間", p.catch_time ? productDate(p.catch_time) : "未提供"]
+  ];
+  document.getElementById("pd-spec").innerHTML = rows.map(function (row) {
+    return "<div>" + row[0] + "</div><div>" + productEscape(row[1]) + "</div>";
+  }).join("");
+}
+
+function renderDetail(p) {
+  const status = productStatus(p);
+  renderPhoto(p);
+  document.getElementById("pd-region").textContent = p.region || "地區未提供";
+  document.getElementById("pd-condition").textContent = p.condition || "處理方式未提供";
+  document.getElementById("pd-status").textContent = status;
+  document.getElementById("pd-name").textContent = productTitle(p);
+  document.getElementById("pd-latin").textContent = p.species_latin || "";
+  document.getElementById("pd-price").innerHTML = productMoney(p.price) + '<span class="unit"> / 整批</span>';
+  document.getElementById("pd-unit-price").textContent = "每尾 " + productMoney(p.unit_price);
+  document.getElementById("pd-stock-note").textContent =
+    status + " · 共 " + Number(p.quantity || 0) + " 尾上架";
+  document.getElementById("pd-qty").textContent = String(productAvailable(p));
+  renderSpec(p);
+
+  document.getElementById("crumb-name").textContent = p.fish_species || "漁獲詳情";
+  document.title = productTitle(p) + " — 今日漁獲 | 海人直送";
+  document.getElementById("pd-view").hidden = false;
+}
+
+async function loadRelated(currentId) {
+  try {
+    const products = await window.HaisenAPI.listProducts();
+    const others = products.filter(function (p) { return p.id !== currentId; }).slice(0, 4);
+    if (!others.length) return;
+    renderProductCards("related", others);
+    document.getElementById("pd-related-section").hidden = false;
+  } catch (error) {
+    /* 其他漁獲載入失敗不影響主商品。 */
+  }
+}
+
+async function loadDetail() {
+  const id = detailParam("id");
+  if (!id) {
+    showDetailError("找不到這筆商品", "商品連結不完整，請回到列表重新選擇。");
+    return;
+  }
+  try {
+    const product = await window.HaisenAPI.getProduct(id);
+    if (!product) {
+      showDetailError("找不到這筆商品", "商品可能已下架或連結有誤。");
+      return;
+    }
+    renderDetail(product);
+    loadRelated(product.id);
+  } catch (error) {
+    if (error.status === 404) {
+      showDetailError("找不到這筆商品", "商品可能已下架或連結有誤。");
+      return;
+    }
+    showDetailError("無法載入商品",
+      error.status === 0 ? "無法連線到伺服器，請確認後端已啟動" : error.message);
+  }
+}
+
+loadDetail();

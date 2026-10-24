@@ -110,6 +110,7 @@ export async function publishDraft() {
     ui.scrollEnd();
 
     if (window.loadCatchFromApi) window.loadCatchFromApi();
+    document.dispatchEvent(new CustomEvent("haisen:products-changed"));
     if (window.toast) window.toast("已上架：" + product.title);
   } catch (error) {
     ui.notify(error);

@@ -1,7 +1,8 @@
-/* [API 對接點] GET /api/fish/data → 併入 CATCH（同 key 覆蓋、新 key 追加）。
-   app.js 既有的 render* 函式完全不動，只替換資料來源。
-   連線失敗時保留下方的示意資料，介面不會空白，外觀維持不變。 */
+/* [過渡期 API 對接點] 首頁「今日漁獲」仍使用舊格式 GET /api/fish/data → 併入 CATCH。
+   商品列表與詳情已改接 /api/products；首頁會在 ticket 05 一併遷移。
+   連線失敗時保留示意資料，首頁不會空白。 */
 async function loadCatchFromApi(){
+  if(!document.getElementById("today-catch")) return;
   if(!window.HaisenAPI){ document.dispatchEvent(new CustomEvent("haisen:catch-ready")); return; }
   try{
     const rows = await window.HaisenAPI.listFish();

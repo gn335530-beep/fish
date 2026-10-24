@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>今日漁獲 — 海人直送</title>
-<meta name="description" content="各地個人釣客今日上架的現流漁獲。依魚類與地區篩選，查看可購買尾數與各尾重量、產地與捕獲時間，售完為止。">
+<meta name="description" content="各地個人釣客今日上架的漁獲。依魚類與縣市篩選，查看可售尾數、整批價與捕獲日期，售完為止。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&family=Noto+Serif+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -38,14 +38,14 @@
     <div class="section-head" style="margin-bottom:34px">
       <span class="eyebrow">Today's Catch</span>
       <h2>今日漁獲</h2>
-      <p class="lead" style="margin-top:14px">各地個人釣客今日上架的現流漁獲，共 <b id="total-count">7</b> 種，數量有限、售完為止。可依魚類與地區篩選，避免商品過遠無法運送。</p>
+      <p class="lead" style="margin-top:14px">各地個人釣客今日上架的漁獲，共 <b id="total-count">0</b> 筆，數量有限、售完為止。可依魚類與縣市篩選。</p>
     </div>
 
     <!-- 地區選擇 -->
     <div class="region-bar">
-      <span class="region-bar__label">我的地區</span>
+      <span class="region-bar__label">我的縣市</span>
       <div class="region-chips" id="region-chips"></div>
-      <span class="region-bar__hint" id="region-hint">選擇地區後，將優先顯示可運送給你的漁獲</span>
+      <span class="region-bar__hint" id="region-hint">選擇縣市後，只顯示該縣市的商品</span>
     </div>
 
     <div class="layout grid-12 grid-12--wide" style="margin-top:44px">
@@ -53,21 +53,16 @@
       <aside class="filters col-span-12 col-lg-span-3">
         <h4>魚類</h4>
         <label class="check"><input type="checkbox" class="f-cat" value="fish" checked> 魚類</label>
-        <label class="check"><input type="checkbox" class="f-cat" value="ceph" checked> 頭足類（小卷／軟絲）</label>
+        <label class="check"><input type="checkbox" class="f-cat" value="ceph" checked> 頭足類</label>
 
-        <h4>地區</h4>
-        <div id="f-regions"></div>
-
-        <h4>價格區間</h4>
-        <input type="range" class="range" min="150" max="2000" value="2000" id="price-range">
+        <h4>價格上限（整批）</h4>
+        <input type="range" class="range" min="0" max="1000" value="1000" id="price-range">
         <div style="display:flex;justify-content:space-between;font-size:.74rem;color:var(--muted);margin-top:8px;font-family:var(--font-mono)">
-          <span>$150</span><span id="price-max">$2,000</span>
+          <span>0 元</span><span id="price-max">1,000 元</span>
         </div>
 
         <h4>其他</h4>
         <label class="check"><input type="checkbox" id="f-instock"> 僅顯示尚有庫存</label>
-        <label class="check"><input type="checkbox" id="f-sashimi"> 生食級</label>
-        <label class="check"><input type="checkbox" id="f-selfpick"> 可買家自取</label>
 
         <button class="btn btn--ghost btn--sm btn--block" style="margin-top:28px" id="reset-filters">重設篩選</button>
       </aside>
@@ -75,7 +70,7 @@
       <!-- 漁獲區 -->
       <div class="col-span-12 col-lg-span-9">
         <div class="toolbar">
-          <div class="toolbar__count">今日供應 <b id="shown-count">7</b> 種現流</div>
+          <div class="toolbar__count">今日供應 <b id="shown-count">0</b> 筆</div>
           <div style="display:flex;align-items:center;gap:12px">
             <span style="font-size:.74rem;color:var(--muted);letter-spacing:.12em;text-transform:uppercase">排序</span>
             <select class="select" id="sort" style="width:auto;padding:6px 26px 6px 2px;font-size:.84rem">
@@ -86,7 +81,7 @@
             </select>
           </div>
         </div>
-        <div class="grid grid--3" id="catch-grid"></div>
+        <div class="grid grid--3" id="catch-grid"><p class="state-msg">載入商品中…</p></div>
       </div>
     </div>
   </div>
@@ -102,10 +97,10 @@
 <script src="../assets/js/config.js?v=v3"></script>
 <script src="../assets/js/api/client.js?v=v3"></script>
 <script src="../assets/js/api/auth.js?v=v3"></script>
-<script src="../assets/js/api/fish.js?v=v3"></script>
-<script src="../assets/js/api/fish-mapper.js?v=v3"></script>
-<script src="../assets/js/app/01-data.js?v=v3"></script>
+<script src="../assets/js/api/products.js?v=v3"></script>
 <script src="../assets/js/app/02-account.js?v=v3"></script>
+<script src="../assets/js/app/04-regions.js?v=v3"></script>
+<script src="../assets/js/app/05-product-view.js?v=v3"></script>
 <script src="../assets/js/app/03-catalog.js?v=v3"></script>
 <script type="module" src="../assets/js/demo/main.js?v=v3"></script>
 <script src="../assets/js/app/06-drawer.js?v=v3"></script>
