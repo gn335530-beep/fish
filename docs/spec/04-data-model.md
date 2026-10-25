@@ -11,7 +11,7 @@
 | `conversations` | 3 | ✅（助手房；交易房由開啟交易房建立） |
 | `messages` | 78 | ✅ |
 | `deals` | 0 | ✅ 草稿由開啟交易房建立 |
-| `reviews` | 0 | ⬜ 無路由會寫入 |
+| `reviews` | 0 | ✅ 成交後由 `POST /api/reviews/submit` 寫入 |
 | `market_prices` | 不存在 | ⬜ |
 | `species_market_codes` | 不存在 | ⬜ |
 | `market_locations` | 不存在 | ⬜ |
@@ -142,10 +142,11 @@
   "items_total": 5000,
   "items": [{ "title": "...", "quantity": 1, "unit_price": 2800 }] }
 { "type": "order" }                                               // 目標
-{ "type": "review" }                                              // 目標
+{ "type": "review", "deal_id": "deal_...", "buyer_id": 2, "seller_id": 1,
+  "buyer_reviewed": false, "seller_reviewed": false }
 ```
 
-**目標**：`deal` 卡狀態值統一為 `pending` / `rejected` / `confirmed` / `cancelled` / `expired`；目前提案會寫入 `pending`，逾時流程會寫 `expired`。
+**卡片狀態**：`deal` 卡為 `pending` / `rejected` / `confirmed` / `cancelled` / `expired`。`review` 卡沒有狀態欄位，改用 `buyer_reviewed`／`seller_reviewed` 表示雙方是否已評價。
 
 ## 7. `deals`
 
@@ -191,8 +192,9 @@
 - `deal_terms` 在 `DRAFT` 可以為 `null`。
 - `cancel_reason`：`SELLER_OUT_OF_STOCK`、`BUYER_CHANGED_MIND`、`TERMS_MISMATCH`、`OTHER`、`LOCK_EXPIRED`、`HOLD_EXPIRED`。
 - `cancelled_by` 是使用者 id；逾時取消時是 `"system"`。
+- `review_status` 由評價端點維護，成交後插入的評價卡會跟著更新。
 
-## 8. `reviews`（目標）
+## 8. `reviews`
 
 ```jsonc
 { "id": "rev_20261025_001", "deal_id": "deal_...",
@@ -201,7 +203,9 @@
   "created_at": "..." }
 ```
 
-唯一鍵：`deal_id + reviewer_id`。
+- 唯一鍵：`deal_id + reviewer_id`；重複評價回 409。
+- `tags` 最多 3 個（送去重的前長度就必須 ≤ 3），必須是「準時守約／魚貨新鮮／溝通良好／包裝完善／臨時放鳥」之一。
+- 送出後用該對象的全部評價重算 `rating_score` 與 `review_count`；含「臨時放鳥」時 `no_show_count` +1，達 3 次 `is_blacklisted = true`。
 
 ## 9. 行情資料表（目標）
 

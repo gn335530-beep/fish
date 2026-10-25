@@ -65,6 +65,9 @@
 | 25 | POST | `/api/deals/propose` | 參與者 | ✅ 送出協議 |
 | 26 | POST | `/api/deals/respond` | 參與者（非發起方） | ✅ 同意／退回 |
 | 27 | POST | `/api/deals/cancel` | 參與者 | ✅ 取消並釋放 |
+| 28 | GET | `/api/deals` | 登入 | ✅ 交易紀錄列表 |
+| 29 | POST | `/api/reviews/submit` | 登入（參與者） | ✅ 送出評價 |
+| 30 | GET | `/api/reviews?user_id=` | 公開 | ✅ 使用者的評價與平均 |
 
 ## 3. 會員
 
@@ -272,7 +275,7 @@
 
 ## 8. 交易端點
 
-> 2026-10-25：`initiate-channel`、訂單明細、項目 CRUD、`propose`、`respond` 與 `cancel` 已實作；交易紀錄仍是目標。
+> 2026-10-25：`initiate-channel`、訂單明細、項目 CRUD、`propose`、`respond`、`cancel` 與交易紀錄都已實作。
 
 ### 8.1 訂單
 
@@ -287,7 +290,7 @@
 | POST | `/api/deals/propose` | 參與者 | ✅ 送協議，逐項檢查可售 |
 | POST | `/api/deals/respond` | 參與者（非發起方） | ✅ 同意／退回 |
 | POST | `/api/deals/cancel` | 參與者 | ✅ 取消並釋放 |
-| GET | `/api/deals` | 登入 | 交易紀錄列表（目標） |
+| GET | `/api/deals` | 登入 | ✅ 交易紀錄列表 |
 
 `POST /api/deals/initiate-channel`
 
@@ -301,9 +304,13 @@
 
 `GET /api/deals/:id`
 
-回 200 `data` 是訂單：`items[]` 每項附 `available`（目前可售尾數），`items_total` 由 `unit_price × quantity` 重算。非參與者 403 `FORBIDDEN`，不存在 404 `DEAL_NOT_FOUND`。
+回 200 `data` 是訂單：`items[]` 每項附 `available`（目前可售尾數），`items_total` 由 `unit_price × quantity` 重算；另附 `peer`（對方 `{ id, display_name }`）、`role`（`buyer`／`seller`）、`my_reviewed` 與 `peer_reviewed`。非參與者 403 `FORBIDDEN`，不存在 404 `DEAL_NOT_FOUND`。
 
 **副作用**：讀取前會先做逾期掃描，可能讓這筆訂單轉為 `CANCELLED` 並留下系統訊息。
+
+`GET /api/deals`
+
+回目前使用者參與的所有訂單，依「成交時間，未成交則建立時間」由新到舊（`confirmed_at || created_at`）。每筆含 `id`、`deal_status`、`created_at`、`confirmed_at`、`item_count`、`total_quantity`、`items_total`、`final_price`（有 `deal_terms` 用整單金額，否則用小計）、`review_status`、`role`、`my_reviewed`、`peer_reviewed`、`peer`。讀取前同樣會做逾期掃描。
 
 `POST /api/deals/items`
 
@@ -369,12 +376,29 @@
 | 方法 | 路徑 | 權限 |
 | --- | --- | --- |
 | POST | `/api/reviews/submit` | 登入（且為該訂單參與者） |
+| GET | `/api/reviews?user_id=&limit=` | 公開 |
 
 ```json
 { "deal_id": "deal_...", "rating": 5, "tags": ["準時守約"], "comment": "…" }
 ```
 
-`reviewer_id`、`target_user_id`、`reviewer_role` 由訂單與 Token 推導，不接受 client 指定。重複評價回 409 `ALREADY_REVIEWED`。評價對象必須是已成交的訂單。
+- `rating` 必須是 1–5 的整數。
+- `tags` 最多 3 個，只接受「準時守約」「魚貨新鮮」「溝通良好」「包裝完善」「臨時放鳥」。
+- `comment` 最多 100 字。
+- `reviewer_id`、`target_user_id`、`reviewer_role` 由訂單與 Token 推導，不接受 client 指定；買家評釣客、釣客評買家。
+- 只有 `CONFIRMED` 的訂單能評價；重複評價回 409 `ALREADY_REVIEWED`。
+- 回 201 `{ review, target }`。`target` 是評價對象更新後的公開資料。伺服器用該對象的全部評價重算 `rating_score`、`review_count`；含「臨時放鳥」的評價會讓 `no_show_count` +1，達 3 次時 `is_blacklisted = true`。未到次數只累加，不會因重算而減少。
+- 最新的評價卡會同步雙方的 `buyer_reviewed`／`seller_reviewed`。
+
+`GET /api/reviews?user_id=1&limit=6`（公開）回：
+
+```jsonc
+{ "user_id": 1, "rating_score": 4.8, "review_count": 18,
+  "reviews": [{ "id": "rev_...", "rating": 5, "tags": ["準時守約"],
+    "comment": "…", "created_at": "...", "reviewer_name": "買家乙" }] }
+```
+
+`rating_score` 與 `review_count` 由 `reviews` 實際資料計算，不採信會員表上的舊數字；`reviews` 只回最近 `limit` 筆。只回傳評價者的顯示名稱，不回傳電話或其他會員欄位。找不到使用者回 404 `USER_NOT_FOUND`。
 
 ### 8.3 行情
 
@@ -437,7 +461,13 @@
 | `DEAL_IN_PROGRESS` | 409 | 提案（房間已有進行中訂單） |
 | `INVALID_ACTION` | 400 | 回應協議（不是 AGREE／REJECT） |
 | `INVALID_CANCEL_REASON` | 400 | 取消（缺原因或原因無效） |
-| `ALREADY_REVIEWED` | 409 | 目標：評價 |
+| `INVALID_RATING` | 400 | 評價（星等不是 1–5） |
+| `INVALID_TAGS` | 400 | 評價（標籤格式或名稱無效） |
+| `TOO_MANY_TAGS` | 400 | 評價（超過 3 個標籤） |
+| `COMMENT_TOO_LONG` | 400 | 評價（評語超過 100 字） |
+| `DEAL_NOT_CONFIRMED` | 409 | 評價（訂單未成交） |
+| `ALREADY_REVIEWED` | 409 | 評價（重複送出） |
+| `USER_NOT_FOUND` | 404 | 公開評價列表 |
 | `INVALID_SPECIES` | 400 | 目標：行情 |
 | `INVALID_DATE` | 400 | 目標：行情 |
 | `NO_TRADE_DATA` | 200 | 目標：行情（不是錯誤） |

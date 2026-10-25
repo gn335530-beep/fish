@@ -126,14 +126,29 @@ export function mountPanel(options) {
     handlers.onAction(node.dataset.action, node.dataset);
   });
   refs.body.addEventListener("input", function (event) {
-    const node = event.target.closest("[data-field]");
-    if (node && handlers.onInput) handlers.onInput(node.dataset.field, node.value);
+    const field = event.target.closest("[data-field]");
+    if (field && handlers.onInput) handlers.onInput(field.dataset.field, field.value);
+    const review = event.target.closest("[data-review-deal]");
+    const comment = event.target.closest("[data-review-comment]");
+    if (review && comment && handlers.onReviewComment) {
+      handlers.onReviewComment(review.dataset.reviewDeal, comment.value);
+    }
   });
   refs.body.addEventListener("change", function (event) {
     const addon = event.target.closest("[data-addon-qty]");
     if (addon && handlers.onSelect) handlers.onSelect(addon.dataset.addonQty, addon.value);
     const reason = event.target.closest("[data-cancel-reason]");
     if (reason && handlers.onReason) handlers.onReason(reason.dataset.cancelReason, reason.value);
+    const review = event.target.closest("[data-review-deal]");
+    if (!review) return;
+    const field = event.target.closest("[data-review-field]");
+    if (field && handlers.onReviewField) {
+      handlers.onReviewField(review.dataset.reviewDeal, field.dataset.reviewField, field.value);
+    }
+    const tag = event.target.closest("[data-review-tag]");
+    if (tag && handlers.onReviewTag) {
+      handlers.onReviewTag(review.dataset.reviewDeal, tag.dataset.reviewTag, tag.checked);
+    }
   });
   document.addEventListener("keydown", function (event) {
     if (event.key === "Escape" && api.isOpen()) api.close();

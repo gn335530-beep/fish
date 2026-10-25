@@ -58,6 +58,7 @@ function renderAuthNav(){
       <div class="nav-menu__sec">
         <div class="nav-menu__label">我的</div>
         <button class="nav-menu__item" type="button" data-open-drawer>個人資訊</button>
+        <button class="nav-menu__item" type="button" data-open-history>交易紀錄</button>
       </div>
       ${links}
       <div class="nav-menu__sec">
@@ -68,6 +69,10 @@ function renderAuthNav(){
       <div class="nav-menu__sec">
         <div class="nav-menu__label">會員</div>
         <a class="nav-menu__item" href="login.html">登入 / 註冊</a>
+      </div>
+      <div class="nav-menu__sec">
+        <div class="nav-menu__label">我的</div>
+        <button class="nav-menu__item" type="button" data-open-history>交易紀錄</button>
       </div>
       ${links}`;
   }
@@ -80,6 +85,11 @@ function bindNavMenu(){
   inner.querySelectorAll("[data-open-drawer]").forEach(b => b.addEventListener("click", ()=>{
     closeNavMenu();
     openDrawer();
+  }));
+  inner.querySelectorAll("[data-open-history]").forEach(b => b.addEventListener("click", ()=>{
+    closeNavMenu();
+    openDrawer();
+    openTradeHistory();
   }));
   const out = document.getElementById("nav-menu-logout");
   if(out) out.addEventListener("click", ()=>{

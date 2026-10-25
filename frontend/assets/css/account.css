@@ -55,6 +55,38 @@
 }
 .eyebrow .opt-tag{margin-left:9px}
 
+/* ---------- 交易紀錄 ---------- */
+.drawer__entry{display:flex;flex-direction:column;align-items:flex-start;gap:3px;width:100%;padding:14px 0;margin-bottom:22px;border-top:1px solid var(--rule-2);border-bottom:1px solid var(--rule-2);text-align:left;background:none}
+.drawer__entry b{font-family:var(--font-display);font-size:1rem;font-weight:600}
+.drawer__entry span{font-size:.72rem;color:var(--muted)}
+.drawer__entry:hover b{color:var(--accent)}
+.history__head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.history__head h4{margin:0}
+.drawer__back{padding:4px 8px;border:1px solid var(--rule);background:none;color:var(--muted);font-size:.7rem;cursor:pointer}
+.drawer__back:hover{border-color:var(--ink);color:var(--ink)}
+.history{display:grid;gap:8px}
+.history__item{display:grid;gap:3px;width:100%;padding:12px;border:1px solid var(--rule-2);background:var(--surface);text-align:left;cursor:pointer}
+.history__item:hover{border-color:var(--accent)}
+.history__top{display:flex;justify-content:space-between;gap:10px}
+.history__top b{font-size:.78rem}
+.history__top em{font-size:.66rem;font-style:normal;color:var(--muted-2)}
+.history__peer{font-size:.78rem;color:var(--ink)}
+.history__meta{font-size:.7rem;color:var(--muted)}
+.history__review{font-size:.68rem;color:var(--accent)}
+.history__summary{display:flex;justify-content:space-between;gap:10px;font-size:.8rem;margin-bottom:12px}
+.history__summary span{color:var(--muted-2);font-size:.7rem}
+.history__items{display:grid;gap:10px;list-style:none;margin:0 0 16px;padding:0}
+.history__items li{display:flex;align-items:center;gap:10px;font-size:.72rem}
+.history__items img{width:48px;height:48px;object-fit:cover;flex:none}
+.history__item-main{flex:1;display:grid;gap:2px;min-width:0}
+.history__items b{font-weight:500}
+.history__items em{font-style:normal;color:var(--muted);font-size:.66rem}
+.history__item-price{font-family:var(--font-mono);font-size:.7rem;flex:none}
+.history__terms{display:grid;gap:6px;margin:0 0 12px;padding:12px 0;border-top:1px solid var(--rule-2);border-bottom:1px solid var(--rule-2)}
+.history__terms div{display:flex;justify-content:space-between;gap:10px;font-size:.72rem}
+.history__terms dt{color:var(--muted)}
+.history__terms dd{margin:0;text-align:right}
+
 /* ---------- v10 響應式 ---------- */
 @media(max-width:1080px){
   .drawer__panel{width:400px}

@@ -11,7 +11,8 @@ function bubble(message) {
 
   const mine = state.user && String(message.sender_id) === String(state.user.id);
   const isAi = message.sender_id === "ai";
-  const speaker = isAi ? "小幫手" : (mine ? "我" : (state.room && state.room.peer ? state.room.peer.display_name : "對方"));
+  const isSystem = String(message.sender_id) === "system";
+  const speaker = isSystem ? "系統" : (isAi ? "小幫手" : (mine ? "我" : (state.room && state.room.peer ? state.room.peer.display_name : "對方")));
   let content;
   if (message.type === "card") {
     content = renderCard(message.card);
