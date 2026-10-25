@@ -1,6 +1,6 @@
 /* 訂單與商品的衍生計算：可售尾數、商品狀態、逾時釋放。 */
 
-const { all, patch, insert, nextCode, nextSeq } = require("./store");
+const { all, findById, patch, insert, nextCode, nextSeq } = require("./store");
 
 const ACTIVE_STATUS = ["PENDING_REVIEW", "NEGOTIATING"];
 
@@ -21,9 +21,10 @@ function reservedFor(productId, deals) {
   }, 0);
 }
 
+/* 有保留就先算洽談中；全部售完且沒有保留才是 SOLD_OUT。 */
 function statusOf(available, reserved) {
-  if (available <= 0) return "SOLD_OUT";
   if (reserved > 0) return "PARTIALLY_RESERVED";
+  if (available <= 0) return "SOLD_OUT";
   return "ACTIVE";
 }
 
@@ -49,6 +50,14 @@ function decorateProducts(products) {
   return products.map(function (product) { return decorateProduct(product, deals); });
 }
 
+/* 單一商品目前的可售尾數；商品不存在時回 null。 */
+function productAvailability(productId) {
+  const product = findById("products", productId);
+  if (!product) return null;
+  const decorated = decorateProduct(product, all("deals"));
+  return { product: product, decorated: decorated, available: decorated.available };
+}
+
 /* 卡片訊息跟著訂單狀態同步，讓重新載入後仍顯示正確結果。 */
 function syncDealCard(dealId, status) {
   all("messages").forEach(function (message) {
@@ -60,17 +69,27 @@ function syncDealCard(dealId, status) {
   });
 }
 
-function systemMessage(conversationId, text) {
-  insert("messages", {
+function addMessage(conversationId, fields) {
+  return insert("messages", Object.assign({
     id: nextCode("messages", "msg"),
     seq: nextSeq("messages"),
     conversation_id: conversationId,
-    sender_id: "system",
-    type: "system",
-    text: text,
     image_url: null,
     card: null,
     created_at: new Date().toISOString()
+  }, fields));
+}
+
+function systemMessage(conversationId, text) {
+  return addMessage(conversationId, { sender_id: "system", type: "system", text: text });
+}
+
+function cardMessage(conversationId, senderId, card) {
+  return addMessage(conversationId, {
+    sender_id: senderId,
+    type: "card",
+    text: "",
+    card: card
   });
 }
 
@@ -109,7 +128,10 @@ module.exports = {
   reservedFor: reservedFor,
   decorateProduct: decorateProduct,
   decorateProducts: decorateProducts,
+  productAvailability: productAvailability,
   syncDealCard: syncDealCard,
+  addMessage: addMessage,
   systemMessage: systemMessage,
+  cardMessage: cardMessage,
   sweepExpired: sweepExpired
 };

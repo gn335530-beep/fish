@@ -31,6 +31,11 @@
 | `POST` | `/api/conversations/{id}/read` | 參與者 | 標記已讀 |
 | `POST` | `/api/conversations/{id}/clear` | 參與者（助手房） | 清除舊訊息 |
 | `POST` | `/api/deals/initiate-channel` | 登入 | 由商品開啟或沿用交易房與草稿訂單 |
+| `GET` | `/api/deals/{id}` | 參與者 | 訂單明細，項目附可售尾數 |
+| `POST` | `/api/deals/items` | 買家 | 加購同一釣客的商品 |
+| `PATCH` | `/api/deals/items/{itemId}` | 買家 | 改尾數（需帶 `deal_id`） |
+| `DELETE` | `/api/deals/items/{itemId}`、`/api/deals/items` | 買家 | 刪除項目／清空 |
+| `POST` | `/api/deals/propose` | 參與者 | 送出協議，鎖定 30 分鐘 |
 | `POST` | `/api/uploads` | 登入 | 上傳圖片（base64 data URL） |
 
 `GET /api/products` 會先掃描逾時訂單並釋放保留，不是純讀取。舊的 `/api/fish/data` 與 `PUT /api/fish/data/{id}` 已移除。

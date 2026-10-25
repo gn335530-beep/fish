@@ -2,28 +2,9 @@
 
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { createDb } = require("./fixture");
+const { start, stop, call, tokens } = require("./client");
 
-process.env.FISHMATCH_DB = createDb();
-const app = require("../app");
-
-let server = null;
-let base = "";
-const tokens = {};
 const seen = {};
-
-async function call(method, suffix, options) {
-  const opts = options || {};
-  const headers = {};
-  if (opts.token) headers.Authorization = "Bearer " + opts.token;
-  if (opts.body) headers["Content-Type"] = "application/json";
-  const response = await fetch(base + suffix, {
-    method: method,
-    headers: headers,
-    body: opts.body ? JSON.stringify(opts.body) : undefined
-  });
-  return { status: response.status, body: await response.json() };
-}
 
 async function initiate(productId, quantity, token) {
   return call("POST", "/api/deals/initiate-channel", {
@@ -32,27 +13,9 @@ async function initiate(productId, quantity, token) {
   });
 }
 
-test.before(async function () {
-  await new Promise(function (resolve) {
-    server = app.listen(0, resolve);
-  });
-  base = "http://127.0.0.1:" + server.address().port;
-  const accounts = [
-    ["buyer", "0922222222", 2],
-    ["seller", "0911111111", 1],
-    ["third", "0933333333", 3]
-  ];
-  for (const account of accounts) {
-    const result = await call("POST", "/api/auth/login", {
-      body: { username: account[1], password: "pw" + account[2] }
-    });
-    tokens[account[0]] = result.body.data.token;
-  }
-});
+test.before(start);
 
-test.after(function () {
-  if (server) server.close();
-});
+test.after(stop);
 
 test("買家開啟交易房並建立草稿訂單", async function () {
   const result = await initiate("prd_a", 1);

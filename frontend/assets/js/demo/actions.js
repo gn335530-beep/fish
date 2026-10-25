@@ -4,6 +4,7 @@ import { state, update } from "./store.js";
 import * as api from "./api.js";
 import { refreshRooms } from "./poll.js";
 import { openRoom, viewOf } from "./rooms.js";
+import { initDealActions, handleDealAction } from "./deal-actions.js";
 import {
   submitText, publishDraft, resetDraft, explainProduct, beginEdit, beginDeal
 } from "./flow.js";
@@ -16,6 +17,7 @@ export function initActions(options) {
   panel = options.panel;
   render = options.render;
   notify = options.notify;
+  initDealActions(options);
 }
 
 function panelQuantity(productId) {
@@ -46,6 +48,7 @@ export async function handleAction(action, data) {
     return;
   }
   if (action === "photo") return panel.openFilePicker();
+  if (await handleDealAction(action, data)) return;
   if (action === "edit-slot") return beginEdit(data.slot);
   if (action === "publish") {
     publishDraft();

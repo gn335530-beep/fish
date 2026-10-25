@@ -1,5 +1,9 @@
 /* 前端共用狀態。任何變更都會通知訂閱者重繪，不做虛擬 DOM。 */
 
+export function emptyProposal() {
+  return { final_price: "", meetup_location: "", meetup_time: "" };
+}
+
 export const state = {
   user: null,
   conversations: [],
@@ -7,7 +11,14 @@ export const state = {
   messages: [],
   lastSeq: 0,
   view: "assistant",
-  notice: ""
+  notice: "",
+  deal: null,
+  dealOpen: true,
+  addonOpen: false,
+  addons: [],
+  addonQty: {},
+  proposeOpen: false,
+  proposal: emptyProposal()
 };
 
 const listeners = [];

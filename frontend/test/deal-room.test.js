@@ -61,13 +61,13 @@ test("交易房訊息只送出一次，不呼叫助手回覆", async function ()
   assert.equal(state.messages.length, 1);
 });
 
-test("輪詢會同步目前房間的訂單摘要", function () {
+test("輪詢會同步目前房間的訂單摘要", async function () {
   const stale = Object.assign({}, ROOM, {
     order: { status: "DRAFT", item_count: 1, total_quantity: 1, final_price: 1400 }
   });
   update({ room: stale, conversations: [ROOM] });
 
-  poll.syncOpenRoom();
+  await poll.syncOpenRoom();
 
   assert.equal(state.room.order.item_count, 2);
   assert.equal(state.room.order.final_price, 4330);

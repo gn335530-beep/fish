@@ -6,6 +6,7 @@ const { requireUser } = require("../lib/auth");
 const { decorateProduct, systemMessage } = require("../lib/orders");
 const { summary } = require("../lib/conversations");
 const deals = require("../lib/deals");
+const dealItems = require("../lib/deal-items");
 const { ok, fail } = require("../lib/http");
 
 const router = express.Router();
@@ -31,7 +32,7 @@ router.post("/api/deals/initiate-channel", requireUser, function (req, res) {
   const decorated = decorateProduct(product, all("deals"));
   let conversation = deals.findConversation(req.user.id, product.seller_id);
   let deal = conversation ? deals.draftOf(conversation.id) : null;
-  const inDraft = deals.quantityOf(deal, product.id);
+  const inDraft = dealItems.quantityOf(deal, product.id);
 
   /* 草稿不保留庫存，但同一筆草稿加起來不得超過目前可售。 */
   if (inDraft + quantity > decorated.available) {
@@ -53,18 +54,23 @@ router.post("/api/deals/initiate-channel", requireUser, function (req, res) {
   }
 
   if (!deal) deal = deals.createDeal(conversation, req.user.id, now);
-  deal = deals.addItem(deal, decorated, quantity);
+  deal = dealItems.addItem(deal, decorated, quantity);
 
   if (createdRoom) systemMessage(conversation.id, "已進入交易洽談。");
   systemMessage(conversation.id, "已將「" + decorated.title + "」" + quantity + " 尾加入訂單草稿。");
-
-  conversation = patch("conversations", conversation.id, { last_message_at: new Date().toISOString() });
+  conversation = deals.touch(conversation.id);
 
   ok(res, {
     conversation: summary(conversation, req.user),
-    deal: deal,
+    deal: deals.decorateDeal(deal),
     product: decorated
   }, "已開啟交易房");
+});
+
+router.get("/api/deals/:id", requireUser, function (req, res) {
+  const deal = deals.requireDeal(req, res);
+  if (!deal) return;
+  ok(res, deals.decorateDeal(deal), "取得訂單成功");
 });
 
 module.exports = router;

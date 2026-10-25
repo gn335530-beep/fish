@@ -28,21 +28,32 @@ async function refreshMessages() {
 }
 
 /* 目前的房間摘要（訂單項目數、金額）也要跟著別人的加購更新。 */
-export function syncOpenRoom() {
+export async function syncOpenRoom() {
   if (!state.room) return;
   const fresh = (state.conversations || []).find(function (item) {
     return item.id === state.room.id;
   });
   if (!fresh) return;
+
   const order = fresh.order || null;
-  if (JSON.stringify(order) === JSON.stringify(state.room.order || null)) return;
-  update({
-    room: Object.assign({}, state.room, {
-      order: order,
-      peer: fresh.peer,
-      mode: fresh.mode
-    })
-  });
+  const changed = JSON.stringify(order) !== JSON.stringify(state.room.order || null);
+  if (changed) {
+    update({
+      room: Object.assign({}, state.room, {
+        order: order,
+        peer: fresh.peer,
+        mode: fresh.mode
+      })
+    });
+  }
+
+  if (fresh.type !== "deal" || !order) return;
+  if (!changed && state.deal && state.deal.id === order.id) return;
+  try {
+    update({ deal: await api.getDeal(order.id) });
+  } catch (error) {
+    /* 訂單明細載入失敗時，摘要仍然可用。 */
+  }
 }
 
 async function tick() {
@@ -50,7 +61,7 @@ async function tick() {
   running = true;
   try {
     await refreshRooms();
-    syncOpenRoom();
+    await syncOpenRoom();
     if (state.room && state.view !== "inbox") await refreshMessages();
   } catch (error) {
     update({ notice: error && error.message ? error.message : "" });

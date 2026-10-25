@@ -1,15 +1,25 @@
 /* 訊息卡片：商品卡與上架草稿卡。 */
 
-import { escapeHtml, money, resolveImage } from "./html.js";
+import { escapeHtml, money, resolveImage, dateTimeOf } from "./html.js";
 import { normalizeCityName } from "../ai/species.js";
 import { DRAFT_FIELDS } from "../ai/editing.js";
 
+const DEAL_STATUS = {
+  pending: "等待確認",
+  rejected: "已退回",
+  confirmed: "已成交",
+  cancelled: "已取消",
+  expired: "已逾時"
+};
+
 function dealActions(card) {
   const available = Number(card.available) || 0;
+  const reserved = Number(card.reserved_quantity) || 0;
   const ask = '<button type="button" data-action="ask-product" data-product="' +
     escapeHtml(card.product_id) + '">深入諮詢</button>';
   if (available <= 0) {
-    return '<div class="fm-card__acts">' + ask + '<span class="fm-card__sold">已售出</span></div>';
+    const note = reserved > 0 ? "洽談中，暫無法購買" : "已售出";
+    return '<div class="fm-card__acts">' + ask + '<span class="fm-card__sold">' + note + "</span></div>";
   }
 
   const options = [];
@@ -28,7 +38,9 @@ function dealActions(card) {
 function productCard(card) {
   const title = escapeHtml(card.title || "商品");
   const image = escapeHtml(resolveImage(card.photo_url));
-  const stock = Number(card.available) > 0 ? "可售 " + card.available + " 尾" : "已售出";
+  const available = Number(card.available) || 0;
+  const reserved = Number(card.reserved_quantity) || 0;
+  const stock = available > 0 ? "可售 " + available + " 尾" : (reserved > 0 ? "洽談中" : "已售出");
   return '<div class="fm-card fm-card--product">' +
     '<img src="' + image + '" alt="' + title + '">' +
     '<div class="fm-card__body">' +
@@ -68,9 +80,26 @@ function draftCard(card) {
     '</div>';
 }
 
+function dealCard(card) {
+  const items = card.items || [];
+  return '<div class="fm-card fm-card--deal">' +
+    '<div class="fm-card__deal-head"><b>協議</b><span class="fm-card__pill">' +
+    escapeHtml(DEAL_STATUS[card.status] || "協議") + '</span></div>' +
+    '<ul class="fm-card__deal-items">' + items.map(function (item) {
+      return "<li><span>" + escapeHtml(item.title) + " × " + Number(item.quantity || 0) + " 尾</span>" +
+        "<span>" + money(Math.round(Number(item.unit_price || 0) * Number(item.quantity || 0))) + "</span></li>";
+    }).join("") + "</ul>" +
+    '<dl class="fm-card__deal-terms">' +
+    row("整單金額", money(card.final_price)) +
+    row("面交地點", card.meetup_location) +
+    row("面交時間", dateTimeOf(card.meetup_time)) +
+    "</dl></div>";
+}
+
 export function renderCard(card) {
   if (!card) return "";
   if (card.type === "product") return productCard(card);
   if (card.type === "draft") return draftCard(card);
+  if (card.type === "deal") return dealCard(card);
   return '<div class="fm-card fm-card--plain">' + escapeHtml(card.title || "訊息卡片") + '</div>';
 }
