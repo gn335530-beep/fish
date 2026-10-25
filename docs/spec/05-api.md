@@ -57,6 +57,12 @@
 | 17 | POST | `/api/uploads` | 登入 | ✅ |
 | 18 | GET | `/uploads/*` | 公開 | ✅ 靜態檔 |
 | 19 | POST | `/api/deals/initiate-channel` | 登入 | ✅ 開啟／沿用交易房 |
+| 20 | GET | `/api/deals/:id` | 參與者 | ✅ 訂單明細（含商品快照與可售） |
+| 21 | POST | `/api/deals/items` | 登入（買家） | ✅ 加購同一釣客的商品 |
+| 22 | PATCH | `/api/deals/items/:itemId` | 登入（買家） | ✅ 改尾數 |
+| 23 | DELETE | `/api/deals/items/:itemId` | 登入（買家） | ✅ 刪除項目 |
+| 24 | DELETE | `/api/deals/items` | 登入（買家） | ✅ 清空訂單 |
+| 25 | POST | `/api/deals/propose` | 參與者 | ✅ 送出協議 |
 
 ## 3. 會員
 
@@ -172,7 +178,7 @@
   "created_at": "...", "last_message_at": "..." }
 ```
 
-`order` 只在交易房有進行中訂單時才有值：`{ id, status, item_count, total_quantity, final_price }`。
+`order` 只在交易房有進行中訂單時才有值：`{ id, status, item_count, total_quantity, final_price, updated_at }`。`updated_at` 在每次加購、改量、刪除、清空或提案時更新，前端用來判斷何時重抓明細。
 
 未讀數不含自己送出的訊息。助手房的系統訊息不算未讀；交易房的系統訊息（開房、加購通知）算未讀。
 
@@ -260,23 +266,24 @@
 
 舊購物車與手動上架表單也已在 M1 移除。
 
-## 8. 目標端點
+## 8. 交易端點
 
-> `POST /api/deals/initiate-channel` 已於 2026-10-25 實作（見 8.1）；其餘端點仍為目標。
+> 2026-10-25：`initiate-channel`、訂單明細、項目 CRUD 與 `propose` 已實作；`respond`、`cancel` 與交易紀錄仍是目標。
 
 ### 8.1 訂單
 
 | 方法 | 路徑 | 權限 | 說明 |
 | --- | --- | --- | --- |
 | POST | `/api/deals/initiate-channel` | 登入 | ✅ 由商品建立／沿用交易房與草稿，加入項目 |
-| POST | `/api/deals/items` | 登入 | 加購同一釣客的其他商品 |
-| PATCH | `/api/deals/items/:itemId` | 登入 | 改尾數 |
-| DELETE | `/api/deals/items/:itemId` | 登入 | 移除項目 |
-| POST | `/api/deals/propose` | 登入 | 送協議，逐項檢查可售 |
-| POST | `/api/deals/respond` | 登入 | `AGREE` / `REJECT` |
-| POST | `/api/deals/cancel` | 登入 | 取消並釋放 |
-| GET | `/api/deals` | 登入 | 交易紀錄列表 |
-| GET | `/api/deals/:id` | 登入 | 訂單詳情（含快照） |
+| GET | `/api/deals/:id` | 參與者 | ✅ 訂單明細，項目附目前可售尾數 |
+| POST | `/api/deals/items` | 登入（買家） | ✅ 加購同一釣客的其他商品 |
+| PATCH | `/api/deals/items/:itemId` | 登入（買家） | ✅ 改尾數 |
+| DELETE | `/api/deals/items/:itemId` | 登入（買家） | ✅ 移除項目 |
+| DELETE | `/api/deals/items` | 登入（買家） | ✅ 清空項目 |
+| POST | `/api/deals/propose` | 參與者 | ✅ 送協議，逐項檢查可售 |
+| POST | `/api/deals/respond` | 參與者 | `AGREE` / `REJECT`（目標） |
+| POST | `/api/deals/cancel` | 參與者 | 取消並釋放（目標） |
+| GET | `/api/deals` | 登入 | 交易紀錄列表（目標） |
 
 `POST /api/deals/initiate-channel`
 
@@ -286,7 +293,31 @@
 
 回 200：`{ conversation, deal, product }`。行為：以 `product.seller_id` 找或建立交易房（唯一鍵 `buyer_id + seller_id`）→ 找或建立草稿訂單 → 加入或累加項目 → 房間轉 `HUMAN` → 插入系統訊息（第一次開房時另有「已進入交易洽談」）。`conversation` 是對話摘要（含 `peer.username` 完整電話與 `order`），`deal` 是草稿訂單，項目為商品快照。
 
-錯誤：404 `PRODUCT_NOT_FOUND`、400 `INVALID_QUANTITY`、400 `OWN_PRODUCT`（自己的商品）、409 `INSUFFICIENT_QUANTITY`（附 `product_id`、`available`、`in_draft`）。`INSUFFICIENT_QUANTITY` 只擋同一筆草稿的累計尾數，草稿本身不保留庫存；送出提案時會再依當下可售檢查。
+錯誤：404 `PRODUCT_NOT_FOUND`、400 `INVALID_QUANTITY`、400 `OWN_PRODUCT`（自己的商品）、409 `INSUFFICIENT_QUANTITY`（附 `product_id`、`available`、`in_draft`）。
+
+`GET /api/deals/:id`
+
+回 200 `data` 是訂單：`items[]` 每項附 `available`（目前可售尾數），`items_total` 由 `unit_price × quantity` 重算。非參與者 403 `FORBIDDEN`，不存在 404 `DEAL_NOT_FOUND`。
+
+`POST /api/deals/items`
+
+```json
+{ "deal_id": "deal_...", "product_id": "prd_...", "quantity": 1 }
+```
+
+只有買家、只有 `DRAFT` 可以改。商品必須屬於同一釣客，否則 400 `WRONG_SELLER`。回 201 `{ deal }`，並插入系統訊息。錯誤：409 `INVALID_DEAL_STATUS`、409 `INSUFFICIENT_QUANTITY`（附 `product_id`、`available`、`in_draft`）。
+
+`PATCH /api/deals/items/:itemId`
+
+```json
+{ "deal_id": "deal_...", "quantity": 2 }
+```
+
+尾數必須 1 以上且不超過目前可售。錯誤：404 `ITEM_NOT_FOUND`、409 `INSUFFICIENT_QUANTITY`（附 `item_id`、`product_id`、`available`）。
+
+`DELETE /api/deals/items/:itemId?deal_id=deal_...` 與 `DELETE /api/deals/items?deal_id=deal_...`
+
+刪除單項或清空。項目存在是刪除單項的前提（404 `ITEM_NOT_FOUND`）；清空允許草稿變成 0 項。兩者都只允許買家在 `DRAFT` 時呼叫。
 
 `POST /api/deals/propose`
 
@@ -296,7 +327,11 @@
   "meetup_time": "2026-10-25T17:30:00+08:00" }
 ```
 
-逐項檢查 `quantity ≤ available`，不足回 409 `INSUFFICIENT_QUANTITY` 並附 `product_id`。成功後 `DRAFT → PENDING_REVIEW`、`lock_expires_at = now + 30 分`、發起方簽核為真、插入協議卡。
+逐項檢查 `quantity ≤ available`，不足回 409 `INSUFFICIENT_QUANTITY` 並附 `product_id`、`available`、`item_id`；訂單維持 `DRAFT`。成功後 `DRAFT → PENDING_REVIEW`、`lock_expires_at = now + 30 分`、`deal_terms` 寫入、發起方對應的 `buyer_confirmed` 或 `seller_confirmed` 為真，並插入協議卡與系統訊息。同一個交易房已有一筆 `PENDING_REVIEW`／`NEGOTIATING` 時回 409 `DEAL_IN_PROGRESS`。
+
+錯誤：400 `EMPTY_DEAL`（沒有項目）、400 `INVALID_PRICE`、400 `MISSING_TERMS`、400 `FIELD_TOO_LONG`、400 `INVALID_MEETUP_TIME`、409 `INVALID_DEAL_STATUS`、409 `INSUFFICIENT_QUANTITY`、409 `DEAL_IN_PROGRESS`。
+
+協議卡內容：`{ type: "deal", deal_id, status: "pending", initiator_id, final_price, meetup_location, meetup_time, items_total, items: [{ title, quantity, unit_price }] }`。
 
 `POST /api/deals/respond`
 
@@ -354,7 +389,9 @@
 | `UNAUTHORIZED` | 401 | 所有需登入端點 |
 | `FORBIDDEN` | 403 | 對話 |
 | `NOT_FOUND` | 404 | 未定義路徑 |
-| `PRODUCT_NOT_FOUND` | 404 | 商品詳情 |
+| `PRODUCT_NOT_FOUND` | 404 | 商品詳情、交易 |
+| `DEAL_NOT_FOUND` | 404 | 訂單 |
+| `ITEM_NOT_FOUND` | 404 | 訂單項目 |
 | `CONVERSATION_NOT_FOUND` | 404 | 對話 |
 | `MISSING_FIELDS` | 400 | 註冊 |
 | `DUPLICATE_PHONE` | 409 | 註冊 |
@@ -377,7 +414,13 @@
 | `INVALID_CONTEXT` | 400 | 訊息 |
 | `MISSING_IMAGE` / `INVALID_IMAGE` / `UNSUPPORTED_TYPE` / `EMPTY_IMAGE` | 400 | 上傳 |
 | `IMAGE_TOO_LARGE` | 413 | 上傳 |
-| `INSUFFICIENT_QUANTITY` | 409 | 開啟交易房、目標：提案 |
+| `INSUFFICIENT_QUANTITY` | 409 | 開啟交易房、訂單項目、提案 |
+| `INVALID_DEAL_STATUS` | 409 | 訂單項目、提案 |
+| `WRONG_SELLER` | 400 | 訂單項目（不同釣客） |
+| `EMPTY_DEAL` | 400 | 提案（沒有項目） |
+| `MISSING_TERMS` | 400 | 提案（缺面交地點） |
+| `INVALID_MEETUP_TIME` | 400 | 提案（時間無效） |
+| `DEAL_IN_PROGRESS` | 409 | 提案（房間已有進行中訂單） |
 | `ALREADY_REVIEWED` | 409 | 目標：評價 |
 | `INVALID_SPECIES` | 400 | 目標：行情 |
 | `INVALID_DATE` | 400 | 目標：行情 |
@@ -397,4 +440,7 @@
 | `sender_type: "ai"` 不是身分證明 | 只有房間參與者能寫訊息；跨房寫入一律 403 |
 | 交易房的 `peer.username` 是完整電話 | 電話橫幅直接顯示，加 `tel:` 連結 |
 | 交易房訊息只走真人訊息 | 前端不得再呼叫規則引擎；後端也會擋 `sender_type: "ai"` |
+| `item_id` 只在同一筆訂單內唯一 | 改尾數／刪項目要同時帶 `deal_id` |
+| 草稿不保留庫存 | `available` 仍包含草稿中的尾數；同一草稿的累計不得超過 `available` |
+| 協議卡 `status` 是小寫 `pending` 等 | 訂單本身是 `deal_status` 大寫 `PENDING_REVIEW` |
 | 舊文件寫的 `createFish()` / `deleteFish()` 已不存在 | 上架只用 `POST /api/products/create` |

@@ -35,10 +35,9 @@ function productTitle(p) {
 }
 
 function productStatus(p) {
-  const available = productAvailable(p);
-  if (available <= 0) return "已售出";
-  if (Number(p.reserved_quantity || 0) > 0) return "洽談中";
-  return "可售 " + available + " 尾";
+  if (p.status === "PARTIALLY_RESERVED") return "洽談中";
+  if (p.status === "SOLD_OUT") return "已售出";
+  return "可售 " + productAvailable(p) + " 尾";
 }
 
 function productStateHTML(text, isError) {
@@ -69,7 +68,8 @@ function dealQuantityOptions(available) {
 function dealControls(p) {
   var available = productAvailable(p);
   if (available <= 0) {
-    return '<div class="card__deal"><span class="card__deal-note">已售出，無法洽談</span></div>';
+    var note = Number(p.reserved_quantity) > 0 ? "洽談中，暫無法購買" : "已售出，無法洽談";
+    return '<div class="card__deal"><span class="card__deal-note">' + note + '</span></div>';
   }
   return '<div class="card__deal">' +
     '<select class="select card__deal-qty" data-deal-qty="' + productEscape(p.id) + '" aria-label="購買尾數">' +

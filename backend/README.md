@@ -26,8 +26,8 @@ python -m http.server 8000 --directory frontend
 backend/
   server.js       啟動
   app.js          middleware、靜態目錄、路由掛載
-  lib/            auth / store / orders / deals / conversations / species / http
-  routes/         auth / products / species / chat / chat-messages / deals / uploads
+  lib/            auth / store / orders / deals / deal-items / conversations / species / http
+  routes/         auth / products / species / chat / chat-messages / deals / deal-items / deal-proposal / uploads
   test/           node:test 整合測試（使用暫存 db.json）
   db.json         模擬資料
   uploads/        上傳圖片（不進版控）
@@ -41,7 +41,7 @@ backend/
 | `products` | 上架商品（唯一真實來源） |
 | `conversations` | 助手房與交易房 |
 | `messages` | 對話訊息與卡片 |
-| `deals` | 訂單草稿（開啟交易房時建立） |
+| `deals` | 訂單（`DRAFT`、提案後的 `PENDING_REVIEW`） |
 | `reviews` | 雙向評價（尚未提供 API） |
 
 ## 支援端點
@@ -64,6 +64,11 @@ backend/
 | `POST` | `/api/conversations/{id}/read` | 標記已讀；需參與者 |
 | `POST` | `/api/conversations/{id}/clear` | 清除助手房舊訊息；需參與者 |
 | `POST` | `/api/deals/initiate-channel` | 由商品開啟或沿用交易房與草稿訂單；需登入 |
+| `GET` | `/api/deals/{id}` | 訂單明細（項目附可售尾數）；需參與者 |
+| `POST` | `/api/deals/items` | 加購同一釣客的商品；需買家 |
+| `PATCH` | `/api/deals/items/{itemId}` | 改尾數；需買家 |
+| `DELETE` | `/api/deals/items/{itemId}`、`/api/deals/items` | 刪除項目／清空；需買家 |
+| `POST` | `/api/deals/propose` | 送出協議；需參與者 |
 | `POST` | `/api/uploads` | 上傳圖片（base64 data URL）；需登入 |
 
 錯誤回應採用 `{ "success": false, "code": "代碼", "message": "錯誤說明" }`。

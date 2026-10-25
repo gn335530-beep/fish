@@ -1,17 +1,13 @@
-/* 交易房與草稿訂單的共用邏輯：找或建立、加入項目、金額計算。 */
+/* 交易房與訂單：找或建立唯一的房間與草稿、對外樣貌與協議狀態。 */
 
-const { all, insert, patch, nextCode } = require("./store");
-const { itemsOf } = require("./orders");
+const { all, findById, insert, patch, nextCode } = require("./store");
+const { productAvailability } = require("./orders");
+const { itemsOf, itemsTotal } = require("./deal-items");
+const { fail } = require("./http");
 
 const DRAFT_STATUS = "DRAFT";
-
-function itemSubtotal(item) {
-  return Math.round(Number(item.unit_price || 0) * Number(item.quantity || 0));
-}
-
-function itemsTotal(items) {
-  return items.reduce(function (sum, item) { return sum + itemSubtotal(item); }, 0);
-}
+const ACTIVE_STATUS = ["PENDING_REVIEW", "NEGOTIATING"];
+const LOCK_MINUTES = 30;
 
 /* 交易房以一組買家與釣客為單位（ADR 0001），不限商品。 */
 function findConversation(buyerId, sellerId) {
@@ -49,6 +45,15 @@ function draftOf(conversationId) {
   return drafts[0] || null;
 }
 
+/* 一個交易房同時最多一筆進行中訂單（02-domain 6.2）。 */
+function hasActiveDeal(conversationId, exceptId) {
+  return all("deals").some(function (deal) {
+    return String(deal.conversation_id) === String(conversationId)
+      && String(deal.id) !== String(exceptId)
+      && ACTIVE_STATUS.indexOf(deal.deal_status) !== -1;
+  });
+}
+
 function createDeal(conversation, initiatorId, now) {
   return insert("deals", {
     id: nextCode("deals", "deal"),
@@ -68,56 +73,89 @@ function createDeal(conversation, initiatorId, now) {
     cancelled_by: null,
     cancel_reason: null,
     created_at: now,
+    updated_at: now,
     confirmed_at: null
   });
 }
 
-function nextItemId(items) {
-  const max = items.reduce(function (m, item) {
-    return Math.max(m, Number(String(item.item_id || "").replace(/\D/g, "")) || 0);
-  }, 0);
-  return "itm_" + String(max + 1).padStart(2, "0");
-}
-
-/* 項目是商品快照：之後商品改價或售出都不影響已加入的內容。 */
-function snapshot(product, quantity, itemId) {
-  return {
-    item_id: itemId,
-    product_id: product.id,
-    title: product.title,
-    photo_url: product.photo_url,
-    unit_price: Number(product.unit_price || 0),
-    weight_kg: product.weight_kg,
-    quantity: Number(quantity)
-  };
-}
-
-/* 某一商品在草稿裡已加入的尾數。 */
-function quantityOf(deal, productId) {
-  if (!deal) return 0;
-  return itemsOf(deal).filter(function (item) {
-    return String(item.product_id) === String(productId);
-  }).reduce(function (sum, item) { return sum + Number(item.quantity || 0); }, 0);
-}
-
-/* 同一商品再加購時累加尾數，不新增第二個項目。 */
-function addItem(deal, product, quantity) {
-  const items = itemsOf(deal).map(function (item) { return Object.assign({}, item); });
-  const existing = items.find(function (item) {
-    return String(item.product_id) === String(product.id);
+/* 訂單對外的樣貌：項目附上目前可售尾數，金額重算。 */
+function decorateDeal(deal) {
+  const items = itemsOf(deal).map(function (item) {
+    const stock = productAvailability(item.product_id);
+    return Object.assign({}, item, { available: stock ? stock.available : 0 });
   });
+  return Object.assign({}, deal, { items: items, items_total: itemsTotal(items) });
+}
 
-  if (existing) existing.quantity = Number(existing.quantity || 0) + Number(quantity);
-  else items.push(snapshot(product, quantity, nextItemId(items)));
+function isParticipant(deal, userId) {
+  return String(deal.buyer_id) === String(userId) || String(deal.seller_id) === String(userId);
+}
 
-  return patch("deals", deal.id, { items: items, items_total: itemsTotal(items) });
+function isBuyer(deal, userId) {
+  return String(deal.buyer_id) === String(userId);
+}
+
+function dealIdOf(req) {
+  const body = req.body || {};
+  return req.params.id || body.deal_id || req.query.deal_id || "";
+}
+
+/* 取得訂單並檢查參與者；失敗時直接回應並回傳 null。 */
+function requireDeal(req, res) {
+  const deal = findById("deals", dealIdOf(req));
+  if (!deal) {
+    fail(res, 404, "DEAL_NOT_FOUND", "找不到訂單");
+    return null;
+  }
+  if (!isParticipant(deal, req.user.id)) {
+    fail(res, 403, "FORBIDDEN", "你不是這筆訂單的參與者");
+    return null;
+  }
+  return deal;
+}
+
+function requireDraft(deal, res, message) {
+  if (deal.deal_status !== DRAFT_STATUS) {
+    fail(res, 409, "INVALID_DEAL_STATUS", message || "只有草稿訂單可以修改");
+    return false;
+  }
+  return true;
+}
+
+function touch(conversationId) {
+  return patch("conversations", conversationId, { last_message_at: new Date().toISOString() });
+}
+
+/* 發起方送出提案即視為自己已簽，鎖定 30 分鐘。 */
+function applyProposal(deal, userId, terms, now) {
+  const buyer = isBuyer(deal, userId);
+  return patch("deals", deal.id, {
+    deal_status: "PENDING_REVIEW",
+    deal_terms: terms,
+    initiator_id: Number(userId),
+    buyer_confirmed: buyer,
+    seller_confirmed: !buyer,
+    lock_expires_at: new Date(new Date(now).getTime() + LOCK_MINUTES * 60000).toISOString(),
+    hold_expires_at: null,
+    cancelled_by: null,
+    cancel_reason: null,
+    confirmed_at: null,
+    updated_at: now
+  });
 }
 
 module.exports = {
+  DRAFT_STATUS: DRAFT_STATUS,
   findConversation: findConversation,
   createConversation: createConversation,
   draftOf: draftOf,
+  hasActiveDeal: hasActiveDeal,
   createDeal: createDeal,
-  quantityOf: quantityOf,
-  addItem: addItem
+  decorateDeal: decorateDeal,
+  isParticipant: isParticipant,
+  isBuyer: isBuyer,
+  requireDeal: requireDeal,
+  requireDraft: requireDraft,
+  touch: touch,
+  applyProposal: applyProposal
 };

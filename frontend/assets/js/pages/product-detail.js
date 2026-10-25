@@ -64,7 +64,9 @@ function renderDealControls(p) {
   button.dataset.dealProduct = p.id;
   select.disabled = available <= 0;
   button.disabled = available <= 0;
-  button.textContent = available <= 0 ? "已售出" : "洽談購買";
+  button.textContent = available > 0
+    ? "洽談購買"
+    : (p.status === "PARTIALLY_RESERVED" ? "洽談中" : "已售出");
 }
 
 function renderDetail(p) {

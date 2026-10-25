@@ -28,6 +28,7 @@ function productCard(product) {
     weight_kg: product.weight_kg,
     quantity: product.quantity,
     available: product.available,
+    reserved_quantity: product.reserved_quantity,
     condition: product.condition,
     region: product.region,
     location: product.location,

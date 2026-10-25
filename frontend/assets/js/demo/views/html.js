@@ -19,6 +19,15 @@ export function timeOf(iso) {
   return String(date.getHours()).padStart(2, "0") + ":" + String(date.getMinutes()).padStart(2, "0");
 }
 
+export function dateTimeOf(iso) {
+  if (!iso) return "";
+  const date = new Date(iso);
+  if (isNaN(date.getTime())) return "";
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return month + "/" + day + " " + timeOf(iso);
+}
+
 export function money(value) {
   const number = Number(value) || 0;
   return "NT$" + number.toLocaleString("zh-TW");

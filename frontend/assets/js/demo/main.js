@@ -10,6 +10,7 @@ import { escapeHtml } from "./views/html.js";
 import { startPolling, pollNow } from "./poll.js";
 import { initFlow, ensureRoom, submitText, submitPhoto } from "./flow.js";
 import { initActions, handleAction, startDeal } from "./actions.js";
+import { handleFieldInput, handleAddonSelect } from "./deal-actions.js";
 import { clearUnread } from "./rooms.js";
 import { loadSpecies } from "./ai/species.js";
 
@@ -17,7 +18,9 @@ const panel = mountPanel({
   onSubmit: handleSubmit,
   onAction: handleAction,
   onOpen: handleOpen,
-  onPhoto: submitPhoto
+  onPhoto: submitPhoto,
+  onInput: handleFieldInput,
+  onSelect: handleAddonSelect
 });
 
 initFlow({
@@ -26,7 +29,12 @@ initFlow({
   notify: notify
 });
 
-initActions({ panel: panel, render: render, notify: notify });
+initActions({
+  panel: panel,
+  render: render,
+  notify: notify,
+  scrollEnd: function () { panel.scrollToEnd(true); }
+});
 
 function statusText() {
   if (!state.user) return "未登入";

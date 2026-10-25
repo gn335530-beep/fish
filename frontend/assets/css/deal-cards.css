@@ -136,3 +136,33 @@
 }
 
 .fm-deal__order b { color: var(--ink); }
+
+/* 協議卡 */
+.fm-card--deal { padding: 10px; }
+
+.fm-card__deal-head { display: flex; align-items: center; justify-content: space-between; }
+.fm-card__deal-head b { font-size: .78rem; }
+
+.fm-card__pill {
+  padding: 2px 7px;
+  border: 1px solid var(--coral);
+  color: var(--coral);
+  font-size: .62rem;
+  font-weight: 600;
+}
+
+.fm-card__deal-items { display: grid; gap: 3px; list-style: none; margin: 0; padding: 0; }
+.fm-card__deal-items li { display: flex; justify-content: space-between; gap: 8px; font-size: .7rem; }
+.fm-card__deal-items li span:last-child { font-family: var(--font-mono); color: var(--muted); }
+
+.fm-card__deal-terms {
+  display: grid;
+  gap: 3px;
+  margin: 0;
+  padding-top: 6px;
+  border-top: 1px solid var(--rule-2);
+}
+
+.fm-card__deal-terms div { display: flex; justify-content: space-between; gap: 8px; font-size: .68rem; }
+.fm-card__deal-terms dt { color: var(--muted); }
+.fm-card__deal-terms dd { margin: 0; }

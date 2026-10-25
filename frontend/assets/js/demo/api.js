@@ -78,3 +78,37 @@ export function initiateChannel(productId, quantity) {
     body: { product_id: productId, quantity: Number(quantity) || 1 }
   });
 }
+
+export function getDeal(dealId) {
+  return call("/api/deals/" + encodeURIComponent(dealId));
+}
+
+export function addDealItem(dealId, productId, quantity) {
+  return call("/api/deals/items", {
+    method: "POST",
+    body: { deal_id: dealId, product_id: productId, quantity: Number(quantity) }
+  });
+}
+
+export function updateDealItem(dealId, itemId, quantity) {
+  return call("/api/deals/items/" + encodeURIComponent(itemId), {
+    method: "PATCH",
+    body: { deal_id: dealId, quantity: Number(quantity) }
+  });
+}
+
+export function removeDealItem(dealId, itemId) {
+  return call("/api/deals/items/" + encodeURIComponent(itemId) +
+    "?deal_id=" + encodeURIComponent(dealId), { method: "DELETE" });
+}
+
+export function clearDealItems(dealId) {
+  return call("/api/deals/items?deal_id=" + encodeURIComponent(dealId), { method: "DELETE" });
+}
+
+export function proposeDeal(dealId, terms) {
+  return call("/api/deals/propose", {
+    method: "POST",
+    body: Object.assign({ deal_id: dealId }, terms || {})
+  });
+}

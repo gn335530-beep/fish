@@ -36,7 +36,8 @@ function orderSummary(deal) {
     status: deal.deal_status,
     item_count: items.length,
     total_quantity: items.reduce(function (sum, item) { return sum + Number(item.quantity || 0); }, 0),
-    final_price: deal.deal_terms ? Number(deal.deal_terms.final_price || 0) : Number(deal.items_total || 0)
+    final_price: deal.deal_terms ? Number(deal.deal_terms.final_price || 0) : Number(deal.items_total || 0),
+    updated_at: deal.updated_at || deal.created_at || null
   };
 }
 

@@ -136,16 +136,20 @@
 
 { "type": "draft", "draft": { } }
 
-{ "type": "deal", "deal_id": "deal_...", "status": "pending" }   // 目標
+{ "type": "deal", "deal_id": "deal_...", "status": "pending",
+  "initiator_id": 2, "final_price": 4800,
+  "meetup_location": "基隆火車站南站 7-11 門口", "meetup_time": "...",
+  "items_total": 5000,
+  "items": [{ "title": "...", "quantity": 1, "unit_price": 2800 }] }
 { "type": "order" }                                               // 目標
 { "type": "review" }                                              // 目標
 ```
 
-**目標**：`deal` 卡狀態值統一為 `pending` / `rejected` / `confirmed` / `cancelled` / `expired`；目前逾時流程會寫 `expired`，其餘沒有程式產生。
+**目標**：`deal` 卡狀態值統一為 `pending` / `rejected` / `confirmed` / `cancelled` / `expired`；目前提案會寫入 `pending`，逾時流程會寫 `expired`。
 
 ## 7. `deals`
 
-目前只會建立 `DRAFT`（`POST /api/deals/initiate-channel`）；協議與成交狀態仍是目標。
+`DRAFT` 由開啟交易房建立；送提案後是 `PENDING_REVIEW`。`NEGOTIATING`／`CONFIRMED`／`CANCELLED` 仍待回應與取消端點實作。
 
 ```jsonc
 {
@@ -175,11 +179,13 @@
   "cancelled_by": null,
   "cancel_reason": null,
   "created_at": "...",
+  "updated_at": "...",
   "confirmed_at": null
 }
 ```
 
-- `items[]` 是商品快照，不隨商品變動。
+- `items[]` 是商品快照，不隨商品變動；`GET /api/deals/:id` 讀取時會為每項附上 `available`（不落庫）。
+- `updated_at` 會在項目變動與提案時更新，供前端判斷是否重抓明細。
 - `deal_terms` 在 `DRAFT` 可以為 `null`。
 - `cancel_reason`：`SELLER_OUT_OF_STOCK`、`BUYER_CHANGED_MIND`、`TERMS_MISMATCH`、`OTHER`、`LOCK_EXPIRED`、`HOLD_EXPIRED`。
 
