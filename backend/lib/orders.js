@@ -58,26 +58,31 @@ function productAvailability(productId) {
   return { product: product, decorated: decorated, available: decorated.available };
 }
 
-/* 卡片訊息跟著訂單狀態同步，讓重新載入後仍顯示正確結果。 */
+/* 卡片狀態跟著訂單走；只更新最新的協議卡，較早的卡留作歷史。 */
 function syncDealCard(dealId, status) {
-  all("messages").forEach(function (message) {
-    if (!message.card || message.card.type !== "deal") return;
-    if (String(message.card.deal_id) !== String(dealId)) return;
-    patch("messages", message.id, {
-      card: Object.assign({}, message.card, { status: status })
-    });
+  const cards = all("messages").filter(function (message) {
+    return message.card && message.card.type === "deal"
+      && String(message.card.deal_id) === String(dealId);
+  });
+  cards.sort(function (a, b) { return Number(b.seq) - Number(a.seq); });
+  if (!cards.length) return;
+  patch("messages", cards[0].id, {
+    card: Object.assign({}, cards[0].card, { status: status })
   });
 }
 
 function addMessage(conversationId, fields) {
-  return insert("messages", Object.assign({
+  const now = new Date().toISOString();
+  const message = insert("messages", Object.assign({
     id: nextCode("messages", "msg"),
     seq: nextSeq("messages"),
     conversation_id: conversationId,
     image_url: null,
     card: null,
-    created_at: new Date().toISOString()
+    created_at: now
   }, fields));
+  patch("conversations", conversationId, { last_message_at: now });
+  return message;
 }
 
 function systemMessage(conversationId, text) {
@@ -94,10 +99,14 @@ function cardMessage(conversationId, senderId, card) {
 }
 
 function expireDeal(deal, reason, message) {
+  const now = new Date().toISOString();
   patch("deals", deal.id, {
     deal_status: "CANCELLED",
     cancelled_by: "system",
-    cancel_reason: reason
+    cancel_reason: reason,
+    lock_expires_at: null,
+    hold_expires_at: null,
+    updated_at: now
   });
   syncDealCard(deal.id, "expired");
   systemMessage(deal.conversation_id, message);

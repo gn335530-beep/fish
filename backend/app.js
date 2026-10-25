@@ -33,6 +33,7 @@ app.use(require("./routes/chat-messages"));
 app.use(require("./routes/deals"));
 app.use(require("./routes/deal-items"));
 app.use(require("./routes/deal-proposal"));
+app.use(require("./routes/deal-response"));
 app.use(require("./routes/uploads"));
 
 /* 只開放自訂的 /api 與 /uploads，避免直接以 json-server 預設路由改寫資料。 */

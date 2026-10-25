@@ -26,8 +26,8 @@ python -m http.server 8000 --directory frontend
 backend/
   server.js       啟動
   app.js          middleware、靜態目錄、路由掛載
-  lib/            auth / store / orders / deals / deal-items / conversations / species / http
-  routes/         auth / products / species / chat / chat-messages / deals / deal-items / deal-proposal / uploads
+  lib/            auth / store / orders / deals / deal-items / deal-status / conversations / species / http
+  routes/         auth / products / species / chat / chat-messages / deals / deal-items / deal-proposal / deal-response / uploads
   test/           node:test 整合測試（使用暫存 db.json）
   db.json         模擬資料
   uploads/        上傳圖片（不進版控）
@@ -41,7 +41,7 @@ backend/
 | `products` | 上架商品（唯一真實來源） |
 | `conversations` | 助手房與交易房 |
 | `messages` | 對話訊息與卡片 |
-| `deals` | 訂單（`DRAFT`、提案後的 `PENDING_REVIEW`） |
+| `deals` | 訂單（`DRAFT`、`PENDING_REVIEW`、`NEGOTIATING`、`CONFIRMED`、`CANCELLED`） |
 | `reviews` | 雙向評價（尚未提供 API） |
 
 ## 支援端點
@@ -69,6 +69,8 @@ backend/
 | `PATCH` | `/api/deals/items/{itemId}` | 改尾數；需買家 |
 | `DELETE` | `/api/deals/items/{itemId}`、`/api/deals/items` | 刪除項目／清空；需買家 |
 | `POST` | `/api/deals/propose` | 送出協議；需參與者 |
+| `POST` | `/api/deals/respond` | 同意／退回；需非發起方 |
+| `POST` | `/api/deals/cancel` | 取消並選原因；需參與者 |
 | `POST` | `/api/uploads` | 上傳圖片（base64 data URL）；需登入 |
 
 錯誤回應採用 `{ "success": false, "code": "代碼", "message": "錯誤說明" }`。

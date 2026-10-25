@@ -54,7 +54,6 @@ router.post("/api/deals/items", requireUser, function (req, res) {
   const updated = dealItems.addItem(deal, stock.decorated, quantity);
   systemMessage(deal.conversation_id,
     "已將「" + stock.decorated.title + "」" + quantity + " 尾加入訂單草稿。");
-  deals.touch(deal.conversation_id);
 
   created(res, { deal: deals.decorateDeal(updated) }, "已加入訂單");
 });

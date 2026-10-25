@@ -19,8 +19,8 @@
 | 商品諮詢 | ✅ | `ai/service.js` 的 `explainProduct` |
 | 交易房 | ✅ | 開房、電話橫幅、訂單摘要、加購與協議提案 |
 | 訂單草稿與加購 | ✅ | 加購、改尾數、刪除、清空 |
-| 協議與簽核 | 🟡 | 提案與協議卡已完成；`respond`／`cancel` 待做 |
-| 逾時釋放 | 🟡 | 商品端點會掃描並釋放；對話與訂單端點尚未掃描 |
+| 協議與簽核 | ✅ | 提案、同意、退回、取消與協議卡 |
+| 逾時釋放 | ✅ | 商品、對話清單與訂單讀取時掃描 |
 | 評價 | ⬜ | 無路由 |
 | 交易紀錄 | ⬜ | 無路由、無頁面 |
 | 行情抓取與查詢 | ⬜ | 無資料表、無路由 |
@@ -54,7 +54,7 @@
 | G-8 | ✅ `POST /api/deals/initiate-channel`（已修正） | 無 |
 | G-9 | ✅ 交易房視圖（電話橫幅、訂單摘要）（已修正） | G-8 |
 | G-10 | ✅ 加購、改尾數、刪項目（已修正） | G-8 |
-| G-11 | 🟡 提案與協議卡已完成；同意／退回／取消待做 | G-10 |
+| G-11 | ✅ 協議提案、同意、退回、取消（已修正） | G-10 |
 | G-12 | 評價與交易紀錄不存在 | G-11 |
 
 ### 2.4 行情（G-13～G-16）
@@ -82,7 +82,7 @@
 | R-8 | 移除未使用的 API 函式與狀態 | `api/fish.js`（`createFish`、`deleteFish`）、`api/auth.js`（`updateProfile` 未接 UI）、`demo/store.js`（`busy`、`resetRoom`）、`demo/views/panel.js`（`setTitle`、`clearInput`、`focusInput`） | |
 | R-9 | 魚種單一來源 | `backend/lib/species.js`、`frontend/assets/js/demo/ai/species.js`、`frontend/assets/js/app/01-data.js` | 後端提供 `GET /api/species`，前端一律取用；移除另兩份 |
 | R-10 | UI 改名與錯字 | 全站 | 「海人直送」→「一支釣」；「紅鰹」→「紅魽」；縣市用字統一為「臺」（或全改「台」，擇一） |
-| R-11 | 逾時掃描補齊 | `backend/routes/chat.js`、未來的 deals 路由 | 讀取對話與訂單時也要 `sweepExpired()` |
+| R-11 | 逾時掃描補齊 | `backend/routes/chat.js`、未來的 deals 路由 | ✅ 2026-10-25：`GET /api/conversations` 與 `GET /api/deals/:id` 都會 `sweepExpired()` |
 | R-12 | 檔案行數 | `pages/index.html`（255）、`pages/cart.html`（207）、`pages/seller.html`（344） | 前兩者需拆或隨 R-4／R-5 消失；`AGENTS.md` 規定單檔 ≤ 200 行 |
 | R-13 | 安全性（若要上正式環境） | `routes/auth.js`、`lib/auth.js`、`app.js` | 密碼雜湊、Token 持久化、CORS 收斂、上傳驗證實際檔頭 |
 

@@ -28,6 +28,16 @@ export function dateTimeOf(iso) {
   return month + "/" + day + " " + timeOf(iso);
 }
 
+/* datetime-local 需要本地時間且不含秒。 */
+export function localInputOf(iso) {
+  if (!iso) return "";
+  const date = new Date(iso);
+  if (isNaN(date.getTime())) return "";
+  const pad = function (value) { return String(value).padStart(2, "0"); };
+  return date.getFullYear() + "-" + pad(date.getMonth() + 1) + "-" + pad(date.getDate()) +
+    "T" + pad(date.getHours()) + ":" + pad(date.getMinutes());
+}
+
 export function money(value) {
   const number = Number(value) || 0;
   return "NT$" + number.toLocaleString("zh-TW");

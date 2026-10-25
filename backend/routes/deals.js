@@ -3,7 +3,7 @@
 const express = require("express");
 const { all, findById, patch } = require("../lib/store");
 const { requireUser } = require("../lib/auth");
-const { decorateProduct, systemMessage } = require("../lib/orders");
+const { decorateProduct, systemMessage, sweepExpired } = require("../lib/orders");
 const { summary } = require("../lib/conversations");
 const deals = require("../lib/deals");
 const dealItems = require("../lib/deal-items");
@@ -58,7 +58,7 @@ router.post("/api/deals/initiate-channel", requireUser, function (req, res) {
 
   if (createdRoom) systemMessage(conversation.id, "已進入交易洽談。");
   systemMessage(conversation.id, "已將「" + decorated.title + "」" + quantity + " 尾加入訂單草稿。");
-  conversation = deals.touch(conversation.id);
+  conversation = findById("conversations", conversation.id);
 
   ok(res, {
     conversation: summary(conversation, req.user),
@@ -68,6 +68,7 @@ router.post("/api/deals/initiate-channel", requireUser, function (req, res) {
 });
 
 router.get("/api/deals/:id", requireUser, function (req, res) {
+  sweepExpired();
   const deal = deals.requireDeal(req, res);
   if (!deal) return;
   ok(res, deals.decorateDeal(deal), "取得訂單成功");

@@ -9,40 +9,10 @@ const { state, update } = await import("../assets/js/demo/store.js");
 const order = await import("../assets/js/demo/views/deal-order.js");
 const cards = await import("../assets/js/demo/views/cards.js");
 const dealActions = await import("../assets/js/demo/deal-actions.js");
+const { draft, reset } = await import("./deal-fixtures.js");
+
 const handleFieldInput = dealActions.handleFieldInput;
 const selectAddon = dealActions.handleAddonSelect;
-
-const ITEMS = [
-  { item_id: "itm_01", product_id: "prd_a", title: "石斑（2kg / 2尾 / 活體）", unit_price: 1400, quantity: 2, available: 2 },
-  { item_id: "itm_02", product_id: "prd_b", title: "嘉鱲（2kg / 2尾 / 活體）", unit_price: 1530, quantity: 1, available: 2 }
-];
-
-function draft() {
-  return {
-    id: "deal_1",
-    conversation_id: "conv_1",
-    buyer_id: 2,
-    seller_id: 1,
-    deal_status: "DRAFT",
-    deal_terms: null,
-    items_total: 4330,
-    items: ITEMS.map(function (item) { return Object.assign({}, item); })
-  };
-}
-
-function reset(deal, userId) {
-  update({
-    user: { id: userId },
-    room: { id: "conv_1", type: "deal", order: { id: deal.id, status: deal.deal_status } },
-    deal: deal,
-    dealOpen: true,
-    addonOpen: false,
-    addons: [],
-    addonQty: {},
-    proposeOpen: false,
-    proposal: { final_price: "", meetup_location: "", meetup_time: "" }
-  });
-}
 
 test("買家看到項目明細、小計與可操作按鈕", function () {
   reset(draft(), 2);

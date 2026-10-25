@@ -18,7 +18,8 @@ export const state = {
   addons: [],
   addonQty: {},
   proposeOpen: false,
-  proposal: emptyProposal()
+  proposal: emptyProposal(),
+  cancelReasons: {}
 };
 
 const listeners = [];

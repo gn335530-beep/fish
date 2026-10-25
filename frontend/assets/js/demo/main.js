@@ -11,6 +11,7 @@ import { startPolling, pollNow } from "./poll.js";
 import { initFlow, ensureRoom, submitText, submitPhoto } from "./flow.js";
 import { initActions, handleAction, startDeal } from "./actions.js";
 import { handleFieldInput, handleAddonSelect } from "./deal-actions.js";
+import { handleCancelReason } from "./deal-replies.js";
 import { clearUnread } from "./rooms.js";
 import { loadSpecies } from "./ai/species.js";
 
@@ -20,7 +21,8 @@ const panel = mountPanel({
   onOpen: handleOpen,
   onPhoto: submitPhoto,
   onInput: handleFieldInput,
-  onSelect: handleAddonSelect
+  onSelect: handleAddonSelect,
+  onReason: handleCancelReason
 });
 
 initFlow({

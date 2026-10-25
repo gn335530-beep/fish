@@ -36,6 +36,8 @@
 | `PATCH` | `/api/deals/items/{itemId}` | 買家 | 改尾數（需帶 `deal_id`） |
 | `DELETE` | `/api/deals/items/{itemId}`、`/api/deals/items` | 買家 | 刪除項目／清空 |
 | `POST` | `/api/deals/propose` | 參與者 | 送出協議，鎖定 30 分鐘 |
+| `POST` | `/api/deals/respond` | 參與者（非發起方） | 同意／退回協議 |
+| `POST` | `/api/deals/cancel` | 參與者 | 取消並選原因 |
 | `POST` | `/api/uploads` | 登入 | 上傳圖片（base64 data URL） |
 
 `GET /api/products` 會先掃描逾時訂單並釋放保留，不是純讀取。舊的 `/api/fish/data` 與 `PUT /api/fish/data/{id}` 已移除。
