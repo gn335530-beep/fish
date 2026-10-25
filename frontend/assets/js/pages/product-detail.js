@@ -55,6 +55,18 @@ function renderSpec(p) {
   }).join("");
 }
 
+function renderDealControls(p) {
+  const available = productAvailable(p);
+  const select = document.getElementById("pd-deal-qty");
+  const button = document.getElementById("pd-deal");
+  select.innerHTML = dealQuantityOptions(available);
+  select.dataset.dealQty = p.id;
+  button.dataset.dealProduct = p.id;
+  select.disabled = available <= 0;
+  button.disabled = available <= 0;
+  button.textContent = available <= 0 ? "已售出" : "洽談購買";
+}
+
 function renderDetail(p) {
   const status = productStatus(p);
   renderPhoto(p);
@@ -69,6 +81,7 @@ function renderDetail(p) {
     status + " · 共 " + Number(p.quantity || 0) + " 尾上架";
   document.getElementById("pd-qty").textContent = String(productAvailable(p));
   renderSpec(p);
+  renderDealControls(p);
 
   document.getElementById("crumb-name").textContent = p.fish_species || "漁獲詳情";
   document.title = productTitle(p) + " — 今日漁獲 | 一支釣";

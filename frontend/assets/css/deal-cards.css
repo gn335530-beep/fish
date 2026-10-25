@@ -72,8 +72,67 @@
 
 .fm-card__acts button:hover { border-color: var(--accent); color: var(--accent); }
 
+.fm-card__qty {
+  flex: none;
+  width: 58px;
+  padding: 6px 2px;
+  border: 1px solid var(--rule);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: .72rem;
+}
+
+.fm-card__sold {
+  align-self: center;
+  color: var(--muted-2);
+  font-size: .7rem;
+}
+
 .fm-card__primary {
   background: var(--accent) !important;
   border-color: var(--accent) !important;
   color: #fff !important;
 }
+
+/* ---------- 交易房：電話橫幅與訂單摘要 ---------- */
+.fm-deal__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  border: 1px solid var(--rule);
+  background: var(--accent-soft);
+}
+
+.fm-deal__peer { display: grid; gap: 2px; min-width: 0; }
+.fm-deal__peer b { font-size: .78rem; }
+.fm-deal__peer span { color: var(--muted); font-size: .64rem; }
+
+.fm-deal__phone {
+  flex: none;
+  padding: 5px 9px;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+}
+
+.fm-deal__phone:hover { background: var(--accent); color: #fff; }
+
+.fm-deal__order {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  margin-bottom: 12px;
+  border: 1px solid var(--rule-2);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: .72rem;
+}
+
+.fm-deal__order b { color: var(--ink); }

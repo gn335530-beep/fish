@@ -46,20 +46,38 @@ function shoppingContext(cards) {
   };
 }
 
+/* 個人檔案的縣市就是預設範圍；沒有填才退回全省。 */
+function profileRegion(user) {
+  return normalizeCityName((user && user.city) || "").trim();
+}
+
+function matchesRegion(product, region) {
+  return normalizeCityName(product.region).indexOf(region) !== -1;
+}
+
+function scopeOf(text, user) {
+  const explicit = findRegion(text);
+  if (explicit) return { region: explicit, explicit: true, profile: profileRegion(user) };
+  const profile = profileRegion(user);
+  return { region: profile, explicit: false, profile: profile };
+}
+
+function scoped(scope, text) {
+  if (scope.explicit) return scope.region + text;
+  if (scope.profile) return "依你的地區（" + scope.profile + "）" + text;
+  return "你的個人檔案還沒填縣市，先以全省查詢，" + text;
+}
+
 export async function shoppingReply(text, user) {
   const spice = findSpecies(text);
-  let region = findRegion(text);
-  if (!region && /附近|我這邊|附近有什麼/.test(text) && user && user.city) {
-    region = normalizeCityName(user.city);
-  }
+  const scope = scopeOf(text, user);
   const cooking = cookingMatches(text);
   const rows = await api.listProducts({ limit: 100 });
 
   let matched = rows.filter(function (p) { return Number(p.available) > 0; });
   if (spice) matched = matched.filter(function (p) { return p.species_id === spice.id; });
-  if (region) {
-    const key = normalizeCityName(region);
-    matched = matched.filter(function (p) { return normalizeCityName(p.region).indexOf(key) !== -1; });
+  if (scope.region) {
+    matched = matched.filter(function (p) { return matchesRegion(p, scope.region); });
   }
   if (cooking) matched = matched.filter(function (p) { return cooking.indexOf(p.species_id) !== -1; });
   matched = matched.slice(0, 5);
@@ -67,11 +85,11 @@ export async function shoppingReply(text, user) {
   if (!matched.length) {
     return {
       context: shoppingContext([]),
-      replies: [{ text: "目前沒有符合條件的商品。可以換個魚種或地區再試。" }]
+      replies: [{ text: scoped(scope, "目前沒有符合條件的商品。可以換個魚種或地區再試。") }]
     };
   }
 
-  const replies = [{ text: "找到 " + matched.length + " 個商品。" }];
+  const replies = [{ text: scoped(scope, "找到 " + matched.length + " 個商品。") }];
   matched.forEach(function (p) { replies.push({ card: productCard(p) }); });
 
   return {

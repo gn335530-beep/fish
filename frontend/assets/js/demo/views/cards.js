@@ -4,6 +4,27 @@ import { escapeHtml, money, resolveImage } from "./html.js";
 import { normalizeCityName } from "../ai/species.js";
 import { DRAFT_FIELDS } from "../ai/editing.js";
 
+function dealActions(card) {
+  const available = Number(card.available) || 0;
+  const ask = '<button type="button" data-action="ask-product" data-product="' +
+    escapeHtml(card.product_id) + '">深入諮詢</button>';
+  if (available <= 0) {
+    return '<div class="fm-card__acts">' + ask + '<span class="fm-card__sold">已售出</span></div>';
+  }
+
+  const options = [];
+  for (let i = 1; i <= available; i++) {
+    options.push('<option value="' + i + '">' + i + ' 尾</option>');
+  }
+  return '<div class="fm-card__acts">' +
+    ask +
+    '<select class="fm-card__qty" data-fm-qty="' + escapeHtml(card.product_id) + '" aria-label="購買尾數">' +
+    options.join("") + '</select>' +
+    '<button type="button" class="fm-card__primary" data-action="start-deal" data-product="' +
+    escapeHtml(card.product_id) + '">洽談購買</button>' +
+    '</div>';
+}
+
 function productCard(card) {
   const title = escapeHtml(card.title || "商品");
   const image = escapeHtml(resolveImage(card.photo_url));
@@ -16,9 +37,7 @@ function productCard(card) {
     '<span>' + escapeHtml(card.weight_kg) + ' kg · ' + escapeHtml(card.quantity) + ' 尾 · ' + escapeHtml(card.condition) + '</span>' +
     '<span>' + escapeHtml(normalizeCityName(card.region)) + '　' + stock + '</span>' +
     '</div>' +
-    '<div class="fm-card__acts">' +
-    '<button type="button" data-action="ask-product" data-product="' + escapeHtml(card.product_id) + '">深入諮詢</button>' +
-    '</div>' +
+    dealActions(card) +
     '</div>';
 }
 

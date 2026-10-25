@@ -25,6 +25,14 @@ npm run web
 > `python -m http.server 8010 --directory frontend`。
 > 換一個連接埠也能避開瀏覽器對舊檔案的快取。
 
+## 測試
+
+```bash
+npm test
+```
+
+使用 Node 內建 `node:test`；後端測試使用暫存 `db.json`，不會動到開發資料。
+
 ## 專案結構
 
 ```text

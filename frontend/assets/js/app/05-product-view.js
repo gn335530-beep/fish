@@ -58,6 +58,27 @@ function productDateLabel(p) {
   return "日期未提供";
 }
 
+function dealQuantityOptions(available) {
+  var options = "";
+  for (var i = 1; i <= available; i++) {
+    options += '<option value="' + i + '">' + i + ' 尾</option>';
+  }
+  return options;
+}
+
+function dealControls(p) {
+  var available = productAvailable(p);
+  if (available <= 0) {
+    return '<div class="card__deal"><span class="card__deal-note">已售出，無法洽談</span></div>';
+  }
+  return '<div class="card__deal">' +
+    '<select class="select card__deal-qty" data-deal-qty="' + productEscape(p.id) + '" aria-label="購買尾數">' +
+    dealQuantityOptions(available) + '</select>' +
+    '<button type="button" class="btn btn--primary btn--sm" data-deal-product="' +
+    productEscape(p.id) + '">洽談購買</button>' +
+    '</div>';
+}
+
 function productCardHTML(p) {
   var href = "product-detail.html?id=" + encodeURIComponent(p.id);
   var photo = window.HaisenAPI.photoUrl(p.photo_url);
@@ -85,7 +106,8 @@ function productCardHTML(p) {
     '<div class="card__meta"><span>' + productEscape(location) + '</span></div>' +
     (unknown ? '<div class="card__meta"><span>料理資料暫無 · 暫無行情</span></div>' : "") +
     '<div class="card__price"><b>' + productMoney(p.price) + '<span class="unit"> · 整批</span></b></div>' +
-    '<a href="' + href + '" class="btn btn--ghost btn--sm" style="margin-top:14px">查看詳情</a>' +
+    dealControls(p) +
+    '<a href="' + href + '" class="btn btn--ghost btn--sm" style="margin-top:10px">查看詳情</a>' +
     '</div></article>';
 }
 

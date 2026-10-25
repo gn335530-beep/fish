@@ -6,6 +6,7 @@ import * as ai from "./ai/service.js";
 import { draftToProduct } from "./ai/slots.js";
 import { beginEdit as beginDraftEdit } from "./ai/editing.js";
 import { uploadImage } from "./upload.js";
+import { openRoom } from "./rooms.js";
 
 let ui = {
   render: function () {},
@@ -63,6 +64,7 @@ export async function submitText(text) {
     if (!state.room) await ensureRoom();
     const message = await api.sendMessage(state.room.id, { text: value });
     appendMessages([message]);
+    if (state.room.type === "deal") return;
     const result = await ai.handleText(state.room.context, value, state.user);
     await runReplies(result);
   } catch (error) {
@@ -77,6 +79,7 @@ export async function submitPhoto(file) {
     const url = await uploadImage(file);
     const message = await api.sendMessage(state.room.id, { image_url: url });
     appendMessages([message]);
+    if (state.room.type === "deal") return;
     const result = ai.handlePhoto(state.room.context, url);
     await runReplies(result);
   } catch (error) {
@@ -147,5 +150,19 @@ export async function explainProduct(productId) {
     await runReplies(await ai.explainProduct(product, state.room.context));
   } catch (error) {
     ui.notify(error);
+  }
+}
+
+/* 「洽談購買」：後端找或建立房間與草稿，前端切到交易房視圖。 */
+export async function beginDeal(productId, quantity) {
+  try {
+    const result = await api.initiateChannel(productId, quantity);
+    const room = await openRoom(result.conversation);
+    ui.render();
+    ui.scrollEnd(true);
+    return room;
+  } catch (error) {
+    ui.notify(error);
+    return null;
   }
 }

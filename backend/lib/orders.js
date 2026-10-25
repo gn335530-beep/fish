@@ -1,6 +1,6 @@
 /* 訂單與商品的衍生計算：可售尾數、商品狀態、逾時釋放。 */
 
-const { all, patch, insert, nextCode } = require("./store");
+const { all, patch, insert, nextCode, nextSeq } = require("./store");
 
 const ACTIVE_STATUS = ["PENDING_REVIEW", "NEGOTIATING"];
 
@@ -63,6 +63,7 @@ function syncDealCard(dealId, status) {
 function systemMessage(conversationId, text) {
   insert("messages", {
     id: nextCode("messages", "msg"),
+    seq: nextSeq("messages"),
     conversation_id: conversationId,
     sender_id: "system",
     type: "system",

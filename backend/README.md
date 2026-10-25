@@ -1,6 +1,6 @@
 # 後端（json-server）
 
-此服務以 json-server 的 JSON 檔案儲存資料，並用自訂路由提供登入、會員、商品、魚種、對話與上傳 API。訂單與評價目前只有資料表，尚無路由。不是正式後端，不能用於正式環境。
+此服務以 json-server 的 JSON 檔案儲存資料，並用自訂路由提供登入、會員、商品、魚種、對話、交易房與上傳 API。訂單目前只會建立草稿，評價尚未提供路由。不是正式後端，不能用於正式環境。
 
 ## 啟動
 
@@ -26,8 +26,9 @@ python -m http.server 8000 --directory frontend
 backend/
   server.js       啟動
   app.js          middleware、靜態目錄、路由掛載
-  lib/            auth / store / orders / conversations / species / http
-  routes/         auth / products / species / chat / chat-messages / uploads
+  lib/            auth / store / orders / deals / conversations / species / http
+  routes/         auth / products / species / chat / chat-messages / deals / uploads
+  test/           node:test 整合測試（使用暫存 db.json）
   db.json         模擬資料
   uploads/        上傳圖片（不進版控）
 ```
@@ -40,7 +41,7 @@ backend/
 | `products` | 上架商品（唯一真實來源） |
 | `conversations` | 助手房與交易房 |
 | `messages` | 對話訊息與卡片 |
-| `deals` | 訂單與協議（尚未提供 API） |
+| `deals` | 訂單草稿（開啟交易房時建立） |
 | `reviews` | 雙向評價（尚未提供 API） |
 
 ## 支援端點
@@ -62,11 +63,20 @@ backend/
 | `PUT` | `/api/conversations/{id}/context` | 更新助手房 context；需參與者 |
 | `POST` | `/api/conversations/{id}/read` | 標記已讀；需參與者 |
 | `POST` | `/api/conversations/{id}/clear` | 清除助手房舊訊息；需參與者 |
+| `POST` | `/api/deals/initiate-channel` | 由商品開啟或沿用交易房與草稿訂單；需登入 |
 | `POST` | `/api/uploads` | 上傳圖片（base64 data URL）；需登入 |
 
 錯誤回應採用 `{ "success": false, "code": "代碼", "message": "錯誤說明" }`。
 
 登入 Token 僅保存在伺服器記憶體中，重新啟動服務後需重新登入。
+
+## 測試
+
+```bash
+npm test
+```
+
+以 `node:test` 跑 `backend/test/` 與 `frontend/test/`。後端測試會把 `FISHMATCH_DB` 指到暫存檔，不會動到 `db.json`。
 
 ## 測試帳號
 

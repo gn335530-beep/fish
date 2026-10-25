@@ -4,10 +4,13 @@ import { state, update, subscribe, totalUnread } from "./store.js";
 import * as api from "./api.js";
 import { mountPanel } from "./views/panel.js";
 import { renderAssistant, renderLogin } from "./views/assistant.js";
+import { renderDealRoom } from "./views/deal.js";
 import { renderInbox } from "./views/inbox.js";
 import { escapeHtml } from "./views/html.js";
-import { startPolling, refreshRooms, pollNow } from "./poll.js";
-import { initFlow, ensureRoom, submitText, submitPhoto, publishDraft, resetDraft, explainProduct, beginEdit } from "./flow.js";
+import { startPolling, pollNow } from "./poll.js";
+import { initFlow, ensureRoom, submitText, submitPhoto } from "./flow.js";
+import { initActions, handleAction, startDeal } from "./actions.js";
+import { clearUnread } from "./rooms.js";
 import { loadSpecies } from "./ai/species.js";
 
 const panel = mountPanel({
@@ -22,6 +25,8 @@ initFlow({
   scrollEnd: function () { panel.scrollToEnd(true); },
   notify: notify
 });
+
+initActions({ panel: panel, render: render, notify: notify });
 
 function statusText() {
   if (!state.user) return "未登入";
@@ -54,6 +59,11 @@ function render() {
     panel.setBody(bodyWith(renderLogin()));
     return;
   }
+  if (state.view === "deal" && state.room && state.room.type === "deal") {
+    panel.setBody(bodyWith(renderDealRoom()));
+    panel.scrollToEnd();
+    return;
+  }
   panel.setBody(bodyWith(renderAssistant()));
   panel.scrollToEnd();
 }
@@ -67,21 +77,6 @@ function notify(error) {
   }, 4000);
 }
 
-async function switchRoom(roomId) {
-  const room = (state.conversations || []).find(function (item) { return item.id === roomId; });
-  if (!room) return;
-  const messages = await api.listMessages(room.id, 0);
-  const last = messages[messages.length - 1];
-  update({ room: room, messages: messages, lastSeq: last ? Number(last.seq) : 0, view: "assistant" });
-  await api.markRead(room.id);
-  update({
-    conversations: state.conversations.map(function (item) {
-      return item.id === room.id ? Object.assign({}, item, { unread_count: 0 }) : item;
-    })
-  });
-  render();
-}
-
 async function handleOpen() {
   if (!state.user) {
     render();
@@ -92,11 +87,7 @@ async function handleOpen() {
     await pollNow();
     if (state.room) {
       await api.markRead(state.room.id);
-      update({
-        conversations: state.conversations.map(function (item) {
-          return item.id === state.room.id ? Object.assign({}, item, { unread_count: 0 }) : item;
-        })
-      });
+      update({ conversations: clearUnread(state.conversations, state.room.id) });
     }
     render();
   } catch (error) {
@@ -106,53 +97,6 @@ async function handleOpen() {
 
 function handleSubmit(text) {
   submitText(text);
-}
-
-async function handleAction(action, data) {
-  if (action === "close" || action === "minimize") {
-    panel.close();
-    return;
-  }
-  if (action === "photo") return panel.openFilePicker();
-  if (action === "edit-slot") return beginEdit(data.slot);
-  if (action === "publish") {
-    publishDraft();
-    return;
-  }
-  if (action === "reset-draft") {
-    resetDraft();
-    return;
-  }
-  if (action === "ask-product") {
-    explainProduct(data.product);
-    return;
-  }
-  if (action === "inbox") {
-    try {
-      await refreshRooms();
-      update({ view: "inbox" });
-      render();
-    } catch (error) {
-      notify(error);
-    }
-    return;
-  }
-  if (action === "back") {
-    update({ view: "assistant" });
-    render();
-    return;
-  }
-  if (action === "room") {
-    try {
-      await switchRoom(data.room);
-    } catch (error) {
-      notify(error);
-    }
-    return;
-  }
-  if (action === "hint") {
-    submitText(data.value);
-  }
 }
 
 async function boot() {
@@ -192,7 +136,8 @@ window.FishMatchBot = {
   open: function () { panel.open(); },
   close: function () { panel.close(); },
   toggle: function () { panel.toggle(); },
-  refresh: function () { return pollNow(); }
+  refresh: function () { return pollNow(); },
+  startDeal: startDeal
 };
 
 boot();
