@@ -1,7 +1,9 @@
-/* 交易房的訂單摘要：項目明細、加購、改量、刪除與協議表單。 */
+/* 交易房的訂單摘要：項目明細、加購、改量與刪除。 */
 
 import { state } from "../store.js";
-import { escapeHtml, money, dateTimeOf } from "./html.js";
+import { escapeHtml, money } from "./html.js";
+import { canResend } from "../deal-state.js";
+import { proposalForm, termsBlock, statusNote } from "./deal-terms.js";
 
 const STATUS_LABEL = {
   DRAFT: "訂單草稿",
@@ -9,13 +11,6 @@ const STATUS_LABEL = {
   NEGOTIATING: "協商中",
   CONFIRMED: "已成交",
   CANCELLED: "已取消"
-};
-
-const STATUS_NOTE = {
-  PENDING_REVIEW: "等待對方回覆（30 分鐘內）",
-  NEGOTIATING: "協商中，等待對方重新送出",
-  CONFIRMED: "雙方已同意，交易成立",
-  CANCELLED: "這筆訂單已取消"
 };
 
 function isBuyer() {
@@ -86,27 +81,8 @@ function addonsBlock() {
     "</div>";
 }
 
-function proposalForm() {
-  const proposal = state.proposal || {};
-  return '<div class="fm-order__form">' +
-    '<label>整單金額<input type="number" min="1" step="1" data-field="final_price" value="' +
-    escapeHtml(proposal.final_price) + '"></label>' +
-    '<label>面交地點<input type="text" maxlength="100" data-field="meetup_location" value="' +
-    escapeHtml(proposal.meetup_location) + '" placeholder="例：基隆火車站南站"></label>' +
-    '<label>面交時間<input type="datetime-local" data-field="meetup_time" value="' +
-    escapeHtml(proposal.meetup_time) + '"></label>' +
-    '<div class="fm-order__acts"><button type="button" data-action="toggle-propose">取消</button>' +
-    '<button type="button" class="fm-order__primary" data-action="submit-proposal">送出協議</button></div>' +
-    "</div>";
-}
-
-function termsBlock(deal) {
-  const terms = deal.deal_terms || {};
-  return '<dl class="fm-order__terms">' +
-    "<div><dt>整單金額</dt><dd>" + money(terms.final_price) + "</dd></div>" +
-    "<div><dt>面交地點</dt><dd>" + escapeHtml(terms.meetup_location) + "</dd></div>" +
-    "<div><dt>面交時間</dt><dd>" + escapeHtml(dateTimeOf(terms.meetup_time)) + "</dd></div>" +
-    "</dl>";
+function mayResend(deal) {
+  return canResend(deal, state.user && state.user.id);
 }
 
 function fallback() {
@@ -141,11 +117,16 @@ function bodyOf(deal, items) {
     }
   } else if (deal.deal_terms) {
     html += termsBlock(deal);
+    if (mayResend(deal)) {
+      html += state.proposeOpen
+        ? proposalForm()
+        : '<div class="fm-order__acts"><button type="button" class="fm-order__primary"' +
+          ' data-action="toggle-propose">修改條件並重送</button></div>';
+    }
   }
 
-  if (STATUS_NOTE[deal.deal_status]) {
-    html += '<p class="fm-order__note">' + escapeHtml(STATUS_NOTE[deal.deal_status]) + "</p>";
-  }
+  const note = statusNote(deal);
+  if (note) html += '<p class="fm-order__note">' + escapeHtml(note) + "</p>";
   return html;
 }
 

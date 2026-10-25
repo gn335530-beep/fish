@@ -4,11 +4,13 @@ const express = require("express");
 const { all, insert, patch, nextCode, nextSeq } = require("../lib/store");
 const { requireUser } = require("../lib/auth");
 const { isParticipant, messagesOf, summary, requireRoom } = require("../lib/conversations");
+const { sweepExpired } = require("../lib/orders");
 const { ok } = require("../lib/http");
 
 const router = express.Router();
 
 router.get("/api/conversations", requireUser, function (req, res) {
+  sweepExpired();
   const data = all("conversations")
     .filter(function (c) { return isParticipant(c, req.user.id); })
     .map(function (c) { return summary(c, req.user); })

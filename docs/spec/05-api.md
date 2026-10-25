@@ -63,6 +63,8 @@
 | 23 | DELETE | `/api/deals/items/:itemId` | 登入（買家） | ✅ 刪除項目 |
 | 24 | DELETE | `/api/deals/items` | 登入（買家） | ✅ 清空訂單 |
 | 25 | POST | `/api/deals/propose` | 參與者 | ✅ 送出協議 |
+| 26 | POST | `/api/deals/respond` | 參與者（非發起方） | ✅ 同意／退回 |
+| 27 | POST | `/api/deals/cancel` | 參與者 | ✅ 取消並釋放 |
 
 ## 3. 會員
 
@@ -178,9 +180,11 @@
   "created_at": "...", "last_message_at": "..." }
 ```
 
-`order` 只在交易房有進行中訂單時才有值：`{ id, status, item_count, total_quantity, final_price, updated_at }`。`updated_at` 在每次加購、改量、刪除、清空或提案時更新，前端用來判斷何時重抓明細。
+`order` 只在交易房有進行中訂單時才有值：`{ id, status, item_count, total_quantity, final_price, updated_at }`。`updated_at` 在每次加購、改量、刪除、清空、提案、回應、取消或逾時時更新，前端用來判斷何時重抓明細。
 
 未讀數不含自己送出的訊息。助手房的系統訊息不算未讀；交易房的系統訊息（開房、加購通知）算未讀。
+
+**副作用**：會先做一次逾時掃描（`sweepExpired`），所以讀取清單可能讓過期的協議轉為 `CANCELLED` 並留下系統訊息。
 
 ### `POST /api/conversations/assistant`
 
@@ -268,7 +272,7 @@
 
 ## 8. 交易端點
 
-> 2026-10-25：`initiate-channel`、訂單明細、項目 CRUD 與 `propose` 已實作；`respond`、`cancel` 與交易紀錄仍是目標。
+> 2026-10-25：`initiate-channel`、訂單明細、項目 CRUD、`propose`、`respond` 與 `cancel` 已實作；交易紀錄仍是目標。
 
 ### 8.1 訂單
 
@@ -281,8 +285,8 @@
 | DELETE | `/api/deals/items/:itemId` | 登入（買家） | ✅ 移除項目 |
 | DELETE | `/api/deals/items` | 登入（買家） | ✅ 清空項目 |
 | POST | `/api/deals/propose` | 參與者 | ✅ 送協議，逐項檢查可售 |
-| POST | `/api/deals/respond` | 參與者 | `AGREE` / `REJECT`（目標） |
-| POST | `/api/deals/cancel` | 參與者 | 取消並釋放（目標） |
+| POST | `/api/deals/respond` | 參與者（非發起方） | ✅ 同意／退回 |
+| POST | `/api/deals/cancel` | 參與者 | ✅ 取消並釋放 |
 | GET | `/api/deals` | 登入 | 交易紀錄列表（目標） |
 
 `POST /api/deals/initiate-channel`
@@ -298,6 +302,8 @@
 `GET /api/deals/:id`
 
 回 200 `data` 是訂單：`items[]` 每項附 `available`（目前可售尾數），`items_total` 由 `unit_price × quantity` 重算。非參與者 403 `FORBIDDEN`，不存在 404 `DEAL_NOT_FOUND`。
+
+**副作用**：讀取前會先做逾期掃描，可能讓這筆訂單轉為 `CANCELLED` 並留下系統訊息。
 
 `POST /api/deals/items`
 
@@ -327,9 +333,11 @@
   "meetup_time": "2026-10-25T17:30:00+08:00" }
 ```
 
-逐項檢查 `quantity ≤ available`，不足回 409 `INSUFFICIENT_QUANTITY` 並附 `product_id`、`available`、`item_id`；訂單維持 `DRAFT`。成功後 `DRAFT → PENDING_REVIEW`、`lock_expires_at = now + 30 分`、`deal_terms` 寫入、發起方對應的 `buyer_confirmed` 或 `seller_confirmed` 為真，並插入協議卡與系統訊息。同一個交易房已有一筆 `PENDING_REVIEW`／`NEGOTIATING` 時回 409 `DEAL_IN_PROGRESS`。
+逐項檢查 `quantity ≤ available`，不足回 409 `INSUFFICIENT_QUANTITY` 並附 `product_id`、`available`、`item_id`；訂單維持原狀態。成功後進入 `PENDING_REVIEW`、`lock_expires_at = now + 30 分`、`deal_terms` 寫入、發起方對應的 `buyer_confirmed` 或 `seller_confirmed` 為真，並插入協議卡與系統訊息。同一個交易房已有一筆 `PENDING_REVIEW`／`NEGOTIATING` 時回 409 `DEAL_IN_PROGRESS`。
 
-錯誤：400 `EMPTY_DEAL`（沒有項目）、400 `INVALID_PRICE`、400 `MISSING_TERMS`、400 `FIELD_TOO_LONG`、400 `INVALID_MEETUP_TIME`、409 `INVALID_DEAL_STATUS`、409 `INSUFFICIENT_QUANTITY`、409 `DEAL_IN_PROGRESS`。
+`NEGOTIATING` 的訂單也可以送出：只有 `rejected_by` 本人（退回方）能重送，成功後重新進入 `PENDING_REVIEW`，發起方改為重送的人，另一方的簽核歸零。重送時逐項比對的可售會把這筆訂單自己的保留加回來，避免「整批都保留在這筆訂單」時被自己的保留卡住。
+
+錯誤：400 `EMPTY_DEAL`（沒有項目）、400 `INVALID_PRICE`、400 `MISSING_TERMS`、400 `FIELD_TOO_LONG`、400 `INVALID_MEETUP_TIME`、403 `FORBIDDEN`（不是退回方）、409 `INVALID_DEAL_STATUS`、409 `INSUFFICIENT_QUANTITY`、409 `DEAL_IN_PROGRESS`。
 
 協議卡內容：`{ type: "deal", deal_id, status: "pending", initiator_id, final_price, meetup_location, meetup_time, items_total, items: [{ title, quantity, unit_price }] }`。
 
@@ -339,8 +347,10 @@
 { "deal_id": "deal_...", "action": "AGREE" }
 ```
 
-- `AGREE`：非發起方 → `CONFIRMED`、各項目 `sold_quantity += quantity`、寫 `confirmed_at`、插入評價卡、雙方 `completed_deals + 1`。
-- `REJECT`：→ `NEGOTIATING`、`hold_expires_at = now + 15 分`、協議卡狀態改 `rejected`、插入系統訊息。
+- `AGREE`：非發起方 → `CONFIRMED`、各項目 `sold_quantity += quantity`、寫 `confirmed_at`、雙方 `completed_deals + 1`、最新協議卡改 `confirmed`、插入系統訊息。評價卡尚未實作。
+- `REJECT`：非發起方 → `NEGOTIATING`、`hold_expires_at = now + 15 分`、`rejected_by` 記下退回方、最新協議卡改 `rejected`、插入系統訊息。之後只有退回方能重送。
+
+發起方自己呼叫回 403 `FORBIDDEN`；不是 `PENDING_REVIEW` 回 409 `INVALID_DEAL_STATUS`；`action` 不是 `AGREE`／`REJECT` 回 400 `INVALID_ACTION`。
 
 `POST /api/deals/cancel`
 
@@ -348,7 +358,11 @@
 { "deal_id": "deal_...", "reason": "SELLER_OUT_OF_STOCK" }
 ```
 
-任一方皆可；釋放尾數、插入系統訊息、協議卡改 `cancelled`。
+任一方皆可，`DRAFT`／`PENDING_REVIEW`／`NEGOTIATING` 都能取消。`reason` 只接受 `SELLER_OUT_OF_STOCK`、`BUYER_CHANGED_MIND`、`TERMS_MISMATCH`、`OTHER`；缺少或無效回 400 `INVALID_CANCEL_REASON`。取消後保留尾數立即釋放、最新協議卡改 `cancelled`、交易房留下含原因的系統訊息。已成交或已取消回 409 `INVALID_DEAL_STATUS`。
+
+### 8.1.1 逾時
+
+`GET /api/conversations` 與 `GET /api/deals/:id` 會先掃描進行中訂單：`PENDING_REVIEW` 超過 `lock_expires_at`、`NEGOTIATING` 超過 `hold_expires_at` 就轉 `CANCELLED`（原因 `LOCK_EXPIRED`／`HOLD_EXPIRED`），最新協議卡改 `expired`，並插入系統訊息。寫入端點（`propose`、`respond`、`cancel`）也會先掃描，過期的協議不能靠舊畫面續命。重複讀取不會重複取消或重複留言。
 
 ### 8.2 評價
 
@@ -421,6 +435,8 @@
 | `MISSING_TERMS` | 400 | 提案（缺面交地點） |
 | `INVALID_MEETUP_TIME` | 400 | 提案（時間無效） |
 | `DEAL_IN_PROGRESS` | 409 | 提案（房間已有進行中訂單） |
+| `INVALID_ACTION` | 400 | 回應協議（不是 AGREE／REJECT） |
+| `INVALID_CANCEL_REASON` | 400 | 取消（缺原因或原因無效） |
 | `ALREADY_REVIEWED` | 409 | 目標：評價 |
 | `INVALID_SPECIES` | 400 | 目標：行情 |
 | `INVALID_DATE` | 400 | 目標：行情 |
@@ -443,4 +459,6 @@
 | `item_id` 只在同一筆訂單內唯一 | 改尾數／刪項目要同時帶 `deal_id` |
 | 草稿不保留庫存 | `available` 仍包含草稿中的尾數；同一草稿的累計不得超過 `available` |
 | 協議卡 `status` 是小寫 `pending` 等 | 訂單本身是 `deal_status` 大寫 `PENDING_REVIEW` |
+| 發起方不能同意自己的協議 | 只有對方能 `AGREE`／`REJECT`；任一方都能 `cancel` |
+| 協議卡只有最新一張會跟著狀態更新 | 舊卡保留 `rejected` 等歷史狀態 |
 | 舊文件寫的 `createFish()` / `deleteFish()` 已不存在 | 上架只用 `POST /api/products/create` |

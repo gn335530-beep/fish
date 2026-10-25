@@ -130,8 +130,10 @@ export function mountPanel(options) {
     if (node && handlers.onInput) handlers.onInput(node.dataset.field, node.value);
   });
   refs.body.addEventListener("change", function (event) {
-    const node = event.target.closest("[data-addon-qty]");
-    if (node && handlers.onSelect) handlers.onSelect(node.dataset.addonQty, node.value);
+    const addon = event.target.closest("[data-addon-qty]");
+    if (addon && handlers.onSelect) handlers.onSelect(addon.dataset.addonQty, addon.value);
+    const reason = event.target.closest("[data-cancel-reason]");
+    if (reason && handlers.onReason) handlers.onReason(reason.dataset.cancelReason, reason.value);
   });
   document.addEventListener("keydown", function (event) {
     if (event.key === "Escape" && api.isOpen()) api.close();

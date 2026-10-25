@@ -149,7 +149,7 @@
 
 ## 7. `deals`
 
-`DRAFT` 由開啟交易房建立；送提案後是 `PENDING_REVIEW`。`NEGOTIATING`／`CONFIRMED`／`CANCELLED` 仍待回應與取消端點實作。
+`DRAFT` 由開啟交易房建立；送提案後是 `PENDING_REVIEW`，退回是 `NEGOTIATING`，同意是 `CONFIRMED`，取消或逾時是 `CANCELLED`。協議卡的 `status` 會跟著最新一張卡同步為 `pending`／`rejected`／`confirmed`／`cancelled`／`expired`。舊卡保留當時的狀態。
 
 ```jsonc
 {
@@ -173,6 +173,7 @@
   "deal_status": "DRAFT",
   "buyer_confirmed": true,
   "seller_confirmed": false,
+  "rejected_by": null,
   "lock_expires_at": null,
   "hold_expires_at": null,
   "review_status": { "buyer_reviewed": false, "seller_reviewed": false },
@@ -185,9 +186,11 @@
 ```
 
 - `items[]` 是商品快照，不隨商品變動；`GET /api/deals/:id` 讀取時會為每項附上 `available`（不落庫）。
-- `updated_at` 會在項目變動與提案時更新，供前端判斷是否重抓明細。
+- `updated_at` 會在項目變動、提案、回應、取消或逾時時更新，供前端判斷是否重抓明細。
+- `rejected_by` 記住最後一位按「退回」的人；只有這個人可以把 `NEGOTIATING` 的訂單重新送出。
 - `deal_terms` 在 `DRAFT` 可以為 `null`。
 - `cancel_reason`：`SELLER_OUT_OF_STOCK`、`BUYER_CHANGED_MIND`、`TERMS_MISMATCH`、`OTHER`、`LOCK_EXPIRED`、`HOLD_EXPIRED`。
+- `cancelled_by` 是使用者 id；逾時取消時是 `"system"`。
 
 ## 8. `reviews`（目標）
 

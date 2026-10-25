@@ -112,3 +112,17 @@ export function proposeDeal(dealId, terms) {
     body: Object.assign({ deal_id: dealId }, terms || {})
   });
 }
+
+export function respondDeal(dealId, action) {
+  return call("/api/deals/respond", {
+    method: "POST",
+    body: { deal_id: dealId, action: action }
+  });
+}
+
+export function cancelDeal(dealId, reason) {
+  return call("/api/deals/cancel", {
+    method: "POST",
+    body: { deal_id: dealId, reason: reason }
+  });
+}

@@ -2,8 +2,8 @@
 
 const express = require("express");
 const { requireUser } = require("../lib/auth");
-const { productAvailability, cardMessage, systemMessage } = require("../lib/orders");
-const { itemsOf } = require("../lib/deal-items");
+const { productAvailability, isActive, cardMessage, systemMessage, sweepExpired } = require("../lib/orders");
+const { itemsOf, quantityOf } = require("../lib/deal-items");
 const deals = require("../lib/deals");
 const { ok, fail } = require("../lib/http");
 
@@ -29,21 +29,32 @@ function parseTerms(body) {
   };
 }
 
-/* 回傳第一個可售不足的項目；沒有問題時回 null。 */
+/* 回傳第一個可售不足的項目；重送時要扣掉這筆訂單自己的保留。 */
 function shortageOf(deal) {
   const items = itemsOf(deal);
   for (const item of items) {
     const stock = productAvailability(item.product_id);
-    const available = stock ? stock.available : 0;
+    const own = isActive(deal) ? quantityOf(deal, item.product_id) : 0;
+    const available = (stock ? stock.available : 0) + own;
     if (Number(item.quantity) > available) return { item: item, available: available };
   }
   return null;
 }
 
 router.post("/api/deals/propose", requireUser, function (req, res) {
+  sweepExpired();
   const deal = deals.requireDeal(req, res);
   if (!deal) return;
-  if (!deals.requireDraft(deal, res, "只有草稿訂單可以送出協議")) return;
+
+  const resending = deal.deal_status === "NEGOTIATING";
+  if (!resending && deal.deal_status !== deals.DRAFT_STATUS) {
+    fail(res, 409, "INVALID_DEAL_STATUS", "只有草稿或已退回的訂單可以送出協議");
+    return;
+  }
+  if (resending && String(deal.rejected_by) !== String(req.user.id)) {
+    fail(res, 403, "FORBIDDEN", "只有退回方可以重新送出協議");
+    return;
+  }
 
   const items = itemsOf(deal);
   if (!items.length) {
@@ -91,7 +102,6 @@ router.post("/api/deals/propose", requireUser, function (req, res) {
   };
   cardMessage(deal.conversation_id, Number(req.user.id), card);
   systemMessage(deal.conversation_id, "已送出協議，等待對方回覆（30 分鐘內）。");
-  deals.touch(deal.conversation_id);
 
   ok(res, { deal: deals.decorateDeal(updated) }, "協議已送出");
 });

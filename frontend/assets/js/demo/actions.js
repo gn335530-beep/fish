@@ -5,6 +5,7 @@ import * as api from "./api.js";
 import { refreshRooms } from "./poll.js";
 import { openRoom, viewOf } from "./rooms.js";
 import { initDealActions, handleDealAction } from "./deal-actions.js";
+import { initDealReplies } from "./deal-replies.js";
 import {
   submitText, publishDraft, resetDraft, explainProduct, beginEdit, beginDeal
 } from "./flow.js";
@@ -18,6 +19,7 @@ export function initActions(options) {
   render = options.render;
   notify = options.notify;
   initDealActions(options);
+  initDealReplies(options);
 }
 
 function panelQuantity(productId) {

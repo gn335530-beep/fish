@@ -7,6 +7,13 @@ export function viewOf(room) {
   return room && room.type === "deal" ? "deal" : "assistant";
 }
 
+export function currentRoom() {
+  if (!state.room) return null;
+  return (state.conversations || []).find(function (item) {
+    return item.id === state.room.id;
+  }) || state.room;
+}
+
 export function clearUnread(conversations, roomId) {
   return (conversations || []).map(function (item) {
     return item.id === roomId ? Object.assign({}, item, { unread_count: 0 }) : item;
@@ -37,7 +44,8 @@ export async function openRoom(room) {
     addons: [],
     addonQty: {},
     proposeOpen: false,
-    proposal: emptyProposal()
+    proposal: emptyProposal(),
+    cancelReasons: {}
   });
   await api.markRead(room.id);
   update({ conversations: clearUnread(state.conversations, room.id) });

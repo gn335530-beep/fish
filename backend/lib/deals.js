@@ -122,10 +122,6 @@ function requireDraft(deal, res, message) {
   return true;
 }
 
-function touch(conversationId) {
-  return patch("conversations", conversationId, { last_message_at: new Date().toISOString() });
-}
-
 /* 發起方送出提案即視為自己已簽，鎖定 30 分鐘。 */
 function applyProposal(deal, userId, terms, now) {
   const buyer = isBuyer(deal, userId);
@@ -137,6 +133,7 @@ function applyProposal(deal, userId, terms, now) {
     seller_confirmed: !buyer,
     lock_expires_at: new Date(new Date(now).getTime() + LOCK_MINUTES * 60000).toISOString(),
     hold_expires_at: null,
+    rejected_by: null,
     cancelled_by: null,
     cancel_reason: null,
     confirmed_at: null,
@@ -156,6 +153,5 @@ module.exports = {
   isBuyer: isBuyer,
   requireDeal: requireDeal,
   requireDraft: requireDraft,
-  touch: touch,
   applyProposal: applyProposal
 };

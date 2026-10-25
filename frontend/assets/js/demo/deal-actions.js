@@ -2,8 +2,11 @@
 
 import { state, update, emptyProposal } from "./store.js";
 import * as api from "./api.js";
-import { refreshRooms } from "./poll.js";
-import { openRoom } from "./rooms.js";
+import { reloadRoom, respondToDeal, cancelDeal } from "./deal-replies.js";
+import {
+  initOrderActions, toggleAddon, addItem, changeQuantity, removeItem, clearItems
+} from "./deal-order-actions.js";
+import { localInputOf } from "./views/html.js";
 
 let ui = {
   render: function () {},
@@ -13,91 +16,7 @@ let ui = {
 
 export function initDealActions(options) {
   ui = Object.assign(ui, options || {});
-}
-
-function currentRoom() {
-  return (state.conversations || []).find(function (item) {
-    return item.id === state.room.id;
-  }) || state.room;
-}
-
-async function refreshDeal() {
-  await refreshRooms();
-  const room = currentRoom();
-  let deal = null;
-  if (room.order) {
-    try {
-      deal = await api.getDeal(room.order.id);
-    } catch (error) {
-      deal = state.deal;
-    }
-  }
-  update({ room: room, deal: deal });
-  ui.render();
-  ui.scrollEnd();
-}
-
-async function toggleAddon() {
-  if (state.addonOpen) {
-    update({ addonOpen: false, addons: [], addonQty: {} });
-    ui.render();
-    return;
-  }
-
-  const deal = state.deal;
-  if (!deal) return;
-  try {
-    const rows = await api.listProducts({ seller_id: deal.seller_id, limit: 100 });
-    const inOrder = (deal.items || []).map(function (item) { return item.product_id; });
-    const addons = (rows || []).filter(function (product) {
-      return Number(product.available) > 0 && inOrder.indexOf(product.id) === -1;
-    });
-    update({ addonOpen: true, addons: addons, addonQty: {} });
-    ui.render();
-  } catch (error) {
-    ui.notify(error);
-  }
-}
-
-async function addItem(productId) {
-  const stored = (state.addonQty || {})[productId];
-  const select = document.querySelector('[data-addon-qty="' + productId + '"]');
-  const quantity = Number(stored) || (select ? Number(select.value) : 1) || 1;
-  try {
-    await api.addDealItem(state.deal.id, productId, quantity);
-    update({ addonOpen: false, addons: [], addonQty: {} });
-    await refreshDeal();
-  } catch (error) {
-    ui.notify(error);
-  }
-}
-
-async function changeQuantity(itemId, quantity) {
-  if (quantity < 1) return;
-  try {
-    await api.updateDealItem(state.deal.id, itemId, quantity);
-    await refreshDeal();
-  } catch (error) {
-    ui.notify(error);
-  }
-}
-
-async function removeItem(itemId) {
-  try {
-    await api.removeDealItem(state.deal.id, itemId);
-    await refreshDeal();
-  } catch (error) {
-    ui.notify(error);
-  }
-}
-
-async function clearItems() {
-  try {
-    await api.clearDealItems(state.deal.id);
-    await refreshDeal();
-  } catch (error) {
-    ui.notify(error);
-  }
+  initOrderActions(options);
 }
 
 function togglePropose() {
@@ -108,10 +27,13 @@ function togglePropose() {
   }
   const deal = state.deal;
   if (!deal || !(deal.items || []).length) return;
+  const terms = deal.deal_terms || {};
   update({
     proposeOpen: true,
     proposal: Object.assign(emptyProposal(), {
-      final_price: String(deal.items_total || "")
+      final_price: String(terms.final_price || deal.items_total || ""),
+      meetup_location: terms.meetup_location || "",
+      meetup_time: localInputOf(terms.meetup_time)
     })
   });
   ui.render();
@@ -135,10 +57,7 @@ async function submitProposal() {
       meetup_time: when.toISOString()
     });
     update({ proposeOpen: false });
-    await refreshRooms();
-    await openRoom(currentRoom());
-    ui.render();
-    ui.scrollEnd();
+    await reloadRoom();
   } catch (error) {
     ui.notify(error);
   }
@@ -189,6 +108,14 @@ export async function handleDealAction(action, data) {
   }
   if (action === "submit-proposal") {
     await submitProposal();
+    return true;
+  }
+  if (action === "deal-agree" || action === "deal-reject") {
+    await respondToDeal(data.deal, action === "deal-agree" ? "AGREE" : "REJECT");
+    return true;
+  }
+  if (action === "deal-cancel") {
+    await cancelDeal(data.deal);
     return true;
   }
   return false;
