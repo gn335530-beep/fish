@@ -3,6 +3,7 @@
 import { state, update, emptyProposal } from "./store.js";
 import * as api from "./api.js";
 import { reloadRoom, respondToDeal, cancelDeal } from "./deal-replies.js";
+import { handleReviewAction } from "./deal-reviews.js";
 import {
   initOrderActions, toggleAddon, addItem, changeQuantity, removeItem, clearItems
 } from "./deal-order-actions.js";
@@ -76,6 +77,7 @@ export function handleAddonSelect(productId, value) {
 }
 
 export async function handleDealAction(action, data) {
+  if (await handleReviewAction(action, data)) return true;
   if (action === "toggle-order") {
     update({ dealOpen: !state.dealOpen });
     ui.render();

@@ -100,3 +100,49 @@
 }
 
 .fm-card__cancel button:hover { background: var(--coral); color: #fff; }
+
+/* 評價卡 */
+.fm-card--review { padding: 10px; }
+.fm-review__note { margin: 6px 0 0; color: var(--muted); font-size: .7rem; line-height: 1.7; }
+
+.fm-review__form { display: grid; gap: 8px; margin-top: 8px; }
+
+.fm-review__rating {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: .7rem;
+}
+
+.fm-review__rating select {
+  padding: 4px 6px;
+  border: 1px solid var(--rule);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: .7rem;
+}
+
+.fm-review__tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.fm-review__tag { display: inline-flex; align-items: center; gap: 3px; font-size: .66rem; color: var(--ink-2); }
+
+.fm-review__form textarea {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  color: var(--ink);
+  font-size: .72rem;
+  resize: vertical;
+}
+
+.fm-review__form textarea:focus { border-color: var(--accent); outline: none; }
+
+.fm-review__form button {
+  padding: 7px 8px;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #fff;
+  font-size: .72rem;
+  cursor: pointer;
+}

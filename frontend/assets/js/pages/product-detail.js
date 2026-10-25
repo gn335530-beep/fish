@@ -102,6 +102,48 @@ async function loadRelated(currentId) {
   }
 }
 
+function reviewStars(rating) {
+  const value = Math.max(0, Math.min(5, Number(rating) || 0));
+  return "★".repeat(value) + "☆".repeat(5 - value);
+}
+
+function reviewHTML(review) {
+  const tags = (review.tags || []).map(function (tag) {
+    return '<span class="review__tag">' + productEscape(tag) + "</span>";
+  }).join("");
+  return '<article class="review">' +
+    '<div class="review__head"><b>' + productEscape(review.reviewer_name || "會員") + "</b>" +
+    '<span class="review__stars">' + reviewStars(review.rating) + " · " +
+    productEscape(productDate(review.created_at)) + "</span></div>" +
+    (review.comment ? '<p class="review__body">' + productEscape(review.comment) + "</p>" : "") +
+    (tags ? '<div class="review__tags">' + tags + "</div>" : "") +
+    "</article>";
+}
+
+async function loadReviews(product) {
+  if (!product.seller_id) return;
+  const section = document.getElementById("pd-reviews-section");
+  const summary = document.getElementById("pd-review-summary");
+  const list = document.getElementById("pd-reviews");
+  section.hidden = false;
+  summary.textContent = "評價載入中…";
+
+  try {
+    const response = await window.HaisenAPI.request(
+      "/api/reviews?user_id=" + encodeURIComponent(product.seller_id) + "&limit=6"
+    );
+    const data = response.data || {};
+    const reviews = data.reviews || [];
+    summary.textContent = data.review_count
+      ? String(Number(data.rating_score || 0)).replace(/\.0$/, "") + " 星 · " + data.review_count + " 則評價"
+      : "目前沒有評價。";
+    list.innerHTML = reviews.map(reviewHTML).join("");
+  } catch (error) {
+    summary.textContent = "評價載入失敗，請稍後再試。";
+    list.innerHTML = "";
+  }
+}
+
 async function loadDetail() {
   const id = detailParam("id");
   if (!id) {
@@ -116,6 +158,7 @@ async function loadDetail() {
     }
     renderDetail(product);
     loadRelated(product.id);
+    loadReviews(product);
   } catch (error) {
     if (error.status === 404) {
       showDetailError("找不到這筆商品", "商品可能已下架或連結有誤。");

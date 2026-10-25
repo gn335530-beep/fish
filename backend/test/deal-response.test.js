@@ -63,7 +63,7 @@ test("對方同意後成交：已售、完成數與協議卡都更新", async fu
     return message.type === "system" && message.text.indexOf("交易成立") !== -1;
   }));
   const card = messages.filter(function (message) {
-    return message.card && message.card.deal_id === seen.dealA;
+    return message.card && message.card.type === "deal" && message.card.deal_id === seen.dealA;
   }).pop();
   assert.equal(card.card.status, "confirmed");
 
@@ -83,7 +83,7 @@ test("退回後進入協商中 15 分鐘，只有退回方能重送", async func
 
   const messages = await messagesOf(seen.convB, tokens.third);
   const card = messages.filter(function (message) {
-    return message.card && message.card.deal_id === seen.dealB;
+    return message.card && message.card.type === "deal" && message.card.deal_id === seen.dealB;
   }).pop();
   assert.equal(card.card.status, "rejected");
   assert.ok(messages.some(function (message) {
@@ -107,7 +107,7 @@ test("退回後進入協商中 15 分鐘，只有退回方能重送", async func
   assert.equal(agreed.body.data.deal.deal_status, "CONFIRMED");
 
   const cards = (await messagesOf(seen.convB, tokens.third)).filter(function (message) {
-    return message.card && message.card.deal_id === seen.dealB;
+    return message.card && message.card.type === "deal" && message.card.deal_id === seen.dealB;
   });
   assert.equal(cards.length, 2);
   assert.equal(cards[0].card.status, "rejected");

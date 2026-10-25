@@ -6,6 +6,7 @@ import { refreshRooms } from "./poll.js";
 import { openRoom, viewOf } from "./rooms.js";
 import { initDealActions, handleDealAction } from "./deal-actions.js";
 import { initDealReplies } from "./deal-replies.js";
+import { initDealReviews } from "./deal-reviews.js";
 import {
   submitText, publishDraft, resetDraft, explainProduct, beginEdit, beginDeal
 } from "./flow.js";
@@ -20,6 +21,7 @@ export function initActions(options) {
   notify = options.notify;
   initDealActions(options);
   initDealReplies(options);
+  initDealReviews(options);
 }
 
 function panelQuantity(productId) {

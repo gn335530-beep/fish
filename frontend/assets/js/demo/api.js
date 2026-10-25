@@ -126,3 +126,10 @@ export function cancelDeal(dealId, reason) {
     body: { deal_id: dealId, reason: reason }
   });
 }
+
+export function submitReview(dealId, review) {
+  return call("/api/reviews/submit", {
+    method: "POST",
+    body: Object.assign({ deal_id: dealId }, review || {})
+  });
+}

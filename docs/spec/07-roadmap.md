@@ -21,8 +21,8 @@
 | 訂單草稿與加購 | ✅ | 加購、改尾數、刪除、清空 |
 | 協議與簽核 | ✅ | 提案、同意、退回、取消與協議卡 |
 | 逾時釋放 | ✅ | 商品、對話清單與訂單讀取時掃描 |
-| 評價 | ⬜ | 無路由 |
-| 交易紀錄 | ⬜ | 無路由、無頁面 |
+| 評價 | ✅ | `POST /api/reviews/submit`、評價卡、星等與未到次數重算 |
+| 交易紀錄 | ✅ | `GET /api/deals`、抽屜列表與單筆詳情 |
 | 行情抓取與查詢 | ⬜ | 無資料表、無路由 |
 | 行情顯示 | 🟡 | 顯示的是示意資料，且標成「即時均價」 |
 | 購物車 | 🗑 | 要移除 |
@@ -55,7 +55,7 @@
 | G-9 | ✅ 交易房視圖（電話橫幅、訂單摘要）（已修正） | G-8 |
 | G-10 | ✅ 加購、改尾數、刪項目（已修正） | G-8 |
 | G-11 | ✅ 協議提案、同意、退回、取消（已修正） | G-10 |
-| G-12 | 評價與交易紀錄不存在 | G-11 |
+| G-12 | ✅ 評價與交易紀錄（已修正） | G-11 |
 
 ### 2.4 行情（G-13～G-16）
 
@@ -77,7 +77,7 @@
 | R-3 | 修訊息權限漏洞 | `backend/routes/chat-messages.js` | ✅ 2026-10-25 已修正：一律驗參與者（不再因 `sender_type:"ai"` 跳過）；`context` 僅限助手房且必須是物件 |
 | R-4 | 移除購物車 | `pages/cart.html`、`assets/js/pages/cart.js`、`assets/js/app/02-cart-account.js`（`haisen_cart_v1`）、各頁導覽列入口、`PUT /api/fish/data/:id` | 交易改走交易房 |
 | R-5 | 移除手動上架表單 | `pages/seller.html`、`assets/js/pages/seller-*.js`、`assets/css/seller.css` | 唯一入口是對話上架 |
-| R-6 | 移除「聊聊」入口與死分頁 | `assets/js/app/02-cart-account.js`（nav）、`07-drawer-panels.js`、`05-listings.js`、`assets/css/features.css` 的 `.chat`、`chat-auth.css` | 個人抽屜改為「交易紀錄」 |
+| R-6 | 移除「聊聊」入口與死分頁 | `assets/js/app/02-cart-account.js`（nav）、`07-drawer-panels.js`、`05-listings.js`、`assets/css/features.css` 的 `.chat`、`chat-auth.css` | ✅ 2026-10-25：個人抽屜改為「個人資訊」＋「交易紀錄」 |
 | R-7 | 移除或封存 `report.html` | `pages/report.html` | 內容與現況不符；若要留，移到 `docs/` |
 | R-8 | 移除未使用的 API 函式與狀態 | `api/fish.js`（`createFish`、`deleteFish`）、`api/auth.js`（`updateProfile` 未接 UI）、`demo/store.js`（`busy`、`resetRoom`）、`demo/views/panel.js`（`setTitle`、`clearInput`、`focusInput`） | |
 | R-9 | 魚種單一來源 | `backend/lib/species.js`、`frontend/assets/js/demo/ai/species.js`、`frontend/assets/js/app/01-data.js` | 後端提供 `GET /api/species`，前端一律取用；移除另兩份 |
@@ -92,7 +92,7 @@
 | --- | --- | --- | --- |
 | B-1 | 商品卡顯示「今日 2026-10-20T05:40:00+08:00 釣獲」 | `api/fish-mapper.js` | 舊格式轉換時把 ISO 轉成日期時間；R-2 後自然消失 |
 | B-2 | API 商品被預設地區篩選濾掉 | `pages/products.js` | R-2 一併處理 |
-| B-3 | 詳情頁相簿與「96 則評價」寫死 | `pages/product-detail.js`、`.html` | 改讀商品照片；評價接 `reviews`（M4） |
+| B-3 | 詳情頁相簿只有一張主圖 | `pages/product-detail.js`、`.html` | 🟡 評價已接 `reviews` 並顯示真實內容；相簿仍只有主圖 |
 | B-4 | 購物車金額 = 每台斤價 × 尾數 | `pages/cart.js` | R-4 移除後消失 |
 | B-5 | 未登入也能「訂單成立」 | `pages/cart.js` | R-4 |
 | B-6 | 抽屜點「聊聊」顯示賣家資訊 | `07-drawer-panels.js` | R-6 |

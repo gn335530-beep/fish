@@ -2,6 +2,7 @@
 
 const { findById, patch } = require("./store");
 const { itemsOf, syncDealCard, systemMessage } = require("./orders");
+const { reviewCardMessage } = require("./reviews");
 
 const HOLD_MINUTES = 15;
 
@@ -42,6 +43,7 @@ function agree(deal, now) {
   });
   syncDealCard(deal.id, "confirmed");
   systemMessage(deal.conversation_id, "雙方都同意了，這筆交易成立。");
+  reviewCardMessage(updated);
   return updated;
 }
 

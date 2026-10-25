@@ -38,6 +38,9 @@
 | `POST` | `/api/deals/propose` | 參與者 | 送出協議，鎖定 30 分鐘 |
 | `POST` | `/api/deals/respond` | 參與者（非發起方） | 同意／退回協議 |
 | `POST` | `/api/deals/cancel` | 參與者 | 取消並選原因 |
+| `GET` | `/api/deals` | 登入 | 交易紀錄列表 |
+| `POST` | `/api/reviews/submit` | 參與者 | 成交後評價對方 |
+| `GET` | `/api/reviews?user_id=` | 公開 | 評價與平均星等 |
 | `POST` | `/api/uploads` | 登入 | 上傳圖片（base64 data URL） |
 
 `GET /api/products` 會先掃描逾時訂單並釋放保留，不是純讀取。舊的 `/api/fish/data` 與 `PUT /api/fish/data/{id}` 已移除。

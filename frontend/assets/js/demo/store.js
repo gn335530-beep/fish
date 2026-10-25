@@ -19,7 +19,8 @@ export const state = {
   addonQty: {},
   proposeOpen: false,
   proposal: emptyProposal(),
-  cancelReasons: {}
+  cancelReasons: {},
+  reviewDrafts: {}
 };
 
 const listeners = [];

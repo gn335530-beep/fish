@@ -45,7 +45,8 @@ export async function openRoom(room) {
     addonQty: {},
     proposeOpen: false,
     proposal: emptyProposal(),
-    cancelReasons: {}
+    cancelReasons: {},
+    reviewDrafts: {}
   });
   await api.markRead(room.id);
   update({ conversations: clearUnread(state.conversations, room.id) });

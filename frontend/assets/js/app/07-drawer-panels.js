@@ -2,6 +2,9 @@ function profileHTML(u){
   const nick = (u.nick || "").replace(/"/g, "&quot;");
   const phone = (u.phone || "—");
   return `
+  <button class="drawer__entry" type="button" id="dr-history">
+    <b>交易紀錄</b><span>所有訂單、金額與評價 →</span>
+  </button>
   <div class="drawer__sec"><h4>個人資訊</h4>
     <p class="drawer__note">暱稱可自行編輯；電話號碼為註冊時綁定，僅供顯示、不可修改。</p></div>
   <div class="field" id="dr-f-av">
@@ -72,6 +75,9 @@ function bindDrawerBody(){
     renderAuthNav();
     renderDrawer();
   });
+  const history = document.getElementById("dr-history");
+  if(history) history.addEventListener("click", openTradeHistory);
+  bindTradeHistory();
 }
 function setSimple(fieldId, ok, errId){
   const f = document.getElementById(fieldId);
