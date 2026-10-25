@@ -27,11 +27,30 @@ async function refreshMessages() {
   return messages;
 }
 
+/* 目前的房間摘要（訂單項目數、金額）也要跟著別人的加購更新。 */
+export function syncOpenRoom() {
+  if (!state.room) return;
+  const fresh = (state.conversations || []).find(function (item) {
+    return item.id === state.room.id;
+  });
+  if (!fresh) return;
+  const order = fresh.order || null;
+  if (JSON.stringify(order) === JSON.stringify(state.room.order || null)) return;
+  update({
+    room: Object.assign({}, state.room, {
+      order: order,
+      peer: fresh.peer,
+      mode: fresh.mode
+    })
+  });
+}
+
 async function tick() {
   if (running || !state.user) return;
   running = true;
   try {
     await refreshRooms();
+    syncOpenRoom();
     if (state.room && state.view !== "inbox") await refreshMessages();
   } catch (error) {
     update({ notice: error && error.message ? error.message : "" });

@@ -30,9 +30,12 @@
 | `PUT` | `/api/conversations/{id}/context` | 參與者（助手房） | 更新助手房 context |
 | `POST` | `/api/conversations/{id}/read` | 參與者 | 標記已讀 |
 | `POST` | `/api/conversations/{id}/clear` | 參與者（助手房） | 清除舊訊息 |
+| `POST` | `/api/deals/initiate-channel` | 登入 | 由商品開啟或沿用交易房與草稿訂單 |
 | `POST` | `/api/uploads` | 登入 | 上傳圖片（base64 data URL） |
 
 `GET /api/products` 會先掃描逾時訂單並釋放保留，不是純讀取。舊的 `/api/fish/data` 與 `PUT /api/fish/data/{id}` 已移除。
+
+交易房由 `POST /api/deals/initiate-channel` 開啟，房間唯一鍵是 `buyer_id + seller_id`；同一釣客的多個商品會進同一筆草稿訂單。交易房的系統訊息會計入未讀。
 
 ## 3. 商品回應欄位
 

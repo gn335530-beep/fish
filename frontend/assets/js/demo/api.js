@@ -70,3 +70,11 @@ export function clearConversation(conversationId, keepFromSeq) {
     body: { keep_from_seq: keepFromSeq }
   });
 }
+
+/* 由商品開啟或沿用交易房與草稿訂單。 */
+export function initiateChannel(productId, quantity) {
+  return call("/api/deals/initiate-channel", {
+    method: "POST",
+    body: { product_id: productId, quantity: Number(quantity) || 1 }
+  });
+}

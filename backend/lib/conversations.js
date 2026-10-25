@@ -52,7 +52,8 @@ function unreadCount(conversation, userId) {
   const readAt = (conversation.read_at || {})[String(userId)] || "";
   return messagesOf(conversation.id).filter(function (m) {
     if (String(m.sender_id) === String(userId)) return false;
-    if (m.type === "system") return false;
+    /* 助手房的系統訊息不算未讀；交易房的系統訊息是開房與加購通知，要讓對方看到。 */
+    if (m.type === "system" && conversation.type !== "deal") return false;
     return !readAt || m.created_at > readAt;
   }).length;
 }

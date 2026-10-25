@@ -8,9 +8,9 @@
 | --- | ---: | --- |
 | `users` | 4 | ✅ |
 | `products` | 5 | ✅ |
-| `conversations` | 3 | ✅（只有助手房） |
+| `conversations` | 3 | ✅（助手房；交易房由開啟交易房建立） |
 | `messages` | 78 | ✅ |
-| `deals` | 0 | ⬜ 無路由會寫入 |
+| `deals` | 0 | ✅ 草稿由開啟交易房建立 |
 | `reviews` | 0 | ⬜ 無路由會寫入 |
 | `market_prices` | 不存在 | ⬜ |
 | `species_market_codes` | 不存在 | ⬜ |
@@ -27,7 +27,7 @@
 | 商品 | `prd_YYYYMMDD_NNN` | 以台灣時間取日期，當日流水號 |
 | 對話 | `conv_YYYYMMDD_NNN` | 同上 |
 | 訊息 | `msg_YYYYMMDD_NNN` + `seq` | `seq` 是**全域**單調遞增，不是每個房間各自編號 |
-| 訂單 | `deal_YYYYMMDD_NNN` | 同上（目標） |
+| 訂單 | `deal_YYYYMMDD_NNN` | 同上（草稿已實作） |
 | 評價 | `rev_YYYYMMDD_NNN` | 同上（目標） |
 
 `seq` 全域遞增是刻意的：輪詢用「大於上次序號」取增量，同毫秒的多則訊息也不會漏。
@@ -143,7 +143,9 @@
 
 **目標**：`deal` 卡狀態值統一為 `pending` / `rejected` / `confirmed` / `cancelled` / `expired`；目前逾時流程會寫 `expired`，其餘沒有程式產生。
 
-## 7. `deals`（目標）
+## 7. `deals`
+
+目前只會建立 `DRAFT`（`POST /api/deals/initiate-channel`）；協議與成交狀態仍是目標。
 
 ```jsonc
 {

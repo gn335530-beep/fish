@@ -62,10 +62,8 @@
         </div>
 
         <div style="display:flex;gap:12px;flex-wrap:wrap">
-          <button class="chat-trigger" style="flex:1;min-width:170px;justify-content:center" onclick="FishMatchBot.open()">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8 8 0 0 1-8 8H7l-4 3V12a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8z"/></svg>
-            與釣客聊聊
-          </button>
+          <select class="select card__deal-qty" id="pd-deal-qty" data-deal-qty="" aria-label="購買尾數" style="min-width:96px"></select>
+          <button class="btn btn--primary" type="button" id="pd-deal" data-deal-product="">洽談購買</button>
         </div>
       </div>
     </div>
@@ -104,6 +102,7 @@
 <script src="../assets/js/app/06-drawer.js?v=v3"></script>
 <script src="../assets/js/app/07-drawer-panels.js?v=v3"></script>
 <script src="../assets/js/app/08-api-init.js?v=v3"></script>
+<script src="../assets/js/app/09-deal-buy.js?v=v3"></script>
 <script src="../assets/js/pages/product-detail.js?v=v3"></script>
 </body>
 </html>

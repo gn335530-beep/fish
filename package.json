@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "backend": "node backend/server.js",
-    "web": "node tools/serve-frontend.js"
+    "web": "node tools/serve-frontend.js",
+    "test": "node --test \"backend/test/*.test.js\" \"frontend/test/*.test.js\""
   },
   "devDependencies": {
     "json-server": "0.17.4"

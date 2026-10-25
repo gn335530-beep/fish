@@ -5,8 +5,10 @@ const express = require("express");
 const jsonServer = require("json-server");
 const { setDb } = require("./lib/store");
 
+const DB_FILE = process.env.FISHMATCH_DB || path.join(__dirname, "db.json");
+
 const app = jsonServer.create();
-const router = jsonServer.router(path.join(__dirname, "db.json"));
+const router = jsonServer.router(DB_FILE);
 setDb(router.db);
 
 app.use(function (req, res, next) {
@@ -28,6 +30,7 @@ app.use(require("./routes/products"));
 app.use(require("./routes/species"));
 app.use(require("./routes/chat"));
 app.use(require("./routes/chat-messages"));
+app.use(require("./routes/deals"));
 app.use(require("./routes/uploads"));
 
 /* 只開放自訂的 /api 與 /uploads，避免直接以 json-server 預設路由改寫資料。 */

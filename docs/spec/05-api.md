@@ -56,6 +56,7 @@
 | 16 | POST | `/api/conversations/:id/clear` | 參與者（助手房） | ✅ |
 | 17 | POST | `/api/uploads` | 登入 | ✅ |
 | 18 | GET | `/uploads/*` | 公開 | ✅ 靜態檔 |
+| 19 | POST | `/api/deals/initiate-channel` | 登入 | ✅ 開啟／沿用交易房 |
 
 ## 3. 會員
 
@@ -173,6 +174,8 @@
 
 `order` 只在交易房有進行中訂單時才有值：`{ id, status, item_count, total_quantity, final_price }`。
 
+未讀數不含自己送出的訊息。助手房的系統訊息不算未讀；交易房的系統訊息（開房、加購通知）算未讀。
+
 ### `POST /api/conversations/assistant`
 
 找或建立目前使用者的助手房。首次建立時寫入一則招呼語並標記已讀。回傳同上摘要。
@@ -253,17 +256,19 @@
 | 端點 | 現況 |
 | --- | --- |
 | `GET /api/fish/data` | 已移除；瀏覽頁改用 `GET /api/products` |
-| `PUT /api/fish/data/:id` | 已移除；交易改走交易房（尚未實作） |
+| `PUT /api/fish/data/:id` | 已移除；交易改走交易房 |
 
 舊購物車與手動上架表單也已在 M1 移除。
 
 ## 8. 目標端點
 
+> `POST /api/deals/initiate-channel` 已於 2026-10-25 實作（見 8.1）；其餘端點仍為目標。
+
 ### 8.1 訂單
 
 | 方法 | 路徑 | 權限 | 說明 |
 | --- | --- | --- | --- |
-| POST | `/api/deals/initiate-channel` | 登入 | 由商品建立／沿用交易房與草稿，加入項目 |
+| POST | `/api/deals/initiate-channel` | 登入 | ✅ 由商品建立／沿用交易房與草稿，加入項目 |
 | POST | `/api/deals/items` | 登入 | 加購同一釣客的其他商品 |
 | PATCH | `/api/deals/items/:itemId` | 登入 | 改尾數 |
 | DELETE | `/api/deals/items/:itemId` | 登入 | 移除項目 |
@@ -279,7 +284,9 @@
 { "product_id": "prd_...", "quantity": 2 }
 ```
 
-回 `{ conversation, deal, product }`。行為：以 `product.seller_id` 找或建立交易房 → 找或建立草稿訂單 → 加入或累加項目 → 房間轉 HUMAN → 插入系統訊息。
+回 200：`{ conversation, deal, product }`。行為：以 `product.seller_id` 找或建立交易房（唯一鍵 `buyer_id + seller_id`）→ 找或建立草稿訂單 → 加入或累加項目 → 房間轉 `HUMAN` → 插入系統訊息（第一次開房時另有「已進入交易洽談」）。`conversation` 是對話摘要（含 `peer.username` 完整電話與 `order`），`deal` 是草稿訂單，項目為商品快照。
+
+錯誤：404 `PRODUCT_NOT_FOUND`、400 `INVALID_QUANTITY`、400 `OWN_PRODUCT`（自己的商品）、409 `INSUFFICIENT_QUANTITY`（附 `product_id`、`available`、`in_draft`）。`INSUFFICIENT_QUANTITY` 只擋同一筆草稿的累計尾數，草稿本身不保留庫存；送出提案時會再依當下可售檢查。
 
 `POST /api/deals/propose`
 
@@ -360,6 +367,7 @@
 | `INVALID_QUANTITY` | 400 | 上架 |
 | `INVALID_CONDITION` | 400 | 上架 |
 | `INVALID_PRICE` | 400 | 上架 |
+| `OWN_PRODUCT` | 400 | 開啟交易房（自己的商品） |
 | `MISSING_PHOTO` | 400 | 上架 |
 | `MISSING_CONVERSATION` | 400 | 訊息 |
 | `EMPTY_MESSAGE` | 400 | 訊息 |
@@ -369,7 +377,7 @@
 | `INVALID_CONTEXT` | 400 | 訊息 |
 | `MISSING_IMAGE` / `INVALID_IMAGE` / `UNSUPPORTED_TYPE` / `EMPTY_IMAGE` | 400 | 上傳 |
 | `IMAGE_TOO_LARGE` | 413 | 上傳 |
-| `INSUFFICIENT_QUANTITY` | 409 | 目標：提案 |
+| `INSUFFICIENT_QUANTITY` | 409 | 開啟交易房、目標：提案 |
 | `ALREADY_REVIEWED` | 409 | 目標：評價 |
 | `INVALID_SPECIES` | 400 | 目標：行情 |
 | `INVALID_DATE` | 400 | 目標：行情 |
@@ -387,4 +395,6 @@
 | `GET /api/products` 會順便釋放逾時訂單 | 不要假設它是純讀取 |
 | `/api/fish/data` 已移除 | 瀏覽頁一律用 `/api/products` |
 | `sender_type: "ai"` 不是身分證明 | 只有房間參與者能寫訊息；跨房寫入一律 403 |
+| 交易房的 `peer.username` 是完整電話 | 電話橫幅直接顯示，加 `tel:` 連結 |
+| 交易房訊息只走真人訊息 | 前端不得再呼叫規則引擎；後端也會擋 `sender_type: "ai"` |
 | 舊文件寫的 `createFish()` / `deleteFish()` 已不存在 | 上架只用 `POST /api/products/create` |
