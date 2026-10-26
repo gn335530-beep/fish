@@ -2,13 +2,14 @@
 
 import * as api from "../api.js";
 import { INTENT, detectIntent } from "./rules.js";
-import { extractSlots, mergeDraft, nextMissingSlot, draftReady } from "./slots.js";
+import { extractSlots } from "./slots.js";
+import { mergeDraft, nextMissingSlot, draftReady, missingNonPriceSlots } from "./draft.js";
 import { editText, editPhoto } from "./editing.js";
 import { resolveReferent } from "./referents.js";
 import { shoppingReply } from "./shopping.js";
 import { marketReply } from "./market.js";
 import { speciesById, ensureSpecies } from "./species.js";
-import { QUESTIONS, ASK_AGAIN } from "./prompts.js";
+import { QUESTIONS, ASK_AGAIN, batchFollowupPrompt } from "./prompts.js";
 
 function makeContext(mode, draft, lastCards) {
   return {
@@ -51,7 +52,10 @@ function advance(ctx) {
 
 function startListing(text) {
   const draft = mergeDraft(null, extractSlots(text, null));
-  return advance(makeContext("listing", draft, []));
+  const ctx = makeContext("listing", draft, []);
+  const missing = missingNonPriceSlots(draft);
+  if (missing.length) return { context: ctx, replies: [{ text: batchFollowupPrompt(missing) }] };
+  return advance(ctx);
 }
 
 function continueListing(ctx, text) {

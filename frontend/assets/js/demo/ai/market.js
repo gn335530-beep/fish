@@ -2,7 +2,7 @@
 
 import * as api from "../api.js";
 import { findSpecies, findRegion, normalizeCityName } from "./species.js";
-import { guessUnknownSpecies } from "./slots.js";
+import { guessUnknownSpecies } from "./conditions.js";
 
 function profileRegion(user) {
   return normalizeCityName((user && user.city) || "").trim();

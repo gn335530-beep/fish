@@ -39,7 +39,8 @@ function renderSpec(p) {
     ["總重", productWeight(p) + " kg"],
     ["尾數", Number(p.quantity || 0) + " 尾"],
     ["處理方式", p.condition || "—"],
-    ["整批價", productMoney(p.price)],
+    ["整批售價", productMoney(p.price) + (p.price_auto ? "（自動計算）" : "")],
+    ["每台斤售價", p.price_per_taijin != null ? productMoney(p.price_per_taijin) : "—"],
     ["每尾均價", productMoney(p.unit_price)],
     ["可售尾數", productAvailable(p) + " 尾"],
     ["地區", normalizeCityName(p.region) || "—"],
@@ -85,8 +86,9 @@ function renderDetail(p) {
   document.getElementById("pd-status").textContent = status;
   document.getElementById("pd-name").textContent = productTitle(p);
   document.getElementById("pd-latin").textContent = p.species_latin || "";
-  document.getElementById("pd-price").innerHTML = productMoney(p.price) + '<span class="unit"> / 整批</span>';
-  document.getElementById("pd-unit-price").textContent = "每尾 " + productMoney(p.unit_price);
+  document.getElementById("pd-price").innerHTML = productMoney(p.price) +
+    '<span class="unit"> / 整批</span>' + (p.price_auto ? '<span class="unit"> · 自動計算</span>' : '');
+  document.getElementById("pd-unit-price").textContent = "每尾均價 " + productMoney(p.unit_price);
   document.getElementById("pd-stock-note").textContent =
     status + " · 共 " + Number(p.quantity || 0) + " 尾上架";
   document.getElementById("pd-qty").textContent = String(productAvailable(p));

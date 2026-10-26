@@ -2,26 +2,11 @@
 
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { start, stop, call, tokens } = require("./client");
+const { start, stop, call } = require("./client");
 const { raw, useRows, resetMarket } = require("./market-test-helpers");
 const { patch } = require("../lib/store");
 const upstream = require("../lib/market/upstream");
-
-function create(overrides) {
-  return call("POST", "/api/products/create", {
-    token: tokens.seller,
-    body: Object.assign({
-      fish_species: "石斑",
-      species_id: "grouper",
-      weight_kg: 4.5,
-      quantity: 1,
-      condition: "放血冰鎮",
-      photo_url: "/uploads/test.jpg",
-      price: 1000,
-      region: "高雄市"
-    }, overrides || {})
-  });
-}
+const { create } = require("./product-helpers");
 
 test.before(start);
 test.after(stop);

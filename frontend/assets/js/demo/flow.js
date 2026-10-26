@@ -3,7 +3,7 @@
 import { state, update } from "./store.js";
 import * as api from "./api.js";
 import * as ai from "./ai/service.js";
-import { draftToProduct } from "./ai/slots.js";
+import { draftToProduct } from "./ai/draft.js";
 import { beginEdit as beginDraftEdit } from "./ai/editing.js";
 import { uploadImage } from "./upload.js";
 import { openRoom } from "./rooms.js";

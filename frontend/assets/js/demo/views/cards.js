@@ -39,7 +39,9 @@ function productCard(card) {
     '<img src="' + image + '" alt="' + title + '">' +
     '<div class="fm-card__body">' +
     '<b>' + title + '</b>' +
-    '<span>' + money(card.price) + '　每尾約 ' + money(card.unit_price) + '</span>' +
+    '<span>整批 ' + money(card.price) + (card.price_auto ? '（自動計算）' : '') + '</span>' +
+    (card.price_per_taijin != null ? '<span>每台斤 ' + money(card.price_per_taijin) + '</span>' : '') +
+    '<span>每尾均價 ' + money(card.unit_price) + '</span>' +
     '<span>' + escapeHtml(card.weight_kg) + ' kg · ' + escapeHtml(card.quantity) + ' 尾 · ' + escapeHtml(card.condition) + '</span>' +
     '<span>' + escapeHtml(normalizeCityName(card.region)) + '　' + stock + '</span>' +
     '<span class="fm-card__market">' + escapeHtml(marketLine(card.market_snapshot)) + '</span>' +
@@ -54,6 +56,8 @@ function row(label, value) {
 
 function draftCard(card) {
   const draft = card.draft || {};
+  const quantity = Number(draft.quantity || 0);
+  const unitPrice = quantity > 0 ? Math.round(Number(draft.price || 0) / quantity) : 0;
   const edits = DRAFT_FIELDS.map(function (field) {
     return '<button type="button" data-action="edit-slot" data-slot="' + field.slot + '">' + field.label + '</button>';
   }).join("");
@@ -64,7 +68,9 @@ function draftCard(card) {
     row("總重", draft.weight_kg + " kg") +
     row("尾數", draft.quantity + " 尾") +
     row("處理", draft.condition) +
-    row("售價", money(draft.price)) +
+    row("整批售價", money(draft.price) + (draft.price_auto ? "（自動計算）" : "")) +
+    row("每台斤", draft.price_per_taijin == null ? "—" : money(draft.price_per_taijin)) +
+    row("每尾均價", unitPrice > 0 ? money(unitPrice) : "—") +
     '</dl>' +
     '<div class="fm-card__edits"><span>修改</span>' + edits + '</div>' +
     (draft.photo_url ? '<img class="fm-card__thumb" src="' + escapeHtml(resolveImage(draft.photo_url)) + '" alt="商品照片">' : "") +
