@@ -80,7 +80,7 @@
 
 **衍生**（讀取時算，不落庫）：`reserved_quantity`、`available`、`unit_price`、`avg_weight_kg`、`status`。
 
-**變更（#24、#27）**：新增 `price_per_taijin`、`price_auto` 與 `market_snapshot`；移除 `market_reference_price`；`condition` 不再限定四種。`market_snapshot` 與自由文字 `condition` 已實作（#24、#26）；每台斤售價與自動計算仍待 #27。只填每台斤時，後端在建立商品時計算 `price` 並設 `price_auto = true`；只填整批時 `price_per_taijin = null`；兩者都填時都保留，不檢查一致性。
+**變更（#24、#27）**：新增 `price_per_taijin`、`price_auto` 與 `market_snapshot`；移除 `market_reference_price`；`condition` 不再限定四種。`market_snapshot`、自由文字 `condition`、每台斤售價與自動計算已實作（#24、#26、#27）。只填每台斤時，後端在建立商品時計算 `price` 並設 `price_auto = true`；只填整批時 `price_per_taijin = null`；兩者都填時都保留，不檢查一致性。
 
 **索引需求**：`seller_id`、`region`、`species_id`、`created_at`（目前是線性掃描，資料量小可接受）。
 

@@ -24,6 +24,8 @@ function productCard(product) {
     title: product.title,
     photo_url: product.photo_url,
     price: product.price,
+    price_per_taijin: product.price_per_taijin == null ? null : product.price_per_taijin,
+    price_auto: product.price_auto === true,
     unit_price: product.unit_price,
     weight_kg: product.weight_kg,
     quantity: product.quantity,

@@ -1,27 +1,7 @@
-/* 槽位抽取：魚種、重量、尾數、處理方式、照片、價格。 */
+/* 槽位抽取：魚種、重量、尾數、處理方式與價格。 */
 
-import { findSpecies, normalizeCityName } from "./species.js";
-
-const SLOT_ORDER = ["fish_species", "weight_kg", "quantity", "condition", "photo_url", "price"];
-
-const CONDITION_WORDS = [
-  "還活著", "放血冰鎮", "三去處理", "去內臟", "處理好",
-  "活體", "活魚", "活跳", "蓄養", "放血", "冰鎮", "碎冰", "冰水",
-  "三去", "去鱗", "去鰓", "宰殺", "冷凍", "凍"
-].sort(function (a, b) { return b.length - a.length; });
-
-const CONDITION_NOISE = CONDITION_WORDS.join("|");
-
-function emptyDraft() {
-  return {
-    fish_species: "",
-    weight_kg: null,
-    quantity: null,
-    condition: "",
-    photo_url: "",
-    price: null
-  };
-}
+import { findSpecies } from "./species.js";
+import { cleanCondition, extractCondition, guessUnknownSpecies } from "./conditions.js";
 
 function round1(value) {
   return Math.round(Number(value) * 10) / 10;
@@ -29,33 +9,6 @@ function round1(value) {
 
 function strip(text, match) {
   return text.replace(match, " ");
-}
-
-/* 只做語句抽取提示，不是允許值清單；回傳使用者實際說的詞，不做同義詞對照。 */
-function extractCondition(text) {
-  return CONDITION_WORDS.find(function (word) { return text.indexOf(word) !== -1; }) || "";
-}
-
-/* 使用者回答處理方式時照原樣記錄，只去掉前後空白與句尾標點。 */
-function cleanCondition(text) {
-  return String(text || "").trim().replace(/[。.!！?？,，;；]+$/, "").trim();
-}
-
-/* 字典沒有的魚種：從句子中移除意圖、數量、單位與處理方式後，留下名稱。 */
-export function guessUnknownSpecies(text) {
-  const noise = new RegExp("我要買魚|我要買|想買|要買|買魚|我要賣魚|我要賣|想賣|要賣|賣魚|上架|出售|賣掉|剛釣到|剛釣|釣到|捕獲|今天|現在|目前|最近|近期|這幾天|幫我|請問|不知道|不確定|忘了|我的|想要|想|大概|大約|左右|差不多|怎麼|什麼魚|什麼|如何|多少|價錢|價格|錢|行情|均價|平均|批發|公斤|kg|KG|Kg|台斤|斤|尾|條|隻|份|元|塊|" + CONDITION_NOISE + "|照片|上傳|一張|一隻|一條|一尾|兩隻|兩條|兩尾|新鮮|現流|最後|這尾|這個|這張|那尾|那個|第|個|我|你|他|的|約|賣", "g");
-  const candidate = String(text || "")
-    .replace(noise, " ")
-    .replace(/\d+(?:\.\d+)?/g, " ")
-    .replace(/[一二兩三四五六七八九十]+/g, " ")
-    .replace(/^(的|是|為|叫|叫做)+/, "")
-    .replace(/[啦喔啊耶吧呢]/g, "")
-    .replace(/[，,。.!！?？、:：;；\s]/g, "");
-
-  if (candidate.length < 2 || candidate.length > 10) return "";
-  if (!/[\u4e00-\u9fff]/.test(candidate)) return "";
-  if (["魚", "海鮮", "海產", "東西", "什麼", "什麼魚", "怎麼", "如何", "多少", "價格", "價錢", "這個", "那個", "未知", "魚種", "不知道"].indexOf(candidate) !== -1) return "";
-  return candidate;
 }
 
 /* assumeSlot：當使用者只回一個數字時，要放進哪個槽位。 */
@@ -114,6 +67,14 @@ export function extractSlots(text, assumeSlot) {
     }
   }
 
+  const perTaijinMatch = /(?:每\s*(?:台斤|斤)|一\s*(?:台斤|斤))\s*(\d+(?:\.\d+)?)/.exec(rest)
+    || /(\d+(?:\.\d+)?)\s*(?:元)?\s*[／/]\s*(?:台斤|斤)/.exec(rest)
+    || /(\d+(?:\.\d+)?)\s*元?\s*(?:每|一)?\s*(?:台斤|斤)/.exec(rest);
+  if (perTaijinMatch) {
+    found.price_per_taijin = Number(perTaijinMatch[1]);
+    rest = strip(rest, perTaijinMatch[0]);
+  }
+
   const priceMatch = /(\d{2,6})\s*(元|塊|nt|NT)?/.exec(rest);
   if (priceMatch) found.price = Number(priceMatch[1]);
 
@@ -128,38 +89,4 @@ export function extractSlots(text, assumeSlot) {
   }
 
   return found;
-}
-
-export function mergeDraft(draft, found) {
-  const next = Object.assign(emptyDraft(), draft || {});
-  Object.keys(found || {}).forEach(function (key) {
-    const value = found[key];
-    if (value === null || value === undefined || value === "") return;
-    next[key] = value;
-  });
-  return next;
-}
-
-export function nextMissingSlot(draft) {
-  return SLOT_ORDER.find(function (slot) {
-    return draft[slot] === null || draft[slot] === undefined || draft[slot] === "";
-  }) || null;
-}
-
-export function draftReady(draft) {
-  return nextMissingSlot(draft) === null;
-}
-
-/* 送給後端前轉成 API 欄位。 */
-export function draftToProduct(draft, user) {
-  return {
-    fish_species: draft.fish_species,
-    weight_kg: draft.weight_kg,
-    quantity: draft.quantity,
-    condition: draft.condition,
-    photo_url: draft.photo_url,
-    price: draft.price,
-    region: normalizeCityName((user && user.city) || ""),
-    location: normalizeCityName((user && user.address) || "")
-  };
 }

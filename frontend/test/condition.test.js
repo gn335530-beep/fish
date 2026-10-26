@@ -54,6 +54,9 @@ test("一般句子仍可抽出處理方式與其他欄位", function () {
 
   const live = extractSlots("石斑 3公斤 2尾 活魚", null);
   assert.equal(live.condition, "活魚");
+
+  const killed = extractSlots("石斑 3公斤 2尾 已經殺好了", null);
+  assert.equal(killed.condition, "殺好");
 });
 
 test("修改草稿的處理方式提示也不再列固定選項", function () {

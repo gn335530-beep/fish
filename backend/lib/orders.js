@@ -37,6 +37,8 @@ function decorateProduct(product, deals) {
   const unitPrice = quantity > 0 ? Math.round(Number(product.price || 0) / quantity) : 0;
   const avgWeight = quantity > 0 ? Number((Number(product.weight_kg || 0) / quantity).toFixed(2)) : 0;
   return Object.assign({}, product, {
+    price_per_taijin: product.price_per_taijin == null ? null : product.price_per_taijin,
+    price_auto: product.price_auto === true,
     reserved_quantity: reserved,
     available: available,
     unit_price: unitPrice,

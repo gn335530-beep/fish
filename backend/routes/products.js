@@ -44,6 +44,35 @@ async function snapshotFor(speciesId, region) {
   }
 }
 
+function hasValue(value) {
+  return value !== undefined && value !== null && String(value).trim() !== "";
+}
+
+/* 只填每台斤時由後端算整批；兩者都填時保留原值，不檢查一致性。 */
+function readPricing(body, weightKg) {
+  const hasPrice = hasValue(body.price);
+  const hasPerTaijin = hasValue(body.price_per_taijin);
+  if (!hasPrice && !hasPerTaijin) return { error: "MISSING_PRICE" };
+
+  const priceValue = hasPrice ? Number(body.price) : null;
+  const perTaijinValue = hasPerTaijin ? Number(body.price_per_taijin) : null;
+  if ((hasPrice && (!Number.isFinite(priceValue) || priceValue <= 0)) ||
+      (hasPerTaijin && (!Number.isFinite(perTaijinValue) || perTaijinValue <= 0))) {
+    return { error: "INVALID_PRICE" };
+  }
+
+  const auto = !hasPrice && hasPerTaijin;
+  const price = hasPrice
+    ? Math.round(priceValue)
+    : Math.round(perTaijinValue * weightKg / 0.6);
+  if (!(price > 0)) return { error: "INVALID_PRICE" };
+  return {
+    price: price,
+    price_per_taijin: hasPerTaijin ? perTaijinValue : null,
+    price_auto: auto
+  };
+}
+
 function matches(text, keyword) {
   return String(text || "").indexOf(keyword) !== -1;
 }
@@ -93,7 +122,7 @@ router.post("/api/products/create", requireUser, async function (req, res) {
   const fishSpecies = String(body.fish_species || "").trim();
   const quantity = Math.floor(Number(body.quantity));
   const weightKg = Number(body.weight_kg);
-  const price = Math.round(Number(body.price));
+  const weight = round1(weightKg);
   const condition = String(body.condition || "").trim();
   const photoUrl = String(body.photo_url || "").trim();
 
@@ -117,7 +146,12 @@ router.post("/api/products/create", requireUser, async function (req, res) {
     fail(res, 400, "FIELD_TOO_LONG", "處理方式最多 20 字");
     return;
   }
-  if (!(price > 0)) {
+  const pricing = readPricing(body, weight);
+  if (pricing.error === "MISSING_PRICE") {
+    fail(res, 400, "MISSING_PRICE", "請提供整批或每台斤售價");
+    return;
+  }
+  if (pricing.error === "INVALID_PRICE") {
     fail(res, 400, "INVALID_PRICE", "售價必須大於 0 元");
     return;
   }
@@ -139,12 +173,14 @@ router.post("/api/products/create", requireUser, async function (req, res) {
     fish_species: fishSpecies,
     species_id: match ? match.id : null,
     species_latin: (match && match.latin) || String(body.species_latin || ""),
-    weight_kg: round1(weightKg),
+    weight_kg: weight,
     quantity: quantity,
     sold_quantity: 0,
     condition: condition,
     photo_url: photoUrl,
-    price: price,
+    price: pricing.price,
+    price_per_taijin: pricing.price_per_taijin,
+    price_auto: pricing.price_auto,
     market_snapshot: marketSnapshot,
     region: region || rawRegion,
     location: String(body.location || [user.city, user.district, user.address_line].filter(Boolean).join("")).trim(),

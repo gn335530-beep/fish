@@ -20,12 +20,16 @@ function nextItemId(items) {
 
 /* 項目是商品快照：之後商品改價或售出都不影響已加入的內容。 */
 function snapshot(product, quantity, itemId) {
+  const batchQuantity = Number(product.quantity) || 0;
+  const unitPrice = batchQuantity > 0
+    ? Number((Number(product.price || 0) / batchQuantity).toFixed(2))
+    : Number(product.unit_price || 0);
   return {
     item_id: itemId,
     product_id: product.id,
     title: product.title,
     photo_url: product.photo_url,
-    unit_price: Number(product.unit_price || 0),
+    unit_price: unitPrice,
     weight_kg: product.weight_kg,
     quantity: Number(quantity)
   };

@@ -92,3 +92,17 @@ test("行情快照格式化不顯示上價、中價、下價", function () {
   assert.doesNotMatch(text, /上價|中價|下價/);
   assert.equal(ctx.marketSnapshotPrice({ price_per_taijin: 742.2 }), "742.2 元／台斤");
 });
+
+test("商品卡標明每台斤與自動計算", function () {
+  const ctx = newContext();
+  const html = ctx.productCardHTML(product({
+    price: 1500,
+    price_per_taijin: 200,
+    price_auto: true
+  }));
+  assert.match(html, /每台斤/);
+  assert.match(html, /每台斤 200 元/);
+  assert.match(html, /每尾均價/);
+  assert.match(html, /自動計算/);
+  assert.match(html, /整批/);
+});

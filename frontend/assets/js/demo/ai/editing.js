@@ -2,6 +2,7 @@
 
 import { INTENT, detectIntent } from "./rules.js";
 import { extractSlots } from "./slots.js";
+import { mergeDraft } from "./draft.js";
 import { EDIT_PROMPTS } from "./prompts.js";
 
 export const DRAFT_FIELDS = [
@@ -28,8 +29,9 @@ export function beginEdit(context, slot) {
 }
 
 function finish(context, slot, value) {
-  const draft = Object.assign({}, context.draft);
-  draft[slot] = value;
+  const found = {};
+  found[slot] = value;
+  const draft = mergeDraft(context.draft, found);
   return {
     context: Object.assign({}, context, { editing: null, draft: draft }),
     replies: [
@@ -56,6 +58,23 @@ export function editText(context, text) {
   }
 
   const found = extractSlots(text, editing.slot);
+  if (editing.slot === "price") {
+    const priceFound = {};
+    if (found.price !== undefined) priceFound.price = found.price;
+    if (found.price_per_taijin !== undefined) priceFound.price_per_taijin = found.price_per_taijin;
+    if (priceFound.price === undefined && priceFound.price_per_taijin === undefined) {
+      return { context: context, replies: [{ text: "沒有讀到售價。" + EDIT_PROMPTS.price }] };
+    }
+    const draft = mergeDraft(context.draft, priceFound);
+    return {
+      context: Object.assign({}, context, { editing: null, draft: draft }),
+      replies: [
+        { text: "已更新售價。" },
+        { card: { type: "draft", draft: draft } }
+      ]
+    };
+  }
+
   const value = found[editing.slot];
   if (value === undefined) {
     return { context: context, replies: [{ text: "沒有讀到" + LABELS[editing.slot] + "。" + EDIT_PROMPTS[editing.slot] }] };

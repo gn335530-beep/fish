@@ -138,11 +138,16 @@ function productCardHTML(p) {
     '<h3 class="card__title"><a href="' + href + '">' + productEscape(productTitle(p)) + '</a></h3>' +
     '<div class="card__meta"><span>' + productWeight(p) + ' kg · 共 ' + quantity + ' 尾</span>' +
     '<span>可售 ' + available + ' 尾</span></div>' +
-    '<div class="card__meta"><span>每尾 ' + productMoney(p.unit_price) + '</span></div>' +
+    '<div class="card__meta"><span>每尾均價 ' + productMoney(p.unit_price) + '</span>' +
+    (p.price_per_taijin != null ? '<span>每台斤 ' + productMoney(p.price_per_taijin) + '</span>' : '') +
+    '</div>' +
     marketSnapshotCardHTML(p.market_snapshot) +
     '<div class="card__meta"><span>' + productEscape(location) + '</span></div>' +
     (unknown ? '<div class="card__meta"><span>料理資料暫無</span></div>' : "") +
-    '<div class="card__price"><b>' + productMoney(p.price) + '<span class="unit"> · 整批</span></b></div>' +
+    '<div class="card__price"><b>' + productMoney(p.price) +
+    '<span class="unit"> · 整批</span>' +
+    (p.price_auto ? '<span class="unit"> · 自動計算</span>' : '') +
+    '</b></div>' +
     dealControls(p) +
     '<a href="' + href + '" class="btn btn--ghost btn--sm" style="margin-top:10px">查看詳情</a>' +
     '</div></article>';
