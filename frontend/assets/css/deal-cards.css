@@ -10,6 +10,7 @@
 .fm-card__body { display: grid; gap: 4px; align-content: center; padding: 8px 10px 8px 0; }
 .fm-card__body b { font-size: .78rem; }
 .fm-card__body span { color: var(--muted); font-size: .7rem; }
+.fm-card__market { color: var(--ink-2) !important; line-height: 1.5; }
 .fm-card--plain { padding: 10px; font-size: .78rem; }
 .fm-card__thumb { width: 100%; max-height: 140px; object-fit: cover; }
 

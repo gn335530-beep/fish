@@ -2,6 +2,7 @@
 
 import { INTENT, detectIntent } from "./rules.js";
 import { extractSlots } from "./slots.js";
+import { EDIT_PROMPTS } from "./prompts.js";
 
 export const DRAFT_FIELDS = [
   { slot: "fish_species", label: "魚種" },
@@ -13,14 +14,6 @@ export const DRAFT_FIELDS = [
 ];
 
 const LABELS = {};
-const PROMPTS = {
-  fish_species: "請提供新的魚種。",
-  weight_kg: "請提供新的總重（公斤）。",
-  quantity: "請提供新的尾數。",
-  condition: "請提供新的處理方式：活體、放血冰鎮、三去處理或冷凍。",
-  photo_url: "請點輸入框左邊的相機圖示，重新上傳照片。",
-  price: "請提供新的整批售價（元）。"
-};
 DRAFT_FIELDS.forEach(function (field) { LABELS[field.slot] = field.label; });
 
 export function beginEdit(context, slot) {
@@ -30,7 +23,7 @@ export function beginEdit(context, slot) {
     context: Object.assign({}, context, {
       editing: { slot: slot, backup: Object.assign({}, context.draft) }
     }),
-    replies: [{ text: PROMPTS[slot] + "（輸入「取消」可保留原值）" }]
+    replies: [{ text: EDIT_PROMPTS[slot] + "（輸入「取消」可保留原值）" }]
   };
 }
 
@@ -59,13 +52,13 @@ export function editText(context, text) {
   }
 
   if (editing.slot === "photo_url") {
-    return { context: context, replies: [{ text: PROMPTS.photo_url }] };
+    return { context: context, replies: [{ text: EDIT_PROMPTS.photo_url }] };
   }
 
   const found = extractSlots(text, editing.slot);
   const value = found[editing.slot];
   if (value === undefined) {
-    return { context: context, replies: [{ text: "沒有讀到" + LABELS[editing.slot] + "。" + PROMPTS[editing.slot] }] };
+    return { context: context, replies: [{ text: "沒有讀到" + LABELS[editing.slot] + "。" + EDIT_PROMPTS[editing.slot] }] };
   }
   return finish(context, editing.slot, value);
 }

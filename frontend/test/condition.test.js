@@ -1,0 +1,66 @@
+/* 處理方式自由文字：提示詞只舉例，回答照原樣記錄，不再做同義詞對照。 */
+
+import test from "node:test";
+import assert from "node:assert/strict";
+
+const SPECIES = [
+  { id: "grouper", name: "石斑", alias: [], category: "fish", texture: "", bones: "刺少", cooking: ["清蒸"] }
+];
+
+globalThis.window = {
+  HaisenAPI: {
+    listSpecies: async function () { return SPECIES; }
+  }
+};
+
+const { loadSpecies } = await import("../assets/js/demo/ai/species.js");
+const { extractSlots } = await import("../assets/js/demo/ai/slots.js");
+const { beginEdit } = await import("../assets/js/demo/ai/editing.js");
+const service = await import("../assets/js/demo/ai/service.js");
+await loadSpecies();
+
+function textOf(result) {
+  return result.replies.map(function (reply) { return reply.text || ""; }).join("\n");
+}
+
+test("詢問處理方式時只舉例活體與放血冰鎮", async function () {
+  const started = await service.handleText(null, "我要賣魚", {});
+  const asked = await service.handleText(started.context, "石斑 3公斤 2尾", {});
+  const text = textOf(asked);
+  assert.match(text, /活體、放血冰鎮/);
+  assert.doesNotMatch(text, /三去處理/);
+  assert.doesNotMatch(text, /冷凍/);
+});
+
+test("使用者的回答照原樣記錄，不做活魚→活體對照", async function () {
+  const started = await service.handleText(null, "我要賣魚", {});
+  const asked = await service.handleText(started.context, "石斑 3公斤 2尾", {});
+  const answered = await service.handleText(asked.context, "活魚", {});
+  assert.equal(answered.context.draft.condition, "活魚");
+});
+
+test("冷凍、自行處理等自由文字都能進草稿", function () {
+  assert.equal(extractSlots("冷凍。", "condition").condition, "冷凍");
+  assert.equal(extractSlots("我自己處理", "condition").condition, "我自己處理");
+  assert.equal(extractSlots("放血冰鎮", "condition").condition, "放血冰鎮");
+});
+
+test("一般句子仍可抽出處理方式與其他欄位", function () {
+  const found = extractSlots("石斑 3公斤 2尾 冷凍", null);
+  assert.equal(found.fish_species, "石斑");
+  assert.equal(found.weight_kg, 3);
+  assert.equal(found.quantity, 2);
+  assert.equal(found.condition, "冷凍");
+
+  const live = extractSlots("石斑 3公斤 2尾 活魚", null);
+  assert.equal(live.condition, "活魚");
+});
+
+test("修改草稿的處理方式提示也不再列固定選項", function () {
+  const result = beginEdit({
+    mode: "listing",
+    draft: { fish_species: "石斑", condition: "活體" }
+  }, "condition");
+  assert.match(textOf(result), /例如：活體、放血冰鎮/);
+  assert.doesNotMatch(textOf(result), /三去處理|冷凍/);
+});

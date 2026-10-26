@@ -67,6 +67,7 @@
 | `avg_weight_kg` | 每尾平均重量 |
 | `status` | `ACTIVE` / `PARTIALLY_RESERVED` / `SOLD_OUT` |
 | `region`, `location` | 縣市與完整地點 |
+| `market_snapshot` | 發布時凍結的行情快照；查無行情為 `null` |
 | `catch_time`, `created_at` | 捕獲與建立時間 |
 
 ## 4. 前端公開函式

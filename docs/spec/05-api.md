@@ -148,6 +148,8 @@
 
 ### `POST /api/products/create`
 
+> 2026-10-27：處理方式自由文字與發布時行情快照已實作（#24、#26）。
+
 ```json
 { "fish_species": "石斑", "species_id": "grouper", "weight_kg": 4.5, "quantity": 1,
   "condition": "放血冰鎮", "photo_url": "/uploads/ab12.jpg",

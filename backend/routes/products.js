@@ -5,18 +5,43 @@ const { all, insert, nextCode } = require("../lib/store");
 const { requireUser } = require("../lib/auth");
 const { decorateProduct, decorateProducts, sweepExpired } = require("../lib/orders");
 const species = require("../lib/species");
+const market = require("../lib/market/service");
+const { round1, buildTitle } = require("../lib/product-title");
+const { normalizeRegion } = require("../lib/regions");
 const { ok, created, fail } = require("../lib/http");
 
 const router = express.Router();
 
-const CONDITIONS = ["活體", "放血冰鎮", "三去處理", "冷凍"];
-
-function round1(value) {
-  return Math.round(Number(value) * 10) / 10;
+function toSnapshot(data) {
+  if (!data || !data.found) return null;
+  return {
+    scope: data.scope,
+    region: data.region,
+    trade_date: data.trade_date,
+    price_per_kg: data.price_per_kg,
+    price_per_taijin: data.price_per_taijin,
+    is_aquaculture: data.is_aquaculture,
+    source: data.source,
+    source_url: data.source_url,
+    fetched_at: data.fetched_at,
+    quality: data.quality
+  };
 }
 
-function buildTitle(fishSpecies, weightKg, quantity, condition) {
-  return fishSpecies + "（" + round1(weightKg) + "kg / " + quantity + "尾 / " + condition + "）";
+/* 行情查不到或上游失敗都不阻擋上架，快照為 null。 */
+async function snapshotFor(speciesId, region) {
+  if (!speciesId) return null;
+  try {
+    const data = await market.getMarketPrice({
+      speciesId: speciesId,
+      region: region || null,
+      date: null,
+      includeHistory: false
+    });
+    return toSnapshot(data);
+  } catch (err) {
+    return null;
+  }
 }
 
 function matches(text, keyword) {
@@ -63,7 +88,7 @@ router.get("/api/products/:id", function (req, res) {
   ok(res, decorateProduct(product, all("deals")), "取得商品成功");
 });
 
-router.post("/api/products/create", requireUser, function (req, res) {
+router.post("/api/products/create", requireUser, async function (req, res) {
   const body = req.body || {};
   const fishSpecies = String(body.fish_species || "").trim();
   const quantity = Math.floor(Number(body.quantity));
@@ -84,8 +109,12 @@ router.post("/api/products/create", requireUser, function (req, res) {
     fail(res, 400, "INVALID_QUANTITY", "尾數必須大於等於 1");
     return;
   }
-  if (CONDITIONS.indexOf(condition) === -1) {
-    fail(res, 400, "INVALID_CONDITION", "處理方式必須是活體、放血冰鎮、三去處理或冷凍");
+  if (!condition) {
+    fail(res, 400, "MISSING_CONDITION", "請描述處理方式");
+    return;
+  }
+  if (condition.length > 20) {
+    fail(res, 400, "FIELD_TOO_LONG", "處理方式最多 20 字");
     return;
   }
   if (!(price > 0)) {
@@ -98,9 +127,10 @@ router.post("/api/products/create", requireUser, function (req, res) {
   }
 
   const match = species.byId(body.species_id) || species.byName(fishSpecies);
-  const totalTaijin = weightKg / 0.6;
-  const marketTotal = match ? Math.round(match.market * totalTaijin) : price;
   const user = req.user;
+  const rawRegion = String(body.region || user.city || "").trim();
+  const region = normalizeRegion(rawRegion);
+  const marketSnapshot = await snapshotFor(match ? match.id : null, region);
 
   const product = insert("products", {
     id: nextCode("products", "prd"),
@@ -115,8 +145,8 @@ router.post("/api/products/create", requireUser, function (req, res) {
     condition: condition,
     photo_url: photoUrl,
     price: price,
-    market_reference_price: marketTotal,
-    region: String(body.region || user.city || "").trim(),
+    market_snapshot: marketSnapshot,
+    region: region || rawRegion,
     location: String(body.location || [user.city, user.district, user.address_line].filter(Boolean).join("")).trim(),
     catch_time: body.catch_time || new Date().toISOString(),
     created_at: new Date().toISOString()

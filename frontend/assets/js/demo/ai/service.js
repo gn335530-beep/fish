@@ -6,25 +6,9 @@ import { extractSlots, mergeDraft, nextMissingSlot, draftReady } from "./slots.j
 import { editText, editPhoto } from "./editing.js";
 import { resolveReferent } from "./referents.js";
 import { shoppingReply } from "./shopping.js";
+import { marketReply } from "./market.js";
 import { speciesById, ensureSpecies } from "./species.js";
-
-const QUESTIONS = {
-  fish_species: "請問釣到的是什麼魚？",
-  weight_kg: "這批總重大約幾公斤？（也可以說台斤）",
-  quantity: "總共幾尾？",
-  condition: "目前的處理方式是？活體、放血冰鎮、三去處理或冷凍。",
-  photo_url: "還需要一張實拍照片，請點輸入框左邊的相機圖示上傳。",
-  price: "整批預計賣多少元？"
-};
-
-const ASK_AGAIN = {
-  fish_species: "還缺魚種，請問釣到的是什麼魚？",
-  weight_kg: "還缺重量，這批大約幾公斤？",
-  quantity: "還缺尾數，總共幾尾？",
-  condition: "還缺處理方式：活體、放血冰鎮、三去處理或冷凍。",
-  photo_url: "還缺照片，請點相機圖示上傳一張實拍照片。",
-  price: "還缺售價，整批預計賣多少元？"
-};
+import { QUESTIONS, ASK_AGAIN } from "./prompts.js";
 
 function makeContext(mode, draft, lastCards) {
   return {
@@ -183,6 +167,10 @@ export async function handleText(context, text, user) {
   if (intent === INTENT.SELL) return startListing(source);
   if (intent === INTENT.CANCEL) {
     return { context: resetContext(), replies: [{ text: "好，已經重來。想賣魚或找魚都可以直接說。" }] };
+  }
+  if (intent === INTENT.MARKET) {
+    const result = await marketReply(source, user);
+    return { context: ctx, replies: result.replies };
   }
   if (intent === INTENT.BUY) return shoppingReply(source, user);
 

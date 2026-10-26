@@ -4,12 +4,16 @@
 
 **Blocked by:** 23
 
-**Status:** ready-for-agent
+**Status:** ready-for-human
 
-- [ ] 在高雄市上架石斑後，商品含 `market_snapshot`（`price_per_kg`、`price_per_taijin`、交易日期、來源、`source_url`、抓取時間、養殖旗標、`scope`／`region`、`quality`）。
-- [ ] 商品卡與詳情頁的行情資訊都來自快照；商品改價不影響快照。
-- [ ] `is_aquaculture: true` 時顯示「養殖價格」；行情區標「新鮮批發參考」。
-- [ ] 查無行情時顯示「暫無行情」，畫面沒有價格數字。
-- [ ] 畫面不再出現「澎湖魚市即時均價」「今日行情」「即時均價」。
-- [ ] `market_reference_price` 與魚種字典的示意行情移除；不再用示意值定價。
-- [ ] 02／03／04／05／06／07 與測試同步。
+- [x] 在高雄市上架石斑後，商品含 `market_snapshot`（`price_per_kg`、`price_per_taijin`、交易日期、來源、`source_url`、抓取時間、養殖旗標、`scope`／`region`、`quality`）。
+- [x] 商品卡與詳情頁的行情資訊都來自快照；商品改價不影響快照。
+- [x] `is_aquaculture: true` 時顯示「養殖價格」；行情區標「新鮮批發參考」。
+- [x] 查無行情時顯示「暫無行情」，畫面沒有價格數字。
+- [x] 畫面不再出現「澎湖魚市即時均價」「今日行情」「即時均價」。
+- [x] `market_reference_price` 與魚種字典的示意行情移除；不再用示意值定價。
+- [x] 02／03／04／05／06／07 與測試同步。
+
+## Comments
+
+- 2026-10-27：已實作。`POST /api/products/create` 會寫入 `market_snapshot`；商品卡、詳情頁與對話商品卡皆顯示快照。既有 `market_reference_price` 在啟動時移除。
