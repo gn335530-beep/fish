@@ -4,12 +4,14 @@ const path = require("node:path");
 const express = require("express");
 const jsonServer = require("json-server");
 const { setDb } = require("./lib/store");
+const { seedMarketMappings } = require("./lib/market/bootstrap");
 
 const DB_FILE = process.env.FISHMATCH_DB || path.join(__dirname, "db.json");
 
 const app = jsonServer.create();
 const router = jsonServer.router(DB_FILE);
 setDb(router.db);
+seedMarketMappings();
 
 app.use(function (req, res, next) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -35,6 +37,7 @@ app.use(require("./routes/deal-items"));
 app.use(require("./routes/deal-proposal"));
 app.use(require("./routes/deal-response"));
 app.use(require("./routes/reviews"));
+app.use(require("./routes/market"));
 app.use(require("./routes/uploads"));
 
 /* 只開放自訂的 /api 與 /uploads，避免直接以 json-server 預設路由改寫資料。 */

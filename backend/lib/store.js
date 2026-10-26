@@ -20,8 +20,15 @@ function findById(collection, id) {
 }
 
 function insert(collection, row) {
+  if (!Array.isArray(db().get(collection).value())) db().set(collection, []).write();
   db().get(collection).push(row).write();
   return row;
+}
+
+/* 整批取代唯讀對照表；重啟時用它讓 db 與程式內建對照保持一致。 */
+function setAll(collection, rows) {
+  db().set(collection, rows).write();
+  return rows;
 }
 
 function patch(collection, id, changes) {
@@ -71,6 +78,7 @@ module.exports = {
   all: all,
   findById: findById,
   insert: insert,
+  setAll: setAll,
   patch: patch,
   remove: remove,
   nextCode: nextCode,

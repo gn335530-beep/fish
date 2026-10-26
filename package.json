@@ -5,6 +5,7 @@
   "scripts": {
     "backend": "node backend/server.js",
     "web": "node tools/serve-frontend.js",
+    "market:fetch": "node backend/scripts/market-fetch.js",
     "test": "node --test \"backend/test/*.test.js\" \"frontend/test/*.test.js\""
   },
   "devDependencies": {
