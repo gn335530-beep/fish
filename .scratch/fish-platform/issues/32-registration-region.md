@@ -4,13 +4,17 @@
 
 **Blocked by:** 無
 
-**Status:** ready-for-agent
+**Status:** ready-for-human
 
-- [ ] 註冊表單有縣市欄位，未填不能送出。
-- [ ] API 接受 `city`；缺填回 400 `MISSING_REGION`，不在清單回 400 `INVALID_REGION`。
-- [ ] 「臺北市」入庫與回應為「台北市」。
-- [ ] 註冊縣市成為商品預設 `region`；行情查詢在 #25／#29 以同一個 `city` 作預設，於那兩張驗收。
-- [ ] 既有測試資料中沒有 `city` 的使用者，demo 啟動時隨機補一個縣市；已有 `city` 者不覆寫。
-- [ ] 個人檔案 `city` 也驗證與正規化。
-- [ ] 登入／註冊頁只新增縣市欄位；若 #34 已完成，不覆蓋其法規告知與文案修正。
-- [ ] 測試、02-domain、03-flows、04-data-model、05-api、06-ui、07-roadmap、glossary 同步。
+- [x] 註冊表單有縣市欄位，未填不能送出。
+- [x] API 接受 `city`；缺填回 400 `MISSING_REGION`，不在清單回 400 `INVALID_REGION`。
+- [x] 「臺北市」入庫與回應為「台北市」。
+- [x] 註冊縣市成為商品預設 `region`；行情查詢在 #25／#29 以同一個 `city` 作預設，於那兩張驗收。
+- [x] 既有測試資料中沒有 `city` 的使用者，demo 啟動時隨機補一個縣市；已有 `city` 者不覆寫。
+- [x] 個人檔案 `city` 也驗證與正規化。
+- [x] 登入／註冊頁只新增縣市欄位；若 #34 已完成，不覆蓋其法規告知與文案修正。
+- [x] 測試、02-domain、03-flows、04-data-model、05-api、06-ui、07-roadmap、glossary 同步。
+
+## Comments
+
+- 2026-10-27：已實作。註冊必填 `city`，缺失／無效分別回 `MISSING_REGION`、`INVALID_REGION`；「臺」正規化為「台」。個人檔案同樣驗證。啟動時為沒有 `city` 的既有使用者隨機補值。

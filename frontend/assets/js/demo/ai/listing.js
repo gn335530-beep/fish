@@ -13,7 +13,10 @@ function makeContext(mode, draft, lastCards) {
     last_cards: lastCards,
     selected_product_id: null,
     editing: null,
-    market_quoted: false
+    choosing_edit: null,
+    market_quoted: false,
+    pending_sale_text: null,
+    awaiting_consent: false
   };
 }
 
@@ -82,9 +85,26 @@ export async function startListing(text, user, base) {
   return advance(ctx, user);
 }
 
+export function dismissCancel(context) {
+  return {
+    context: context,
+    replies: [{ text: "好，繼續上架。" }, { card: { type: "draft", draft: context.draft } }]
+  };
+}
+
+export function requestCancel(context) {
+  return {
+    context: context,
+    replies: [
+      { text: "確定取消上架？此對話會一併刪除。" },
+      { card: { type: "draft_cancel" } }
+    ]
+  };
+}
+
 export async function continueListing(ctx, text, user) {
   if (detectIntent(text) === INTENT.CANCEL) {
-    return { context: resetContext(), replies: [{ text: "好，已取消這次上架。" }] };
+    return requestCancel(ctx);
   }
 
   const missing = nextMissingSlot(ctx.draft);

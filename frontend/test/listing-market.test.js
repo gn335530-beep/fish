@@ -12,9 +12,9 @@ test("非價格欄位齊了先送行情卡，再問售價", async function () {
   const started = await service.handleText(
     null,
     "我要賣花枝 3公斤 2尾 放血冰鎮",
-    { city: "高雄市" }
+    { city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" }
   );
-  const result = await service.handlePhoto(started.context, "/uploads/a.jpg", { city: "高雄市" });
+  const result = await service.handlePhoto(started.context, "/uploads/a.jpg", { city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" });
   const card = cardOf(result);
   assert.ok(card, "應有行情卡");
   assert.equal(card.price_per_taijin, 200);
@@ -41,9 +41,9 @@ test("已提供售價時行情卡後直接顯示草稿，不重問價格", async
   const started = await service.handleText(
     null,
     "我要賣花枝 3公斤 2尾 放血冰鎮 每台斤 200",
-    { city: "高雄市" }
+    { city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" }
   );
-  const result = await service.handlePhoto(started.context, "/uploads/a.jpg", { city: "高雄市" });
+  const result = await service.handlePhoto(started.context, "/uploads/a.jpg", { city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" });
   assert.ok(cardOf(result));
   assert.doesNotMatch(textOf(result), /多少錢|每台斤價格或整批價格/);
   assert.ok(result.replies.some(function (reply) {
@@ -55,9 +55,9 @@ test("補完照片後只出一次行情卡", async function () {
   const started = await service.handleText(
     null,
     "我要賣花枝 3公斤 2尾 放血冰鎮 每台斤 200",
-    { city: "高雄市" }
+    { city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" }
   );
-  const photographed = await service.handlePhoto(started.context, "/uploads/a.jpg", { city: "高雄市" });
+  const photographed = await service.handlePhoto(started.context, "/uploads/a.jpg", { city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" });
   assert.doesNotMatch(textOf(photographed), /多少錢/);
   assert.ok(photographed.replies.some(function (reply) {
     return reply.card && reply.card.type === "draft";
@@ -72,9 +72,9 @@ test("未知魚種不呼叫行情 API，顯示暫無行情仍可定價", async f
   const started = await service.handleText(
     null,
     "我要賣鮭魚 3公斤 2尾 放血冰鎮",
-    { city: "高雄市" }
+    { city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" }
   );
-  const result = await service.handlePhoto(started.context, "/uploads/a.jpg", { city: "高雄市" });
+  const result = await service.handlePhoto(started.context, "/uploads/a.jpg", { city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" });
   assert.equal(marketCalls().length, 0);
   assert.match(textOf(result), /暫無行情/);
   assert.match(textOf(result), /每台斤價格或整批價格/);
@@ -83,8 +83,8 @@ test("未知魚種不呼叫行情 API，顯示暫無行情仍可定價", async f
 
 test("查無行情時說目前沒有，不編造數字", async function () {
   setMarket({ found: false, reason: "NO_TRADE_DATA" });
-  const started = await service.handleText(null, "我要賣花枝 3公斤 2尾 放血冰鎮", { city: "高雄市" });
-  const result = await service.handlePhoto(started.context, "/uploads/a.jpg", { city: "高雄市" });
+  const started = await service.handleText(null, "我要賣花枝 3公斤 2尾 放血冰鎮", { city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" });
+  const result = await service.handlePhoto(started.context, "/uploads/a.jpg", { city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" });
   assert.match(textOf(result), /目前沒有花枝的行情。/);
   assert.doesNotMatch(textOf(result), /\d|元／/);
   assert.match(textOf(result), /每台斤價格或整批價格/);
@@ -92,8 +92,8 @@ test("查無行情時說目前沒有，不編造數字", async function () {
 
 test("上游失敗時說暫時無法取得，仍可繼續定價", async function () {
   setMarket({ found: false, reason: "UPSTREAM_UNAVAILABLE" });
-  const started = await service.handleText(null, "我要賣花枝 3公斤 2尾 放血冰鎮", { city: "高雄市" });
-  const result = await service.handlePhoto(started.context, "/uploads/a.jpg", { city: "高雄市" });
+  const started = await service.handleText(null, "我要賣花枝 3公斤 2尾 放血冰鎮", { city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" });
+  const result = await service.handlePhoto(started.context, "/uploads/a.jpg", { city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" });
   assert.match(textOf(result), /暫時無法取得花枝的行情。/);
   assert.match(textOf(result), /每台斤價格或整批價格/);
 });
@@ -106,15 +106,15 @@ test("保留未知的 context 欄位，法規確認狀態不被清掉", async fu
     pending_sale_text: "我要賣花枝",
     awaiting_consent: true
   };
-  const result = await service.handleText(context, "我要賣花枝 3公斤 2尾 放血冰鎮", { city: "高雄市" });
+  const result = await service.handleText(context, "我要賣花枝 3公斤 2尾 放血冰鎮", { city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" });
   assert.equal(result.context.pending_sale_text, "我要賣花枝");
   assert.equal(result.context.awaiting_consent, true);
 });
 
 test("行情回應缺少 history 時仍顯示卡片，不編造走勢", async function () {
   setMarket(quote({ history: [] }));
-  const started = await service.handleText(null, "我要賣花枝 3公斤 2尾 放血冰鎮", { city: "高雄市" });
-  const result = await service.handlePhoto(started.context, "/uploads/a.jpg", { city: "高雄市" });
+  const started = await service.handleText(null, "我要賣花枝 3公斤 2尾 放血冰鎮", { city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" });
+  const result = await service.handlePhoto(started.context, "/uploads/a.jpg", { city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" });
   const card = cardOf(result);
   assert.equal(card.history.length, 0);
   assert.equal(card.high, null);

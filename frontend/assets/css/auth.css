@@ -5,6 +5,9 @@
 .auth__points{margin-top:34px;display:flex;flex-direction:column;gap:16px}
 .auth__points div{font-size:.88rem;color:var(--muted);line-height:1.8;border-top:1px solid var(--rule-2);padding-top:16px}
 .auth__points b{color:var(--ink);font-family:var(--font-display);margin-right:8px}
+.auth__legal{margin-top:26px;padding-top:18px;border-top:1px solid var(--rule-2);font-size:.78rem;line-height:1.9;color:var(--muted)}
+.auth__legal p{margin:0 0 6px}
+.auth__legal a{color:var(--accent);text-decoration:underline}
 .auth__card{border:1px solid var(--rule);padding:38px 40px;background:var(--paper)}
 .auth__tabs{display:flex;gap:0;border-bottom:1px solid var(--rule-2);margin-bottom:30px}
 .auth__tab{

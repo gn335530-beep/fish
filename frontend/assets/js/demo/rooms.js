@@ -83,8 +83,10 @@ export async function createAssistantRoom() {
 }
 
 /* 刪除目前房間後，切到下一間助手房；沒有就回到空狀態，不自動補一間。 */
-export async function deleteConversation(conversationId) {
-  if (window.confirm && !window.confirm("確定刪除聊天室？")) return false;
+export async function deleteConversation(conversationId, options) {
+  if (!(options && options.confirm === false) && window.confirm && !window.confirm("確定刪除聊天室？")) {
+    return false;
+  }
   await api.deleteConversation(conversationId);
   const conversations = await api.listConversations();
   update({ conversations: conversations });

@@ -3,8 +3,11 @@
 import * as api from "../api.js";
 import { INTENT, detectIntent } from "./rules.js";
 import { mergeDraft } from "./draft.js";
-import { normalize, resetContext, advance, withDraft, startListing, continueListing } from "./listing.js";
-import { editText, editPhoto } from "./editing.js";
+import { normalize, resetContext, advance, withDraft, startListing, continueListing, requestCancel, dismissCancel } from "./listing.js";
+import { editText, editPhoto, askDraftEdit, chooseEditField } from "./editing.js";
+import {
+  needsConsent, requestConsent, resumeAfterConsent, declineConsent
+} from "./consent.js";
 import { resolveReferent } from "./referents.js";
 import { shoppingReply } from "./shopping.js";
 import { marketReply } from "./market.js";
@@ -109,6 +112,11 @@ export async function handleText(context, text, user) {
     };
   }
 
+  if (ctx.choosing_edit) return chooseEditField(ctx, source);
+  if (needsConsent(user) && ctx.mode === "listing" && ctx.draft) {
+    return requestConsent(ctx, ctx.pending_sale_text || "我要賣魚");
+  }
+
   if (ctx.mode !== "listing") {
     const referent = resolveReferent(source, ctx.last_cards.length);
     if (referent) return handleReferent(ctx, referent);
@@ -117,7 +125,10 @@ export async function handleText(context, text, user) {
   if (ctx.mode === "listing" && ctx.draft) return continueListing(ctx, source, user);
 
   const intent = detectIntent(source);
-  if (intent === INTENT.SELL) return startListing(source, user, ctx);
+  if (intent === INTENT.SELL) {
+    if (needsConsent(user)) return requestConsent(ctx, source);
+    return startListing(source, user, ctx);
+  }
   if (intent === INTENT.CANCEL) {
     return { context: resetContext(), replies: [{ text: "好，已經重來。想賣魚或找魚都可以直接說。" }] };
   }
@@ -132,3 +143,8 @@ export async function handleText(context, text, user) {
     replies: [{ text: "你是想賣魚，還是想找魚？也可以直接說「我要賣魚」或「今天有什麼魚」。" }]
   };
 }
+
+export {
+  askDraftEdit, requestCancel, dismissCancel, resumeAfterConsent, declineConsent,
+  needsConsent, requestConsent
+};

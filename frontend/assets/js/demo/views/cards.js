@@ -6,6 +6,7 @@ import { normalizeCityName } from "../ai/species.js";
 import { DRAFT_FIELDS } from "../ai/editing.js";
 import { renderDealCard, renderReviewCard } from "./deal-cards.js";
 import { renderMarketCard } from "./market-card.js";
+import { renderLegalCard, renderCancelCard } from "./legal-card.js";
 
 function dealActions(card) {
   const available = Number(card.available) || 0;
@@ -77,7 +78,8 @@ function draftCard(card) {
     (draft.photo_url ? '<img class="fm-card__thumb" src="' + escapeHtml(resolveImage(draft.photo_url)) + '" alt="商品照片">' : "") +
     '<div class="fm-card__acts">' +
     '<button type="button" class="fm-card__primary" data-action="publish">確認發布</button>' +
-    '<button type="button" data-action="reset-draft">重新填寫</button>' +
+    '<button type="button" data-action="edit-draft">修改草稿</button>' +
+    '<button type="button" data-action="cancel-listing">取消上架</button>' +
     '</div>' +
     '</div>';
 }
@@ -87,6 +89,8 @@ export function renderCard(card, messageId) {
   if (card.type === "product") return productCard(card);
   if (card.type === "draft") return draftCard(card);
   if (card.type === "market_quote") return renderMarketCard(card, messageId);
+  if (card.type === "legal_consent") return renderLegalCard(card);
+  if (card.type === "draft_cancel") return renderCancelCard(card);
   if (card.type === "deal") return renderDealCard(card);
   if (card.type === "review") return renderReviewCard(card);
   return '<div class="fm-card fm-card--plain">' + escapeHtml(card.title || "訊息卡片") + '</div>';

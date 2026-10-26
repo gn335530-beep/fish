@@ -111,12 +111,13 @@
   },
   "last_cards": ["prd_...", "prd_..."],
   "market_quoted": false,
+  "choosing_edit": null,
   "pending_sale_text": null,
   "awaiting_consent": false
 }
 ```
 
-`pending_sale_text` 只在法規告知期間有值；`awaiting_consent` 標記等待法規確認。確認後用它進入 listing、兩者清空；取消後也清空。`seller_terms_accepted_at` 一旦寫入永久有效，不因法規文字更新重問。`market_quoted` 標記這份草稿已送過行情卡；魚種或重量改變時重設。
+`pending_sale_text` 只在法規告知期間有值；`awaiting_consent` 標記等待法規確認。確認後用它進入 listing、兩者清空；取消後也清空。`seller_terms_accepted_at` 一旦寫入永久有效，不因法規文字更新重問。`market_quoted` 標記這份草稿已送過行情卡；魚種或重量改變時重設。`choosing_edit` 標記正在等待使用者選擇要修改的草稿欄位。
 
 **唯一鍵**：助手房＝`id`（每位使用者可以有多間，不再用 `type + user_ids[0]`）；交易房＝`type + buyer_id + seller_id`。
 
@@ -168,10 +169,12 @@
   "history_30": [{ "trade_date": "2026-09-01", "price_per_taijin": 29.8 }],
   "high": 31.4, "low": 30.1, "high_30": 31.4, "low_30": 29.8 }
 
-{ "type": "legal_consent", "title": "販賣漁貨需具備合法證照",
+{ "type": "legal_consent", "title": "販賣漁獲需具備合法證照",
   "text": "販賣魚貨（一支釣）需依照法規申請相關合法證照；未申請可依法開罰新臺幣三萬元以上三十萬元以下罰鍰。",
   "law_name": "漁業法", "law_url": "https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode=M0050001",
   "accept_label": "我已了解並確認", "decline_label": "取消" }
+
+{ "type": "draft_cancel" }                                        // 取消上架確認卡
 
 { "type": "deal", "deal_id": "deal_...", "status": "pending",
   "initiator_id": 2, "final_price": 4800,

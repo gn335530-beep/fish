@@ -5,15 +5,16 @@
     // [API 對接點] 會員註冊
     // METHOD  : POST
     // ENDPOINT: /api/auth/register
-    // PARAMS  : { username: phone, password, display_name: nick, role: "BUYER" }
+    // PARAMS  : { username: phone, password, display_name: nick, city, role: "BUYER" }
     // 回應    : { success, message, token, user }  (HTTP 201)
-    // 資料庫  : users(username, password[bcrypt], display_name, role, is_verified, completed_orders)
+    // 資料庫  : users(username, password[bcrypt], display_name, city, role, is_verified, completed_orders)
     var data = await API.request("/api/auth/register", {
       method: "POST",
       body: {
         username: p.phone,
         password: p.password,
         display_name: p.nick,
+        city: p.city,
         role: p.role || "BUYER"
       }
     });

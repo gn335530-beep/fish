@@ -41,10 +41,12 @@ function validateLogin(){
 /* 註冊驗證 */
 function validateRegister(){
   const nick = document.getElementById("rg-nick").value.trim();
+  const city = document.getElementById("rg-city").value;
   const phone = normPhone(document.getElementById("rg-phone").value);
   const pass = document.getElementById("rg-pass").value;
   let ok = true;
   ok = setField("f-rg-nick", nick.length >= 2 && nick.length <= 20, "e-rg-nick") && ok;
+  ok = setField("f-rg-city", !!city, "e-rg-city") && ok;
   ok = setField("f-rg-phone", PHONE_RE.test(phone), "e-rg-phone") && ok;
   ok = setField("f-rg-pass", pass.length >= 6, "e-rg-pass") && ok;
   document.getElementById("rg-submit").disabled = !ok;
@@ -56,20 +58,22 @@ function validateRegister(){
   el.addEventListener("input", validateLogin);
   el.addEventListener("blur", validateLogin);
 });
-["rg-nick","rg-phone","rg-pass"].forEach(id=>{
+["rg-nick","rg-city","rg-phone","rg-pass"].forEach(id=>{
   const el = document.getElementById(id);
   el.addEventListener("input", validateRegister);
+  el.addEventListener("change", validateRegister);
   el.addEventListener("blur", validateRegister);
 });
 
 /* 送出 */
-function finish(kind, nick, phone){
+function finish(kind, nick, phone, city){
   document.getElementById("auth-modal-ic").textContent = kind === "register" ? "Account Created" : "Welcome Back";
   document.getElementById("auth-modal-title").textContent = kind === "register" ? "帳號已建立" : "登入成功";
   document.getElementById("auth-modal-text").textContent = "歡迎回來，" + (nick || "朋友") + "。前往首頁開始選購或上架。";
   document.getElementById("auth-summary").innerHTML =
     `<div><span>暱稱</span><b>${nick || "—"}</b></div>
-     <div><span>電話</span><b>${phone}</b></div>`;
+     <div><span>電話</span><b>${phone}</b></div>
+     <div><span>縣市</span><b>${city || "—"}</b></div>`;
   document.getElementById("auth-go").setAttribute("href", "index.html");
   document.getElementById("auth-go").textContent = "前往首頁";
   document.getElementById("auth-modal").classList.add("show");
@@ -99,7 +103,7 @@ formLogin.addEventListener("submit", async e=>{
        PARAMS  : { username: 電話, password }
        回應    : { success, message, token, user } */
     const u = await window.HaisenAPI.login({ phone: phone, password: pass });
-    finish("login", u.nick, u.phone);
+    finish("login", u.nick, u.phone, u.city);
   }catch(err){
     toast(err && err.message ? err.message : "登入失敗，請稍後再試");
   }finally{
@@ -111,6 +115,7 @@ formRegister.addEventListener("submit", async e=>{
   if(!validateRegister()) return;
   if(!window.HaisenAPI){ toast("API 模組尚未載入"); return; }
   const nick = document.getElementById("rg-nick").value.trim();
+  const city = document.getElementById("rg-city").value;
   const phone = normPhone(document.getElementById("rg-phone").value);
   const pass = document.getElementById("rg-pass").value;
   const btn = document.getElementById("rg-submit");
@@ -119,11 +124,11 @@ formRegister.addEventListener("submit", async e=>{
     /* [API 對接點] 會員註冊
        METHOD  : POST
        ENDPOINT: /api/auth/register
-       PARAMS  : { username: 電話, password, display_name: 暱稱, role: "BUYER" }
+       PARAMS  : { username: 電話, password, display_name: 暱稱, city: 縣市, role: "BUYER" }
        回應    : { success, message, token, user }（HTTP 201，token 直接登入）
-       資料庫  : users(username, password[bcrypt], display_name, role) */
-    const u = await window.HaisenAPI.register({ phone: phone, nick: nick, password: pass });
-    finish("register", u.nick, u.phone);
+       資料庫  : users(username, password[bcrypt], display_name, city, role) */
+    const u = await window.HaisenAPI.register({ phone: phone, nick: nick, password: pass, city: city });
+    finish("register", u.nick, u.phone, u.city);
   }catch(err){
     toast(err && err.message ? err.message : "註冊失敗，請稍後再試");
   }finally{

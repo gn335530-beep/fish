@@ -33,7 +33,7 @@ function appendMessages(list) {
   ui.scrollEnd();
 }
 
-async function runReplies(result) {
+export async function runReplies(result) {
   const replies = result.replies || [];
   const created = [];
 
@@ -89,6 +89,10 @@ export async function publishDraft() {
     ui.notify(new Error("找不到草稿，請重新上架"));
     return;
   }
+  if (ai.needsConsent(state.user)) {
+    await runReplies(ai.requestConsent(state.room.context, state.room.context.pending_sale_text || "我要賣魚"));
+    return;
+  }
 
   try {
     const product = await api.createProduct(draftToProduct(draft, state.user));
@@ -111,17 +115,6 @@ export async function publishDraft() {
 
     document.dispatchEvent(new CustomEvent("haisen:products-changed"));
     if (window.toast) window.toast("已上架：" + product.title);
-  } catch (error) {
-    ui.notify(error);
-  }
-}
-
-export async function resetDraft() {
-  try {
-    const context = ai.resetContext();
-    await api.updateContext(state.room.id, { context: context });
-    update({ room: Object.assign({}, state.room, { context: context }) });
-    await runReplies({ context: context, replies: [{ text: "已清空草稿，重新開始。" }] });
   } catch (error) {
     ui.notify(error);
   }

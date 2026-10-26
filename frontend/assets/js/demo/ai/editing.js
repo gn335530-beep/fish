@@ -17,11 +17,59 @@ export const DRAFT_FIELDS = [
 const LABELS = {};
 DRAFT_FIELDS.forEach(function (field) { LABELS[field.slot] = field.label; });
 
+const EDIT_ALIASES = {
+  fish_species: ["魚種", "魚"],
+  weight_kg: ["重量", "總重", "公斤"],
+  quantity: ["尾數", "數量", "幾尾"],
+  condition: ["處理方式", "處理"],
+  photo_url: ["照片", "相片", "圖片"],
+  price: ["售價", "價格", "價錢", "每台斤", "整批"]
+};
+
+function draftReply(context, text) {
+  return {
+    context: context,
+    replies: [{ text: text }, { card: { type: "draft", draft: context.draft } }]
+  };
+}
+
+export function askDraftEdit(context) {
+  if (!context || !context.draft) {
+    return { context: context, replies: [{ text: "目前沒有可修改的草稿。" }] };
+  }
+  return draftReply(
+    Object.assign({}, context, { choosing_edit: true, editing: null }),
+    "請問要修改哪個選項？"
+  );
+}
+
+/* 使用者可用「重量」「售價」等字眼指定要修改哪個欄位。 */
+export function chooseEditField(context, text) {
+  if (detectIntent(text) === INTENT.CANCEL) {
+    return draftReply(
+      Object.assign({}, context, { choosing_edit: null }),
+      "已取消修改。"
+    );
+  }
+  const source = String(text || "");
+  const slot = Object.keys(EDIT_ALIASES).find(function (key) {
+    return EDIT_ALIASES[key].some(function (alias) { return source.indexOf(alias) !== -1; });
+  });
+  if (!slot) {
+    return draftReply(
+      Object.assign({}, context, { choosing_edit: true }),
+      "請問要修改哪個選項？"
+    );
+  }
+  return beginEdit(Object.assign({}, context, { choosing_edit: null }), slot);
+}
+
 export function beginEdit(context, slot) {
   if (!context || context.mode !== "listing" || !context.draft) return null;
   if (!LABELS[slot]) return null;
   return {
     context: Object.assign({}, context, {
+      choosing_edit: null,
       editing: { slot: slot, backup: Object.assign({}, context.draft) }
     }),
     replies: [{ text: EDIT_PROMPTS[slot] + "（輸入「取消」可保留原值）" }]

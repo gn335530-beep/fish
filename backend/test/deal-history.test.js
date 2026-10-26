@@ -80,7 +80,7 @@ test("非參與者不能讀單筆訂單", async function () {
 
 test("沒有訂單時列表是空陣列", async function () {
   const registered = await call("POST", "/api/auth/register", {
-    body: { username: "0955555555", password: "pw555", display_name: "新買家" }
+    body: { username: "0955555555", password: "pw555", display_name: "新買家", city: "新北市" }
   });
   const result = await call("GET", "/api/deals", { token: registered.body.data.token });
   assert.deepEqual(result.body.data, []);

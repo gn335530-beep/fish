@@ -86,6 +86,10 @@ export function deleteConversation(conversationId) {
   return call("/api/conversations/" + encodeURIComponent(conversationId), { method: "DELETE" });
 }
 
+export function sellerConsent() {
+  return call("/api/users/seller-consent", { method: "POST" });
+}
+
 /* 由商品開啟或沿用交易房與草稿訂單。 */
 export function initiateChannel(productId, quantity) {
   return call("/api/deals/initiate-channel", {
