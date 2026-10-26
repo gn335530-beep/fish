@@ -1,6 +1,6 @@
 # 後端（json-server）
 
-此服務以 json-server 的 JSON 檔案儲存資料，並用自訂路由提供登入、會員、商品、魚種、對話、交易房與上傳 API。訂單目前只會建立草稿，評價尚未提供路由。不是正式後端，不能用於正式環境。
+此服務以 json-server 的 JSON 檔案儲存資料，並用自訂路由提供登入、會員、商品、魚種、對話、交易房、評價、行情與上傳 API。不是正式後端，不能用於正式環境。
 
 ## 啟動
 
@@ -14,6 +14,14 @@ npm run backend
 預設位址為 `http://localhost:3001`，可用 `PORT` 環境變數更換連接埠。
 前端頁面會將 API base 設為「目前主機的 HTTP 3001 埠」；若使用其他主機，需調整 `frontend/assets/js/config.js`。
 
+行情按需抓取可手動執行：
+
+```bash
+npm run market:fetch -- grouper
+npm run market:fetch -- grouper --date 2026-10-22
+npm run market:fetch -- --status
+```
+
 網站本身請以 `frontend/` 作為根目錄提供：
 
 ```bash
@@ -26,8 +34,9 @@ python -m http.server 8000 --directory frontend
 backend/
   server.js       啟動
   app.js          middleware、靜態目錄、路由掛載
-  lib/            auth / store / orders / deals / deal-items / deal-status / reviews / conversations / species / http
-  routes/         auth / products / species / chat / chat-messages / deals / deal-items / deal-proposal / deal-response / reviews / uploads
+  lib/            auth / store / orders / deals / deal-items / deal-status / reviews / conversations / species / regions / market/ / http
+  routes/         auth / products / species / chat / chat-messages / deals / deal-items / deal-proposal / deal-response / reviews / market / uploads
+  scripts/        market-fetch.js（行情 CLI）
   test/           node:test 整合測試（使用暫存 db.json）
   db.json         模擬資料
   uploads/        上傳圖片（不進版控）
@@ -43,6 +52,10 @@ backend/
 | `messages` | 對話訊息與卡片 |
 | `deals` | 訂單（`DRAFT`、`PENDING_REVIEW`、`NEGOTIATING`、`CONFIRMED`、`CANCELLED`） |
 | `reviews` | 成交後的雙向評價 |
+| `market_prices` | 按需抓取的批發行情（平均價、交易量、養殖旗標） |
+| `species_market_codes` | 28 個系統魚種的主要新鮮官方代碼 |
+| `market_locations` | 21 個批發市場簡稱 → 縣市 |
+| `market_fetch_state` | 每個官方代碼的抓取狀態與快取時間 |
 
 ## 支援端點
 
@@ -74,6 +87,9 @@ backend/
 | `GET` | `/api/deals` | 目前使用者的交易紀錄 |
 | `POST` | `/api/reviews/submit` | 成交後評價對方；需參與者 |
 | `GET` | `/api/reviews?user_id=` | 公開評價與平均星等 |
+| `GET` | `/api/market/prices` | 公開行情；支援 `species_id`、`region`、`date`、`include=history`、`days` |
+| `GET` | `/api/market/species-codes` | 公開主要新鮮代碼對照 |
+| `GET` | `/api/market/markets` | 公開市場對照 |
 | `POST` | `/api/uploads` | 上傳圖片（base64 data URL）；需登入 |
 
 錯誤回應採用 `{ "success": false, "code": "代碼", "message": "錯誤說明" }`。

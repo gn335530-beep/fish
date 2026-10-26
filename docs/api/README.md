@@ -41,6 +41,9 @@
 | `GET` | `/api/deals` | 登入 | 交易紀錄列表 |
 | `POST` | `/api/reviews/submit` | 參與者 | 成交後評價對方 |
 | `GET` | `/api/reviews?user_id=` | 公開 | 評價與平均星等 |
+| `GET` | `/api/market/prices` | 公開 | 行情；支援 `species_id`、`region`、`date`、`include=history`、`days` |
+| `GET` | `/api/market/species-codes` | 公開 | 主要新鮮代碼與養殖旗標 |
+| `GET` | `/api/market/markets` | 公開 | 市場對照表 |
 | `POST` | `/api/uploads` | 登入 | 上傳圖片（base64 data URL） |
 
 `GET /api/products` 會先掃描逾時訂單並釋放保留，不是純讀取。舊的 `/api/fish/data` 與 `PUT /api/fish/data/{id}` 已移除。

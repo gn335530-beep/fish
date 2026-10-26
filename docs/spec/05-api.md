@@ -68,17 +68,36 @@
 | 28 | GET | `/api/deals` | 登入 | ✅ 交易紀錄列表 |
 | 29 | POST | `/api/reviews/submit` | 登入（參與者） | ✅ 送出評價 |
 | 30 | GET | `/api/reviews?user_id=` | 公開 | ✅ 使用者的評價與平均 |
+| 31 | GET | `/api/market/species-codes` | 公開 | ✅ 主要新鮮代碼對照 |
+| 32 | GET | `/api/market/markets` | 公開 | ✅ 市場對照 |
+| 33 | GET | `/api/market/prices` | 公開 | ✅ 行情（含 `include=history`） |
+
+### 2.1 本版新增／變更的端點
+
+行情三個端點已於 2026-10-27 實作（#21～#23）；其餘標記為目標的端點仍依 ticket 實作。
+
+| 方法 | 路徑 | 權限 | 說明 |
+| --- | --- | --- | --- |
+| POST | `/api/auth/register` | 公開 | 變更：新增 `city`（必填） |
+| POST | `/api/users/seller-consent` | 登入 | 新增：記錄第一次販賣確認 |
+| POST | `/api/products/create` | 登入 | 變更：每台斤／整批售價、處理方式自由文字 |
+| DELETE | `/api/conversations/:id` | 參與者 | 新增：刪除助手房或已取消交易房 |
+| GET | `/api/market/prices` | 公開 | 新增：行情（含 `include=history`） |
+| GET | `/api/market/markets` | 公開 | 新增：市場對照表 |
+| GET | `/api/market/species-codes` | 公開 | 新增：主要新鮮代碼對照表 |
 
 ## 3. 會員
 
 ### `POST /api/auth/register`
 
 ```json
-{ "username": "0912345678", "password": "secret123", "display_name": "阿海", "role": "SELLER" }
+{ "username": "0912345678", "password": "secret123", "display_name": "阿海",
+  "city": "新北市", "role": "SELLER" }
 ```
 
 回 201：`data = { token, user }`。`role` 只接受 `BUYER` / `SELLER`，其他值一律 `BUYER`。
-錯誤：400 `MISSING_FIELDS`、409 `DUPLICATE_PHONE`。
+`city` 必填，必須在縣市清單內；「臺」正規化為「台」。
+錯誤：400 `MISSING_FIELDS`、400 `MISSING_REGION`、400 `INVALID_REGION`、409 `DUPLICATE_PHONE`。
 
 ### `POST /api/auth/login`
 
@@ -90,7 +109,7 @@
 
 ### `GET /api/auth/me`
 
-回傳 `publicUser`：全部會員欄位，**移除** `password`、`bank_code`、`bank_account`、`bank_account_name`，**加上** `display_address`、`region`。
+回傳 `publicUser`：全部會員欄位，**移除** `password`、`bank_code`、`bank_account`、`bank_account_name`，**加上** `display_address`、`region`。包含 `seller_terms_accepted_at`（未確認時為 `null`）。
 
 ### `PUT /api/users/profile`
 
@@ -99,8 +118,13 @@
   "address_line": "鼻頭路 1 號", "bank_code": "", "bank_account": "", "bank_account_name": "" }
 ```
 
-可接受 `nickname` 作為 `display_name` 的別名。暱稱 2–20 字；`city`/`district` ≤ 20、`address_line` ≤ 100、銀行欄位有各自上限。
-錯誤：400 `INVALID_NICKNAME`、400 `FIELD_TOO_LONG`、400 `NO_CHANGES`。
+可接受 `nickname` 作為 `display_name` 的別名。暱稱 2–20 字；`city`/`district` ≤ 20、`address_line` ≤ 100、銀行欄位有各自上限。`city` 若有值必須在縣市清單內，「臺」正規化為「台」。
+錯誤：400 `INVALID_NICKNAME`、400 `INVALID_REGION`、400 `FIELD_TOO_LONG`、400 `NO_CHANGES`。
+
+### `POST /api/users/seller-consent`
+
+登入後記錄第一次販賣確認。伺服器設定 `seller_terms_accepted_at = now`，回 200 `{ user }`。已確認過則**不覆寫**原時間，仍回 200。這個同意永久有效，不因法規文字更新重問。
+錯誤：401 `UNAUTHORIZED`。
 
 ## 4. 商品
 
@@ -126,7 +150,8 @@
 
 ```json
 { "fish_species": "石斑", "species_id": "grouper", "weight_kg": 4.5, "quantity": 1,
-  "condition": "放血冰鎮", "photo_url": "/uploads/ab12.jpg", "price": 2800,
+  "condition": "放血冰鎮", "photo_url": "/uploads/ab12.jpg",
+  "price": 1000, "price_per_taijin": 200,
   "region": "新北市", "location": "新北市瑞芳區鼻頭路 1 號",
   "catch_time": "2026-10-25T14:00:00+08:00" }
 ```
@@ -136,20 +161,28 @@
 - `seller_id` 取自 Token，client 傳的值一律忽略。
 - `species_id` 先以 id 比對魚種字典，比對不到再用名稱比對；都沒有則存 `null`。
 - `title` 自動產生：`{魚種}（{總重}kg / {尾數}尾 / {處理}）`。
-- `market_reference_price` = 字典行情 ×（總重 ÷ 0.6）；比對不到魚種時等於 `price`。
+- `condition` 是自由文字：trim、非空、最多 20 字。
+- 售價：
+  - 只填 `price` → `price_per_taijin = null`、`price_auto = false`。
+  - 只填 `price_per_taijin` → `price = round(price_per_taijin × weight_kg ÷ 0.6)`、`price_auto = true`。
+  - 兩者都填 → 都保留、`price_auto = false`，**不檢查一致性**（整批可為折扣）。
+  - 至少要有一個 > 0。
+- 發布時查行情並寫入 `market_snapshot`；查無或上游失敗則為 `null`，商品仍建立。
 - `sold_quantity = 0`；**不寫入 `status`**。
 - `region` 預設個人檔案的縣市；`location` 預設三段地址串接。
 - 回 201，`data` 是含衍生欄位的商品。
 
-錯誤：400 `MISSING_SPECIES`、`INVALID_WEIGHT`、`INVALID_QUANTITY`、`INVALID_CONDITION`、`INVALID_PRICE`、`MISSING_PHOTO`。
+錯誤：400 `MISSING_SPECIES`、`INVALID_WEIGHT`、`INVALID_QUANTITY`、`MISSING_CONDITION`、`FIELD_TOO_LONG`、`MISSING_PRICE`、`INVALID_PRICE`、`MISSING_PHOTO`。
 
-驗證規則：重量 > 0；尾數 ≥ 1（無條件捨去小數）；處理方式必須是四種之一；售價 > 0；照片必填。
+驗證規則：重量 > 0；尾數 ≥ 1（無條件捨去小數）；處理方式非空且 ≤ 20 字；整批與每台斤至少一個 > 0；照片必填。
 
 ### 商品衍生欄位
 
 ```jsonc
 { "...商品欄位": "...",
-  "reserved_quantity": 0, "available": 1, "unit_price": 2800,
+  "price": 1000, "price_per_taijin": 200, "price_auto": false,
+  "unit_price": 1000, "market_snapshot": { "...": "..." },
+  "reserved_quantity": 0, "available": 1,
   "avg_weight_kg": 4.5, "status": "ACTIVE" }
 ```
 
@@ -165,13 +198,13 @@
 | `category` | `fish`／`ceph`／`shellfish` |
 | `texture`、`bones`、`cooking` | 料理屬性 |
 
-行情 `market` 只在後端內部定價使用，不對外回傳。
+魚種字典不再提供示意行情；行情對照與養殖標記見 `/api/market/species-codes`。
 
 ## 5. 對話
 
 ### `GET /api/conversations`
 
-回傳 `data`：目前使用者參與的所有房間摘要，依最後訊息時間由新到舊。
+回傳 `data`：目前使用者參與的所有房間摘要，依最後訊息時間由新到舊。助手房可以有多筆，每筆有自己的 `context` 與草稿。
 
 ```jsonc
 { "id": "conv_...", "type": "assistant", "mode": "AI",
@@ -191,7 +224,7 @@
 
 ### `POST /api/conversations/assistant`
 
-找或建立目前使用者的助手房。首次建立時寫入一則招呼語並標記已讀。回傳同上摘要。
+建立一間新的助手房。寫入一則招呼語並標記已讀。回傳同上摘要。登入後若使用者沒有任何助手房，前端自動呼叫一次；收件匣的「新增 AI 對話」也呼叫這個端點。
 
 ### `GET /api/conversations/:id/messages`
 
@@ -218,6 +251,7 @@
 
 - **必須是房間參與者**，不論有沒有帶 `sender_type`。`sender_type` 只是訊息標記，不是身分證明。
 - `text`、`image_url`、`card` 至少要有一個。
+- `card.type = "legal_consent"` 只在助手房、第一次販賣前送出；確認／取消由前端按鈕處理，確認成功後呼叫 `POST /api/users/seller-consent`，不是由 `chat/message` 寫入同意。
 - `text` 上限 500 字。
 - `sender_type = "ai"` 只在助手房且 `mode = AI` 時接受，否則 409 `AI_NOT_ACTIVE`。
 - `context` 只能寫在助手房；交易房帶 `context` 回 409 `NOT_ASSISTANT_ROOM`。省略或 `null` 視為不更新。
@@ -248,6 +282,15 @@
 ```
 
 只有助手房可用。保留 `keep_from_seq`（含）之後的訊息，之前的查詢時跳過。發布商品後前端用它把對話清空，只留下「已上架」那一則。
+
+### `DELETE /api/conversations/:id`
+
+刪除一間對話。權限：參與者。
+
+- **助手房**：任何時候都能刪；刪除該房訊息與 `context`。
+- **交易房**：只有在房內沒有任何 `CONFIRMED` 訂單，且目前訂單 `deal_status = "CANCELLED"`（或全部訂單皆 `CANCELLED`）時才能刪；刪除時一併移除訊息、該房所有 `deals` 與訂單項目，交易紀錄不再顯示。有成交歷史或進行中（`DRAFT`／`PENDING_REVIEW`／`NEGOTIATING`）訂單時，回 409 `DEAL_NOT_DELETABLE`。
+- 回 200 `{ deleted: true }`。
+- 錯誤：404 `CONVERSATION_NOT_FOUND`、403 `FORBIDDEN`、409 `DEAL_NOT_DELETABLE`。
 
 ## 6. 上傳
 
@@ -402,23 +445,41 @@
 
 ### 8.3 行情
 
-| 方法 | 路徑 | 說明 |
-| --- | --- | --- |
-| GET | `/api/market/prices?species_id=&region=&date=` | 單筆行情（含全國備援） |
-| GET | `/api/market/prices/summary?species_id=&region=&days=` | 每日均價序列（預設 30、上限 90） |
-| GET | `/api/market/markets` | 市場對照表與未對照清單 |
-| GET | `/api/market/species-codes` | 魚種代碼對照與未對照清單 |
+> 2026-10-27：三個行情端點、按需抓取與快取已實作。沒有每日全量 job；第一次查某魚種會打上游，之後依 TTL 使用 `db.json` 快取。手動 CLI 見 `npm run market:fetch`。
+
+| 方法 | 路徑 | 權限 | 說明 |
+| --- | --- | --- | --- |
+| GET | `/api/market/prices?species_id=&region=&date=&include=history&days=7` | 公開 | 單筆行情；`include=history` 加回歷史；`days` 為最近 7 或 30 個交易日 |
+| GET | `/api/market/markets` | 公開 | 市場對照表（唯讀，21 筆） |
+| GET | `/api/market/species-codes` | 公開 | 主要新鮮代碼對照與養殖旗標（唯讀，28 筆） |
+
+- `region` 省略 → 全國平均，回應 `region: null`、`scope: "national"`；`region` 無效 → 400 `INVALID_REGION`。縣市比對前把「臺」正規化為「台」。
+- 縣市平均只納入 `market_locations.verified = true` 的市場；全國平均納入所有已抓到的市場，包含未確認市場。
+- `date` 用 ISO `YYYY-MM-DD`，語意「該日或之前最近交易日」；省略取該魚種最近交易日。
+- `species_id` 不存在於系統 28 種 → 400 `INVALID_SPECIES`；有魚種但沒有官方代碼 → 200 `found:false, reason:"NO_MAPPING"`。
+- 查無交易資料 → 200 `found:false, reason:"NO_TRADE_DATA"`。
+- 上游失敗且無快取 → 200 `found:false, reason:"UPSTREAM_UNAVAILABLE"`；有快取就回快取。
+- 行情 API 公開，不需 Token。
 
 ```jsonc
 { "success": true, "data": {
-    "found": true, "scope": "city", "region": "基隆市", "trade_date": "2026-10-22",
-    "price_per_kg": { "low": 1033, "avg": 1237, "high": 1433 },
-    "price_per_taijin": { "low": 620, "avg": 742, "high": 860 },
+    "found": true, "scope": "city", "region": "高雄市", "trade_date": "2026-10-22",
+    "price_per_kg": 52.4, "price_per_taijin": 31.4,
+    "is_aquaculture": false,
     "source": "農業部漁產品交易行情", "source_url": "...",
-    "fetched_at": "...", "quality": "official" } }
+    "fetched_at": "...", "quality": "official",
+    "history": [
+      { "trade_date": "2026-10-16", "price_per_kg": 50.1, "price_per_taijin": 30.1 },
+      { "trade_date": "2026-10-22", "price_per_kg": 52.4, "price_per_taijin": 31.4 }
+    ] } }
 ```
 
-查無資料仍回 200：`{ "found": false, "reason": "NO_TRADE_DATA" }`。
+- `price_per_kg`／`price_per_taijin` 都是平均價，不是範圍；四捨五入到小數 1 位。
+- `found:false` 只回 `found`、`reason`、`species_id`，不得帶 `price_per_kg`／`price_per_taijin` 或任何價格數字。
+- `scope = "national"` 時保留請求的 `region`，前端顯示「全國平均」。
+- `include=history` 只回該次查詢的 `scope`（縣市或全國）每日平均價；`days` 是最近 N 個交易日（7 或 30），回傳最多 N 筆有交易的日期；抓取時需涵蓋足夠日曆日。未帶 `include=history` 時省略 `history` 欄位。
+- `is_aquaculture: true` 時，畫面與助手回覆標「養殖價格」。
+- `summary` 端點已移除；走勢改用 `include=history`。
 
 ## 9. 錯誤碼總表
 
@@ -432,16 +493,19 @@
 | `ITEM_NOT_FOUND` | 404 | 訂單項目 |
 | `CONVERSATION_NOT_FOUND` | 404 | 對話 |
 | `MISSING_FIELDS` | 400 | 註冊 |
+| `MISSING_REGION` | 400 | 註冊（缺縣市） |
+| `INVALID_REGION` | 400 | 註冊、個人檔案、行情（縣市不在清單） |
 | `DUPLICATE_PHONE` | 409 | 註冊 |
 | `INVALID_CREDENTIALS` | 401 | 登入 |
 | `INVALID_NICKNAME` | 400 | 個人檔案 |
-| `FIELD_TOO_LONG` | 400 | 個人檔案 |
+| `FIELD_TOO_LONG` | 400 | 個人檔案、上架（處理方式） |
 | `NO_CHANGES` | 400 | 個人檔案、context |
 | `MISSING_SPECIES` | 400 | 上架 |
 | `INVALID_WEIGHT` | 400 | 上架 |
 | `INVALID_QUANTITY` | 400 | 上架 |
-| `INVALID_CONDITION` | 400 | 上架 |
-| `INVALID_PRICE` | 400 | 上架 |
+| `MISSING_CONDITION` | 400 | 上架（處理方式空白） |
+| `MISSING_PRICE` | 400 | 上架（整批與每台斤都沒填） |
+| `INVALID_PRICE` | 400 | 上架（售價 ≤ 0） |
 | `OWN_PRODUCT` | 400 | 開啟交易房（自己的商品） |
 | `MISSING_PHOTO` | 400 | 上架 |
 | `MISSING_CONVERSATION` | 400 | 訊息 |
@@ -449,6 +513,7 @@
 | `MESSAGE_TOO_LONG` | 400 | 訊息 |
 | `AI_NOT_ACTIVE` | 409 | 訊息 |
 | `NOT_ASSISTANT_ROOM` | 409 | context、clear、訊息 |
+| `DEAL_NOT_DELETABLE` | 409 | 刪除交易房（有成交歷史或非 CANCELLED） |
 | `INVALID_CONTEXT` | 400 | 訊息 |
 | `MISSING_IMAGE` / `INVALID_IMAGE` / `UNSUPPORTED_TYPE` / `EMPTY_IMAGE` | 400 | 上傳 |
 | `IMAGE_TOO_LARGE` | 413 | 上傳 |
@@ -468,10 +533,11 @@
 | `DEAL_NOT_CONFIRMED` | 409 | 評價（訂單未成交） |
 | `ALREADY_REVIEWED` | 409 | 評價（重複送出） |
 | `USER_NOT_FOUND` | 404 | 公開評價列表 |
-| `INVALID_SPECIES` | 400 | 目標：行情 |
-| `INVALID_DATE` | 400 | 目標：行情 |
-| `NO_TRADE_DATA` | 200 | 目標：行情（不是錯誤） |
-| `UPSTREAM_ERROR` | 502 | 目標：行情抓取 job |
+| `INVALID_SPECIES` | 400 | 行情（species_id 不在系統 28 種） |
+| `INVALID_DATE` | 400 | 行情（日期格式錯誤） |
+| `NO_TRADE_DATA` | 200 | 行情（查無交易資料，不是錯誤） |
+| `NO_MAPPING` | 200 | 行情（魚種存在但沒有官方代碼） |
+| `UPSTREAM_UNAVAILABLE` | 200 | 行情（上游失敗且無快取） |
 
 ## 10. 契約陷阱（前端容易踩）
 
@@ -492,3 +558,15 @@
 | 發起方不能同意自己的協議 | 只有對方能 `AGREE`／`REJECT`；任一方都能 `cancel` |
 | 協議卡只有最新一張會跟著狀態更新 | 舊卡保留 `rejected` 等歷史狀態 |
 | 舊文件寫的 `createFish()` / `deleteFish()` 已不存在 | 上架只用 `POST /api/products/create` |
+| `price` 是上架整批售價，`price_per_taijin` 是每台斤售價，`unit_price` 是每尾均價 | 三個都要標清楚；不要把整批價乘以尾數 |
+| `price_auto: true` 代表整批價由每台斤自動計算 | 畫面標「自動計算」；只填整批時 `price_per_taijin` 為 `null` |
+| 行情查詢回的是平均價數字，不是 low／avg／high 物件 | `data.price_per_kg`、`data.price_per_taijin` 直接是 number |
+| 行情卡走勢要帶 `include=history`；沒有 `summary` 端點 | 用 `days=7` 或 `days=30`（最近 7／30 個交易日） |
+| `is_aquaculture: true` | 商品卡、行情卡、助手回覆都要標「養殖價格」 |
+| 助手房可以有多間 | 每間有自己的 `context` 與草稿；不要假設只有一間 |
+| 交易房只有 `CANCELLED` 能刪 | 房內必須沒有 `CONFIRMED` 歷史；刪除會一併移除該房所有訂單與項目 |
+| 商品發布時寫入行情快照 | 小卡是對話訊息，快照才是商品的一部分 |
+| 取消上架會刪除目前 AI 對話 | 前端要先確認，再呼叫 `DELETE /api/conversations/:id` |
+| `seller_terms_accepted_at` 有值就永久跳過法規告知 | 不要每次賣魚都重問或重送 consent |
+| 法規告知卡按「取消」不記錄同意 | 取消後回 idle；下次賣魚再顯示 |
+| 同意只由 `POST /api/users/seller-consent` 寫入 | `chat/message` 的 `legal_consent` 卡只是 UI，不是同意紀錄 |
