@@ -18,8 +18,7 @@ test("註冊表單有必填縣市欄位", function () {
 });
 
 test("兩個 tab 都看得到法規告知與漁業法連結", function () {
-  assert.match(html, /販賣魚貨（一支釣）需依照法規申請相關合法證照/);
-  assert.match(html, /新臺幣三萬元以上三十萬元以下罰鍰/);
+  assert.match(html, /<strong>販賣魚貨（一支釣）需依照法規申請相關合法證照<\/strong><br>未申請可依法開罰新臺幣三萬元以上三十萬元以下罰鍰/);
   assert.match(html, /https:\/\/law\.moj\.gov\.tw\/LawClass\/LawAll\.aspx\?pcode=M0050001/);
   assert.match(html, /target="_blank"/);
   assert.match(html, /rel="noopener"/);
