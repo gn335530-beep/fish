@@ -4,25 +4,29 @@ export function emptyProposal() {
   return { final_price: "", meetup_location: "", meetup_time: "" };
 }
 
-export const state = {
-  user: null,
-  conversations: [],
-  room: null,
-  messages: [],
-  lastSeq: 0,
-  view: "assistant",
-  notice: "",
-  deal: null,
-  dealOpen: true,
-  addonOpen: false,
-  addons: [],
-  addonQty: {},
-  proposeOpen: false,
-  proposal: emptyProposal(),
-  cancelReasons: {},
-  reviewDrafts: {},
-  marketDays: {}
-};
+export function emptyState() {
+  return {
+    user: null,
+    conversations: [],
+    room: null,
+    messages: [],
+    lastSeq: 0,
+    view: "assistant",
+    notice: "",
+    deal: null,
+    dealOpen: true,
+    addonOpen: false,
+    addons: [],
+    addonQty: {},
+    proposeOpen: false,
+    proposal: emptyProposal(),
+    cancelReasons: {},
+    reviewDrafts: {},
+    marketDays: {}
+  };
+}
+
+export const state = emptyState();
 
 const listeners = [];
 

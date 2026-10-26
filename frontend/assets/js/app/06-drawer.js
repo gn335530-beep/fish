@@ -26,7 +26,7 @@ function ensureDrawer(){
   document.getElementById("dr-logout").addEventListener("click", ()=>{
     resetTradeHistory();
     drawerView = "profile";
-    setUser(null); closeDrawer(); toast("已登出"); renderAuthNav();
+    logoutUser(); closeDrawer(); toast("已登出"); renderAuthNav();
   });
   document.addEventListener("keydown", e=>{ if(e.key === "Escape") closeDrawer(); });
 }

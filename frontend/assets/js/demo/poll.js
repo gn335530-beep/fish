@@ -77,7 +77,7 @@ export function startPolling() {
   }, INTERVAL);
 }
 
-function stopPolling() {
+export function stopPolling() {
   if (timer) window.clearInterval(timer);
   timer = null;
 }
