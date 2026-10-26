@@ -15,7 +15,7 @@ function bubble(message) {
   const speaker = isSystem ? "系統" : (isAi ? "小幫手" : (mine ? "我" : (state.room && state.room.peer ? state.room.peer.display_name : "對方")));
   let content;
   if (message.type === "card") {
-    content = renderCard(message.card);
+    content = renderCard(message.card, message.id);
   } else if (message.type === "image") {
     content = '<img class="fm-msg__image" src="' + escapeHtml(resolveImage(message.image_url)) + '" alt="訊息圖片">';
   } else {

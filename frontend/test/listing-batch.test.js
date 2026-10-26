@@ -60,14 +60,14 @@ test("第一次已補齊非價格欄位時只追照片，不問價格", async fu
 
 test("照片補齊後才問售價，且可回每台斤或整批", async function () {
   const started = await service.handleText(null, "我要賣花枝 3公斤 2尾 放血冰鎮", {});
-  const photographed = service.handlePhoto(started.context, "/uploads/a.jpg");
+  const photographed = await service.handlePhoto(started.context, "/uploads/a.jpg");
   assert.match(textOf(photographed), /每台斤價格或整批價格/);
   assert.equal(photographed.context.draft.photo_url, "/uploads/a.jpg");
 });
 
 test("一次補齊含每台斤售價時直接進草稿卡", async function () {
   const started = await service.handleText(null, "我要賣花枝 3公斤 2尾 放血冰鎮 每台斤 200", {});
-  const photographed = service.handlePhoto(started.context, "/uploads/a.jpg");
+  const photographed = await service.handlePhoto(started.context, "/uploads/a.jpg");
   assert.equal(photographed.context.draft.price_per_taijin, 200);
   assert.equal(photographed.context.draft.price_auto, true);
   assert.equal(photographed.context.draft.price, 1000);

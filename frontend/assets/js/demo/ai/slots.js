@@ -40,9 +40,13 @@ export function extractSlots(text, assumeSlot) {
   const spice = findSpecies(source);
   if (spice) {
     found.fish_species = spice.name;
+    found.species_id = spice.id;
   } else if (!assumeSlot || assumeSlot === "fish_species") {
     const guess = guessUnknownSpecies(source);
-    if (guess) found.fish_species = guess;
+    if (guess) {
+      found.fish_species = guess;
+      found.species_id = null;
+    }
   }
 
   const condition = extractCondition(source);

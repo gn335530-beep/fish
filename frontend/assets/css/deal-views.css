@@ -90,9 +90,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
   margin-bottom: 12px;
   font-size: .82rem;
 }
+
+.fm-inbox__acts { display: flex; gap: 4px; }
 
 .fm-link {
   padding: 4px 8px;
@@ -103,22 +106,54 @@
   cursor: pointer;
 }
 
+.fm-inbox__note {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: .72rem;
+  line-height: 1.6;
+}
+
 .fm-inbox { display: grid; gap: 6px; }
 
 .fm-inbox__item {
   display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px;
+  align-items: center;
+  border: 1px solid var(--rule-2);
+  background: var(--surface);
+}
+
+.fm-inbox__item:hover, .fm-inbox__item.on { border-color: var(--accent); }
+
+.fm-inbox__open {
+  display: grid;
   grid-template-columns: 32px minmax(0, 1fr) auto;
   gap: 10px;
   align-items: center;
-  width: 100%;
+  min-width: 0;
   padding: 10px;
-  border: 1px solid var(--rule-2);
-  background: var(--surface);
+  border: 0;
+  background: transparent;
   text-align: left;
   cursor: pointer;
 }
 
-.fm-inbox__item:hover, .fm-inbox__item.on { border-color: var(--accent); }
+.fm-inbox__del {
+  align-self: start;
+  width: 26px;
+  height: 26px;
+  margin: 8px 6px 0 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--rule-2);
+  background: transparent;
+  color: var(--muted-2);
+  font-size: .68rem;
+  cursor: pointer;
+}
+
+.fm-inbox__del:hover { border-color: var(--coral); color: var(--coral); }
 
 .fm-inbox__avatar {
   width: 32px;

@@ -22,7 +22,7 @@ export function fetchMe() {
   return call("/api/auth/me");
 }
 
-export function ensureAssistant() {
+export function createAssistant() {
   return call("/api/conversations/assistant", { method: "POST" });
 }
 
@@ -64,10 +64,14 @@ export function createProduct(payload) {
   return call("/api/products/create", { method: "POST", body: payload });
 }
 
-/* 行情查詢：公開端點；只需要魚種與可選縣市。 */
-export function getMarketPrice(speciesId, region) {
+/* 行情查詢：公開端點；可選縣市與 history 天數（7／30）。 */
+export function getMarketPrice(speciesId, region, days) {
   const params = new URLSearchParams({ species_id: speciesId });
   if (region) params.set("region", region);
+  if (days) {
+    params.set("include", "history");
+    params.set("days", String(days));
+  }
   return call("/api/market/prices?" + params.toString());
 }
 
@@ -76,6 +80,10 @@ export function clearConversation(conversationId, keepFromSeq) {
     method: "POST",
     body: { keep_from_seq: keepFromSeq }
   });
+}
+
+export function deleteConversation(conversationId) {
+  return call("/api/conversations/" + encodeURIComponent(conversationId), { method: "DELETE" });
 }
 
 /* 由商品開啟或沿用交易房與草稿訂單。 */

@@ -1,4 +1,4 @@
-/* 房間切換：載入訊息、標記已讀並決定視圖。 */
+/* 房間切換：載入訊息、標記已讀、新增助手房與刪除。 */
 
 import { state, update, emptyProposal } from "./store.js";
 import * as api from "./api.js";
@@ -18,6 +18,16 @@ export function clearUnread(conversations, roomId) {
   return (conversations || []).map(function (item) {
     return item.id === roomId ? Object.assign({}, item, { unread_count: 0 }) : item;
   });
+}
+
+function assistantsOf(conversations) {
+  return (conversations || []).filter(function (item) {
+    return item.type === "assistant";
+  });
+}
+
+export function latestAssistant(conversations) {
+  return assistantsOf(conversations)[0] || null;
 }
 
 async function loadDeal(deal) {
@@ -51,4 +61,45 @@ export async function openRoom(room) {
   await api.markRead(room.id);
   update({ conversations: clearUnread(state.conversations, room.id) });
   return room;
+}
+
+/* 登入時只在完全沒有助手房時建立；否則開啟最近一間。 */
+export async function ensureAssistantRoom() {
+  const conversations = await api.listConversations();
+  update({ conversations: conversations });
+  const assistants = assistantsOf(conversations);
+  if (!assistants.length) return createAssistantRoom();
+  return openRoom(latestAssistant(conversations));
+}
+
+export async function createAssistantRoom() {
+  const created = await api.createAssistant();
+  const conversations = await api.listConversations();
+  update({ conversations: conversations });
+  const room = (conversations || []).find(function (item) {
+    return item.id === created.id;
+  }) || created;
+  return openRoom(room);
+}
+
+/* 刪除目前房間後，切到下一間助手房；沒有就回到空狀態，不自動補一間。 */
+export async function deleteConversation(conversationId) {
+  if (window.confirm && !window.confirm("確定刪除聊天室？")) return false;
+  await api.deleteConversation(conversationId);
+  const conversations = await api.listConversations();
+  update({ conversations: conversations });
+
+  if (!state.room || state.room.id !== conversationId) return true;
+  const assistants = assistantsOf(conversations);
+  if (assistants.length) {
+    await openRoom(assistants[0]);
+    return true;
+  }
+  update({
+    room: null,
+    messages: [],
+    lastSeq: 0,
+    view: conversations.length ? "inbox" : "assistant"
+  });
+  return true;
 }

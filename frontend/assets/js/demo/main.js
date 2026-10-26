@@ -13,7 +13,7 @@ import { initActions, handleAction, startDeal } from "./actions.js";
 import { handleFieldInput, handleAddonSelect } from "./deal-actions.js";
 import { handleCancelReason } from "./deal-replies.js";
 import { handleReviewField, handleReviewTag, handleReviewComment } from "./deal-reviews.js";
-import { clearUnread } from "./rooms.js";
+import { clearUnread, openRoom, latestAssistant } from "./rooms.js";
 import { loadSpecies } from "./ai/species.js";
 
 const panel = mountPanel({
@@ -63,7 +63,7 @@ function render() {
   panel.setBadge(state.user ? totalUnread() : 0);
   panel.setStatus(statusText());
   panel.setView(state.view);
-  panel.setFooter(state.view !== "inbox" && !!state.user);
+  panel.setFooter(state.view !== "inbox" && !!state.user && !!state.room);
 
   if (state.view === "inbox") {
     panel.setBody(bodyWith(renderInbox()));
@@ -97,7 +97,11 @@ async function handleOpen() {
     return;
   }
   try {
-    if (!state.room) await ensureRoom();
+    if (!state.room) {
+      await refreshRooms();
+      const room = latestAssistant(state.conversations);
+      if (room) await openRoom(room);
+    }
     await pollNow();
     if (state.room) {
       await api.markRead(state.room.id);
@@ -141,9 +145,9 @@ async function boot() {
   }
 }
 
-window.FISHMATCH_BUILD = "v4";
+window.FISHMATCH_BUILD = "v5";
 if (window.console && console.info) {
-  console.info("[FishMatch] build v4 · API " + (window.HaisenAPI ? window.HaisenAPI.BASE : "未載入"));
+  console.info("[FishMatch] build v5 · API " + (window.HaisenAPI ? window.HaisenAPI.BASE : "未載入"));
 }
 
 window.FishMatchBot = {

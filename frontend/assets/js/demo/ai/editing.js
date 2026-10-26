@@ -28,16 +28,21 @@ export function beginEdit(context, slot) {
   };
 }
 
-function finish(context, slot, value) {
-  const found = {};
-  found[slot] = value;
-  const draft = mergeDraft(context.draft, found);
+function finish(context, slot, found) {
+  const changes = {};
+  changes[slot] = found[slot];
+  /* 魚種名稱與 species_id 必須一起更新；未知魚種要清成 null。 */
+  if (slot === "fish_species") changes.species_id = found.species_id || null;
+  const draft = mergeDraft(context.draft, changes);
+  const next = { editing: null, draft: draft };
+  const refreshMarket = slot === "fish_species" || slot === "weight_kg";
+  if (refreshMarket) next.market_quoted = false;
   return {
-    context: Object.assign({}, context, { editing: null, draft: draft }),
-    replies: [
-      { text: "已更新" + LABELS[slot] + "。" },
-      { card: { type: "draft", draft: draft } }
-    ]
+    context: Object.assign({}, context, next),
+    replies: refreshMarket
+      ? [{ text: "已更新" + LABELS[slot] + "。" }]
+      : [{ text: "已更新" + LABELS[slot] + "。" }, { card: { type: "draft", draft: draft } }],
+    refresh_market: refreshMarket
   };
 }
 
@@ -79,7 +84,7 @@ export function editText(context, text) {
   if (value === undefined) {
     return { context: context, replies: [{ text: "沒有讀到" + LABELS[editing.slot] + "。" + EDIT_PROMPTS[editing.slot] }] };
   }
-  return finish(context, editing.slot, value);
+  return finish(context, editing.slot, found);
 }
 
 export function editPhoto(context, photoUrl) {

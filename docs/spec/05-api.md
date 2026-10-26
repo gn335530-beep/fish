@@ -215,12 +215,13 @@
   "order": null,
   "last_message": { "...": "..." },
   "unread_count": 0,
+  "deletable": true,
   "created_at": "...", "last_message_at": "..." }
 ```
 
 `order` 只在交易房有進行中訂單時才有值：`{ id, status, item_count, total_quantity, final_price, updated_at }`。`updated_at` 在每次加購、改量、刪除、清空、提案、回應、取消或逾時時更新，前端用來判斷何時重抓明細。
 
-未讀數不含自己送出的訊息。助手房的系統訊息不算未讀；交易房的系統訊息（開房、加購通知）算未讀。
+未讀數不含自己送出的訊息。助手房的系統訊息不算未讀；交易房的系統訊息（開房、加購通知）算未讀。`deletable` 表示這間房目前是否可刪（助手房恆為 true；交易房需全部訂單皆已取消）。
 
 **副作用**：會先做一次逾時掃描（`sweepExpired`），所以讀取清單可能讓過期的協議轉為 `CANCELLED` 並留下系統訊息。
 

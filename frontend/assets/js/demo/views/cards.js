@@ -5,6 +5,7 @@ import { marketLine } from "./market.js";
 import { normalizeCityName } from "../ai/species.js";
 import { DRAFT_FIELDS } from "../ai/editing.js";
 import { renderDealCard, renderReviewCard } from "./deal-cards.js";
+import { renderMarketCard } from "./market-card.js";
 
 function dealActions(card) {
   const available = Number(card.available) || 0;
@@ -81,10 +82,11 @@ function draftCard(card) {
     '</div>';
 }
 
-export function renderCard(card) {
+export function renderCard(card, messageId) {
   if (!card) return "";
   if (card.type === "product") return productCard(card);
   if (card.type === "draft") return draftCard(card);
+  if (card.type === "market_quote") return renderMarketCard(card, messageId);
   if (card.type === "deal") return renderDealCard(card);
   if (card.type === "review") return renderReviewCard(card);
   return '<div class="fm-card fm-card--plain">' + escapeHtml(card.title || "訊息卡片") + '</div>';

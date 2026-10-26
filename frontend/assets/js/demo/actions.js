@@ -3,7 +3,7 @@
 import { state, update } from "./store.js";
 import * as api from "./api.js";
 import { refreshRooms } from "./poll.js";
-import { openRoom, viewOf } from "./rooms.js";
+import { openRoom, viewOf, createAssistantRoom, deleteConversation } from "./rooms.js";
 import { initDealActions, handleDealAction } from "./deal-actions.js";
 import { initDealReplies } from "./deal-replies.js";
 import { initDealReviews } from "./deal-reviews.js";
@@ -52,6 +52,12 @@ export async function handleAction(action, data) {
     return;
   }
   if (action === "photo") return panel.openFilePicker();
+  if (action === "market-days") {
+    const days = Number(data.days) === 30 ? 30 : 7;
+    update({ marketDays: Object.assign({}, state.marketDays, { [data.message]: days }) });
+    render();
+    return;
+  }
   if (await handleDealAction(action, data)) return;
   if (action === "edit-slot") return beginEdit(data.slot);
   if (action === "publish") {
@@ -88,6 +94,28 @@ export async function handleAction(action, data) {
   if (action === "room") {
     try {
       await switchRoom(data.room);
+    } catch (error) {
+      notify(error);
+    }
+    return;
+  }
+  if (action === "new-assistant") {
+    try {
+      await createAssistantRoom();
+      update({ view: "assistant" });
+      render();
+    } catch (error) {
+      notify(error);
+    }
+    return;
+  }
+  if (action === "delete-room") {
+    const view = state.view;
+    try {
+      const removed = await deleteConversation(data.room);
+      if (!removed) return;
+      if (view === "inbox") update({ view: "inbox" });
+      render();
     } catch (error) {
       notify(error);
     }
