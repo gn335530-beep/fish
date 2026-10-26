@@ -43,6 +43,8 @@ export function money(value) {
   return "NT$" + number.toLocaleString("zh-TW");
 }
 
+export const NO_ASSISTANT_TEXT = "目前沒有 AI 對話。按「新增 AI 對話」開始。";
+
 /* 上傳圖片由後端提供；種子圖片則位於前端 assets。 */
 export function resolveImage(url) {
   if (!url) return "../assets/images/catch-still.jpg";

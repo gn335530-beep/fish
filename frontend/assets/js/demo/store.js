@@ -20,7 +20,8 @@ export const state = {
   proposeOpen: false,
   proposal: emptyProposal(),
   cancelReasons: {},
-  reviewDrafts: {}
+  reviewDrafts: {},
+  marketDays: {}
 };
 
 const listeners = [];

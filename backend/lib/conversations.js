@@ -20,13 +20,24 @@ function messagesOf(conversationId) {
   });
 }
 
+function dealsOf(conversationId) {
+  return all("deals").filter(function (deal) {
+    return String(deal.conversation_id) === String(conversationId);
+  });
+}
+
 function activeOrder(conversationId) {
-  return all("deals")
-    .filter(function (d) {
-      return String(d.conversation_id) === String(conversationId)
-        && ACTIVE_ORDER.indexOf(d.deal_status) !== -1;
-    })
+  return dealsOf(conversationId)
+    .filter(function (d) { return ACTIVE_ORDER.indexOf(d.deal_status) !== -1; })
     .sort(function (a, b) { return new Date(b.created_at) - new Date(a.created_at); })[0] || null;
+}
+
+/* 助手房隨時可刪；交易房要全部訂單都已取消（因此也沒有成交歷史）。 */
+function isDeletable(conversation) {
+  if (conversation.type !== "deal") return true;
+  return dealsOf(conversation.id).every(function (deal) {
+    return deal.deal_status === "CANCELLED";
+  });
 }
 
 function orderSummary(deal) {
@@ -71,6 +82,7 @@ function summary(conversation, user) {
     order: deal ? orderSummary(deal) : null,
     last_message: messages.length ? messages[messages.length - 1] : null,
     unread_count: unreadCount(conversation, user.id),
+    deletable: isDeletable(conversation),
     created_at: conversation.created_at,
     last_message_at: conversation.last_message_at || null
   };
@@ -94,6 +106,8 @@ module.exports = {
   AI_PEER: AI_PEER,
   isParticipant: isParticipant,
   messagesOf: messagesOf,
+  dealsOf: dealsOf,
+  isDeletable: isDeletable,
   orderSummary: orderSummary,
   summary: summary,
   unreadCount: unreadCount,

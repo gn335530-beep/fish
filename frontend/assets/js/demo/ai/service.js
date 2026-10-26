@@ -2,75 +2,17 @@
 
 import * as api from "../api.js";
 import { INTENT, detectIntent } from "./rules.js";
-import { extractSlots } from "./slots.js";
-import { mergeDraft, nextMissingSlot, draftReady, missingNonPriceSlots } from "./draft.js";
+import { mergeDraft } from "./draft.js";
+import { normalize, resetContext, advance, withDraft, startListing, continueListing } from "./listing.js";
 import { editText, editPhoto } from "./editing.js";
 import { resolveReferent } from "./referents.js";
 import { shoppingReply } from "./shopping.js";
 import { marketReply } from "./market.js";
 import { speciesById, ensureSpecies } from "./species.js";
-import { QUESTIONS, ASK_AGAIN, batchFollowupPrompt } from "./prompts.js";
 
-function makeContext(mode, draft, lastCards) {
-  return {
-    mode: mode,
-    draft: draft,
-    last_cards: lastCards,
-    selected_product_id: null,
-    editing: null
-  };
-}
+/* ---- 上架照片 ---- */
 
-export function resetContext() {
-  return makeContext("idle", null, []);
-}
-
-function normalize(context) {
-  const source = context || {};
-  return {
-    mode: source.mode || "idle",
-    draft: source.draft || null,
-    last_cards: source.last_cards || [],
-    selected_product_id: source.selected_product_id || null,
-    editing: source.editing || null
-  };
-}
-
-function advance(ctx) {
-  if (draftReady(ctx.draft)) {
-    return {
-      context: ctx,
-      replies: [
-        { text: "資料都齊了，請確認內容後按發布。" },
-        { card: { type: "draft", draft: ctx.draft } }
-      ]
-    };
-  }
-  const missing = nextMissingSlot(ctx.draft);
-  return { context: ctx, replies: [{ text: QUESTIONS[missing] }] };
-}
-
-function startListing(text) {
-  const draft = mergeDraft(null, extractSlots(text, null));
-  const ctx = makeContext("listing", draft, []);
-  const missing = missingNonPriceSlots(draft);
-  if (missing.length) return { context: ctx, replies: [{ text: batchFollowupPrompt(missing) }] };
-  return advance(ctx);
-}
-
-function continueListing(ctx, text) {
-  if (detectIntent(text) === INTENT.CANCEL) {
-    return { context: resetContext(), replies: [{ text: "好，已取消這次上架。" }] };
-  }
-  const missing = nextMissingSlot(ctx.draft);
-  const found = extractSlots(text, missing);
-  if (!Object.keys(found).length) {
-    return { context: ctx, replies: [{ text: ASK_AGAIN[missing] }] };
-  }
-  return advance(makeContext("listing", mergeDraft(ctx.draft, found), []));
-}
-
-export function handlePhoto(context, photoUrl) {
+export async function handlePhoto(context, photoUrl, user) {
   const ctx = normalize(context);
   const edited = editPhoto(ctx, photoUrl);
   if (edited) return edited;
@@ -78,7 +20,7 @@ export function handlePhoto(context, photoUrl) {
     return { context: ctx, replies: [{ text: "照片收到，但目前沒有進行中的上架。" }] };
   }
   const draft = mergeDraft(ctx.draft, { photo_url: photoUrl });
-  return advance(makeContext("listing", draft, []));
+  return advance(withDraft(ctx, draft), user);
 }
 
 /* ---- 指涉 ---- */
@@ -158,17 +100,24 @@ export async function handleText(context, text, user) {
   }
 
   const edited = editText(ctx, source);
-  if (edited) return edited;
+  if (edited) {
+    if (!edited.refresh_market) return edited;
+    const refreshed = await advance(edited.context, user);
+    return {
+      context: refreshed.context,
+      replies: edited.replies.concat(refreshed.replies)
+    };
+  }
 
   if (ctx.mode !== "listing") {
     const referent = resolveReferent(source, ctx.last_cards.length);
     if (referent) return handleReferent(ctx, referent);
   }
 
-  if (ctx.mode === "listing" && ctx.draft) return continueListing(ctx, source);
+  if (ctx.mode === "listing" && ctx.draft) return continueListing(ctx, source, user);
 
   const intent = detectIntent(source);
-  if (intent === INTENT.SELL) return startListing(source);
+  if (intent === INTENT.SELL) return startListing(source, user, ctx);
   if (intent === INTENT.CANCEL) {
     return { context: resetContext(), replies: [{ text: "好，已經重來。想賣魚或找魚都可以直接說。" }] };
   }

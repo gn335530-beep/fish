@@ -24,7 +24,8 @@
 | `POST` | `/api/products/create` | 登入 | 上架商品 |
 | `GET` | `/api/species` | 公開 | 魚種清單（id、名稱、別名、分類、料理屬性） |
 | `GET` | `/api/conversations` | 登入 | 房間清單 |
-| `POST` | `/api/conversations/assistant` | 登入 | 取得或建立助手房 |
+| `POST` | `/api/conversations/assistant` | 登入 | 每次建立一間新的助手房（登入時若完全沒有才由前端自動呼叫） |
+| `DELETE` | `/api/conversations/{id}` | 參與者 | 刪除助手房或可刪的交易房 |
 | `GET` | `/api/conversations/{id}/messages` | 參與者 | 訊息，支援 `after_seq`、`limit` |
 | `POST` | `/api/chat/message` | 參與者 | 送出訊息 |
 | `PUT` | `/api/conversations/{id}/context` | 參與者（助手房） | 更新助手房 context |
@@ -48,7 +49,7 @@
 
 `GET /api/products` 會先掃描逾時訂單並釋放保留，不是純讀取。舊的 `/api/fish/data` 與 `PUT /api/fish/data/{id}` 已移除。
 
-交易房由 `POST /api/deals/initiate-channel` 開啟，房間唯一鍵是 `buyer_id + seller_id`；同一釣客的多個商品會進同一筆草稿訂單。交易房的系統訊息會計入未讀。
+交易房由 `POST /api/deals/initiate-channel` 開啟，房間唯一鍵是 `buyer_id + seller_id`；同一釣客的多個商品會進同一筆草稿訂單。交易房的系統訊息會計入未讀。助手房每次 `POST /api/conversations/assistant` 都是獨立一間，有自己的 `context` 與草稿；`GET /api/conversations` 會回 `deletable` 供收件匣決定是否顯示刪除。
 
 ## 3. 商品回應欄位
 

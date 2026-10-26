@@ -8,6 +8,7 @@ const NON_PRICE_SLOTS = SLOT_ORDER.filter(function (slot) { return slot !== "pri
 function emptyDraft() {
   return {
     fish_species: "",
+    species_id: null,
     weight_kg: null,
     quantity: null,
     condition: "",
@@ -33,6 +34,10 @@ export function mergeDraft(draft, found) {
     if (value === null || value === undefined || value === "") return;
     next[key] = value;
   });
+  /* 未知魚種要把物種清成 null，才不會沿用上一個魚種的行情。 */
+  if (Object.prototype.hasOwnProperty.call(source, "species_id")) {
+    next.species_id = source.species_id || null;
+  }
 
   if (hasPrice) {
     next.price = Number(source.price);
@@ -74,6 +79,7 @@ export function draftReady(draft) {
 export function draftToProduct(draft, user) {
   const payload = {
     fish_species: draft.fish_species,
+    species_id: draft.species_id || null,
     weight_kg: draft.weight_kg,
     quantity: draft.quantity,
     condition: draft.condition,

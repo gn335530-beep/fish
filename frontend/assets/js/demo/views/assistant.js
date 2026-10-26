@@ -2,8 +2,15 @@
 
 import { state } from "../store.js";
 import { renderMessages } from "./messages.js";
+import { NO_ASSISTANT_TEXT } from "./html.js";
 
 export function renderAssistant() {
+  if (!state.room || state.room.type !== "assistant") {
+    return '<div class="fm-empty">' +
+      '<p>' + NO_ASSISTANT_TEXT + '</p>' +
+      '<button type="button" class="fm-chip" data-action="new-assistant">新增 AI 對話</button>' +
+      '</div>';
+  }
   if (!state.messages.length) {
     return '<div class="fm-empty">' +
       '<p>可以用對話完成整筆交易。</p>' +

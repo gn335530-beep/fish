@@ -8,7 +8,7 @@
 | --- | ---: | --- |
 | `users` | 4 | ✅ |
 | `products` | 5 | ✅ |
-| `conversations` | 3 | 🟡（助手房可多間；交易房由開啟交易房建立） |
+| `conversations` | 3 | ✅（助手房可多間；交易房由開啟交易房建立） |
 | `messages` | 78 | ✅ |
 | `deals` | 0 | ✅ 草稿由開啟交易房建立 |
 | `reviews` | 0 | ✅ 成交後由 `POST /api/reviews/submit` 寫入 |
@@ -106,16 +106,17 @@
 {
   "mode": "idle | listing | shopping",
   "draft": {
-    "fish_species", "weight_kg", "quantity", "condition", "photo_url",
+    "fish_species", "species_id", "weight_kg", "quantity", "condition", "photo_url",
     "price", "price_per_taijin", "price_auto"
   },
   "last_cards": ["prd_...", "prd_..."],
+  "market_quoted": false,
   "pending_sale_text": null,
   "awaiting_consent": false
 }
 ```
 
-`pending_sale_text` 只在法規告知期間有值；`awaiting_consent` 標記等待法規確認。確認後用它進入 listing、兩者清空；取消後也清空。`seller_terms_accepted_at` 一旦寫入永久有效，不因法規文字更新重問。
+`pending_sale_text` 只在法規告知期間有值；`awaiting_consent` 標記等待法規確認。確認後用它進入 listing、兩者清空；取消後也清空。`seller_terms_accepted_at` 一旦寫入永久有效，不因法規文字更新重問。`market_quoted` 標記這份草稿已送過行情卡；魚種或重量改變時重設。
 
 **唯一鍵**：助手房＝`id`（每位使用者可以有多間，不再用 `type + user_ids[0]`）；交易房＝`type + buyer_id + seller_id`。
 
@@ -163,7 +164,9 @@
   "source": "農業部漁產品交易行情", "source_url": "...", "fetched_at": "...",
   "weight_kg": 3, "weight_taijin": 5, "estimated_total": 157,
   "history": [{ "trade_date": "2026-10-16", "price_per_taijin": 30.1 },
-              { "trade_date": "2026-10-22", "price_per_taijin": 31.4 }] }
+              { "trade_date": "2026-10-22", "price_per_taijin": 31.4 }],
+  "history_30": [{ "trade_date": "2026-09-01", "price_per_taijin": 29.8 }],
+  "high": 31.4, "low": 30.1, "high_30": 31.4, "low_30": 29.8 }
 
 { "type": "legal_consent", "title": "販賣漁貨需具備合法證照",
   "text": "販賣魚貨（一支釣）需依照法規申請相關合法證照；未申請可依法開罰新臺幣三萬元以上三十萬元以下罰鍰。",

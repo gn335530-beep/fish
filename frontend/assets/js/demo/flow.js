@@ -6,7 +6,7 @@ import * as ai from "./ai/service.js";
 import { draftToProduct } from "./ai/draft.js";
 import { beginEdit as beginDraftEdit } from "./ai/editing.js";
 import { uploadImage } from "./upload.js";
-import { openRoom } from "./rooms.js";
+import { openRoom, ensureAssistantRoom } from "./rooms.js";
 
 let ui = {
   render: function () {},
@@ -19,11 +19,7 @@ export function initFlow(options) {
 }
 
 export async function ensureRoom() {
-  const room = await api.ensureAssistant();
-  const messages = await api.listMessages(room.id, 0);
-  const last = messages[messages.length - 1];
-  update({ room: room, messages: messages, lastSeq: last ? Number(last.seq) : 0, view: "assistant" });
-  return room;
+  return ensureAssistantRoom();
 }
 
 function appendMessages(list) {
@@ -61,7 +57,7 @@ export async function submitText(text) {
   if (!value || !api.isLoggedIn()) return;
 
   try {
-    if (!state.room) await ensureRoom();
+    if (!state.room) return;
     const message = await api.sendMessage(state.room.id, { text: value });
     appendMessages([message]);
     if (state.room.type === "deal") return;
@@ -75,12 +71,12 @@ export async function submitText(text) {
 export async function submitPhoto(file) {
   if (!api.isLoggedIn()) return;
   try {
-    if (!state.room) await ensureRoom();
+    if (!state.room) return;
     const url = await uploadImage(file);
     const message = await api.sendMessage(state.room.id, { image_url: url });
     appendMessages([message]);
     if (state.room.type === "deal") return;
-    const result = ai.handlePhoto(state.room.context, url);
+    const result = await ai.handlePhoto(state.room.context, url, state.user);
     await runReplies(result);
   } catch (error) {
     ui.notify(error);
