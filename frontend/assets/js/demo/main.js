@@ -141,9 +141,9 @@ async function boot() {
   }
 }
 
-window.FISHMATCH_BUILD = "v3";
+window.FISHMATCH_BUILD = "v4";
 if (window.console && console.info) {
-  console.info("[FishMatch] build v3 · API " + (window.HaisenAPI ? window.HaisenAPI.BASE : "未載入"));
+  console.info("[FishMatch] build v4 · API " + (window.HaisenAPI ? window.HaisenAPI.BASE : "未載入"));
 }
 
 window.FishMatchBot = {
