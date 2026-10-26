@@ -22,15 +22,19 @@ export async function ensureRoom() {
   return ensureAssistantRoom();
 }
 
-function appendMessages(list) {
-  if (!list.length) return;
+function setMessages(list) {
   const last = list[list.length - 1];
   update({
-    messages: state.messages.concat(list),
+    messages: list.slice(),
     lastSeq: Number(last.seq) || state.lastSeq
   });
   ui.render();
   ui.scrollEnd();
+}
+
+function appendMessages(list) {
+  if (!list.length) return;
+  setMessages(state.messages.concat(list));
 }
 
 export async function runReplies(result) {
@@ -48,6 +52,18 @@ export async function runReplies(result) {
 
   if (result.context) {
     update({ room: Object.assign({}, state.room, { context: result.context }) });
+  }
+  /* 法規確認後只留新的提問，先前的對話紀錄一併從後端清除。 */
+  if (result.clear_history && created.length) {
+    let clearError = null;
+    try {
+      await api.clearConversation(state.room.id, created[0].seq);
+    } catch (error) {
+      clearError = error;
+    }
+    setMessages(created);
+    if (clearError) ui.notify(clearError);
+    return;
   }
   appendMessages(created);
 }
@@ -105,13 +121,8 @@ export async function publishDraft() {
     await api.updateContext(state.room.id, { context: context });
     await api.clearConversation(state.room.id, message.seq);
 
-    update({
-      messages: [message],
-      lastSeq: Number(message.seq),
-      room: Object.assign({}, state.room, { context: context })
-    });
-    ui.render();
-    ui.scrollEnd();
+    update({ room: Object.assign({}, state.room, { context: context }) });
+    setMessages([message]);
 
     document.dispatchEvent(new CustomEvent("haisen:products-changed"));
     if (window.toast) window.toast("已上架：" + product.title);

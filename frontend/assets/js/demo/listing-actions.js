@@ -60,7 +60,7 @@ export async function acceptSellerConsent() {
     const payload = await api.sellerConsent();
     if (!payload || !payload.user) throw new Error("無法記錄販賣確認，請稍後再試");
     update({ user: payload.user });
-    await runReplies(await ai.resumeAfterConsent(context, payload.user));
+    await runReplies(await ai.resumeAfterConsent(payload.user));
   } catch (error) {
     ui.notify(error);
   }

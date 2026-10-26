@@ -37,6 +37,9 @@ globalThis.window = {
         };
       }
       if (path === "/api/conversations") return { data: [] };
+      if (path === "/api/conversations/conv_1/clear") {
+        return { data: { cleared_before_seq: (options.body || {}).keep_from_seq - 1 } };
+      }
       if (path === "/api/conversations/conv_1") return { data: { deleted: true } };
       throw new Error("unexpected path: " + path);
     }
@@ -87,14 +90,16 @@ test.beforeEach(function () {
   });
 });
 
-test("確認法規後呼叫端點，清掉等待狀態並接回原句上架", async function () {
+test("確認法規後清除對話紀錄，只留下想賣什麼魚類的提問", async function () {
   await listingActions.acceptSellerConsent();
   assert.ok(calls.indexOf("POST /api/users/seller-consent") !== -1);
+  assert.ok(calls.indexOf("POST /api/conversations/conv_1/clear") !== -1);
   assert.equal(state.user.seller_terms_accepted_at, "2026-10-27T01:00:00.000Z");
   assert.equal(state.room.context.pending_sale_text, null);
   assert.equal(state.room.context.awaiting_consent, false);
-  assert.equal(state.room.context.draft.fish_species, "花枝");
-  assert.ok(state.messages.some(function (message) { return /重量|尾數|處理方式|照片/.test(message.text || ""); }));
+  assert.equal(state.room.context.draft.fish_species, "");
+  assert.equal(state.messages.length, 1);
+  assert.match(state.messages[0].text, /請問想要販售什麼魚類/);
 });
 
 test("確認取消上架後直接刪除對話，不再跳瀏覽器確認", async function () {
