@@ -41,7 +41,6 @@ function product(id, sellerId, name, quantity, price) {
     condition: "活體",
     photo_url: "/uploads/" + id + ".jpg",
     price: price,
-    market_reference_price: price,
     region: "新北市",
     location: "新北市瑞芳區",
     catch_time: "2026-10-25T05:00:00+08:00",

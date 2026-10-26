@@ -46,9 +46,17 @@ function renderSpec(p) {
     ["地點", normalizeCityName(p.location) || "—"],
     ["釣獲時間", p.catch_time ? productDate(p.catch_time) : "未提供"]
   ];
+  if (hasMarketSnapshot(p.market_snapshot)) {
+    rows.push(["行情", marketSnapshotPrice(p.market_snapshot)]);
+    rows.push(["行情地區", marketSnapshotScope(p.market_snapshot)]);
+    rows.push(["交易日期", p.market_snapshot.trade_date || "—"]);
+    rows.push(["行情來源", marketSnapshotSource(p.market_snapshot) || "—"]);
+  } else {
+    rows.push(["行情", "暫無行情"]);
+    rows.push(["行情來源", marketSnapshotSource(null)]);
+  }
   if (!p.species_id) {
     rows.push(["料理資料", "暫無"]);
-    rows.push(["行情", "暫無行情"]);
   }
   document.getElementById("pd-spec").innerHTML = rows.map(function (row) {
     return "<div>" + row[0] + "</div><div>" + productEscape(row[1]) + "</div>";

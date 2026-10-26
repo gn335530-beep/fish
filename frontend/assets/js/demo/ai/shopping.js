@@ -33,6 +33,7 @@ function productCard(product) {
     region: product.region,
     location: product.location,
     catch_time: product.catch_time,
+    market_snapshot: product.market_snapshot || null,
     seller_id: product.seller_id
   };
 }

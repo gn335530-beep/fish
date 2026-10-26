@@ -40,6 +40,42 @@ function productStatus(p) {
   return "可售 " + productAvailable(p) + " 尾";
 }
 
+function hasMarketSnapshot(snapshot) {
+  return !!(snapshot && snapshot.price_per_taijin != null);
+}
+
+function marketSnapshotPrice(snapshot) {
+  if (!hasMarketSnapshot(snapshot)) return "暫無行情";
+  return Number(snapshot.price_per_taijin).toFixed(1).replace(/\.0$/, "") + " 元／台斤";
+}
+
+function marketSnapshotScope(snapshot) {
+  if (!hasMarketSnapshot(snapshot)) return "";
+  return snapshot.scope === "city" ? (snapshot.region || "縣市") + "平均" : "全國平均";
+}
+
+function marketSnapshotSource(snapshot) {
+  const parts = ["新鮮批發參考"];
+  if (hasMarketSnapshot(snapshot) && snapshot.source) parts.unshift(snapshot.source);
+  if (hasMarketSnapshot(snapshot) && snapshot.is_aquaculture) parts.push("養殖價格");
+  return parts.join(" · ");
+}
+
+function marketSnapshotCardHTML(snapshot) {
+  if (!hasMarketSnapshot(snapshot)) {
+    return '<div class="card__market"><span class="card__market-label">新鮮批發參考</span>' +
+      '<span class="card__market-empty">暫無行情</span></div>';
+  }
+  var meta = [
+    marketSnapshotScope(snapshot),
+    snapshot.trade_date,
+    marketSnapshotSource(snapshot)
+  ].filter(Boolean).join(" · ");
+  return '<div class="card__market"><span class="card__market-label">新鮮批發參考</span>' +
+    '<b class="card__market-price">' + productEscape(marketSnapshotPrice(snapshot)) + '</b>' +
+    '<span class="card__market-meta">' + productEscape(meta) + '</span></div>';
+}
+
 function productStateHTML(text, isError) {
   return '<p class="state-msg' + (isError ? " state-msg--error" : "") + '">' +
     productEscape(text) + '</p>';
@@ -103,8 +139,9 @@ function productCardHTML(p) {
     '<div class="card__meta"><span>' + productWeight(p) + ' kg · 共 ' + quantity + ' 尾</span>' +
     '<span>可售 ' + available + ' 尾</span></div>' +
     '<div class="card__meta"><span>每尾 ' + productMoney(p.unit_price) + '</span></div>' +
+    marketSnapshotCardHTML(p.market_snapshot) +
     '<div class="card__meta"><span>' + productEscape(location) + '</span></div>' +
-    (unknown ? '<div class="card__meta"><span>料理資料暫無 · 暫無行情</span></div>' : "") +
+    (unknown ? '<div class="card__meta"><span>料理資料暫無</span></div>' : "") +
     '<div class="card__price"><b>' + productMoney(p.price) + '<span class="unit"> · 整批</span></b></div>' +
     dealControls(p) +
     '<a href="' + href + '" class="btn btn--ghost btn--sm" style="margin-top:10px">查看詳情</a>' +

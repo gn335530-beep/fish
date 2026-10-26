@@ -64,6 +64,13 @@ export function createProduct(payload) {
   return call("/api/products/create", { method: "POST", body: payload });
 }
 
+/* 行情查詢：公開端點；只需要魚種與可選縣市。 */
+export function getMarketPrice(speciesId, region) {
+  const params = new URLSearchParams({ species_id: speciesId });
+  if (region) params.set("region", region);
+  return call("/api/market/prices?" + params.toString());
+}
+
 export function clearConversation(conversationId, keepFromSeq) {
   return call("/api/conversations/" + encodeURIComponent(conversationId) + "/clear", {
     method: "POST",

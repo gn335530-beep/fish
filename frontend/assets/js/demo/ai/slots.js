@@ -4,12 +4,13 @@ import { findSpecies, normalizeCityName } from "./species.js";
 
 const SLOT_ORDER = ["fish_species", "weight_kg", "quantity", "condition", "photo_url", "price"];
 
-const CONDITIONS = [
-  { value: "活體", words: ["活體", "活魚", "活跳", "蓄養", "還活著"] },
-  { value: "放血冰鎮", words: ["放血", "冰鎮", "碎冰", "冰水"] },
-  { value: "三去處理", words: ["三去", "去鱗", "去鰓", "去內臟", "宰殺", "處理好"] },
-  { value: "冷凍", words: ["冷凍", "凍"] }
-];
+const CONDITION_WORDS = [
+  "還活著", "放血冰鎮", "三去處理", "去內臟", "處理好",
+  "活體", "活魚", "活跳", "蓄養", "放血", "冰鎮", "碎冰", "冰水",
+  "三去", "去鱗", "去鰓", "宰殺", "冷凍", "凍"
+].sort(function (a, b) { return b.length - a.length; });
+
+const CONDITION_NOISE = CONDITION_WORDS.join("|");
 
 function emptyDraft() {
   return {
@@ -30,17 +31,19 @@ function strip(text, match) {
   return text.replace(match, " ");
 }
 
-function matchCondition(text) {
-  for (const condition of CONDITIONS) {
-    const hit = condition.words.some(function (word) { return text.indexOf(word) !== -1; });
-    if (hit) return condition.value;
-  }
-  return "";
+/* 只做語句抽取提示，不是允許值清單；回傳使用者實際說的詞，不做同義詞對照。 */
+function extractCondition(text) {
+  return CONDITION_WORDS.find(function (word) { return text.indexOf(word) !== -1; }) || "";
+}
+
+/* 使用者回答處理方式時照原樣記錄，只去掉前後空白與句尾標點。 */
+function cleanCondition(text) {
+  return String(text || "").trim().replace(/[。.!！?？,，;；]+$/, "").trim();
 }
 
 /* 字典沒有的魚種：從句子中移除意圖、數量、單位與處理方式後，留下名稱。 */
-function guessUnknownSpecies(text) {
-  const noise = /我要買魚|我要買|想買|要買|買魚|我要賣魚|我要賣|想賣|要賣|賣魚|上架|出售|賣掉|剛釣到|剛釣|釣到|捕獲|今天|幫我|請問|不知道|不確定|忘了|我的|想要|想|大概|大約|左右|差不多|怎麼|什麼魚|什麼|如何|多少|價錢|價格|公斤|kg|KG|Kg|台斤|斤|尾|條|隻|份|元|塊|活體|活魚|活跳|蓄養|還活著|放血冰鎮|放血|冰鎮|碎冰|冰水|三去處理|三去|去鱗|去鰓|去內臟|宰殺|處理好|冷凍|凍|照片|上傳|一張|一隻|一條|一尾|兩隻|兩條|兩尾|新鮮|現流|最後|這尾|這個|這張|那尾|那個|第|個|我|你|他|的|約|賣/g;
+export function guessUnknownSpecies(text) {
+  const noise = new RegExp("我要買魚|我要買|想買|要買|買魚|我要賣魚|我要賣|想賣|要賣|賣魚|上架|出售|賣掉|剛釣到|剛釣|釣到|捕獲|今天|現在|目前|最近|近期|這幾天|幫我|請問|不知道|不確定|忘了|我的|想要|想|大概|大約|左右|差不多|怎麼|什麼魚|什麼|如何|多少|價錢|價格|錢|行情|均價|平均|批發|公斤|kg|KG|Kg|台斤|斤|尾|條|隻|份|元|塊|" + CONDITION_NOISE + "|照片|上傳|一張|一隻|一條|一尾|兩隻|兩條|兩尾|新鮮|現流|最後|這尾|這個|這張|那尾|那個|第|個|我|你|他|的|約|賣", "g");
   const candidate = String(text || "")
     .replace(noise, " ")
     .replace(/\d+(?:\.\d+)?/g, " ")
@@ -60,6 +63,11 @@ export function extractSlots(text, assumeSlot) {
   const source = String(text || "");
   const found = {};
   let rest = source;
+
+  if (assumeSlot === "condition") {
+    const condition = cleanCondition(source);
+    return condition ? { condition: condition } : {};
+  }
 
   const weightMatch = /(\d+(?:\.\d+)?)\s*(公斤|kg|KG|Kg|台斤|斤)/.exec(rest);
   if (weightMatch) {
@@ -84,7 +92,7 @@ export function extractSlots(text, assumeSlot) {
     if (guess) found.fish_species = guess;
   }
 
-  const condition = matchCondition(source);
+  const condition = extractCondition(source);
   if (condition) found.condition = condition;
 
   /* 沒有單位的重量優先接受小數，避免把整數價格或尾數當成重量。 */
