@@ -16,6 +16,7 @@ import { handleCancelReason } from "./deal-replies.js";
 import { handleReviewField, handleReviewTag, handleReviewComment } from "./deal-reviews.js";
 import { clearUnread, openRoom, latestAssistant } from "./rooms.js";
 import { loadSpecies } from "./ai/species.js";
+import { clearSession } from "./session.js";
 
 const panel = mountPanel({
   onSubmit: handleSubmit,
@@ -140,8 +141,7 @@ async function boot() {
   } catch (error) {
     if (error && (error.status === 401 || error.status === 403)) {
       api.logout();
-      update({ user: null, room: null, messages: [], conversations: [], lastSeq: 0 });
-      render();
+      clearSession(panel);
       return;
     }
     notify(error);
@@ -158,7 +158,8 @@ window.FishMatchBot = {
   close: function () { panel.close(); },
   toggle: function () { panel.toggle(); },
   refresh: function () { return pollNow(); },
-  startDeal: startDeal
+  startDeal: startDeal,
+  logout: function () { clearSession(panel); }
 };
 
 boot();

@@ -81,7 +81,7 @@
 | `register({ phone, password, nick, role })` | 註冊並保存登入狀態 |
 | `login({ phone, password })` | 登入並保存登入狀態 |
 | `me()` | 以 Token 取得並同步會員資料 |
-| `logout()` | 清除本機 Token 與會員 |
+| `logout()` | 清除本機 Token、會員資料與頭像 |
 | `listProducts()` | 取得商品清單 |
 | `getProduct(id)` | 取得單一商品 |
 | `photoUrl(path)` | 將 `/uploads/...`、`images/...` 轉成可顯示網址 |
@@ -92,7 +92,7 @@
 ## 5. 頁面初始化
 
 - `frontend/assets/js/app/08-api-init.js` 只負責導覽、個人選單與 `syncSessionFromApi()`。
-- `syncSessionFromApi()` 在有 Token 時呼叫 `me()`；401／403 會清除本機登入狀態。
+- `syncSessionFromApi()` 在有 Token 時呼叫 `me()`；401／403 會清除本機登入狀態，只有會員資料而沒有 Token 時也會清除。
 - 頁面資料由各頁自己的 API 呼叫載入：首頁與列表用 `listProducts()`，詳情用 `getProduct(id)`，列表分類與助手用 `listSpecies()`。
 
 ## 6. 錯誤處理
