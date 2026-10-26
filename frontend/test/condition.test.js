@@ -19,13 +19,15 @@ const { beginEdit } = await import("../assets/js/demo/ai/editing.js");
 const service = await import("../assets/js/demo/ai/service.js");
 await loadSpecies();
 
+const USER = { seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" };
+
 function textOf(result) {
   return result.replies.map(function (reply) { return reply.text || ""; }).join("\n");
 }
 
 test("詢問處理方式時只舉例活體與放血冰鎮", async function () {
-  const started = await service.handleText(null, "我要賣魚", {});
-  const asked = await service.handleText(started.context, "石斑 3公斤 2尾", {});
+  const started = await service.handleText(null, "我要賣魚", USER);
+  const asked = await service.handleText(started.context, "石斑 3公斤 2尾", USER);
   const text = textOf(asked);
   assert.match(text, /活體、放血冰鎮/);
   assert.doesNotMatch(text, /三去處理/);
@@ -33,9 +35,9 @@ test("詢問處理方式時只舉例活體與放血冰鎮", async function () {
 });
 
 test("使用者的回答照原樣記錄，不做活魚→活體對照", async function () {
-  const started = await service.handleText(null, "我要賣魚", {});
-  const asked = await service.handleText(started.context, "石斑 3公斤 2尾", {});
-  const answered = await service.handleText(asked.context, "活魚", {});
+  const started = await service.handleText(null, "我要賣魚", USER);
+  const asked = await service.handleText(started.context, "石斑 3公斤 2尾", USER);
+  const answered = await service.handleText(asked.context, "活魚", USER);
   assert.equal(answered.context.draft.condition, "活魚");
 });
 

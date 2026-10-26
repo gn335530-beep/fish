@@ -130,3 +130,9 @@
 .fm-market__calc dt { color: var(--muted); }
 .fm-market__calc dd { margin: 0; color: var(--ink); }
 .fm-market__note { color: var(--muted-2); font-size: .6rem; line-height: 1.5; }
+
+/* 法規告知卡與取消上架確認 */
+.fm-card--legal { padding: 12px; gap: 6px; }
+.fm-card--legal > b { font-size: .82rem; }
+.fm-card--legal p { margin: 0; color: var(--ink-2); font-size: .72rem; line-height: 1.8; }
+.fm-card--legal a { color: var(--accent); font-size: .7rem; text-decoration: underline; }

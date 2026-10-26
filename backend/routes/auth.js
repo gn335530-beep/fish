@@ -3,6 +3,7 @@
 const express = require("express");
 const { all, insert, patch, nextNumericId, findById } = require("../lib/store");
 const { publicUser, issueToken, requireUser } = require("../lib/auth");
+const { normalizeRegion } = require("../lib/regions");
 const { ok, created, fail } = require("../lib/http");
 
 const router = express.Router();
@@ -16,7 +17,7 @@ function newUser(data) {
     role: ["BUYER", "SELLER"].indexOf(data.role) !== -1 ? data.role : "BUYER",
     is_verified: false,
     completed_orders: 0,
-    city: "",
+    city: normalizeRegion(data.city),
     district: "",
     address_line: "",
     rating_score: 0,
@@ -24,6 +25,7 @@ function newUser(data) {
     completed_deals: 0,
     no_show_count: 0,
     is_blacklisted: false,
+    seller_terms_accepted_at: null,
     bank_code: "",
     bank_account: "",
     bank_account_name: ""
@@ -36,11 +38,21 @@ router.post("/api/auth/register", function (req, res) {
     fail(res, 400, "MISSING_FIELDS", "電話、密碼和暱稱為必填欄位");
     return;
   }
+  const rawCity = String(body.city || "").trim();
+  if (!rawCity) {
+    fail(res, 400, "MISSING_REGION", "請選擇縣市");
+    return;
+  }
+  const city = normalizeRegion(rawCity);
+  if (!city) {
+    fail(res, 400, "INVALID_REGION", "請選擇有效的縣市");
+    return;
+  }
   if (all("users").some(function (u) { return u.username === body.username; })) {
     fail(res, 409, "DUPLICATE_PHONE", "此電話號碼已註冊");
     return;
   }
-  const user = insert("users", newUser(body));
+  const user = insert("users", newUser(Object.assign({}, body, { city: city })));
   created(res, { token: issueToken(user), user: publicUser(user) }, "註冊成功");
 });
 
@@ -87,6 +99,15 @@ router.put("/api/users/profile", requireUser, function (req, res) {
       fail(res, 400, "FIELD_TOO_LONG", field + " 長度超過上限");
       return;
     }
+    if (field === "city") {
+      const normalized = value ? normalizeRegion(value) : "";
+      if (value && !normalized) {
+        fail(res, 400, "INVALID_REGION", "請選擇有效的縣市");
+        return;
+      }
+      changes.city = normalized;
+      continue;
+    }
     changes[field] = value;
   }
 
@@ -97,6 +118,14 @@ router.put("/api/users/profile", requireUser, function (req, res) {
 
   const updated = patch("users", req.user.id, changes) || findById("users", req.user.id);
   ok(res, publicUser(updated), "個人檔案已更新");
+});
+
+router.post("/api/users/seller-consent", requireUser, function (req, res) {
+  const existing = req.user.seller_terms_accepted_at;
+  const updated = existing
+    ? req.user
+    : patch("users", req.user.id, { seller_terms_accepted_at: new Date().toISOString() });
+  ok(res, { user: publicUser(updated) }, "已記錄販賣確認");
 });
 
 module.exports = router;

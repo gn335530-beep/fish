@@ -14,11 +14,12 @@
 
 | 方法 | 路徑 | 權限 | 說明 |
 | --- | --- | --- | --- |
-| `POST` | `/api/auth/register` | 公開 | 註冊，回 `data.token`、`data.user` |
+| `POST` | `/api/auth/register` | 公開 | 註冊，回 `data.token`、`data.user`；需帶 `city` |
 | `POST` | `/api/auth/login` | 公開 | 登入 |
 | `POST` | `/api/auth/signin` | 公開 | 登入別名 |
 | `GET` | `/api/auth/me` | 登入 | 目前會員 |
 | `PUT` | `/api/users/profile` | 登入 | 更新暱稱、地址、銀行資料（後端端點；目前前端沒有 UI 呼叫） |
+| `POST` | `/api/users/seller-consent` | 登入 | 記錄第一次販賣確認，重複呼叫不覆寫時間 |
 | `GET` | `/api/products` | 公開 | 商品清單；支援 `region`、`species`、`seller_id`、`status`、`limit` |
 | `GET` | `/api/products/{id}` | 公開 | 單一商品；不存在回 404 `PRODUCT_NOT_FOUND` |
 | `POST` | `/api/products/create` | 登入 | 上架商品 |

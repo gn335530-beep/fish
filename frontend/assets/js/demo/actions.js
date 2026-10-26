@@ -8,8 +8,12 @@ import { initDealActions, handleDealAction } from "./deal-actions.js";
 import { initDealReplies } from "./deal-replies.js";
 import { initDealReviews } from "./deal-reviews.js";
 import {
-  submitText, publishDraft, resetDraft, explainProduct, beginEdit, beginDeal
+  submitText, publishDraft, explainProduct, beginEdit, beginDeal
 } from "./flow.js";
+import {
+  editDraft, cancelListing, dismissCancelListing, confirmCancelListing,
+  acceptSellerConsent, declineSellerConsent
+} from "./listing-actions.js";
 
 let panel = null;
 let render = function () {};
@@ -64,8 +68,28 @@ export async function handleAction(action, data) {
     publishDraft();
     return;
   }
-  if (action === "reset-draft") {
-    resetDraft();
+  if (action === "edit-draft") {
+    editDraft();
+    return;
+  }
+  if (action === "cancel-listing") {
+    cancelListing();
+    return;
+  }
+  if (action === "cancel-listing-confirm") {
+    confirmCancelListing();
+    return;
+  }
+  if (action === "cancel-listing-dismiss") {
+    dismissCancelListing();
+    return;
+  }
+  if (action === "legal-accept") {
+    acceptSellerConsent();
+    return;
+  }
+  if (action === "legal-decline") {
+    declineSellerConsent();
     return;
   }
   if (action === "ask-product") {

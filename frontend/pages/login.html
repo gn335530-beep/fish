@@ -4,32 +4,32 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>登入 / 註冊 — 一支釣</title>
-<meta name="description" content="一支釣登入與註冊：以電話號碼登入，註冊需填寫暱稱與電話號碼。">
+<meta name="description" content="一支釣登入與註冊：以電話號碼登入，註冊需填寫暱稱、電話號碼與縣市。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&family=Noto+Serif+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/css/base.css?v=v5">
-<link rel="stylesheet" href="../assets/css/layout.css?v=v5">
-<link rel="stylesheet" href="../assets/css/components.css?v=v5">
-<link rel="stylesheet" href="../assets/css/market.css?v=v5">
-<link rel="stylesheet" href="../assets/css/features.css?v=v5">
-<link rel="stylesheet" href="../assets/css/auth.css?v=v5">
-<link rel="stylesheet" href="../assets/css/deal-bot.css?v=v5">
-<link rel="stylesheet" href="../assets/css/deal-views.css?v=v5">
-<link rel="stylesheet" href="../assets/css/deal-cards.css?v=v5">
-<link rel="stylesheet" href="../assets/css/deal-orders.css?v=v5">
-<link rel="stylesheet" href="../assets/css/deal-room.css?v=v5">
-<link rel="stylesheet" href="../assets/css/account.css?v=v5">
-<link rel="stylesheet" href="../assets/css/navigation.css?v=v5">
-<link rel="stylesheet" href="../assets/css/profile.css?v=v5">
-<link rel="stylesheet" href="../assets/css/grid.css?v=v5">
-<link rel="stylesheet" href="../assets/css/responsive.css?v=v5">
+<link rel="stylesheet" href="../assets/css/base.css?v=v6">
+<link rel="stylesheet" href="../assets/css/layout.css?v=v6">
+<link rel="stylesheet" href="../assets/css/components.css?v=v6">
+<link rel="stylesheet" href="../assets/css/market.css?v=v6">
+<link rel="stylesheet" href="../assets/css/features.css?v=v6">
+<link rel="stylesheet" href="../assets/css/auth.css?v=v6">
+<link rel="stylesheet" href="../assets/css/deal-bot.css?v=v6">
+<link rel="stylesheet" href="../assets/css/deal-views.css?v=v6">
+<link rel="stylesheet" href="../assets/css/deal-cards.css?v=v6">
+<link rel="stylesheet" href="../assets/css/deal-orders.css?v=v6">
+<link rel="stylesheet" href="../assets/css/deal-room.css?v=v6">
+<link rel="stylesheet" href="../assets/css/account.css?v=v6">
+<link rel="stylesheet" href="../assets/css/navigation.css?v=v6">
+<link rel="stylesheet" href="../assets/css/profile.css?v=v6">
+<link rel="stylesheet" href="../assets/css/grid.css?v=v6">
+<link rel="stylesheet" href="../assets/css/responsive.css?v=v6">
 </head>
 <body class="auth-body">
 
 <!-- 共用頁殼：導覽列 -->
 <div id="site-header" data-page="login" data-search="off"></div>
-<script src="../assets/js/app/00-shell.js?v=v5"></script>
+<script src="../assets/js/app/00-shell.js?v=v6"></script>
 
 <section class="auth">
   <div class="wrap auth__wrap">
@@ -37,10 +37,14 @@
     <div class="auth__aside">
       <span class="eyebrow">一支釣</span>
       <h1>今天釣到什麼，<br>就賣什麼。</h1>
-      <p class="lead">個人釣客上網販售當日現流漁獲，買家為一般個人消費者，隔日清晨低溫直送。</p>
+      <p class="lead">個人釣客上網販售當日漁獲，買家為一般個人消費者。</p>
       <div class="auth__points">
-        <div><b>釣客</b>上架今日漁獲、參考澎湖魚市行情定價</div>
-        <div><b>買家</b>依魚類與地區篩選、與釣客聊聊後下單</div>
+        <div><b>釣客</b>上架今日漁獲、參考官方行情定價</div>
+        <div><b>買家</b>依魚類與地區篩選、與釣客洽談後成立訂單</div>
+      </div>
+      <div class="auth__legal">
+        <p>販賣魚貨（一支釣）需依照法規申請相關合法證照；未申請可依法開罰新臺幣三萬元以上三十萬元以下罰鍰。</p>
+        <p>參考：<a href="https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode=M0050001" target="_blank" rel="noopener">漁業法</a></p>
       </div>
     </div>
 
@@ -73,6 +77,35 @@
           <label>暱稱 <span class="req">*</span></label>
           <input class="input" type="text" id="rg-nick" placeholder="請輸入你的名字（買家或賣家皆同）" autocomplete="nickname">
           <div class="field-err" id="e-rg-nick">請填寫暱稱（2–20 字）</div>
+        </div>
+        <div class="field" id="f-rg-city">
+          <label>縣市 <span class="req">*</span></label>
+          <select class="input" id="rg-city" required>
+            <option value="">請選擇縣市</option>
+            <option value="基隆市">基隆市</option>
+            <option value="台北市">台北市</option>
+            <option value="新北市">新北市</option>
+            <option value="桃園市">桃園市</option>
+            <option value="新竹市">新竹市</option>
+            <option value="新竹縣">新竹縣</option>
+            <option value="苗栗縣">苗栗縣</option>
+            <option value="台中市">台中市</option>
+            <option value="彰化縣">彰化縣</option>
+            <option value="南投縣">南投縣</option>
+            <option value="雲林縣">雲林縣</option>
+            <option value="嘉義市">嘉義市</option>
+            <option value="嘉義縣">嘉義縣</option>
+            <option value="台南市">台南市</option>
+            <option value="高雄市">高雄市</option>
+            <option value="屏東縣">屏東縣</option>
+            <option value="宜蘭縣">宜蘭縣</option>
+            <option value="花蓮縣">花蓮縣</option>
+            <option value="台東縣">台東縣</option>
+            <option value="澎湖縣">澎湖縣</option>
+            <option value="金門縣">金門縣</option>
+            <option value="連江縣">連江縣</option>
+          </select>
+          <div class="field-err" id="e-rg-city">請選擇縣市</div>
         </div>
         <div class="field" id="f-rg-phone">
           <label>電話號碼 <span class="req">*</span></label>
@@ -110,17 +143,17 @@
 
 
 
-<script src="../assets/js/config.js?v=v5"></script>
-<script src="../assets/js/api/client.js?v=v5"></script>
-<script src="../assets/js/api/auth.js?v=v5"></script>
-<script src="../assets/js/api/species.js?v=v5"></script>
-<script src="../assets/js/app/02-account.js?v=v5"></script>
-<script src="../assets/js/app/03-ui.js?v=v5"></script>
-<script type="module" src="../assets/js/demo/main.js?v=v5"></script>
-<script src="../assets/js/app/06-drawer.js?v=v5"></script>
-<script src="../assets/js/app/07-drawer-panels.js?v=v5"></script>
-<script src="../assets/js/app/08-api-init.js?v=v5"></script>
-<script src="../assets/js/app/10-trade-history.js?v=v5"></script>
-<script src="../assets/js/pages/login.js?v=v5"></script>
+<script src="../assets/js/config.js?v=v6"></script>
+<script src="../assets/js/api/client.js?v=v6"></script>
+<script src="../assets/js/api/auth.js?v=v6"></script>
+<script src="../assets/js/api/species.js?v=v6"></script>
+<script src="../assets/js/app/02-account.js?v=v6"></script>
+<script src="../assets/js/app/03-ui.js?v=v6"></script>
+<script type="module" src="../assets/js/demo/main.js?v=v6"></script>
+<script src="../assets/js/app/06-drawer.js?v=v6"></script>
+<script src="../assets/js/app/07-drawer-panels.js?v=v6"></script>
+<script src="../assets/js/app/08-api-init.js?v=v6"></script>
+<script src="../assets/js/app/10-trade-history.js?v=v6"></script>
+<script src="../assets/js/pages/login.js?v=v6"></script>
 </body>
 </html>

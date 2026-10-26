@@ -6,6 +6,7 @@ const jsonServer = require("json-server");
 const { setDb } = require("./lib/store");
 const { seedMarketMappings } = require("./lib/market/bootstrap");
 const { normalizeProductData } = require("./lib/product-data");
+const { fillMissingCities } = require("./lib/user-bootstrap");
 
 const DB_FILE = process.env.FISHMATCH_DB || path.join(__dirname, "db.json");
 
@@ -13,6 +14,7 @@ const app = jsonServer.create();
 const router = jsonServer.router(DB_FILE);
 setDb(router.db);
 seedMarketMappings();
+fillMissingCities();
 normalizeProductData();
 
 app.use(function (req, res, next) {

@@ -13,4 +13,4 @@ function normalizeRegion(value) {
   return CITIES.indexOf(text) === -1 ? "" : text;
 }
 
-module.exports = { normalizeRegion: normalizeRegion };
+module.exports = { CITIES: CITIES, normalizeRegion: normalizeRegion };

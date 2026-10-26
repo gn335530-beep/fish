@@ -9,6 +9,7 @@ import { renderInbox } from "./views/inbox.js";
 import { escapeHtml } from "./views/html.js";
 import { startPolling, pollNow } from "./poll.js";
 import { initFlow, ensureRoom, submitText, submitPhoto } from "./flow.js";
+import { initListingActions } from "./listing-actions.js";
 import { initActions, handleAction, startDeal } from "./actions.js";
 import { handleFieldInput, handleAddonSelect } from "./deal-actions.js";
 import { handleCancelReason } from "./deal-replies.js";
@@ -41,6 +42,8 @@ initActions({
   notify: notify,
   scrollEnd: function () { panel.scrollToEnd(true); }
 });
+
+initListingActions({ render: render, notify: notify });
 
 function statusText() {
   if (!state.user) return "未登入";
@@ -145,9 +148,9 @@ async function boot() {
   }
 }
 
-window.FISHMATCH_BUILD = "v5";
+window.FISHMATCH_BUILD = "v6";
 if (window.console && console.info) {
-  console.info("[FishMatch] build v5 · API " + (window.HaisenAPI ? window.HaisenAPI.BASE : "未載入"));
+  console.info("[FishMatch] build v6 · API " + (window.HaisenAPI ? window.HaisenAPI.BASE : "未載入"));
 }
 
 window.FishMatchBot = {

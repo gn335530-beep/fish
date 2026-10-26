@@ -9,10 +9,10 @@ import {
 test.beforeEach(resetFixture);
 
 test("修改重量後重新查行情，避免參考金額過期", async function () {
-  const started = await service.handleText(null, "我要賣花枝 3公斤 2尾 放血冰鎮", { city: "高雄市" });
-  const quoted = await service.handlePhoto(started.context, "/uploads/a.jpg", { city: "高雄市" });
+  const started = await service.handleText(null, "我要賣花枝 3公斤 2尾 放血冰鎮", { city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" });
+  const quoted = await service.handlePhoto(started.context, "/uploads/a.jpg", { city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" });
   resetCalls();
-  const edited = await service.handleText(quoted.context, "4 公斤", { city: "高雄市" });
+  const edited = await service.handleText(quoted.context, "4 公斤", { city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" });
   assert.equal(edited.context.draft.weight_kg, 4);
   assert.equal(marketCalls().length, 2);
   const card = cardOf(edited);
@@ -39,12 +39,12 @@ test("修改魚種後立刻用新魚種重新送行情卡", async function () {
   const started = await service.handleText(
     null,
     "我要賣花枝 3公斤 2尾 放血冰鎮 每台斤 200",
-    { city: "高雄市" }
+    { city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" }
   );
-  const quoted = await service.handlePhoto(started.context, "/uploads/a.jpg", { city: "高雄市" });
+  const quoted = await service.handlePhoto(started.context, "/uploads/a.jpg", { city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" });
   const editContext = editing.beginEdit(quoted.context, "fish_species").context;
   resetCalls();
-  const edited = await service.handleText(editContext, "海鱸", { city: "高雄市" });
+  const edited = await service.handleText(editContext, "海鱸", { city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" });
   const card = cardOf(edited);
   assert.equal(card.species_id, "seabass");
   assert.equal(card.species_name, "海鱸");
