@@ -50,7 +50,7 @@ function invalidateQuote(found) {
 export async function advance(ctx, user) {
   const missing = missingNonPriceSlots(ctx.draft);
   if (missing.length) {
-    return { context: ctx, replies: [{ text: QUESTIONS[nextMissingSlot(ctx.draft)] }] };
+    return { context: ctx, replies: [{ text: batchFollowupPrompt(missing) }] };
   }
 
   const replies = [];

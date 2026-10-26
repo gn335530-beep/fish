@@ -38,19 +38,13 @@ export function requestConsent(context, text) {
   };
 }
 
-/* 確認成功後清掉等待狀態，並用使用者原本那句話重新進入上架。 */
-export async function resumeAfterConsent(context, user) {
-  const source = (context && context.pending_sale_text) || "我要賣魚";
-  const base = Object.assign({}, normalize(context), {
-    mode: "idle",
-    draft: null,
-    pending_sale_text: null,
-    awaiting_consent: false
-  });
-  const result = await startListing(source, user, base);
+/* 確認成功後清空舊對話與草稿，重新從「想賣什麼魚」開始問。 */
+export async function resumeAfterConsent(user) {
+  const result = await startListing("", user, resetContext());
   return {
     context: result.context,
-    replies: [{ text: "已確認，請依序告訴我缺少的欄位。" }].concat(result.replies)
+    replies: result.replies,
+    clear_history: true
   };
 }
 

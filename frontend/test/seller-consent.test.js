@@ -53,17 +53,16 @@ test("已確認的使用者直接進入上架，不再顯示法規卡", async fu
   assert.equal(result.context.draft.fish_species, "花枝");
 });
 
-test("確認後清掉待販賣狀態，並用原始句子接回上架", async function () {
-  const asked = await service.handleText(null, "我要賣花枝", { city: "高雄市" });
-  const result = await service.resumeAfterConsent(asked.context, {
+test("確認後清掉待販賣狀態，先問想賣什麼魚類", async function () {
+  const result = await service.resumeAfterConsent({
     city: "高雄市",
     seller_terms_accepted_at: "2026-10-27T00:00:00.000Z"
   });
   assert.equal(result.context.pending_sale_text, null);
   assert.equal(result.context.awaiting_consent, false);
-  assert.equal(result.context.draft.fish_species, "花枝");
-  assert.match(textOf(result), /已確認/);
-  assert.match(textOf(result), /重量|尾數|處理方式|照片/);
+  assert.equal(result.context.draft.fish_species, "");
+  assert.equal(result.clear_history, true);
+  assert.equal(textOf(result), "請問想要販售什麼魚類？");
 });
 
 test("取消法規確認回到 idle，不建立草稿", function () {

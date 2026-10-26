@@ -24,39 +24,50 @@ function textOf(result) {
   return result.replies.map(function (reply) { return reply.text || ""; }).join("\n");
 }
 
-test("說要賣花枝時列出重量、尾數、處理方式與照片，不問價格", async function () {
+test("說要賣花枝時一次問重量、處理方式與照片，不用還需要", async function () {
   const result = await service.handleText(null, "我要賣花枝", USER);
   const text = textOf(result);
-  assert.match(text, /重量/);
-  assert.match(text, /尾數/);
-  assert.match(text, /處理方式/);
-  assert.match(text, /照片/);
-  assert.doesNotMatch(text, /魚種/);
+  assert.equal(
+    text,
+    "請問你要販售魚種的重量、處理方式，與一張商品照片（可以一次告訴我）。處理方式例如：活體、放血冰鎮。"
+  );
+  assert.doesNotMatch(text, /還需要/);
   assert.doesNotMatch(text, /價格|多少錢|售價/);
 });
 
-test("還沒說魚種時把魚種也列進第一批追問", async function () {
+test("還沒說魚種時只問想賣什麼魚類", async function () {
   const result = await service.handleText(null, "我要賣魚", USER);
   const text = textOf(result);
-  assert.match(text, /魚種/);
-  assert.match(text, /重量/);
-  assert.match(text, /尾數/);
-  assert.match(text, /處理方式/);
-  assert.match(text, /照片/);
+  assert.match(text, /請問想要販售什麼魚類/);
+  assert.doesNotMatch(text, /重量|尾數|處理方式|照片/);
   assert.doesNotMatch(text, /價格|多少錢|售價/);
 });
 
-test("未知魚種保留原字串，不再追問魚種", async function () {
+test("回完魚種後才問重量、處理方式與照片", async function () {
+  const started = await service.handleText(null, "我要賣魚", USER);
+  assert.equal(textOf(started), "請問想要販售什麼魚類？");
+  assert.equal(started.context.draft.fish_species, "");
+
+  const answered = await service.handleText(started.context, "花枝", USER);
+  assert.equal(answered.context.draft.fish_species, "花枝");
+  assert.equal(
+    textOf(answered),
+    "請問你要販售魚種的重量、處理方式，與一張商品照片（可以一次告訴我）。處理方式例如：活體、放血冰鎮。"
+  );
+  assert.doesNotMatch(textOf(answered), /還需要/);
+});
+
+test("未知魚種保留原字串，接著問其他欄位", async function () {
   const result = await service.handleText(null, "我要賣鮭魚", USER);
   assert.equal(result.context.draft.fish_species, "鮭魚");
-  assert.doesNotMatch(textOf(result), /魚種/);
   assert.match(textOf(result), /重量/);
 });
 
 test("第一次已補齊非價格欄位時只追照片，不問價格", async function () {
   const result = await service.handleText(null, "我要賣花枝 3公斤 2尾 放血冰鎮", USER);
   const text = textOf(result);
-  assert.match(text, /還需要一張照片/);
+  assert.match(text, /商品照片/);
+  assert.doesNotMatch(text, /還需要/);
   assert.doesNotMatch(text, /價格|多少錢|售價/);
 });
 

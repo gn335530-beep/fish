@@ -86,3 +86,26 @@ test("助手房摘要標記可刪除", async function () {
   const room = await createAssistant();
   assert.equal(room.body.data.deletable, true);
 });
+
+test("清除對話只保留指定序號之後的訊息", async function () {
+  const room = await createAssistant();
+  const id = room.body.data.id;
+  await call("POST", "/api/chat/message", {
+    token: tokens.buyer,
+    body: { conversation_id: id, text: "我要賣魚" }
+  });
+  const question = await call("POST", "/api/chat/message", {
+    token: tokens.buyer,
+    body: { conversation_id: id, sender_type: "ai", text: "請問想要販售什麼魚類？" }
+  });
+
+  const cleared = await call("POST", "/api/conversations/" + id + "/clear", {
+    token: tokens.buyer,
+    body: { keep_from_seq: question.body.data.seq }
+  });
+  assert.equal(cleared.status, 200);
+
+  const messages = await call("GET", "/api/conversations/" + id + "/messages", { token: tokens.buyer });
+  assert.equal(messages.body.data.length, 1);
+  assert.equal(messages.body.data[0].text, "請問想要販售什麼魚類？");
+});
