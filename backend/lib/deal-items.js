@@ -1,7 +1,8 @@
 /* 訂單項目：商品快照、尾數與金額；金額一律由項目重算。 */
 
 const { patch } = require("./store");
-const { itemsOf } = require("./orders");
+const { itemsOf, systemMessage } = require("./orders");
+const { requireQuantity, insufficientQuantity } = require("./quantities");
 
 function itemSubtotal(item) {
   return Math.round(Number(item.unit_price || 0) * Number(item.quantity || 0));
@@ -64,6 +65,30 @@ function addItem(deal, product, quantity) {
   return writeItems(deal, items);
 }
 
+/* 加購與首次建立共用：驗證尾數與草稿累計；回傳可加入的尾數或 null。 */
+function requireAddableQuantity(deal, stock, value, res, shortMessage) {
+  const quantity = requireQuantity(value, res);
+  if (quantity === null) return null;
+
+  const inDraft = quantityOf(deal, stock.product.id);
+  if (inDraft + quantity > stock.available) {
+    insufficientQuantity(res,
+      shortMessage || "「" + stock.decorated.title + "」可售 " + stock.available +
+        " 尾，訂單已有 " + inDraft + " 尾",
+      { product_id: stock.product.id, available: stock.available, in_draft: inDraft });
+    return null;
+  }
+  return quantity;
+}
+
+/* 驗證通過後寫入項目並留下同一則系統訊息。 */
+function addWithMessage(deal, stock, quantity) {
+  const updated = addItem(deal, stock.decorated, quantity);
+  systemMessage(deal.conversation_id,
+    "已將「" + stock.decorated.title + "」" + quantity + " 尾加入訂單草稿。");
+  return updated;
+}
+
 function itemOf(deal, itemId) {
   return itemsOf(deal).find(function (item) {
     return String(item.item_id) === String(itemId);
@@ -95,6 +120,8 @@ module.exports = {
   itemsTotal: itemsTotal,
   quantityOf: quantityOf,
   addItem: addItem,
+  requireAddableQuantity: requireAddableQuantity,
+  addWithMessage: addWithMessage,
   itemOf: itemOf,
   setItemQuantity: setItemQuantity,
   removeItem: removeItem,

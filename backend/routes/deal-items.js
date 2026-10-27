@@ -2,7 +2,8 @@
 
 const express = require("express");
 const { requireUser } = require("../lib/auth");
-const { productAvailability, systemMessage } = require("../lib/orders");
+const { productAvailability } = require("../lib/orders");
+const { requireQuantity, insufficientQuantity } = require("../lib/quantities");
 const deals = require("../lib/deals");
 const dealItems = require("../lib/deal-items");
 const { ok, created, fail } = require("../lib/http");
@@ -34,27 +35,10 @@ router.post("/api/deals/items", requireUser, function (req, res) {
     return;
   }
 
-  const quantity = Math.floor(Number(body.quantity));
-  if (!(quantity >= 1)) {
-    fail(res, 400, "INVALID_QUANTITY", "尾數必須大於等於 1");
-    return;
-  }
+  const quantity = dealItems.requireAddableQuantity(deal, stock, body.quantity, res);
+  if (quantity === null) return;
 
-  const inDraft = dealItems.quantityOf(deal, stock.product.id);
-  if (inDraft + quantity > stock.available) {
-    fail(res, 409, "INSUFFICIENT_QUANTITY",
-      "「" + stock.decorated.title + "」可售 " + stock.available + " 尾，訂單已有 " + inDraft + " 尾", {
-        product_id: stock.product.id,
-        available: stock.available,
-        in_draft: inDraft
-      });
-    return;
-  }
-
-  const updated = dealItems.addItem(deal, stock.decorated, quantity);
-  systemMessage(deal.conversation_id,
-    "已將「" + stock.decorated.title + "」" + quantity + " 尾加入訂單草稿。");
-
+  const updated = dealItems.addWithMessage(deal, stock, quantity);
   created(res, { deal: deals.decorateDeal(updated) }, "已加入訂單");
 });
 
@@ -69,11 +53,8 @@ router.patch("/api/deals/items/:itemId", requireUser, function (req, res) {
     return;
   }
 
-  const quantity = Math.floor(Number((req.body || {}).quantity));
-  if (!(quantity >= 1)) {
-    fail(res, 400, "INVALID_QUANTITY", "尾數必須大於等於 1");
-    return;
-  }
+  const quantity = requireQuantity((req.body || {}).quantity, res);
+  if (quantity === null) return;
 
   const stock = productAvailability(item.product_id);
   if (!stock) {
@@ -81,7 +62,7 @@ router.patch("/api/deals/items/:itemId", requireUser, function (req, res) {
     return;
   }
   if (quantity > stock.available) {
-    fail(res, 409, "INSUFFICIENT_QUANTITY",
+    insufficientQuantity(res,
       "「" + item.title + "」可售 " + stock.available + " 尾，無法改成 " + quantity + " 尾", {
         item_id: item.item_id,
         product_id: item.product_id,

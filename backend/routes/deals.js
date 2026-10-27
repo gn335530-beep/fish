@@ -3,7 +3,7 @@
 const express = require("express");
 const { all, findById, patch } = require("../lib/store");
 const { requireUser } = require("../lib/auth");
-const { decorateProduct, itemsOf, systemMessage, sweepExpired } = require("../lib/orders");
+const { productAvailability, systemMessage, sweepExpired } = require("../lib/orders");
 const { summary } = require("../lib/conversations");
 const deals = require("../lib/deals");
 const dealItems = require("../lib/deal-items");
@@ -67,26 +67,13 @@ router.post("/api/deals/initiate-channel", requireUser, function (req, res) {
     return;
   }
 
-  const quantity = Math.floor(Number(body.quantity));
-  if (!(quantity >= 1)) {
-    fail(res, 400, "INVALID_QUANTITY", "尾數必須大於等於 1");
-    return;
-  }
-
-  const decorated = decorateProduct(product, all("deals"));
+  const stock = productAvailability(product.id);
   let conversation = deals.findConversation(req.user.id, product.seller_id);
   let deal = conversation ? deals.draftOf(conversation.id) : null;
-  const inDraft = dealItems.quantityOf(deal, product.id);
 
   /* 草稿不保留庫存，但同一筆草稿加起來不得超過目前可售。 */
-  if (inDraft + quantity > decorated.available) {
-    fail(res, 409, "INSUFFICIENT_QUANTITY", "可售尾數不足", {
-      product_id: product.id,
-      available: decorated.available,
-      in_draft: inDraft
-    });
-    return;
-  }
+  const quantity = dealItems.requireAddableQuantity(deal, stock, body.quantity, res, "可售尾數不足");
+  if (quantity === null) return;
 
   const now = new Date().toISOString();
   const createdRoom = !conversation;
@@ -98,16 +85,14 @@ router.post("/api/deals/initiate-channel", requireUser, function (req, res) {
   }
 
   if (!deal) deal = deals.createDeal(conversation, req.user.id, now);
-  deal = dealItems.addItem(deal, decorated, quantity);
-
   if (createdRoom) systemMessage(conversation.id, "已進入交易洽談。");
-  systemMessage(conversation.id, "已將「" + decorated.title + "」" + quantity + " 尾加入訂單草稿。");
+  deal = dealItems.addWithMessage(deal, stock, quantity);
   conversation = findById("conversations", conversation.id);
 
   ok(res, {
     conversation: summary(conversation, req.user),
     deal: deals.decorateDeal(deal),
-    product: decorated
+    product: stock.decorated
   }, "已開啟交易房");
 });
 

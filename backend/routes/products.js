@@ -6,8 +6,10 @@ const { requireUser } = require("../lib/auth");
 const { decorateProduct, decorateProducts, sweepExpired } = require("../lib/orders");
 const species = require("../lib/species");
 const market = require("../lib/market/service");
-const { round1, buildTitle } = require("../lib/product-title");
+const { round1 } = require("../lib/round");
+const { buildTitle } = require("../lib/product-title");
 const { normalizeRegion } = require("../lib/regions");
+const { requireQuantity } = require("../lib/quantities");
 const { ok, created, fail } = require("../lib/http");
 
 const router = express.Router();
@@ -120,7 +122,6 @@ router.get("/api/products/:id", function (req, res) {
 router.post("/api/products/create", requireUser, async function (req, res) {
   const body = req.body || {};
   const fishSpecies = String(body.fish_species || "").trim();
-  const quantity = Math.floor(Number(body.quantity));
   const weightKg = Number(body.weight_kg);
   const weight = round1(weightKg);
   const condition = String(body.condition || "").trim();
@@ -134,10 +135,8 @@ router.post("/api/products/create", requireUser, async function (req, res) {
     fail(res, 400, "INVALID_WEIGHT", "重量必須大於 0 公斤");
     return;
   }
-  if (!(quantity >= 1)) {
-    fail(res, 400, "INVALID_QUANTITY", "尾數必須大於等於 1");
-    return;
-  }
+  const quantity = requireQuantity(body.quantity, res);
+  if (quantity === null) return;
   if (!condition) {
     fail(res, 400, "MISSING_CONDITION", "請描述處理方式");
     return;

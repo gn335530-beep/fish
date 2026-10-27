@@ -2,12 +2,9 @@
 
 const repository = require("./repository");
 const mappings = require("./mappings");
+const { round1 } = require("../round");
 
 const KG_PER_TAIJIN = 0.6;
-
-function round1(value) {
-  return Math.round(value * 10) / 10;
-}
 
 function taijinPrice(pricePerKg) {
   return round1(pricePerKg * KG_PER_TAIJIN);
@@ -108,6 +105,5 @@ function buildResult(options) {
 
 module.exports = {
   buildResult: buildResult,
-  averageRows: averageRows,
-  round1: round1
+  averageRows: averageRows
 };

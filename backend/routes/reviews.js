@@ -4,7 +4,7 @@ const express = require("express");
 const { all, findById, insert, patch, nextCode } = require("../lib/store");
 const { requireUser, publicUser } = require("../lib/auth");
 const {
-  REVIEW_TAGS, NO_SHOW_TAG, reviewsFor, recomputeUser, reviewStatusOf, syncReviewCard
+  REVIEW_TAGS, NO_SHOW_TAG, reviewsFor, averageRating, recomputeUser, reviewStatusOf, syncReviewCard
 } = require("../lib/reviews");
 const deals = require("../lib/deals");
 const { ok, created, fail } = require("../lib/http");
@@ -89,8 +89,7 @@ router.get("/api/reviews", function (req, res) {
   }
 
   const rows = reviewsFor(user.id);
-  const count = rows.length;
-  const total = rows.reduce(function (sum, review) { return sum + Number(review.rating || 0); }, 0);
+  const average = averageRating(rows);
   const limit = Math.min(Number(req.query.limit) || 20, 50);
   const reviews = rows
     .sort(function (a, b) { return new Date(b.created_at) - new Date(a.created_at); })
@@ -109,8 +108,8 @@ router.get("/api/reviews", function (req, res) {
 
   ok(res, {
     user_id: user.id,
-    rating_score: count ? Math.round((total / count) * 10) / 10 : 0,
-    review_count: count,
+    rating_score: average.score,
+    review_count: average.count,
     reviews: reviews
   }, "取得評價成功");
 });

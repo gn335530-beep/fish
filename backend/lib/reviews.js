@@ -2,6 +2,8 @@
 
 const { all, findById, patch } = require("./store");
 const { cardMessage } = require("./orders");
+const { syncLatestCard } = require("./cards");
+const { round1 } = require("./round");
 
 const REVIEW_TAGS = ["準時守約", "魚貨新鮮", "溝通良好", "包裝完善", "臨時放鳥"];
 const NO_SHOW_TAG = "臨時放鳥";
@@ -12,18 +14,24 @@ function reviewsFor(userId) {
   });
 }
 
+/* 平均星等：公開列表與重算使用者共用同一份換算。 */
+function averageRating(rows) {
+  const count = rows.length;
+  if (!count) return { count: 0, score: 0 };
+  const total = rows.reduce(function (sum, review) { return sum + Number(review.rating || 0); }, 0);
+  return { count: count, score: round1(total / count) };
+}
+
 /* 用全部評價重算星等與評價數；未到次數只累加，不因重算而減少。 */
 function recomputeUser(userId, addNoShow) {
   const rows = reviewsFor(userId);
-  const count = rows.length;
-  const total = rows.reduce(function (sum, review) { return sum + Number(review.rating || 0); }, 0);
-  const score = count ? Math.round((total / count) * 10) / 10 : 0;
+  const average = averageRating(rows);
   const user = findById("users", userId);
   const noShow = Number(user && user.no_show_count || 0) + (addNoShow ? 1 : 0);
 
   return patch("users", userId, {
-    rating_score: score,
-    review_count: count,
+    rating_score: average.score,
+    review_count: average.count,
     no_show_count: noShow,
     is_blacklisted: noShow >= 3
   });
@@ -51,17 +59,9 @@ function reviewCardMessage(deal) {
 
 /* 只更新最新的評價卡，較早的卡留作歷史。 */
 function syncReviewCard(dealId, status) {
-  const cards = all("messages").filter(function (message) {
-    return message.card && message.card.type === "review"
-      && String(message.card.deal_id) === String(dealId);
-  });
-  cards.sort(function (a, b) { return Number(b.seq) - Number(a.seq); });
-  if (!cards.length) return;
-  patch("messages", cards[0].id, {
-    card: Object.assign({}, cards[0].card, {
-      buyer_reviewed: !!status.buyer_reviewed,
-      seller_reviewed: !!status.seller_reviewed
-    })
+  return syncLatestCard(dealId, "review", {
+    buyer_reviewed: !!status.buyer_reviewed,
+    seller_reviewed: !!status.seller_reviewed
   });
 }
 
@@ -69,6 +69,7 @@ module.exports = {
   REVIEW_TAGS: REVIEW_TAGS,
   NO_SHOW_TAG: NO_SHOW_TAG,
   reviewsFor: reviewsFor,
+  averageRating: averageRating,
   recomputeUser: recomputeUser,
   reviewStatusOf: reviewStatusOf,
   reviewCardMessage: reviewCardMessage,
