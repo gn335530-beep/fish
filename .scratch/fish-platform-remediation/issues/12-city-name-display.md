@@ -4,10 +4,14 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] 登入彈窗顯示「台北市」，與登入頁選項一致。
-- [ ] 顯示層套用既有的縣市正規化，不改 `db.json`。
-- [ ] 其他縣市與既有測試不受影響；`npm test` 全綠。
+- [x] 登入彈窗顯示「台北市」，與登入頁選項一致。
+- [x] 顯示層套用既有的縣市正規化，不改 `db.json`。
+- [x] 其他縣市與既有測試不受影響；`npm test` 全綠。
 
 **Source:** `.scratch/fish-platform/remediation-plan.md` 的「D3」。
+
+## Comments
+
+2026-10-27 完成。登入頁載入既有的 `app/04-regions.js`，`finish()` 以 `normalizeCityName(city)` 顯示縣市，API 回傳的「臺北市」會顯示為「台北市」。未修改 `db.json`。`frontend/test/login-page.test.js` 新增正規化與載入檢查。

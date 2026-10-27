@@ -83,7 +83,7 @@ test("問句指定縣市時覆蓋個人檔案縣市", async function () {
 test("指定縣市無資料時說明改用全國平均", async function () {
   market = found({ scope: "national", region: "澎湖縣", price_per_kg: 50, price_per_taijin: 30 });
   const text = textOf(await handleText(null, "澎湖縣石斑多少錢", { city: "高雄市" }));
-  assert.match(text, /澎湖縣目前沒有資料，改以全國平均/);
+  assert.match(text, /澎湖縣暫無行情，改以全國平均/);
   assert.match(text, /30 元／台斤/);
   assert.match(text, /全國平均/);
 });
@@ -104,17 +104,17 @@ test("養殖魚種回覆含養殖價格", async function () {
   assert.match(text, /養殖價格/);
 });
 
-test("查無交易資料時只說沒有行情，不出現價格數字", async function () {
+test("查無交易資料時回暫無行情，不出現價格數字", async function () {
   market = { found: false, reason: "NO_TRADE_DATA" };
   const text = textOf(await handleText(null, "石斑現在多少錢", { city: "高雄市" }));
-  assert.match(text, /目前沒有今天的石斑行情/);
+  assert.equal(text, "暫無行情");
   assert.doesNotMatch(text, /\d|元／|大約/);
 });
 
-test("上游失敗時說暫時無法取得行情", async function () {
+test("上游失敗時也回暫無行情", async function () {
   market = { found: false, reason: "UPSTREAM_UNAVAILABLE" };
   const text = textOf(await handleText(null, "石斑現在多少錢", { city: "高雄市" }));
-  assert.match(text, /暫時無法取得石斑的行情/);
+  assert.equal(text, "暫無行情");
   assert.doesNotMatch(text, /\d|元／/);
 });
 
@@ -124,16 +124,16 @@ test("沒有指定魚種時請使用者補充，不呼叫行情 API", async func
   assert.equal(marketCalls().length, 0);
 });
 
-test("未知魚種不呼叫行情 API，也不給數字", async function () {
+test("未知魚種不呼叫行情 API，回暫無行情", async function () {
   const text = textOf(await handleText(null, "白鯧現在多少錢", { city: "高雄市" }));
-  assert.match(text, /目前沒有白鯧的行情/);
+  assert.equal(text, "暫無行情");
   assert.equal(marketCalls().length, 0);
   assert.doesNotMatch(text, /\d|元／|大約/);
 });
 
 test("未知魚種前有縣市時，不會把縣市當成魚名", async function () {
   const text = textOf(await handleText(null, "澎湖縣白鯧現在多少錢", { city: "高雄市" }));
-  assert.match(text, /目前沒有白鯧的行情/);
+  assert.equal(text, "暫無行情");
   assert.doesNotMatch(text, /澎湖縣白鯧/);
   assert.equal(marketCalls().length, 0);
 });
@@ -144,15 +144,15 @@ test("只說最近行情時請使用者補充魚種", async function () {
   assert.equal(marketCalls().length, 0);
 });
 
-test("已對照但無行情時說沒有行情", async function () {
+test("已對照但無行情時回暫無行情", async function () {
   market = { found: false, reason: "NO_MAPPING" };
   const text = textOf(await handleText(null, "石斑現在多少錢", { city: "高雄市" }));
-  assert.match(text, /目前沒有石斑的行情/);
+  assert.equal(text, "暫無行情");
   assert.doesNotMatch(text, /\d|元／/);
 });
 
-test("行情 API 連線失敗時說暫時無法取得", async function () {
+test("行情 API 連線失敗時也回暫無行情", async function () {
   market = new Error("network");
   const text = textOf(await handleText(null, "石斑現在多少錢", { city: "高雄市" }));
-  assert.match(text, /暫時無法取得石斑的行情/);
+  assert.equal(text, "暫無行情");
 });

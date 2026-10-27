@@ -67,13 +67,14 @@ function validateRegister(){
 
 /* 送出 */
 function finish(kind, nick, phone, city){
+  const shownCity = city ? normalizeCityName(city) : "—";
   document.getElementById("auth-modal-ic").textContent = kind === "register" ? "Account Created" : "Welcome Back";
   document.getElementById("auth-modal-title").textContent = kind === "register" ? "帳號已建立" : "登入成功";
   document.getElementById("auth-modal-text").textContent = "歡迎回來，" + (nick || "朋友") + "。前往首頁開始選購或上架。";
   document.getElementById("auth-summary").innerHTML =
     `<div><span>暱稱</span><b>${nick || "—"}</b></div>
      <div><span>電話</span><b>${phone}</b></div>
-     <div><span>縣市</span><b>${city || "—"}</b></div>`;
+     <div><span>縣市</span><b>${shownCity}</b></div>`;
   document.getElementById("auth-go").setAttribute("href", "index.html");
   document.getElementById("auth-go").textContent = "前往首頁";
   document.getElementById("auth-modal").classList.add("show");

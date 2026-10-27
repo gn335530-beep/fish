@@ -3,10 +3,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import vm from "node:vm";
 
 const html = fs.readFileSync(new URL("../pages/login.html", import.meta.url), "utf8");
 const script = fs.readFileSync(new URL("../assets/js/pages/login.js", import.meta.url), "utf8");
 const apiAuth = fs.readFileSync(new URL("../assets/js/api/auth.js", import.meta.url), "utf8");
+const regions = fs.readFileSync(new URL("../assets/js/app/04-regions.js", import.meta.url), "utf8");
 
 test("註冊表單有必填縣市欄位", function () {
   assert.match(html, /id="rg-city"[^>]*required/);
@@ -15,6 +17,15 @@ test("註冊表單有必填縣市欄位", function () {
   assert.match(script, /rg-city/);
   assert.match(script, /city: city/);
   assert.match(apiAuth, /city: p\.city/);
+});
+
+test("登入彈窗縣市套用臺→台正規化", function () {
+  assert.match(html, /app\/04-regions\.js/);
+  assert.match(script, /normalizeCityName\(city\)/);
+
+  const ctx = vm.createContext({});
+  vm.runInContext(regions, ctx);
+  assert.equal(vm.runInContext('normalizeCityName("臺北市")', ctx), "台北市");
 });
 
 test("兩個 tab 都看得到法規告知與漁業法連結", function () {

@@ -81,20 +81,22 @@ test("未知魚種不呼叫行情 API，顯示暫無行情仍可定價", async f
   assert.equal(cardOf(result), null);
 });
 
-test("查無行情時說目前沒有，不編造數字", async function () {
+test("查無行情時回暫無行情，不編造數字", async function () {
   setMarket({ found: false, reason: "NO_TRADE_DATA" });
   const started = await service.handleText(null, "我要賣花枝 3公斤 2尾 放血冰鎮", { city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" });
   const result = await service.handlePhoto(started.context, "/uploads/a.jpg", { city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" });
-  assert.match(textOf(result), /目前沒有花枝的行情。/);
+  assert.match(textOf(result), /暫無行情/);
+  assert.doesNotMatch(textOf(result), /沒有今天的/);
   assert.doesNotMatch(textOf(result), /\d|元／/);
   assert.match(textOf(result), /每台斤價格或整批價格/);
 });
 
-test("上游失敗時說暫時無法取得，仍可繼續定價", async function () {
+test("上游失敗時回暫無行情，仍可繼續定價", async function () {
   setMarket({ found: false, reason: "UPSTREAM_UNAVAILABLE" });
   const started = await service.handleText(null, "我要賣花枝 3公斤 2尾 放血冰鎮", { city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" });
   const result = await service.handlePhoto(started.context, "/uploads/a.jpg", { city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" });
-  assert.match(textOf(result), /暫時無法取得花枝的行情。/);
+  assert.match(textOf(result), /暫無行情/);
+  assert.doesNotMatch(textOf(result), /暫時無法取得/);
   assert.match(textOf(result), /每台斤價格或整批價格/);
 });
 

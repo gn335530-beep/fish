@@ -35,7 +35,7 @@ backend/
   server.js       啟動
   app.js          middleware、靜態目錄、路由掛載
   lib/            auth / store / orders / deals / deal-items / deal-status / reviews / conversations / species / regions / market/ / http
-  routes/         auth / products / species / chat / chat-messages / deals / deal-items / deal-proposal / deal-response / reviews / market / uploads
+  routes/         auth / products / species / chat / chat-messages / conversation-delete / deals / deal-items / deal-proposal / deal-response / reviews / market / uploads
   scripts/        market-fetch.js（行情 CLI）
   test/           node:test 整合測試（使用暫存 db.json）
   db.json         模擬資料
@@ -65,12 +65,14 @@ backend/
 | `POST` | `/api/auth/login`、`/api/auth/signin` | 登入 |
 | `GET` | `/api/auth/me` | 取得目前會員；需登入 |
 | `PUT` | `/api/users/profile` | 更新暱稱、地址與銀行資料；需登入 |
+| `POST` | `/api/users/seller-consent` | 記錄第一次販賣確認，重複呼叫不覆寫時間；需登入 |
 | `GET` | `/api/products` | 商品清單，支援 `region`、`species`、`seller_id`、`status`、`limit` |
 | `GET` | `/api/products/{id}` | 單一商品 |
 | `POST` | `/api/products/create` | 上架商品；需登入 |
 | `GET` | `/api/species` | 魚種清單（名稱、別名、分類與料理屬性） |
 | `GET` | `/api/conversations` | 目前會員的房間清單；需登入 |
-| `POST` | `/api/conversations/assistant` | 取得或建立助手房；需登入 |
+| `POST` | `/api/conversations/assistant` | 每次建立一間新的助手房；需登入 |
+| `DELETE` | `/api/conversations/{id}` | 刪除助手房或可刪的交易房；需參與者 |
 | `GET` | `/api/conversations/{id}/messages` | 房間訊息（`after_seq` 增量）；需參與者 |
 | `POST` | `/api/chat/message` | 送出訊息；需參與者 |
 | `PUT` | `/api/conversations/{id}/context` | 更新助手房 context；需參與者 |
