@@ -26,10 +26,10 @@ function dealsOf(conversationId) {
   });
 }
 
-function activeOrder(conversationId) {
-  return dealsOf(conversationId)
-    .filter(function (d) { return ACTIVE_ORDER.indexOf(d.deal_status) !== -1; })
-    .sort(function (a, b) { return new Date(b.created_at) - new Date(a.created_at); })[0] || null;
+function newestFirst(rows) {
+  return rows.slice().sort(function (a, b) {
+    return new Date(b.created_at) - new Date(a.created_at);
+  });
 }
 
 /* 助手房隨時可刪；交易房要全部訂單都已取消（因此也沒有成交歷史）。 */
@@ -48,6 +48,7 @@ function orderSummary(deal) {
     item_count: items.length,
     total_quantity: items.reduce(function (sum, item) { return sum + Number(item.quantity || 0); }, 0),
     final_price: deal.deal_terms ? Number(deal.deal_terms.final_price || 0) : Number(deal.items_total || 0),
+    review_status: deal.review_status || null,
     updated_at: deal.updated_at || deal.created_at || null
   };
 }
@@ -72,14 +73,18 @@ function unreadCount(conversation, userId) {
 
 function summary(conversation, user) {
   const messages = messagesOf(conversation.id);
-  const deal = activeOrder(conversation.id);
+  const deals = newestFirst(dealsOf(conversation.id));
+  const active = deals.filter(function (d) { return ACTIVE_ORDER.indexOf(d.deal_status) !== -1; })[0] || null;
+  const orders = deals.map(orderSummary);
   return {
     id: conversation.id,
     type: conversation.type,
     mode: conversation.mode,
     context: conversation.context,
     peer: peerOf(conversation, user.id),
-    order: deal ? orderSummary(deal) : null,
+    order: active ? orderSummary(active) : null,
+    last_order: orders[0] || null,
+    orders: orders,
     last_message: messages.length ? messages[messages.length - 1] : null,
     unread_count: unreadCount(conversation, user.id),
     deletable: isDeletable(conversation),

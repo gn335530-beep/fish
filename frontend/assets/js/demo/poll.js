@@ -36,21 +36,33 @@ export async function syncOpenRoom() {
   if (!fresh) return;
 
   const order = fresh.order || null;
-  const changed = JSON.stringify(order) !== JSON.stringify(state.room.order || null);
+  const lastOrder = fresh.last_order || null;
+  const orders = fresh.orders || [];
+  const changed = JSON.stringify(order) !== JSON.stringify(state.room.order || null) ||
+    JSON.stringify(lastOrder) !== JSON.stringify(state.room.last_order || null) ||
+    JSON.stringify(orders) !== JSON.stringify(state.room.orders || []);
   if (changed) {
     update({
       room: Object.assign({}, state.room, {
         order: order,
+        last_order: lastOrder,
+        orders: orders,
         peer: fresh.peer,
         mode: fresh.mode
       })
     });
   }
 
-  if (fresh.type !== "deal" || !order) return;
-  if (!changed && state.deal && state.deal.id === order.id) return;
+  /* 已結束的訂單不在 order 裡，last_order 的狀態或更新時間有變就重取。 */
+  if (fresh.type !== "deal" || !lastOrder) return;
+  const deal = state.deal;
+  const stale = !deal ||
+    String(deal.id) !== String(lastOrder.id) ||
+    String(deal.deal_status || "") !== String(lastOrder.status || "") ||
+    String(deal.updated_at || "") !== String(lastOrder.updated_at || "");
+  if (!stale) return;
   try {
-    update({ deal: await api.getDeal(order.id) });
+    update({ deal: await api.getDeal(lastOrder.id) });
   } catch (error) {
     /* 訂單明細載入失敗時，摘要仍然可用。 */
   }

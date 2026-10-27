@@ -52,6 +52,20 @@
 
 交易房由 `POST /api/deals/initiate-channel` 開啟，房間唯一鍵是 `buyer_id + seller_id`；同一釣客的多個商品會進同一筆草稿訂單。交易房的系統訊息會計入未讀。助手房每次 `POST /api/conversations/assistant` 都是獨立一間，有自己的 `context` 與草稿；`GET /api/conversations` 會回 `deletable` 供收件匣決定是否顯示刪除。
 
+### 對話摘要欄位
+
+`GET /api/conversations` 的每間房除了 `peer`、`last_message`、`unread_count`、`deletable`，另有訂單摘要：
+
+| 欄位 | 說明 |
+| --- | --- |
+| `order` | 進行中訂單（`DRAFT`、`PENDING_REVIEW`、`NEGOTIATING`）的摘要；已成交、取消或逾時後為 `null` |
+| `last_order` | 最新一筆訂單摘要，不限狀態；沒有訂單的助手房為 `null` |
+| `orders` | 這間房所有訂單摘要，新到舊；供評價卡等歷史卡片更新 |
+
+三者皆含 `id`、`status`、`item_count`、`total_quantity`、`final_price`、`review_status`、`updated_at`。
+
+前端每 3 秒輪詢對話清單；`last_order` 的 `id`、`status` 或 `updated_at` 改變時，會重取 `GET /api/deals/{id}`，協議卡、評價卡與房間摘要跟著目前訂單更新，不需要重開房間。已成交、已取消與已逾時的協議卡只顯示狀態，不再提供同意、退回或取消操作。
+
 ## 3. 商品回應欄位
 
 `GET /api/products`、`GET /api/products/{id}` 與建立商品都會回傳衍生欄位：

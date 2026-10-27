@@ -8,6 +8,7 @@ const { addDays, maxDate, todayIso } = require("./dates");
 const TTL_MS = 30 * 60 * 1000;
 const KEEP_DAYS = 90;
 const LATEST_WINDOW_DAYS = 14;
+const DATE_LOOKBACK_DAYS = 7;
 
 const rangeCache = new Map();
 const inFlight = new Map();
@@ -102,13 +103,15 @@ async function ensureLatest(mapping) {
   return performFetch(mapping, addDays(to, -LATEST_WINDOW_DAYS), to, { latest: true });
 }
 
+/* 指定日若無資料（週末、休市），往回抓一週補上最近交易日；查詢仍只取 <= date。 */
 async function ensureDate(mapping, date) {
   if (repository.hasPricesForDate(mapping.species_id, date)) return cachedResult("ok");
+  const from = addDays(date, -DATE_LOOKBACK_DAYS);
   const state = repository.getState(mapping.code);
-  if (stateCovers(state, date, date)) return cachedResult(state.last_status);
+  if (stateCovers(state, from, date)) return cachedResult(state.last_status);
   const entry = rangeCache.get(mapping.code);
-  if (entry && cacheCovers(entry, date, date)) return cachedResult(entry.status);
-  return performFetch(mapping, date, date);
+  if (entry && cacheCovers(entry, from, date)) return cachedResult(entry.status);
+  return performFetch(mapping, from, date);
 }
 
 /* 行情卡歷史：從 endDate 往回抓足夠日曆日，確保涵蓋 N 個交易日。 */
