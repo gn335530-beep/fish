@@ -13,6 +13,6 @@
 
 **Consequences**:
 
-- `publicUser` 會刪除舊資料中的 `role` 與 `completed_orders`，不必等資料清理。
+- `publicUser` 會刪除舊資料中的 `role` 與 `completed_orders`，不必等資料清理。這是唯一的相容刪除點，也是 `grep completed_orders` 會找到的資料遷移註記。
 - 前端舊 localStorage 的使用者物件可能還帶著 `role`，登入或 `me` 後會被新格式覆寫；不影響操作。
 - `backend/db.json` 的種子資料清理另見 ticket 10。

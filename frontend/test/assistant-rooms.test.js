@@ -89,6 +89,27 @@ test("刪除目前房間後切換到另一間助手房", async function () {
   assert.equal(state.room.id, "conv_2");
 });
 
+test("刪除提問依房間類型顯示助手房或交易房", async function () {
+  const asked = [];
+  const original = window.confirm;
+  window.confirm = function (message) { asked.push(message); return false; };
+
+  try {
+    conversations = [ROOM1];
+    update({ conversations: conversations, room: ROOM1 });
+    await rooms.deleteConversation("conv_1");
+
+    const deal = Object.assign({}, ROOM1, { id: "conv_deal", type: "deal", order: null });
+    conversations = [deal];
+    update({ conversations: conversations, room: deal });
+    await rooms.deleteConversation("conv_deal");
+  } finally {
+    window.confirm = original;
+  }
+
+  assert.deepEqual(asked, ["確定刪除助手房？", "確定刪除交易房？"]);
+});
+
 test("刪到最後一間助手房後回到空狀態，不自動建立", async function () {
   conversations = [ROOM1];
   update({ conversations: conversations, room: ROOM1, messages: [{ id: "msg_1" }] });

@@ -14,6 +14,7 @@ const authSource = read("../assets/js/api/auth.js");
 const accountSource = read("../assets/js/app/02-account.js");
 const initSource = read("../assets/js/app/08-api-init.js");
 const drawerSource = read("../assets/js/app/06-drawer.js");
+const loginSource = read("../assets/js/pages/login.js");
 
 function createStorage(initial) {
   const data = new Map(Object.entries(initial || {}));
@@ -63,19 +64,32 @@ test("登出會清除 Token、會員資料與頭像，但保留地區偏好", fu
   assert.equal(vm.runInContext("getUser()", ctx), null);
 });
 
-test("HaisenAPI 未載入時也能直接清除 Token 與會員資料", function () {
-  const storage = loggedInStorage();
-  const ctx = vm.createContext({
-    window: {},
-    localStorage: storage,
-    document: { getElementById() { return null; } }
-  });
-  vm.runInContext(accountSource, ctx);
+test("損壞的會員快取不會讓頁面崩潰，並會被清掉", function () {
+  const storage = createStorage({ haisen_user_v1: "{bad json" });
+  const ctx = contextWithAccount(storage);
 
-  vm.runInContext("logoutUser()", ctx);
+  assert.equal(vm.runInContext("getUser()", ctx), null);
+  assert.equal(storage.getItem("haisen_user_v1"), null);
+});
+
+test("登入狀態在重整後仍保留，登出後清除", function () {
+  const storage = loggedInStorage();
+  const first = contextWithAccount(storage);
+  assert.equal(vm.runInContext("getUser().nick", first), "阿海");
+
+  /* 模擬重新載入：同一個 localStorage 重新建立模組環境。 */
+  const reloaded = contextWithAccount(storage);
+  assert.equal(vm.runInContext("getUser().nick", reloaded), "阿海");
+  vm.runInContext("logoutUser()", reloaded);
 
   assert.equal(storage.getItem("haisen_token_v1"), null);
   assert.equal(storage.getItem("haisen_user_v1"), null);
+});
+
+test("登入狀態的儲存 key 只由 api/client.js 讀寫", function () {
+  [accountSource, initSource, drawerSource, authSource, loginSource].forEach(function (source) {
+    assert.doesNotMatch(source, /haisen_token_v1|haisen_user_v1/);
+  });
 });
 
 test("沒有 Token 但有舊會員資料時，載入頁面會清掉登入狀態", async function () {

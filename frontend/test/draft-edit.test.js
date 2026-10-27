@@ -29,6 +29,8 @@ function context() {
 
 test("草稿卡有修改草稿與取消上架，沒有重新填寫", function () {
   const html = renderCard({ type: "draft", draft: draft() }, "msg_1");
+  assert.match(html, /上架草稿/);
+  assert.doesNotMatch(html, /商品草稿/);
   assert.match(html, /確認發布/);
   assert.match(html, /修改草稿/);
   assert.match(html, /取消上架/);

@@ -77,7 +77,7 @@ function finish(kind, nick, phone, city){
   document.getElementById("auth-go").setAttribute("href", "index.html");
   document.getElementById("auth-go").textContent = "前往首頁";
   document.getElementById("auth-modal").classList.add("show");
-  /* 登入狀態（haisen_user_v1 / haisen_token_v1）由 assets/js/api/ 的 HaisenAPI 寫入，
+  /* 登入狀態由 assets/js/api/ 的 HaisenAPI 統一寫入，
      不再於此處覆寫，以免遺失 id 等欄位。 */
 }
 
