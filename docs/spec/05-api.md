@@ -213,13 +213,15 @@
   "context": { "mode": "idle", "draft": null, "last_cards": [] },
   "peer": { "id": "ai", "display_name": "小幫手", "username": "" },
   "order": null,
+  "last_order": null,
+  "orders": [],
   "last_message": { "...": "..." },
   "unread_count": 0,
   "deletable": true,
   "created_at": "...", "last_message_at": "..." }
 ```
 
-`order` 只在交易房有進行中訂單時才有值：`{ id, status, item_count, total_quantity, final_price, updated_at }`。`updated_at` 在每次加購、改量、刪除、清空、提案、回應、取消或逾時時更新，前端用來判斷何時重抓明細。
+`order` 只在交易房有進行中訂單時才有值：`{ id, status, item_count, total_quantity, final_price, review_status, updated_at }`。`last_order` 是最新一筆訂單的摘要，不限狀態；`orders` 是這間房所有訂單摘要（新到舊），供評價卡等歷史卡片更新。沒有訂單的助手房三者皆為 `null` 或空陣列。`updated_at` 在每次加購、改量、刪除、清空、提案、回應、取消、逾時或評價時更新，前端用來判斷何時重抓明細；`last_order` 的 `id`、`status` 或 `updated_at` 改變時，前端會重取 `GET /api/deals/:id`。
 
 未讀數不含自己送出的訊息。助手房的系統訊息不算未讀；交易房的系統訊息（開房、加購通知）算未讀。`deletable` 表示這間房目前是否可刪（助手房恆為 true；交易房需全部訂單皆已取消）。
 

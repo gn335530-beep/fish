@@ -92,6 +92,44 @@ test("逾時的協議卡顯示已逾時且沒有動作", function () {
   assert.doesNotMatch(html, /deal-cancel/);
 });
 
+test("成交與已取消的協議卡只顯示狀態，沒有操作", function () {
+  const confirmed = pendingDeal(2);
+  confirmed.deal_status = "CONFIRMED";
+  reset(confirmed, 1);
+  let html = cards.renderCard({
+    type: "deal", deal_id: "deal_1", status: "confirmed", initiator_id: 2,
+    final_price: 4800, meetup_location: "基隆火車站南站",
+    meetup_time: "2026-10-26T09:30:00.000Z", items: []
+  });
+  assert.match(html, /已成交/);
+  assert.match(html, /NT\$4,800/);
+  assert.doesNotMatch(html, /deal-agree|deal-reject|deal-cancel|data-cancel-reason/);
+
+  const cancelled = pendingDeal(2);
+  cancelled.deal_status = "CANCELLED";
+  reset(cancelled, 1);
+  html = cards.renderCard({
+    type: "deal", deal_id: "deal_1", status: "cancelled", initiator_id: 2,
+    final_price: 4800, meetup_location: "基隆火車站南站",
+    meetup_time: "2026-10-26T09:30:00.000Z", items: []
+  });
+  assert.match(html, /已取消/);
+  assert.doesNotMatch(html, /deal-agree|deal-reject|deal-cancel|data-cancel-reason/);
+});
+
+test("協商中的協議卡仍可依身分取消", function () {
+  const deal = pendingDeal(2);
+  deal.deal_status = "NEGOTIATING";
+  reset(deal, 1);
+  const html = cards.renderCard({
+    type: "deal", deal_id: "deal_1", status: "rejected", initiator_id: 2,
+    final_price: 4800, meetup_location: "基隆火車站南站",
+    meetup_time: "2026-10-26T09:30:00.000Z", items: []
+  });
+  assert.match(html, /data-action="deal-cancel"/);
+  assert.doesNotMatch(html, /deal-agree|deal-reject/);
+});
+
 test("取消原因會留在 state", function () {
   update({ cancelReasons: {} });
   dealReplies.handleCancelReason("deal_1", "TERMS_MISMATCH");
