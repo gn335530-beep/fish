@@ -21,13 +21,21 @@ const SELL_WORDS = [
   "賣魚", "想賣", "要賣", "出售", "上架", "釣到", "剛釣", "多捕", "上岸", "賣掉"
 ];
 
+/* 「取消」只取消本次修改；加上「上架／販售」或「不賣了」才是取消整筆上架。 */
+const CANCEL_LISTING_WORDS = ["取消上架", "取消販售", "不賣了", "不要賣了"];
+
 function includesAny(text, words) {
   return words.some(function (word) { return text.indexOf(word) !== -1; });
+}
+
+export function isCancelListing(text) {
+  return includesAny(String(text || "").trim(), CANCEL_LISTING_WORDS);
 }
 
 export function detectIntent(text) {
   const source = String(text || "").trim();
   if (!source) return INTENT.UNKNOWN;
+  if (isCancelListing(source)) return INTENT.CANCEL;
   if (includesAny(source, CANCEL_WORDS)) return INTENT.CANCEL;
   if (includesAny(source, MARKET_WORDS)) return INTENT.MARKET;
   if (includesAny(source, BUY_FIRST)) return INTENT.BUY;
