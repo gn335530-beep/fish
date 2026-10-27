@@ -2,14 +2,12 @@
 
 import { state } from "../store.js";
 import { roomLabel } from "../rooms.js";
-import { dealStatusLabel } from "../deal-labels.js";
+import { preferredOrder, orderSummaryText } from "../room-order.js";
 import { escapeHtml, timeOf, initials, NO_ASSISTANT_TEXT } from "./html.js";
 
 function orderLine(room) {
   if (room.type === "assistant") return "AI 對話";
-  if (!room.order) return "洽談中";
-  const label = dealStatusLabel(room.order.status, "洽談中");
-  return label + " · " + room.order.item_count + " 項 · " + room.order.total_quantity + " 尾";
+  return orderSummaryText(preferredOrder(room)) || "洽談中";
 }
 
 function deleteButton(room) {

@@ -46,6 +46,11 @@ test("讀取對話清單會取消逾時的待回覆協議", async function () {
   const list = await call("GET", "/api/conversations", { token: tokens.buyer });
   const room = list.body.data.find(function (item) { return item.id === seen.convA; });
   assert.equal(room.order, null);
+  assert.equal(room.last_order.status, "CANCELLED");
+  assert.equal(room.last_order.cancel_reason, "LOCK_EXPIRED");
+
+  const deal = await call("GET", "/api/deals/" + seen.dealA, { token: tokens.buyer });
+  assert.equal(deal.body.data.cancelled_by, "system");
 
   const messages = await messagesOf(seen.convA, tokens.buyer);
   assert.equal(countText(messages, "逾時未回覆"), 1);

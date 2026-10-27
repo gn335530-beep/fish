@@ -1,6 +1,6 @@
 /* 對話流程：送出訊息、上傳照片、發布草稿、商品諮詢。 */
 
-import { state, update } from "./store.js";
+import { state, update, replaceMessages, appendMessages } from "./store.js";
 import * as api from "./api.js";
 import { getProduct, createProduct } from "../api/products.js";
 import * as ai from "./ai/service.js";
@@ -23,19 +23,9 @@ export async function ensureRoom() {
   return ensureAssistantRoom();
 }
 
-function setMessages(list) {
-  const last = list[list.length - 1];
-  update({
-    messages: list.slice(),
-    lastSeq: Number(last.seq) || state.lastSeq
-  });
+function showMessages() {
   ui.render();
   ui.scrollEnd();
-}
-
-function appendMessages(list) {
-  if (!list.length) return;
-  setMessages(state.messages.concat(list));
 }
 
 export async function runReplies(result) {
@@ -62,11 +52,13 @@ export async function runReplies(result) {
     } catch (error) {
       clearError = error;
     }
-    setMessages(created);
+    replaceMessages(created);
+    showMessages();
     if (clearError) ui.notify(clearError);
     return;
   }
   appendMessages(created);
+  showMessages();
 }
 
 export async function submitText(text) {
@@ -77,6 +69,7 @@ export async function submitText(text) {
     if (!state.room) return;
     const message = await api.sendMessage(state.room.id, { text: value });
     appendMessages([message]);
+    showMessages();
     if (state.room.type === "deal") return;
     const result = await ai.handleText(state.room.context, value, state.user);
     await runReplies(result);
@@ -92,6 +85,7 @@ export async function submitPhoto(file) {
     const url = await uploadImage(file);
     const message = await api.sendMessage(state.room.id, { image_url: url });
     appendMessages([message]);
+    showMessages();
     if (state.room.type === "deal") return;
     const result = await ai.handlePhoto(state.room.context, url, state.user);
     await runReplies(result);
@@ -123,7 +117,8 @@ export async function publishDraft() {
     await api.clearConversation(state.room.id, message.seq);
 
     update({ room: Object.assign({}, state.room, { context: context }) });
-    setMessages([message]);
+    replaceMessages([message]);
+    showMessages();
 
     document.dispatchEvent(new CustomEvent("haisen:products-changed"));
     if (window.toast) window.toast("已上架：" + product.title);

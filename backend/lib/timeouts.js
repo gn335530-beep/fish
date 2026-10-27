@@ -1,21 +1,15 @@
 /* 逾時掃描：讀取時惰性取消逾時訂單、釋放保留量並留下系統訊息。 */
 
-const { all, patch } = require("./store");
-const { syncDealCard } = require("./cards");
-const { systemMessage } = require("./messages");
+const { all } = require("./store");
+const { cancelDeal } = require("./deal-cancel");
 
 function expireDeal(deal, reason, message) {
-  const now = new Date().toISOString();
-  patch("deals", deal.id, {
-    deal_status: "CANCELLED",
-    cancelled_by: "system",
-    cancel_reason: reason,
-    lock_expires_at: null,
-    hold_expires_at: null,
-    updated_at: now
-  });
-  syncDealCard(deal.id, "expired");
-  systemMessage(deal.conversation_id, message);
+  return cancelDeal(deal, {
+    operator: "system",
+    reason: reason,
+    cardStatus: "expired",
+    message: message
+  }, new Date().toISOString());
 }
 
 /* 讀取時惰性掃描，不需要背景排程。 */

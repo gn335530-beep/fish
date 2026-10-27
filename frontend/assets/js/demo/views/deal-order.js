@@ -4,6 +4,7 @@ import { state } from "../store.js";
 import { escapeHtml, money } from "./html.js";
 import { canResend } from "../deal-state.js";
 import { dealStatusLabel } from "../deal-labels.js";
+import { preferredOrder, isFinishedDeal, orderSummaryText, summaryOfDeal } from "../room-order.js";
 import { proposalForm, termsBlock, statusNote } from "./deal-terms.js";
 
 function isBuyer() {
@@ -78,13 +79,18 @@ function mayResend(deal) {
   return canResend(deal, state.user && state.user.id);
 }
 
-function fallback() {
-  const order = state.room && state.room.order;
+/* 已結束或尚未載入明細時，只顯示摘要，不提供任何操作。 */
+function summaryPanel(order) {
   if (!order) return '<div class="fm-order fm-order--plain"><span>尚無訂單</span></div>';
   return '<div class="fm-order fm-order--plain"><b>' +
-    escapeHtml(dealStatusLabel(order.status)) + " · " +
-    Number(order.item_count || 0) + " 項 · " + Number(order.total_quantity || 0) + " 尾 · " +
-    money(order.final_price) + "</b></div>";
+    escapeHtml(orderSummaryText(order)) + "</b></div>";
+}
+
+/* 房間摘要若指向別筆訂單，已載入的這筆仍以自己的摘要顯示。 */
+function summaryFor(deal) {
+  const roomOrder = preferredOrder(state.room);
+  if (roomOrder && String(roomOrder.id) === String(deal.id)) return roomOrder;
+  return summaryOfDeal(deal);
 }
 
 function bodyOf(deal, items) {
@@ -125,7 +131,8 @@ function bodyOf(deal, items) {
 
 export function renderDealOrder() {
   const deal = state.deal;
-  if (!deal) return fallback();
+  if (!deal) return summaryPanel(preferredOrder(state.room));
+  if (isFinishedDeal(deal)) return summaryPanel(summaryFor(deal));
 
   const items = deal.items || [];
   const tails = items.reduce(function (sum, item) {

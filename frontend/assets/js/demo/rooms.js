@@ -1,6 +1,6 @@
 /* 房間切換：載入訊息、標記已讀、新增助手房與刪除。 */
 
-import { state, update, emptyProposal } from "./store.js";
+import { state, update, emptyProposal, replaceMessages } from "./store.js";
 import * as api from "./api.js";
 
 export function viewOf(room) {
@@ -41,12 +41,9 @@ async function loadDeal(deal) {
 
 export async function openRoom(room) {
   const messages = await api.listMessages(room.id, 0);
-  const last = messages[messages.length - 1];
   const deal = room.type === "deal" && room.order ? await loadDeal(room.order) : null;
-  update({
+  replaceMessages(messages, {
     room: room,
-    messages: messages,
-    lastSeq: last ? Number(last.seq) : 0,
     view: viewOf(room),
     deal: deal,
     dealOpen: true,

@@ -1,19 +1,14 @@
-/* 協議狀態轉換：同意成交、退回協商、取消釋放。 */
+/* 協議狀態轉移：同意成交、退回協商、使用者取消。 */
 
 const { findById, patch } = require("./store");
 const { itemsOf } = require("./deal-items");
 const { syncDealCard } = require("./cards");
 const { systemMessage } = require("./messages");
 const { reviewCardMessage } = require("./reviews");
+const { DRAFT_STATUS } = require("./deal-statuses");
+const { CANCEL_REASONS, cancelDeal } = require("./deal-cancel");
 
 const HOLD_MINUTES = 15;
-
-const CANCEL_REASONS = {
-  SELLER_OUT_OF_STOCK: "釣客缺貨",
-  BUYER_CHANGED_MIND: "買家改變心意",
-  TERMS_MISMATCH: "條件不合",
-  OTHER: "其他"
-};
 
 /* 同意即成交：項目計入已售、雙方完成數 +1。保留量因狀態離開進行中而自動釋放。 */
 function agree(deal, now) {
@@ -63,27 +58,20 @@ function reject(deal, userId, now) {
   return updated;
 }
 
-/* 任一方取消：選原因、立刻釋放保留尾數、留下系統訊息。 */
+/* 使用者取消：選原因、立刻釋放保留尾數、留下系統訊息。 */
 function cancel(deal, userId, reason, now) {
-  const wasAgreement = deal.deal_status !== "DRAFT";
-  const updated = patch("deals", deal.id, {
-    deal_status: "CANCELLED",
-    cancelled_by: Number(userId),
-    cancel_reason: reason,
-    lock_expires_at: null,
-    hold_expires_at: null,
-    updated_at: now
-  });
-  syncDealCard(deal.id, "cancelled");
-  systemMessage(deal.conversation_id,
-    (wasAgreement ? "協議已取消" : "訂單已取消") +
-    "（" + CANCEL_REASONS[reason] + "），保留的尾數已釋放。");
-  return updated;
+  const wasAgreement = deal.deal_status !== DRAFT_STATUS;
+  return cancelDeal(deal, {
+    operator: Number(userId),
+    reason: reason,
+    cardStatus: "cancelled",
+    message: (wasAgreement ? "協議已取消" : "訂單已取消") +
+      "（" + CANCEL_REASONS[reason] + "），保留的尾數已釋放。"
+  }, now);
 }
 
 module.exports = {
   HOLD_MINUTES: HOLD_MINUTES,
-  CANCEL_REASONS: CANCEL_REASONS,
   agree: agree,
   reject: reject,
   cancel: cancel
