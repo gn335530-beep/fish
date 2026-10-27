@@ -29,11 +29,12 @@ export const EDIT_PROMPTS = {
 
 const DETAIL_LABELS = {
   weight_kg: "重量",
+  quantity: "尾數",
   condition: "處理方式",
   photo_url: "一張商品照片"
 };
 
-const DETAIL_ORDER = ["weight_kg", "condition", "photo_url"];
+const DETAIL_ORDER = ["weight_kg", "quantity", "condition", "photo_url"];
 
 function joinLabels(labels) {
   if (labels.length <= 1) return labels[0] || "";

@@ -1,7 +1,7 @@
 /* 規則式 AI：意圖路由、上架槽位追問、導購與指涉。之後換 LLM 只需改這支。 */
 
 import * as api from "../api.js";
-import { INTENT, detectIntent } from "./rules.js";
+import { INTENT, detectIntent, isCancelListing } from "./rules.js";
 import { mergeDraft } from "./draft.js";
 import { normalize, resetContext, advance, withDraft, startListing, continueListing, requestCancel, dismissCancel } from "./listing.js";
 import { editText, editPhoto, askDraftEdit, chooseEditField } from "./editing.js";
@@ -112,6 +112,9 @@ export async function handleText(context, text, user) {
     };
   }
 
+  if (ctx.choosing_edit && isCancelListing(source)) {
+    return requestCancel(Object.assign({}, ctx, { choosing_edit: null }));
+  }
   if (ctx.choosing_edit) return chooseEditField(ctx, source);
   if (needsConsent(user) && ctx.mode === "listing" && ctx.draft) {
     return requestConsent(ctx, ctx.pending_sale_text || "我要賣魚");

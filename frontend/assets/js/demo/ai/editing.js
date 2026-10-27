@@ -1,6 +1,6 @@
 /* 草稿逐欄修改：一次只重問一個欄位，取消時回復修改前的草稿。 */
 
-import { INTENT, detectIntent } from "./rules.js";
+import { INTENT, detectIntent, isCancelListing } from "./rules.js";
 import { extractSlots } from "./slots.js";
 import { mergeDraft } from "./draft.js";
 import { EDIT_PROMPTS } from "./prompts.js";
@@ -97,6 +97,9 @@ function finish(context, slot, found) {
 export function editText(context, text) {
   const editing = context.editing;
   if (!editing) return null;
+
+  /* 取消整筆上架要落到 continueListing → requestCancel，不能當成取消欄位修改。 */
+  if (isCancelListing(text)) return null;
 
   if (detectIntent(text) === INTENT.CANCEL) {
     const draft = Object.assign({}, editing.backup);
