@@ -20,16 +20,8 @@ function unknownSpeciesName(text) {
   return guessUnknownSpecies(rest);
 }
 
-function noTradeReply(name) {
-  return { replies: [{ text: "目前沒有今天的" + name + "行情。" }] };
-}
-
-function noMappingReply(name) {
-  return { replies: [{ text: "目前沒有" + name + "的行情。" }] };
-}
-
-function unavailableReply(name) {
-  return { replies: [{ text: "暫時無法取得" + name + "的行情。" }] };
+function noMarketReply() {
+  return { replies: [{ text: "暫無行情" }] };
 }
 
 function priceText(data) {
@@ -43,7 +35,7 @@ function scopeText(data, requestedRegion) {
 
 function prefixText(data, explicit, profile, requestedRegion) {
   if (data.scope === "national" && requestedRegion) {
-    return requestedRegion + "目前沒有資料，改以全國平均：";
+    return requestedRegion + "暫無行情，改以全國平均：";
   }
   if (!explicit && profile) return "依你的地區（" + profile + "），";
   if (!explicit && !profile) return "你的個人檔案還沒填縣市，以全國平均查詢：";
@@ -68,7 +60,7 @@ export async function marketReply(text, user) {
 
   if (!species) {
     const candidate = unknownSpeciesName(text);
-    if (candidate) return noMappingReply(candidate);
+    if (candidate) return noMarketReply();
     return { replies: [{ text: "請問想查哪一種魚的行情？" }] };
   }
 
@@ -76,14 +68,10 @@ export async function marketReply(text, user) {
   try {
     data = await api.getMarketPrice(species.id, requestedRegion || null);
   } catch (error) {
-    return unavailableReply(species.name);
+    return noMarketReply();
   }
 
-  if (!data || !data.found) {
-    if (data && data.reason === "UPSTREAM_UNAVAILABLE") return unavailableReply(species.name);
-    if (data && data.reason === "NO_MAPPING") return noMappingReply(species.name);
-    return noTradeReply(species.name);
-  }
+  if (!data || !data.found) return noMarketReply();
 
   return foundReply(species, data, {
     explicit: !!explicit,

@@ -53,13 +53,6 @@ function buildCard(draft, data, seven) {
   };
 }
 
-function statusText(draft, data, error) {
-  const name = draft.fish_species || "這尾魚";
-  if (error) return "暫時無法取得" + name + "的行情。";
-  if (data && data.reason === "UPSTREAM_UNAVAILABLE") return "暫時無法取得" + name + "的行情。";
-  return "目前沒有" + name + "的行情。";
-}
-
 export async function quoteForDraft(draft, user) {
   if (!draft || !draft.species_id) return { text: "暫無行情" };
   const region = normalizeCityName((user && user.city) || "").trim();
@@ -68,9 +61,9 @@ export async function quoteForDraft(draft, user) {
   try {
     /* 先取 30 個交易日，再取 7 個（後端會命中同一段快取）；卡片預設顯示 7 日。 */
     data = await api.getMarketPrice(draft.species_id, region || null, 30);
-    if (!data || !data.found) return { text: statusText(draft, data, null) };
+    if (!data || !data.found) return { text: "暫無行情" };
   } catch (error) {
-    return { text: statusText(draft, null, error) };
+    return { text: "暫無行情" };
   }
 
   let seven = null;
