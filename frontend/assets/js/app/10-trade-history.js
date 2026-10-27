@@ -1,12 +1,8 @@
 /* 個人抽屜：交易紀錄列表與單筆詳情。 */
 
-const HISTORY_STATUS = {
-  DRAFT: "訂單草稿",
-  PENDING_REVIEW: "等待確認",
-  NEGOTIATING: "協商中",
-  CONFIRMED: "已成交",
-  CANCELLED: "已取消"
-};
+function hStatus(status) {
+  return window.dealStatusLabel(status);
+}
 
 let tradeHistory = { loading: false, error: "", rows: [] };
 let tradeDetail = { id: "", loading: false, error: "", deal: null };
@@ -28,10 +24,6 @@ function hDate(iso) {
   const pad = function (value) { return String(value).padStart(2, "0"); };
   return (date.getMonth() + 1) + "/" + pad(date.getDate()) + " " +
     pad(date.getHours()) + ":" + pad(date.getMinutes());
-}
-
-function hStatus(status) {
-  return HISTORY_STATUS[status] || "訂單";
 }
 
 function hReview(row) {

@@ -1,6 +1,6 @@
 /* 規則式 AI：意圖路由、上架槽位追問、導購與指涉。之後換 LLM 只需改這支。 */
 
-import * as api from "../api.js";
+import { getProduct } from "../../api/products.js";
 import { INTENT, detectIntent, isCancelListing } from "./rules.js";
 import { mergeDraft } from "./draft.js";
 import { normalize, resetContext, advance, withDraft, startListing, continueListing, requestCancel, dismissCancel } from "./listing.js";
@@ -31,7 +31,7 @@ export async function handlePhoto(context, photoUrl, user) {
 async function explainAt(ctx, index) {
   const id = ctx.last_cards[index];
   try {
-    const product = await api.getProduct(id);
+    const product = await getProduct(id);
     if (!product) {
       return { context: ctx, replies: [{ text: "這筆商品已不存在，請重新查詢。" }] };
     }

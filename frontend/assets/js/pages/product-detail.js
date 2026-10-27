@@ -179,4 +179,4 @@ async function loadDetail() {
   }
 }
 
-loadDetail();
+document.addEventListener("DOMContentLoaded", loadDetail);

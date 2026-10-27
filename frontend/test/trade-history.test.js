@@ -8,6 +8,9 @@ import vm from "node:vm";
 const source = fs.readFileSync(
   new URL("../assets/js/app/10-trade-history.js", import.meta.url), "utf8"
 );
+const labelsSource = fs.readFileSync(
+  new URL("../assets/js/shared/deal-status.js", import.meta.url), "utf8"
+);
 
 function newContext() {
   const ctx = vm.createContext({
@@ -15,6 +18,7 @@ function newContext() {
     document: { querySelectorAll: function () { return []; } },
     getUser: function () { return { id: 2 }; }
   });
+  vm.runInContext(labelsSource, ctx);
   vm.runInContext(source, ctx);
   return ctx;
 }

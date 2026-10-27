@@ -1,14 +1,6 @@
 /* 對話式交易引擎的 API 呼叫層，統一經過既有的 HaisenAPI.request。 */
 
-function client() {
-  if (!window.HaisenAPI) throw new Error("API 用戶端未載入");
-  return window.HaisenAPI;
-}
-
-async function call(path, options) {
-  const result = await client().request(path, Object.assign({ auth: true }, options || {}));
-  return result.data;
-}
+import { request as call } from "../api/request.js";
 
 export function isLoggedIn() {
   return !!window.HaisenAPI && !!window.HaisenAPI.getToken();
@@ -49,30 +41,6 @@ export function updateContext(conversationId, patch) {
 
 export function markRead(conversationId) {
   return call("/api/conversations/" + encodeURIComponent(conversationId) + "/read", { method: "POST" });
-}
-
-export function listProducts(params) {
-  const query = new URLSearchParams(params || {}).toString();
-  return call("/api/products" + (query ? "?" + query : ""));
-}
-
-export function getProduct(productId) {
-  return call("/api/products/" + encodeURIComponent(productId));
-}
-
-export function createProduct(payload) {
-  return call("/api/products/create", { method: "POST", body: payload });
-}
-
-/* 行情查詢：公開端點；可選縣市與 history 天數（7／30）。 */
-export function getMarketPrice(speciesId, region, days) {
-  const params = new URLSearchParams({ species_id: speciesId });
-  if (region) params.set("region", region);
-  if (days) {
-    params.set("include", "history");
-    params.set("days", String(days));
-  }
-  return call("/api/market/prices?" + params.toString());
 }
 
 export function clearConversation(conversationId, keepFromSeq) {

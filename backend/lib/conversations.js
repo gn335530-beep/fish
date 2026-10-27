@@ -3,10 +3,10 @@
 const { all, findById } = require("./store");
 const { publicUser } = require("./auth");
 const { itemsOf } = require("./orders");
+const { ACTIVE_ORDER } = require("./deal-statuses");
 const { fail } = require("./http");
 
 const AI_PEER = { id: "ai", display_name: "小幫手", username: "" };
-const ACTIVE_ORDER = ["DRAFT", "PENDING_REVIEW", "NEGOTIATING"];
 
 function isParticipant(conversation, userId) {
   return (conversation.user_ids || []).some(function (id) {

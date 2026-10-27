@@ -2,6 +2,7 @@
 
 import { state, update } from "./store.js";
 import * as api from "./api.js";
+import { listProducts } from "../api/products.js";
 import { refreshRooms } from "./poll.js";
 import { currentRoom } from "./rooms.js";
 
@@ -41,7 +42,7 @@ export async function toggleAddon() {
   const deal = state.deal;
   if (!deal) return;
   try {
-    const rows = await api.listProducts({ seller_id: deal.seller_id, limit: 100 });
+    const rows = await listProducts({ seller_id: deal.seller_id, limit: 100 });
     const inOrder = (deal.items || []).map(function (item) { return item.product_id; });
     const addons = (rows || []).filter(function (product) {
       return Number(product.available) > 0 && inOrder.indexOf(product.id) === -1;

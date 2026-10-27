@@ -23,4 +23,4 @@ async function loadTodayCatch() {
 }
 
 document.addEventListener("haisen:products-changed", loadTodayCatch);
-loadTodayCatch();
+document.addEventListener("DOMContentLoaded", loadTodayCatch);

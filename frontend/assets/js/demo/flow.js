@@ -2,6 +2,7 @@
 
 import { state, update } from "./store.js";
 import * as api from "./api.js";
+import { getProduct, createProduct } from "../api/products.js";
 import * as ai from "./ai/service.js";
 import { draftToProduct } from "./ai/draft.js";
 import { beginEdit as beginDraftEdit } from "./ai/editing.js";
@@ -111,7 +112,7 @@ export async function publishDraft() {
   }
 
   try {
-    const product = await api.createProduct(draftToProduct(draft, state.user));
+    const product = await createProduct(draftToProduct(draft, state.user));
     const message = await api.sendMessage(state.room.id, {
       sender_type: "ai",
       text: "已上架：" + product.title
@@ -146,7 +147,7 @@ export async function beginEdit(slot) {
 
 export async function explainProduct(productId) {
   try {
-    const product = await api.getProduct(productId);
+    const product = await getProduct(productId);
     await runReplies(await ai.explainProduct(product, state.room.context));
   } catch (error) {
     ui.notify(error);

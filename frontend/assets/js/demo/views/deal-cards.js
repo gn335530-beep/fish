@@ -3,15 +3,8 @@
 import { state } from "../store.js";
 import { escapeHtml, money, dateTimeOf } from "./html.js";
 import { cardStatusForDeal, isActionable } from "../deal-state.js";
+import { cardStatusLabel } from "../deal-labels.js";
 import { REVIEW_TAGS, draftOf } from "../review-state.js";
-
-const DEAL_STATUS = {
-  pending: "等待確認",
-  rejected: "已退回",
-  confirmed: "已成交",
-  cancelled: "已取消",
-  expired: "已逾時"
-};
 
 const CANCEL_REASONS = [
   ["SELLER_OUT_OF_STOCK", "釣客缺貨"],
@@ -87,7 +80,7 @@ export function renderDealCard(card, messageId) {
   const status = displayStatusOf(card, messageId);
   return '<div class="fm-card fm-card--deal">' +
     '<div class="fm-card__deal-head"><b>協議</b><span class="fm-card__pill">' +
-    escapeHtml(DEAL_STATUS[status] || "協議") + '</span></div>' +
+    escapeHtml(cardStatusLabel(status, "協議")) + '</span></div>' +
     '<ul class="fm-card__deal-items">' + items.map(function (item) {
       return "<li><span>" + escapeHtml(item.title) + " × " + Number(item.quantity || 0) + " 尾</span>" +
         "<span>" + money(Math.round(Number(item.unit_price || 0) * Number(item.quantity || 0))) + "</span></li>";

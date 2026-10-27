@@ -34,7 +34,7 @@ python -m http.server 8000 --directory frontend
 backend/
   server.js       啟動
   app.js          middleware、靜態目錄、路由掛載
-  lib/            auth / store / orders / deals / deal-items / deal-status / reviews / conversations / species / regions / market/ / http
+  lib/            auth / store / orders / deals / deal-items / deal-status / deal-statuses / reviews / conversations / species / regions / market/ / http
   routes/         auth / products / species / chat / chat-messages / conversation-delete / deals / deal-items / deal-proposal / deal-response / reviews / market / uploads
   scripts/        market-fetch.js（行情 CLI）
   test/           node:test 整合測試（使用暫存 db.json）

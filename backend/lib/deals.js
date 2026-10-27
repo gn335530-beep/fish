@@ -3,10 +3,9 @@
 const { all, findById, insert, patch, nextCode } = require("./store");
 const { productAvailability } = require("./orders");
 const { itemsOf, itemsTotal } = require("./deal-items");
+const { DRAFT_STATUS, ACTIVE_STATUS } = require("./deal-statuses");
 const { fail } = require("./http");
 
-const DRAFT_STATUS = "DRAFT";
-const ACTIVE_STATUS = ["PENDING_REVIEW", "NEGOTIATING"];
 const LOCK_MINUTES = 30;
 
 /* 交易房以一組買家與釣客為單位（ADR 0001），不限商品。 */
@@ -142,7 +141,6 @@ function applyProposal(deal, userId, terms, now) {
 }
 
 module.exports = {
-  DRAFT_STATUS: DRAFT_STATUS,
   findConversation: findConversation,
   createConversation: createConversation,
   draftOf: draftOf,
