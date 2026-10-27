@@ -27,12 +27,14 @@ test.beforeEach(function () {
   update({ room: null, messages: [] });
 });
 
-test("收件匣可新增 AI 對話，助手房有刪除 X", function () {
+test("助手房可新增 AI 對話，刪除 X 標示助手房", function () {
   update({ conversations: [room()], room: room() });
   const html = renderInbox();
   assert.match(html, /新增 AI 對話/);
   assert.match(html, /data-action="new-assistant"/);
   assert.match(html, /data-action="delete-room"/);
+  assert.match(html, /aria-label="刪除助手房"/);
+  assert.doesNotMatch(html, /聊天室/);
 });
 
 test("交易房只有可刪時才顯示 X", function () {
@@ -46,7 +48,10 @@ test("交易房只有可刪時才顯示 X", function () {
     });
   };
   update({ conversations: [deal(true)], room: null });
-  assert.match(renderInbox(), /data-action="delete-room"/);
+  const html = renderInbox();
+  assert.match(html, /data-action="delete-room"/);
+  assert.match(html, /aria-label="刪除交易房"/);
+  assert.doesNotMatch(html, /聊天室/);
 
   update({ conversations: [deal(false)], room: null });
   assert.doesNotMatch(renderInbox(), /data-action="delete-room"/);

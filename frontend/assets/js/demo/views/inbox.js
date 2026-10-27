@@ -1,6 +1,7 @@
 /* 收件匣：助手房與交易房清單；可新增助手房，刪除可刪的房間。 */
 
 import { state } from "../store.js";
+import { roomLabel } from "../rooms.js";
 import { escapeHtml, timeOf, initials, NO_ASSISTANT_TEXT } from "./html.js";
 
 function orderLine(room) {
@@ -16,8 +17,9 @@ function orderLine(room) {
 
 function deleteButton(room) {
   if (!room.deletable) return "";
+  const label = "刪除" + roomLabel(room);
   return '<button type="button" class="fm-inbox__del" data-action="delete-room" data-room="' +
-    escapeHtml(room.id) + '" aria-label="刪除聊天室" title="刪除聊天室">✕</button>';
+    escapeHtml(room.id) + '" aria-label="' + label + '" title="' + label + '">✕</button>';
 }
 
 function item(room) {

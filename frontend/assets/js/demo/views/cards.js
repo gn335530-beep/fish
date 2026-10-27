@@ -64,7 +64,7 @@ function draftCard(card) {
     return '<button type="button" data-action="edit-slot" data-slot="' + field.slot + '">' + field.label + '</button>';
   }).join("");
   return '<div class="fm-card fm-card--draft">' +
-    '<b>商品草稿</b>' +
+    '<b>上架草稿</b>' +
     '<dl>' +
     row("魚種", draft.fish_species) +
     row("總重", draft.weight_kg + " kg") +

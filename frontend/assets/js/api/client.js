@@ -2,7 +2,7 @@
   "use strict";
   var BASE = (typeof window !== "undefined" && window.HAISEN_API_BASE) || "";
 
-  // 與 app.js 共用同一組 localStorage key，登入狀態才能跨頁保留。
+  // 本檔是 haisen_token_v1 / haisen_user_v1 的唯一讀寫者，其他模組一律透過 HaisenAPI。
   var TOKEN_KEY = "haisen_token_v1";
   var USER_KEY = "haisen_user_v1";
 
@@ -16,7 +16,11 @@
     try { t ? localStorage.setItem(TOKEN_KEY, t) : localStorage.removeItem(TOKEN_KEY); } catch (e) {}
   }
   function getUser() {
-    try { return JSON.parse(localStorage.getItem(USER_KEY) || "null"); } catch (e) { return null; }
+    try { return JSON.parse(localStorage.getItem(USER_KEY) || "null"); } catch (e) {
+      /* 損壞的快取直接清掉，讓頁面回到未登入而不是每次載入都出錯。 */
+      try { localStorage.removeItem(USER_KEY); } catch (removeError) {}
+      return null;
+    }
   }
   function setUser(u) {
     try { u ? localStorage.setItem(USER_KEY, JSON.stringify(u)) : localStorage.removeItem(USER_KEY); } catch (e) {}

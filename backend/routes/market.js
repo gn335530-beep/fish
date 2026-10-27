@@ -1,4 +1,4 @@
-/* 行情：魚種代碼／市場對照（唯讀）與公開行情查詢。 */
+/* 行情：主要新鮮代碼／市場對照（唯讀）與公開行情查詢。 */
 
 const express = require("express");
 const species = require("../lib/species");
@@ -11,7 +11,7 @@ const { ok, fail } = require("../lib/http");
 const router = express.Router();
 
 router.get("/api/market/species-codes", function (req, res) {
-  ok(res, mappings.speciesCodes(), "取得魚種行情代碼成功");
+  ok(res, mappings.speciesCodes(), "取得主要新鮮代碼成功");
 });
 
 router.get("/api/market/markets", function (req, res) {

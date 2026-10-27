@@ -82,9 +82,17 @@ export async function createAssistantRoom() {
   return openRoom(room);
 }
 
+export function roomLabel(room) {
+  return room && room.type === "deal" ? "交易房" : "助手房";
+}
+
 /* 刪除目前房間後，切到下一間助手房；沒有就回到空狀態，不自動補一間。 */
 export async function deleteConversation(conversationId, options) {
-  if (!(options && options.confirm === false) && window.confirm && !window.confirm("確定刪除聊天室？")) {
+  const target = (state.conversations || []).find(function (item) {
+    return item.id === conversationId;
+  }) || (state.room && state.room.id === conversationId ? state.room : null);
+  const label = roomLabel(target);
+  if (!(options && options.confirm === false) && window.confirm && !window.confirm("確定刪除" + label + "？")) {
     return false;
   }
   await api.deleteConversation(conversationId);

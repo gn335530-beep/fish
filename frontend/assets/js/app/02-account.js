@@ -3,20 +3,18 @@ const REGION_KEY = "haisen_region_v1";
 function getRegion(){ return localStorage.getItem(REGION_KEY) || ""; }
 function setRegion(r){ localStorage.setItem(REGION_KEY, r || ""); }
 
-/* ---------- 登入狀態（localStorage，跨頁保留） ---------- */
-const TOKEN_KEY = "haisen_token_v1";
-const USER_KEY = "haisen_user_v1";
-function getUser(){ try{ return JSON.parse(localStorage.getItem(USER_KEY) || "null"); }catch(e){ return null; } }
+/* ---------- 登入狀態（由 api/client.js 的 HaisenAPI 統一讀寫） ---------- */
+function getUser(){
+  return window.HaisenAPI && typeof window.HaisenAPI.getUser === "function" ? window.HaisenAPI.getUser() : null;
+}
 function setUser(u){
-  try{ if(u) localStorage.setItem(USER_KEY, JSON.stringify(u)); else localStorage.removeItem(USER_KEY); }catch(e){}
+  if(window.HaisenAPI && typeof window.HaisenAPI.setUser === "function") window.HaisenAPI.setUser(u);
 }
 
-/* 登出：Token、會員資料與頭像都要清掉，否則下次載入會用舊 Token 自動登入回來。 */
+/* 登出：請 HaisenAPI 清除 Token 與會員資料，並清掉頭像。 */
 function logoutUser(){
   if(window.HaisenAPI && typeof window.HaisenAPI.logout === "function"){
     window.HaisenAPI.logout();
-  } else {
-    try{ localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(USER_KEY); }catch(e){}
   }
   setUserAvatar("");
   if(window.FishMatchBot && typeof window.FishMatchBot.logout === "function") window.FishMatchBot.logout();

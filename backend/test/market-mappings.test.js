@@ -10,7 +10,7 @@ const { all } = require("../lib/store");
 test.after(stop);
 test.before(start);
 
-test("魚種代碼端點公開且涵蓋全部 28 個系統魚種", async function () {
+test("主要新鮮代碼端點公開且涵蓋全部 28 個系統魚種", async function () {
   const res = await call("GET", "/api/market/species-codes");
   assert.equal(res.status, 200);
   const rows = res.body.data;
