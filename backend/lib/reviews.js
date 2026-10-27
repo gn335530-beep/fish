@@ -1,7 +1,7 @@
 /* 評價：送出一方評價後重算對方的星等、評價數與未到次數。 */
 
 const { all, findById, patch } = require("./store");
-const { cardMessage } = require("./orders");
+const { cardMessage } = require("./messages");
 const { syncLatestCard } = require("./cards");
 const { round1 } = require("./round");
 

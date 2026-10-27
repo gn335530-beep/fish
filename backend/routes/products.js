@@ -3,7 +3,8 @@
 const express = require("express");
 const { all, insert, nextCode } = require("../lib/store");
 const { requireUser } = require("../lib/auth");
-const { decorateProduct, decorateProducts, sweepExpired } = require("../lib/orders");
+const { decorateProduct, decorateProducts } = require("../lib/product-stock");
+const { sweepExpired } = require("../lib/timeouts");
 const species = require("../lib/species");
 const market = require("../lib/market/service");
 const { round1 } = require("../lib/round");

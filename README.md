@@ -21,6 +21,9 @@ npm run web
 
 開啟 <  />。前端預設連線到同主機的 `3001` 埠；其他 API 設定請參考 [後端說明](./backend/README.md)。
 
+> 後端第一次啟動時會從 `backend/db.seed.json` 建立執行時資料庫 `backend/db.json`（不進版控）。
+> 要重置示範資料，刪除 `backend/db.json` 再啟動即可；也可以用 `FISHMATCH_DB` 指定其他資料庫路徑。
+
 > 若使用其他靜態伺服器，請以 `frontend/` 作為網站根目錄，例如：
 > `python -m http.server 8010 --directory frontend`。
 > 換一個連接埠也能避開瀏覽器對舊檔案的快取。
@@ -31,7 +34,7 @@ npm run web
 npm test
 ```
 
-使用 Node 內建 `node:test`；後端測試使用暫存 `db.json`，不會動到開發資料。
+使用 Node 內建 `node:test`；後端測試使用各自的暫存資料庫，不會動到開發資料。
 
 ## 專案結構
 
@@ -49,7 +52,8 @@ backend/                  本機開發用模擬 API
   lib/                    共用邏輯
   routes/                 端點實作
   uploads/                上傳圖片（不進版控）
-  db.json                 模擬資料
+  db.seed.json           可提交的種子資料
+  db.json                執行時資料（不進版控，首次啟動從種子建立）
 docs/api/                 API 規格文件
 ```
 

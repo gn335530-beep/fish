@@ -1,6 +1,6 @@
 # 04 資料模型
 
-資料全部存在 `backend/db.json`（json-server 的 lowdb）。沒有資料庫、沒有遷移工具；改 schema 就是改 JSON。
+資料存在 `backend/db.json`（json-server 的 lowdb 執行時檔，不進版控）。可提交的示範資料在 `backend/db.seed.json`，第一次啟動時複製成執行時檔。沒有資料庫、沒有遷移工具；改 schema 就是改 JSON。
 
 ## 1. 集合總覽
 
@@ -331,4 +331,4 @@
 | 上傳圖片 | 永久 | `backend/uploads/`，不進版控 |
 | Token | 記憶體 | 重啟即失效 |
 
-`db.json` 是唯一資料來源，**沒有任何備份機制**；開發時建議定期複製。
+`backend/db.seed.json` 是可提交的示範種子；執行時使用不進版控的 `backend/db.json`（或 `FISHMATCH_DB` 指定的路徑），**沒有任何備份機制**。要重置示範資料，刪除執行時檔再重新啟動即可。
