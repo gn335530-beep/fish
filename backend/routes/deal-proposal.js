@@ -4,6 +4,7 @@ const express = require("express");
 const { requireUser } = require("../lib/auth");
 const { productAvailability, isActive, cardMessage, systemMessage, sweepExpired } = require("../lib/orders");
 const { itemsOf, quantityOf } = require("../lib/deal-items");
+const { insufficientQuantity } = require("../lib/quantities");
 const { DRAFT_STATUS } = require("../lib/deal-statuses");
 const deals = require("../lib/deals");
 const { ok, fail } = require("../lib/http");
@@ -76,7 +77,7 @@ router.post("/api/deals/propose", requireUser, function (req, res) {
 
   const missing = shortageOf(deal);
   if (missing) {
-    fail(res, 409, "INSUFFICIENT_QUANTITY",
+    insufficientQuantity(res,
       "「" + missing.item.title + "」可售 " + missing.available + " 尾，不足 " + missing.item.quantity + " 尾", {
         item_id: missing.item.item_id,
         product_id: missing.item.product_id,

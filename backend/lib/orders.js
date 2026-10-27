@@ -1,6 +1,7 @@
 /* 訂單與商品的衍生計算：可售尾數、商品狀態、逾時釋放。 */
 
 const { all, findById, patch, insert, nextCode, nextSeq } = require("./store");
+const { syncLatestCard } = require("./cards");
 
 const { ACTIVE_STATUS } = require("./deal-statuses");
 
@@ -62,15 +63,7 @@ function productAvailability(productId) {
 
 /* 卡片狀態跟著訂單走；只更新最新的協議卡，較早的卡留作歷史。 */
 function syncDealCard(dealId, status) {
-  const cards = all("messages").filter(function (message) {
-    return message.card && message.card.type === "deal"
-      && String(message.card.deal_id) === String(dealId);
-  });
-  cards.sort(function (a, b) { return Number(b.seq) - Number(a.seq); });
-  if (!cards.length) return;
-  patch("messages", cards[0].id, {
-    card: Object.assign({}, cards[0].card, { status: status })
-  });
+  return syncLatestCard(dealId, "deal", { status: status });
 }
 
 function addMessage(conversationId, fields) {
