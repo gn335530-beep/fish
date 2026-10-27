@@ -47,25 +47,6 @@
 .region-chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .region-bar__hint{font-size:.76rem;color:var(--muted-2);margin-left:auto;letter-spacing:.02em}
 
-/* 聊聊觸發按鈕 */
-.chat-trigger{
-  display:inline-flex;align-items:center;gap:10px;padding:13px 24px;
-  border:1px solid var(--ink);border-radius:var(--radius-xs);background:transparent;
-  font-size:.8rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ink);
-  transition:background .2s,color .2s;
-}
-.chat-trigger:hover{background:var(--ink);color:#fff}
-.chat-trigger svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.4}
-
-/* 釣客資訊卡 */
-.seller-card{display:flex;gap:18px;align-items:center;padding:22px 0;border-top:1px solid var(--rule-2);border-bottom:1px solid var(--rule-2)}
-.seller-card__av{
-  width:52px;height:52px;flex:none;border:1px solid var(--ink);border-radius:50%;
-  display:grid;place-items:center;font-family:var(--font-display);font-size:1.1rem;
-}
-.seller-card b{font-family:var(--font-display);font-size:1.02rem;display:block}
-.seller-card span{font-size:.78rem;color:var(--muted);letter-spacing:.03em}
-
 /* 已售完遮罩 */
 .card--out .card__media img{opacity:.5}
 .card--out .card__price b{color:var(--muted-2)}

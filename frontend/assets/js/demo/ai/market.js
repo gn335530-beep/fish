@@ -1,6 +1,6 @@
 /* 行情問答：魚種與地區都從使用者句子或個人檔案來，數字只取自行情 API。 */
 
-import * as api from "../api.js";
+import { getMarketPrice } from "../../api/market.js";
 import { findSpecies, findRegion, normalizeCityName } from "./species.js";
 import { guessUnknownSpecies } from "./conditions.js";
 
@@ -66,7 +66,7 @@ export async function marketReply(text, user) {
 
   let data;
   try {
-    data = await api.getMarketPrice(species.id, requestedRegion || null);
+    data = await getMarketPrice(species.id, requestedRegion || null);
   } catch (error) {
     return noMarketReply();
   }

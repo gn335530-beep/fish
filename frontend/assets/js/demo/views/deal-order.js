@@ -3,15 +3,8 @@
 import { state } from "../store.js";
 import { escapeHtml, money } from "./html.js";
 import { canResend } from "../deal-state.js";
+import { dealStatusLabel } from "../deal-labels.js";
 import { proposalForm, termsBlock, statusNote } from "./deal-terms.js";
-
-const STATUS_LABEL = {
-  DRAFT: "訂單草稿",
-  PENDING_REVIEW: "等待確認",
-  NEGOTIATING: "協商中",
-  CONFIRMED: "已成交",
-  CANCELLED: "已取消"
-};
 
 function isBuyer() {
   const deal = state.deal;
@@ -89,7 +82,7 @@ function fallback() {
   const order = state.room && state.room.order;
   if (!order) return '<div class="fm-order fm-order--plain"><span>尚無訂單</span></div>';
   return '<div class="fm-order fm-order--plain"><b>' +
-    escapeHtml(STATUS_LABEL[order.status] || "訂單") + " · " +
+    escapeHtml(dealStatusLabel(order.status)) + " · " +
     Number(order.item_count || 0) + " 項 · " + Number(order.total_quantity || 0) + " 尾 · " +
     money(order.final_price) + "</b></div>";
 }
@@ -143,7 +136,7 @@ export function renderDealOrder() {
   return '<div class="fm-order">' +
     '<button type="button" class="fm-order__head" data-action="toggle-order" aria-expanded="' +
     String(open) + '">' +
-    '<span class="fm-order__status">' + escapeHtml(STATUS_LABEL[deal.deal_status] || "訂單") + "</span>" +
+    '<span class="fm-order__status">' + escapeHtml(dealStatusLabel(deal.deal_status)) + "</span>" +
     "<b>" + items.length + " 項 · " + tails + " 尾 · " + money(deal.items_total) + "</b>" +
     "<em>" + (open ? "收合" : "明細") + "</em></button>" +
     (open ? bodyOf(deal, items) : "") +

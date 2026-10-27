@@ -1,6 +1,6 @@
 /* 導購：從商品 API 找魚，寫入 last_cards 供指涉使用。 */
 
-import * as api from "../api.js";
+import { listProducts } from "../../api/products.js";
 import { findSpecies, findRegion, normalizeCityName, speciesList } from "./species.js";
 
 const COOKING_WORDS = ["清蒸", "煮湯", "紅燒", "香煎", "煎", "烤", "川燙", "生魚片", "涼拌", "炒", "滷"];
@@ -76,7 +76,7 @@ export async function shoppingReply(text, user) {
   const spice = findSpecies(text);
   const scope = scopeOf(text, user);
   const cooking = cookingMatches(text);
-  const rows = await api.listProducts({ limit: 100 });
+  const rows = await listProducts({ limit: 100 });
 
   let matched = rows.filter(function (p) { return Number(p.available) > 0; });
   if (spice) matched = matched.filter(function (p) { return p.species_id === spice.id; });

@@ -4,6 +4,7 @@ const express = require("express");
 const { requireUser } = require("../lib/auth");
 const { productAvailability, isActive, cardMessage, systemMessage, sweepExpired } = require("../lib/orders");
 const { itemsOf, quantityOf } = require("../lib/deal-items");
+const { DRAFT_STATUS } = require("../lib/deal-statuses");
 const deals = require("../lib/deals");
 const { ok, fail } = require("../lib/http");
 
@@ -47,7 +48,7 @@ router.post("/api/deals/propose", requireUser, function (req, res) {
   if (!deal) return;
 
   const resending = deal.deal_status === "NEGOTIATING";
-  if (!resending && deal.deal_status !== deals.DRAFT_STATUS) {
+  if (!resending && deal.deal_status !== DRAFT_STATUS) {
     fail(res, 409, "INVALID_DEAL_STATUS", "只有草稿或已退回的訂單可以送出協議");
     return;
   }

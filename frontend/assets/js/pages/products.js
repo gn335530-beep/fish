@@ -143,4 +143,4 @@ document.getElementById("reset-filters").addEventListener("click", function () {
 });
 document.addEventListener("haisen:products-changed", loadProducts);
 
-loadProducts();
+document.addEventListener("DOMContentLoaded", loadProducts);

@@ -2,7 +2,7 @@
 
 const { all, findById, patch, insert, nextCode, nextSeq } = require("./store");
 
-const ACTIVE_STATUS = ["PENDING_REVIEW", "NEGOTIATING"];
+const { ACTIVE_STATUS } = require("./deal-statuses");
 
 function itemsOf(deal) {
   return Array.isArray(deal.items) ? deal.items : [];
@@ -133,7 +133,6 @@ function sweepExpired() {
 }
 
 module.exports = {
-  ACTIVE_STATUS: ACTIVE_STATUS,
   itemsOf: itemsOf,
   isActive: isActive,
   reservedFor: reservedFor,

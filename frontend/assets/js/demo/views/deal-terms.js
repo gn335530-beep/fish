@@ -3,13 +3,7 @@
 import { state } from "../store.js";
 import { escapeHtml, money, dateTimeOf } from "./html.js";
 import { canResend } from "../deal-state.js";
-
-const STATUS_NOTE = {
-  PENDING_REVIEW: "等待對方回覆（30 分鐘內）",
-  NEGOTIATING: "協商中，等待對方重新送出",
-  CONFIRMED: "雙方已同意，交易成立",
-  CANCELLED: "這筆訂單已取消"
-};
+import { dealStatusNote } from "../deal-labels.js";
 
 function mayResend(deal) {
   return canResend(deal, state.user && state.user.id);
@@ -44,7 +38,7 @@ export function statusNote(deal) {
   if (deal.deal_status === "NEGOTIATING") {
     return mayResend(deal)
       ? "已退回，可修改條件後重新送出（15 分鐘內）"
-      : "協商中，等待對方重新送出";
+      : dealStatusNote("NEGOTIATING");
   }
-  return STATUS_NOTE[deal.deal_status] || "";
+  return dealStatusNote(deal.deal_status);
 }

@@ -3,12 +3,12 @@
 const express = require("express");
 const { requireUser } = require("../lib/auth");
 const { sweepExpired } = require("../lib/orders");
+const { CANCELLABLE } = require("../lib/deal-statuses");
 const deals = require("../lib/deals");
 const status = require("../lib/deal-status");
 const { ok, fail } = require("../lib/http");
 
 const router = express.Router();
-const CANCELLABLE = ["DRAFT", "PENDING_REVIEW", "NEGOTIATING"];
 
 router.post("/api/deals/respond", requireUser, function (req, res) {
   sweepExpired();

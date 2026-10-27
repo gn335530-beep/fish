@@ -1,6 +1,6 @@
 /* 上架行情卡：只在使用者自己的縣市查行情，查無或上游失敗都不阻擋定價。 */
 
-import * as api from "../api.js";
+import { getMarketPrice } from "../../api/market.js";
 import { normalizeCityName } from "./species.js";
 
 const KG_PER_TAIJIN = 0.6;
@@ -60,7 +60,7 @@ export async function quoteForDraft(draft, user) {
   let data;
   try {
     /* 先取 30 個交易日，再取 7 個（後端會命中同一段快取）；卡片預設顯示 7 日。 */
-    data = await api.getMarketPrice(draft.species_id, region || null, 30);
+    data = await getMarketPrice(draft.species_id, region || null, 30);
     if (!data || !data.found) return { text: "暫無行情" };
   } catch (error) {
     return { text: "暫無行情" };
@@ -68,7 +68,7 @@ export async function quoteForDraft(draft, user) {
 
   let seven = null;
   try {
-    seven = await api.getMarketPrice(draft.species_id, region || null, 7);
+    seven = await getMarketPrice(draft.species_id, region || null, 7);
   } catch (error) {
     seven = null;
   }
