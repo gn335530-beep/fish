@@ -465,6 +465,7 @@
 - 查無交易資料 → 200 `found:false, reason:"NO_TRADE_DATA"`。
 - 上游失敗且無快取 → 200 `found:false, reason:"UPSTREAM_UNAVAILABLE"`；有快取就回快取。
 - 行情 API 公開，不需 Token。
+- `/api/market/species-codes` 的 `official_name` 與 `aliases` 由系統魚種清單帶出；代碼、分類與養殖旗標不隨名稱變更。已接受的顯示名稱變更：七星鱸→海鱸、鯖魚→白腹鯖、小卷→澎湖小卷、巴攏→竹筴魚。
 
 ```jsonc
 { "success": true, "data": {

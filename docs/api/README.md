@@ -50,6 +50,10 @@
 
 `GET /api/products` 會先掃描逾時訂單並釋放保留，不是純讀取。舊的 `/api/fish/data` 與 `PUT /api/fish/data/{id}` 已移除。
 
+### 行情對照名稱
+
+`GET /api/market/species-codes` 的 `official_name` 與 `aliases` 直接來自系統魚種清單（`GET /api/species`）；`lib/market/mappings.js` 只維護代碼、分類與養殖旗標。已接受的顯示名稱變更：七星鱸→海鱸、鯖魚→白腹鯖、小卷→澎湖小卷、巴攏→竹筴魚；舊稱若仍列在魚種清單的 `alias` 中，可繼續作為搜尋與別名使用，代碼、分類與養殖旗標不變。
+
 交易房由 `POST /api/deals/initiate-channel` 開啟，房間唯一鍵是 `buyer_id + seller_id`；同一釣客的多個商品會進同一筆草稿訂單。交易房的系統訊息會計入未讀。助手房每次 `POST /api/conversations/assistant` 都是獨立一間，有自己的 `context` 與草稿；`GET /api/conversations` 會回 `deletable` 供收件匣決定是否顯示刪除。
 
 ### 對話摘要欄位
