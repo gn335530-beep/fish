@@ -22,13 +22,41 @@ test("主要新鮮代碼端點公開且涵蓋全部 28 個系統魚種", async f
   assert.equal(new Set(rows.map(function (row) { return row.code; })).size, 28);
 
   for (const row of rows) {
-    assert.ok(species.byId(row.species_id));
+    const item = species.byId(row.species_id);
+    assert.ok(item);
     assert.equal(typeof row.code, "number");
-    assert.ok(row.official_name);
+    assert.equal(row.official_name, item.name);
+    assert.deepEqual(row.aliases, item.alias);
     assert.ok(["1", "2", "4", "5"].includes(row.category));
-    assert.ok(Array.isArray(row.aliases));
+    assert.equal(row.category, String(row.code).charAt(0));
     assert.equal(typeof row.is_aquaculture, "boolean");
   }
+});
+
+test("行情代碼集合維持不變", function () {
+  const expected = [
+    1031, 1041, 1073, 2011, 2012, 2015, 2051, 2074, 2079, 2113, 2114,
+    2163, 2166, 2169, 2181, 2201, 2271, 2291, 2331, 2341, 2440, 2571,
+    2631, 4015, 4131, 4513, 5012, 5022
+  ];
+  const codes = mappings.speciesCodes().map(function (row) { return row.code; })
+    .sort(function (a, b) { return a - b; });
+  assert.deepEqual(codes, expected);
+});
+
+test("已接受的顯示名稱變更以魚種清單為準", function () {
+  const rows = mappings.speciesCodes();
+  const byId = {};
+  for (const row of rows) byId[row.species_id] = row;
+
+  assert.equal(byId.seabass.official_name, "海鱸");
+  assert.equal(byId.mackerel.official_name, "白腹鯖");
+  assert.equal(byId.squid.official_name, "澎湖小卷");
+  assert.equal(byId.scad.official_name, "竹筴魚");
+  assert.notEqual(byId.seabass.official_name, "七星鱸");
+  assert.notEqual(byId.mackerel.official_name, "鯖魚");
+  assert.notEqual(byId.squid.official_name, "小卷");
+  assert.notEqual(byId.scad.official_name, "巴攏");
 });
 
 test("只使用新鮮代碼：1xxx 限三種魚，沒有 3xxx 凍結與 6xxx 加工", function () {
