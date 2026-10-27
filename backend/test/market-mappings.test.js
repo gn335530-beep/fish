@@ -46,17 +46,13 @@ test("行情代碼集合維持不變", function () {
 
 test("已接受的顯示名稱變更以魚種清單為準", function () {
   const rows = mappings.speciesCodes();
-  const byId = {};
-  for (const row of rows) byId[row.species_id] = row;
+  const rowById = {};
+  for (const row of rows) rowById[row.species_id] = row;
 
-  assert.equal(byId.seabass.official_name, "海鱸");
-  assert.equal(byId.mackerel.official_name, "白腹鯖");
-  assert.equal(byId.squid.official_name, "澎湖小卷");
-  assert.equal(byId.scad.official_name, "竹筴魚");
-  assert.notEqual(byId.seabass.official_name, "七星鱸");
-  assert.notEqual(byId.mackerel.official_name, "鯖魚");
-  assert.notEqual(byId.squid.official_name, "小卷");
-  assert.notEqual(byId.scad.official_name, "巴攏");
+  assert.equal(rowById.seabass.official_name, "海鱸");
+  assert.equal(rowById.mackerel.official_name, "白腹鯖");
+  assert.equal(rowById.squid.official_name, "澎湖小卷");
+  assert.equal(rowById.scad.official_name, "竹筴魚");
 });
 
 test("只使用新鮮代碼：1xxx 限三種魚，沒有 3xxx 凍結與 6xxx 加工", function () {
@@ -77,16 +73,16 @@ test("養殖旗標只標五種魚，香魚與白蝦不標", function () {
     .map(function (row) { return row.species_id; }).sort();
   assert.deepEqual(flagged, ["clam", "eel", "milkfish", "oyster", "seabass"].sort());
 
-  const byId = {};
-  for (const row of rows) byId[row.species_id] = row;
-  assert.equal(byId.grouper.code, 2201);
-  assert.equal(byId.seabass.code, 1073);
-  assert.equal(byId.milkfish.code, 1041);
-  assert.equal(byId.eel.code, 1031);
-  assert.equal(byId.oyster.code, 5012);
-  assert.equal(byId.clam.code, 5022);
-  assert.equal(byId.sweetfish.is_aquaculture, false);
-  assert.equal(byId.shrimp.is_aquaculture, false);
+  const rowById = {};
+  for (const row of rows) rowById[row.species_id] = row;
+  assert.equal(rowById.grouper.code, 2201);
+  assert.equal(rowById.seabass.code, 1073);
+  assert.equal(rowById.milkfish.code, 1041);
+  assert.equal(rowById.eel.code, 1031);
+  assert.equal(rowById.oyster.code, 5012);
+  assert.equal(rowById.clam.code, 5022);
+  assert.equal(rowById.sweetfish.is_aquaculture, false);
+  assert.equal(rowById.shrimp.is_aquaculture, false);
 });
 
 test("市場對照端點有 21 筆，含縣市與 verified 旗標", async function () {
