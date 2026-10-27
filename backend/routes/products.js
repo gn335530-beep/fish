@@ -9,6 +9,7 @@ const species = require("../lib/species");
 const market = require("../lib/market/service");
 const { round1 } = require("../lib/round");
 const { buildTitle } = require("../lib/product-title");
+const { readPricing } = require("../lib/product-pricing");
 const { normalizeRegion } = require("../lib/regions");
 const { requireQuantity } = require("../lib/quantities");
 const { ok, created, fail } = require("../lib/http");
@@ -45,35 +46,6 @@ async function snapshotFor(speciesId, region) {
   } catch (err) {
     return null;
   }
-}
-
-function hasValue(value) {
-  return value !== undefined && value !== null && String(value).trim() !== "";
-}
-
-/* 只填每台斤時由後端算整批；兩者都填時保留原值，不檢查一致性。 */
-function readPricing(body, weightKg) {
-  const hasPrice = hasValue(body.price);
-  const hasPerTaijin = hasValue(body.price_per_taijin);
-  if (!hasPrice && !hasPerTaijin) return { error: "MISSING_PRICE" };
-
-  const priceValue = hasPrice ? Number(body.price) : null;
-  const perTaijinValue = hasPerTaijin ? Number(body.price_per_taijin) : null;
-  if ((hasPrice && (!Number.isFinite(priceValue) || priceValue <= 0)) ||
-      (hasPerTaijin && (!Number.isFinite(perTaijinValue) || perTaijinValue <= 0))) {
-    return { error: "INVALID_PRICE" };
-  }
-
-  const auto = !hasPrice && hasPerTaijin;
-  const price = hasPrice
-    ? priceValue
-    : Math.round(perTaijinValue * weightKg / 0.6);
-  if (!(price > 0)) return { error: "INVALID_PRICE" };
-  return {
-    price: price,
-    price_per_taijin: hasPerTaijin ? perTaijinValue : null,
-    price_auto: auto
-  };
 }
 
 function matches(text, keyword) {

@@ -2,9 +2,9 @@
 
 import { state } from "../store.js";
 import { escapeHtml, money } from "./html.js";
-import { canResend } from "../deal-state.js";
+import { canResend, isDraft, isFinished } from "../deal-state.js";
 import { dealStatusLabel } from "../deal-labels.js";
-import { preferredOrder, isFinishedDeal, orderSummaryText, summaryOfDeal } from "../room-order.js";
+import { preferredOrder, orderSummaryText, summaryOfDeal } from "../room-order.js";
 import { proposalForm, termsBlock, statusNote } from "./deal-terms.js";
 
 function isBuyer() {
@@ -13,7 +13,7 @@ function isBuyer() {
 }
 
 function canEdit() {
-  return isBuyer() && state.deal && state.deal.deal_status === "DRAFT";
+  return isBuyer() && isDraft(state.deal);
 }
 
 function quantityOptions(max, selected) {
@@ -29,7 +29,7 @@ function itemRow(item) {
   const quantity = Number(item.quantity || 0);
   const available = Number(item.available || 0);
   const subtotal = Math.round(Number(item.unit_price || 0) * quantity);
-  const draft = state.deal && state.deal.deal_status === "DRAFT";
+  const draft = isDraft(state.deal);
   const hint = (draft ? "可售 " + available + " 尾 · " : "") + "每尾 " + money(item.unit_price);
   let actions;
 
@@ -94,7 +94,7 @@ function summaryFor(deal) {
 }
 
 function bodyOf(deal, items) {
-  const draft = deal.deal_status === "DRAFT";
+  const draft = isDraft(deal);
   let html = items.length
     ? '<ul class="fm-order__items">' + items.map(itemRow).join("") + "</ul>"
     : '<p class="fm-order__empty">尚未加入商品。</p>';
@@ -132,7 +132,7 @@ function bodyOf(deal, items) {
 export function renderDealOrder() {
   const deal = state.deal;
   if (!deal) return summaryPanel(preferredOrder(state.room));
-  if (isFinishedDeal(deal)) return summaryPanel(summaryFor(deal));
+  if (isFinished(deal)) return summaryPanel(summaryFor(deal));
 
   const items = deal.items || [];
   const tails = items.reduce(function (sum, item) {

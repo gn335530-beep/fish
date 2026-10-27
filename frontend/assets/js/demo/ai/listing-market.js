@@ -2,12 +2,9 @@
 
 import { getMarketPrice } from "../../api/market.js";
 import { normalizeCityName } from "./species.js";
+import "../../shared/format.js";
 
-const KG_PER_TAIJIN = 0.6;
-
-function round1(value) {
-  return Math.round(Number(value) * 10) / 10;
-}
+const format = window.HaisenFormat;
 
 export function hasPrice(draft) {
   return (draft.price !== null && draft.price !== undefined && draft.price !== "") ||
@@ -42,8 +39,8 @@ function buildCard(draft, data, seven) {
     fetched_at: data.fetched_at,
     quality: data.quality,
     weight_kg: weight,
-    weight_taijin: round1(weight / KG_PER_TAIJIN),
-    estimated_total: Math.round(Number(data.price_per_taijin) * weight / KG_PER_TAIJIN),
+    weight_taijin: format.taijinFromKg(weight),
+    estimated_total: Math.round(Number(data.price_per_taijin) * format.taijinFromKg(weight)),
     history: seven,
     history_30: history,
     high: short.high,

@@ -4,8 +4,6 @@ import { dealStatusLabel, cardStatusLabel } from "./deal-labels.js";
 import { cardStatusForDeal } from "./deal-state.js";
 import { money } from "./views/html.js";
 
-const FINISHED = ["CONFIRMED", "CANCELLED"];
-
 export function summaryOfDeal(deal) {
   const items = deal.items || [];
   return {
@@ -27,19 +25,14 @@ export function preferredOrder(room) {
   return room.order || room.last_order || null;
 }
 
-export function isFinishedDeal(deal) {
-  return !!deal && FINISHED.indexOf(deal.deal_status) !== -1;
-}
-
-/* 逾時在資料上也是 CANCELLED，摘要要依原因顯示「已逾時」。 */
+/* 逾時在資料上也是取消狀態，摘要要依原因顯示「已逾時」。 */
 export function orderStatusLabel(order) {
   if (!order) return "";
   const cardStatus = cardStatusForDeal({
     deal_status: order.status,
     cancel_reason: order.cancel_reason
   });
-  if (cardStatus === "expired") return cardStatusLabel("expired");
-  return dealStatusLabel(order.status, "洽談中");
+  return cardStatus ? cardStatusLabel(cardStatus) : dealStatusLabel(order.status, "洽談中");
 }
 
 /* 收件匣與訂單面板共用同一段摘要文字。 */

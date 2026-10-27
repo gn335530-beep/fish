@@ -1,7 +1,9 @@
 /* 上架草稿：欄位缺漏、價格自動計算與送後端的欄位轉換。 */
 
 import { normalizeCityName } from "./species.js";
+import "../../shared/format.js";
 
+const format = window.HaisenFormat;
 const SLOT_ORDER = ["fish_species", "weight_kg", "quantity", "condition", "photo_url", "price"];
 const NON_PRICE_SLOTS = SLOT_ORDER.filter(function (slot) { return slot !== "price"; });
 
@@ -50,7 +52,7 @@ export function mergeDraft(draft, found) {
   }
 
   if (next.price_auto && next.price_per_taijin != null && Number(next.weight_kg) > 0) {
-    next.price = Math.round(Number(next.price_per_taijin) * Number(next.weight_kg) / 0.6);
+    next.price = Math.round(Number(next.price_per_taijin) * format.taijinFromKg(next.weight_kg));
   }
   return next;
 }

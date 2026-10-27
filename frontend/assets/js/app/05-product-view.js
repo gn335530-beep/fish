@@ -18,11 +18,9 @@ function productAvailable(p) {
   return Math.max(0, Number(p.available || 0));
 }
 
+/* 標題只由後端產生；缺漏時用通用文案，不在前端重拼格式。 */
 function productTitle(p) {
-  if (p.title) return p.title;
-  var quantity = Number(p.quantity || 0);
-  return (p.fish_species || "未提供魚種") + "（" + productWeight(p) + "kg / " +
-    quantity + "尾 / " + (p.condition || "未標示") + "）";
+  return p.title || "商品資訊未提供";
 }
 
 function productStatus(p) {

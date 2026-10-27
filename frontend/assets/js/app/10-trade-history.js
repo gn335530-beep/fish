@@ -6,14 +6,18 @@ function hMoney(value) { return window.HaisenFormat.money(value); }
 function hDate(iso) { return window.HaisenFormat.dateTimeOf(iso); }
 
 function hStatus(status) {
-  return window.dealStatusLabel(status);
+  return window.DealStatus.dealStatusLabel(status);
+}
+
+function hConfirmed(status) {
+  return window.DealStatus.isConfirmed(status);
 }
 
 let tradeHistory = { loading: false, error: "", rows: [] };
 let tradeDetail = { id: "", loading: false, error: "", deal: null };
 
 function hReview(row) {
-  if (row.deal_status !== "CONFIRMED") return "—";
+  if (!hConfirmed(row.deal_status)) return "—";
   if (row.my_reviewed && row.peer_reviewed) return "雙方已評價";
   if (row.my_reviewed) return "你已評價，對方待評價";
   if (row.peer_reviewed) return "對方已評價，待你評價";
@@ -72,7 +76,7 @@ function tradeDetailHTML() {
   const deal = tradeDetail.deal;
   if (!deal) return head + '<p class="drawer__note">找不到這筆訂單。</p></div>';
   const terms = deal.deal_terms || {};
-  const review = deal.deal_status === "CONFIRMED"
+  const review = hConfirmed(deal.deal_status)
     ? (deal.my_reviewed ? "你已評價" : "尚未評價")
     : "—";
   return head +

@@ -2,7 +2,7 @@
 
 import { state } from "../store.js";
 import { escapeHtml, money, dateTimeOf } from "./html.js";
-import { cardStatusForDeal, isActionable } from "../deal-state.js";
+import { cardStatusForDeal, isActionable, isPendingCard } from "../deal-state.js";
 import { cardStatusLabel } from "../deal-labels.js";
 import { REVIEW_TAGS, draftOf } from "../review-state.js";
 
@@ -53,7 +53,7 @@ function dealCardActions(card, messageId) {
   const dealId = escapeHtml(card.deal_id);
   let html = "";
 
-  if (status === "pending" && !mine) {
+  if (isPendingCard(status) && !mine) {
     html += '<div class="fm-card__acts">' +
       '<button type="button" class="fm-card__primary" data-action="deal-agree" data-deal="' +
       dealId + '">同意</button>' +

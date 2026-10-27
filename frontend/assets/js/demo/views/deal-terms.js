@@ -2,7 +2,7 @@
 
 import { state } from "../store.js";
 import { escapeHtml, money, dateTimeOf } from "./html.js";
-import { canResend } from "../deal-state.js";
+import { canResend, isNegotiating } from "../deal-state.js";
 import { dealStatusNote } from "../deal-labels.js";
 
 function mayResend(deal) {
@@ -35,10 +35,10 @@ export function termsBlock(deal) {
 }
 
 export function statusNote(deal) {
-  if (deal.deal_status === "NEGOTIATING") {
+  if (isNegotiating(deal)) {
     return mayResend(deal)
       ? "已退回，可修改條件後重新送出（15 分鐘內）"
-      : dealStatusNote("NEGOTIATING");
+      : dealStatusNote(deal.deal_status);
   }
   return dealStatusNote(deal.deal_status);
 }

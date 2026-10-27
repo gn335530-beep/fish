@@ -3,8 +3,7 @@
 const repository = require("./repository");
 const mappings = require("./mappings");
 const { round1 } = require("../round");
-
-const KG_PER_TAIJIN = 0.6;
+const { KG_PER_TAIJIN } = require("../units");
 
 function taijinPrice(pricePerKg) {
   return round1(pricePerKg * KG_PER_TAIJIN);
