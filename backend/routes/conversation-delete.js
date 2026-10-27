@@ -7,7 +7,7 @@ const {
   requireRoom, isDeletable, messagesOf, dealsOf
 } = require("../lib/conversations");
 const { ok, fail } = require("../lib/http");
-const { sweepExpired } = require("../lib/orders");
+const { sweepExpired } = require("../lib/timeouts");
 
 const router = express.Router();
 

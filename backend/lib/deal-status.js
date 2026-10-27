@@ -1,7 +1,9 @@
 /* 協議狀態轉換：同意成交、退回協商、取消釋放。 */
 
 const { findById, patch } = require("./store");
-const { itemsOf, syncDealCard, systemMessage } = require("./orders");
+const { itemsOf } = require("./deal-items");
+const { syncDealCard } = require("./cards");
+const { systemMessage } = require("./messages");
 const { reviewCardMessage } = require("./reviews");
 
 const HOLD_MINUTES = 15;

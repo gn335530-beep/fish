@@ -2,7 +2,7 @@
 
 const express = require("express");
 const { requireUser } = require("../lib/auth");
-const { sweepExpired } = require("../lib/orders");
+const { sweepExpired } = require("../lib/timeouts");
 const { CANCELLABLE } = require("../lib/deal-statuses");
 const deals = require("../lib/deals");
 const status = require("../lib/deal-status");

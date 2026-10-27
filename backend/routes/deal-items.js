@@ -2,7 +2,7 @@
 
 const express = require("express");
 const { requireUser } = require("../lib/auth");
-const { productAvailability } = require("../lib/orders");
+const { productAvailability } = require("../lib/product-stock");
 const { requireQuantity, insufficientQuantity } = require("../lib/quantities");
 const deals = require("../lib/deals");
 const dealItems = require("../lib/deal-items");

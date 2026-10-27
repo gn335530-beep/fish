@@ -1,8 +1,12 @@
 /* 訂單項目：商品快照、尾數與金額；金額一律由項目重算。 */
 
 const { patch } = require("./store");
-const { itemsOf, systemMessage } = require("./orders");
+const { systemMessage } = require("./messages");
 const { requireQuantity, insufficientQuantity } = require("./quantities");
+
+function itemsOf(deal) {
+  return Array.isArray(deal.items) ? deal.items : [];
+}
 
 function itemSubtotal(item) {
   return Math.round(Number(item.unit_price || 0) * Number(item.quantity || 0));

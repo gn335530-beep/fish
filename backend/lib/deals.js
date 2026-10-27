@@ -1,7 +1,7 @@
 /* 交易房與訂單：找或建立唯一的房間與草稿、對外樣貌與協議狀態。 */
 
 const { all, findById, insert, patch, nextCode } = require("./store");
-const { productAvailability } = require("./orders");
+const { productAvailability } = require("./product-stock");
 const { itemsOf, itemsTotal } = require("./deal-items");
 const { DRAFT_STATUS, ACTIVE_STATUS } = require("./deal-statuses");
 const { fail } = require("./http");

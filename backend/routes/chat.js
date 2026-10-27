@@ -4,7 +4,7 @@ const express = require("express");
 const { all, insert, patch, nextCode, nextSeq } = require("../lib/store");
 const { requireUser } = require("../lib/auth");
 const { isParticipant, messagesOf, summary, requireRoom } = require("../lib/conversations");
-const { sweepExpired } = require("../lib/orders");
+const { sweepExpired } = require("../lib/timeouts");
 const { ok } = require("../lib/http");
 
 const router = express.Router();

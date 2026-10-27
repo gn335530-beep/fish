@@ -2,7 +2,10 @@
 
 const express = require("express");
 const { requireUser } = require("../lib/auth");
-const { productAvailability, isActive, cardMessage, systemMessage, sweepExpired } = require("../lib/orders");
+const { productAvailability } = require("../lib/product-stock");
+const { isActive } = require("../lib/deal-statuses");
+const { cardMessage, systemMessage } = require("../lib/messages");
+const { sweepExpired } = require("../lib/timeouts");
 const { itemsOf, quantityOf } = require("../lib/deal-items");
 const { insufficientQuantity } = require("../lib/quantities");
 const { DRAFT_STATUS } = require("../lib/deal-statuses");

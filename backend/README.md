@@ -14,6 +14,8 @@ npm run backend
 預設位址為 `http://localhost:3001`，可用 `PORT` 環境變數更換連接埠。
 前端頁面會將 API base 設為「目前主機的 HTTP 3001 埠」；若使用其他主機，需調整 `frontend/assets/js/config.js`。
 
+執行時資料庫預設為 `backend/db.json`（不進版控）；第一次啟動時會從 `backend/db.seed.json` 複製建立，之後保留開發資料。可用 `FISHMATCH_DB` 指定其他路徑。要重置示範資料，刪除 `backend/db.json` 再重新啟動即可。
+
 行情按需抓取可手動執行：
 
 ```bash
@@ -34,11 +36,12 @@ python -m http.server 8000 --directory frontend
 backend/
   server.js       啟動
   app.js          middleware、靜態目錄、路由掛載
-  lib/            auth / store / orders / deals / deal-items / deal-status / deal-statuses / reviews / conversations / species / regions / market/ / http
+  lib/            auth / store / db-file / messages / product-stock / timeouts / cards / quantities / deals / deal-items / deal-status / deal-statuses / reviews / conversations / species / regions / market/ / http
   routes/         auth / products / species / chat / chat-messages / conversation-delete / deals / deal-items / deal-proposal / deal-response / reviews / market / uploads
   scripts/        market-fetch.js（行情 CLI）
-  test/           node:test 整合測試（使用暫存 db.json）
-  db.json         模擬資料
+  test/           node:test 整合測試（使用暫存資料庫）
+  db.seed.json    可提交的種子資料
+  db.json         執行時資料（不進版控，首次啟動從種子建立）
   uploads/        上傳圖片（不進版控）
 ```
 
@@ -104,7 +107,7 @@ backend/
 npm test
 ```
 
-以 `node:test` 跑 `backend/test/` 與 `frontend/test/`。後端測試會把 `FISHMATCH_DB` 指到暫存檔，不會動到 `db.json`。
+以 `node:test` 跑 `backend/test/` 與 `frontend/test/`。後端測試會把 `FISHMATCH_DB` 指到各自的暫存檔，不會讀寫 `db.json`。
 
 ## 測試帳號
 

@@ -2,7 +2,7 @@
 
 const { all, findById } = require("./store");
 const { publicUser } = require("./auth");
-const { itemsOf } = require("./orders");
+const { itemsOf } = require("./deal-items");
 const { ACTIVE_ORDER } = require("./deal-statuses");
 const { fail } = require("./http");
 
