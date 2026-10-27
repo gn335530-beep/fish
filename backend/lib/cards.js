@@ -17,4 +17,6 @@ function syncLatestCard(dealId, type, changes) {
 /* 協議卡狀態跟著訂單走；只更新最新的協議卡，較早的卡留作歷史。 */
 function syncDealCard(dealId, status) {
   return syncLatestCard(dealId, "deal", { status: status });
-}module.exports = { syncLatestCard: syncLatestCard, syncDealCard: syncDealCard };
+}
+
+module.exports = { syncLatestCard: syncLatestCard, syncDealCard: syncDealCard };

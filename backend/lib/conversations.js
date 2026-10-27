@@ -45,6 +45,7 @@ function orderSummary(deal) {
   return {
     id: deal.id,
     status: deal.deal_status,
+    cancel_reason: deal.cancel_reason || null,
     item_count: items.length,
     total_quantity: items.reduce(function (sum, item) { return sum + Number(item.quantity || 0); }, 0),
     final_price: deal.deal_terms ? Number(deal.deal_terms.final_price || 0) : Number(deal.items_total || 0),

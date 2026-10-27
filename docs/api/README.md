@@ -62,7 +62,7 @@
 | `last_order` | 最新一筆訂單摘要，不限狀態；沒有訂單的助手房為 `null` |
 | `orders` | 這間房所有訂單摘要，新到舊；供評價卡等歷史卡片更新 |
 
-三者皆含 `id`、`status`、`item_count`、`total_quantity`、`final_price`、`review_status`、`updated_at`。
+三者皆含 `id`、`status`、`cancel_reason`、`item_count`、`total_quantity`、`final_price`、`review_status`、`updated_at`。`cancel_reason` 供前端區分逾時（`LOCK_EXPIRED`、`HOLD_EXPIRED`）與主動取消。
 
 前端每 3 秒輪詢對話清單；`last_order` 的 `id`、`status` 或 `updated_at` 改變時，會重取 `GET /api/deals/{id}`，協議卡、評價卡與房間摘要跟著目前訂單更新，不需要重開房間。已成交、已取消與已逾時的協議卡只顯示狀態，不再提供同意、退回或取消操作。
 

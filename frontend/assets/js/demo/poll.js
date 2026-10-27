@@ -1,7 +1,7 @@
 /* 3 秒輪詢：對話清單與當前房間的增量訊息。分頁隱藏時暫停。 */
 
 import * as api from "./api.js";
-import { state, update } from "./store.js";
+import { state, update, appendMessages } from "./store.js";
 
 const INTERVAL = 3000;
 
@@ -17,13 +17,7 @@ export async function refreshRooms() {
 async function refreshMessages() {
   if (!state.room) return [];
   const messages = await api.listMessages(state.room.id, state.lastSeq);
-  if (messages.length) {
-    const last = messages[messages.length - 1];
-    update({
-      messages: state.messages.concat(messages),
-      lastSeq: Number(last.seq) || state.lastSeq
-    });
-  }
+  appendMessages(messages);
   return messages;
 }
 

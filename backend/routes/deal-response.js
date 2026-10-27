@@ -5,7 +5,8 @@ const { requireUser } = require("../lib/auth");
 const { sweepExpired } = require("../lib/timeouts");
 const { CANCELLABLE } = require("../lib/deal-statuses");
 const deals = require("../lib/deals");
-const status = require("../lib/deal-status");
+const transitions = require("../lib/deal-transitions");
+const { CANCEL_REASONS } = require("../lib/deal-cancel");
 const { ok, fail } = require("../lib/http");
 
 const router = express.Router();
@@ -31,8 +32,8 @@ router.post("/api/deals/respond", requireUser, function (req, res) {
 
   const now = new Date().toISOString();
   const updated = action === "AGREE"
-    ? status.agree(deal, now)
-    : status.reject(deal, req.user.id, now);
+    ? transitions.agree(deal, now)
+    : transitions.reject(deal, req.user.id, now);
   ok(res, { deal: deals.decorateDeal(updated) }, action === "AGREE" ? "交易已成立" : "協議已退回");
 });
 
@@ -46,12 +47,12 @@ router.post("/api/deals/cancel", requireUser, function (req, res) {
   }
 
   const reason = String((req.body || {}).reason || "");
-  if (!status.CANCEL_REASONS[reason]) {
+  if (!CANCEL_REASONS[reason]) {
     fail(res, 400, "INVALID_CANCEL_REASON", "請選擇取消原因");
     return;
   }
 
-  const updated = status.cancel(deal, req.user.id, reason, new Date().toISOString());
+  const updated = transitions.cancel(deal, req.user.id, reason, new Date().toISOString());
   ok(res, { deal: deals.decorateDeal(updated) }, "訂單已取消");
 });
 
