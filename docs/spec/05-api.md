@@ -162,7 +162,7 @@
 
 - `seller_id` 取自 Token，client 傳的值一律忽略。
 - `species_id` 先以 id 比對魚種字典，比對不到再用名稱比對；都沒有則存 `null`。
-- `title` 自動產生：`{魚種}（{總重}kg / {尾數}尾 / {處理}）`。
+- `title` 由後端產生並隨商品回應回傳：`{魚種}（{總重}kg / {尾數}尾 / {處理}）`；前端直接顯示，標題缺漏時使用通用文案，不自行拼接。
 - `condition` 是自由文字：trim、非空、最多 20 字。
 - 售價：
   - 只填 `price` → 原樣保留（可含小數）、`price_per_taijin = null`、`price_auto = false`。

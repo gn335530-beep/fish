@@ -1,4 +1,4 @@
-/* 前端格式單一來源：跳脫、金額、日期時間與行情快照；classic 頁面與 ESM 共用這個全域。 */
+/* 前端格式單一來源：跳脫、金額、日期時間、台斤換算與行情快照；classic 頁面與 ESM 共用。 */
 
 function escapeHtml(value) {
   return String(value == null ? "" : value).replace(/[&<>"']/g, function (ch) {
@@ -44,6 +44,16 @@ function localInputOf(iso) {
   if (!date) return "";
   return date.getFullYear() + "-" + pad2(date.getMonth() + 1) + "-" + pad2(date.getDate()) +
     "T" + pad2(date.getHours()) + ":" + pad2(date.getMinutes());
+}
+
+const KG_PER_TAIJIN = 0.6;
+
+function kgFromTaijin(value) {
+  return Number(value) * KG_PER_TAIJIN;
+}
+
+function taijinFromKg(value) {
+  return Number(value) / KG_PER_TAIJIN;
 }
 
 function hasMarketSnapshot(snapshot) {
@@ -100,6 +110,9 @@ window.HaisenFormat = {
   dateTimeOf: dateTimeOf,
   dateOf: dateOf,
   localInputOf: localInputOf,
+  KG_PER_TAIJIN: KG_PER_TAIJIN,
+  kgFromTaijin: kgFromTaijin,
+  taijinFromKg: taijinFromKg,
   hasMarketSnapshot: hasMarketSnapshot,
   priceText: priceText,
   marketSnapshotPrice: marketSnapshotPrice,

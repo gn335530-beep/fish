@@ -97,6 +97,19 @@ test("行情快照格式化不顯示上價、中價、下價", function () {
   assert.equal(ctx.marketSnapshotPrice({ price_per_taijin: 742.2 }), "742.2 元／台斤");
 });
 
+test("缺少標題時顯示通用文案，不自行拼接魚種與規格", function () {
+  const ctx = newContext();
+  const html = ctx.productCardHTML(product({
+    title: "",
+    fish_species: "石斑",
+    weight_kg: 4.5,
+    quantity: 1,
+    condition: "放血冰鎮"
+  }));
+  assert.match(html, /商品資訊未提供/);
+  assert.doesNotMatch(html, /石斑（4\.5kg/);
+});
+
 test("商品卡標明每台斤與自動計算", function () {
   const ctx = newContext();
   const html = ctx.productCardHTML(product({

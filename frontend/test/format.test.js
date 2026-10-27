@@ -36,6 +36,12 @@ test("日期與時間格式", function () {
   assert.equal(format.dateTimeOf("不是日期"), "");
 });
 
+test("台斤換算只由共用常數提供", function () {
+  assert.equal(format.KG_PER_TAIJIN, 0.6);
+  assert.equal(format.kgFromTaijin(2), 1.2);
+  assert.equal(format.taijinFromKg(3), 5);
+});
+
 test("行情快照文字只由共用格式產生", function () {
   const snapshot = {
     price_per_taijin: 742.2,
@@ -48,6 +54,9 @@ test("行情快照文字只由共用格式產生", function () {
   assert.equal(format.marketSnapshotPrice(snapshot), "742.2 元／台斤");
   assert.equal(format.priceText(742.2), "742.2");
   assert.equal(format.priceText(200), "200");
+  assert.equal(format.priceText(-1.25), "-1.3");
+  assert.equal(format.priceText("200"), "200");
+  assert.equal(format.priceText("abc"), "NaN");
   assert.equal(format.marketSnapshotScope(snapshot), "高雄市平均");
   assert.equal(format.marketSnapshotMeta(snapshot),
     "高雄市平均 · 2026-10-22 · 農業部漁產品交易行情 · 新鮮批發參考 · 養殖價格");

@@ -32,7 +32,7 @@ function dealActions(card) {
 }
 
 function productCard(card) {
-  const title = escapeHtml(card.title || "商品");
+  const title = escapeHtml(card.title || "商品資訊未提供");
   const image = escapeHtml(resolveImage(card.photo_url));
   const available = Number(card.available) || 0;
   const reserved = Number(card.reserved_quantity) || 0;

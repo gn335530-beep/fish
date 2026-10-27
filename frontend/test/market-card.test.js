@@ -66,6 +66,15 @@ test("顯示期間最高最低與參考整批金額", function () {
   assert.match(html, /NT\$1,000/);
 });
 
+test("行情卡重量使用共用的一位小數格式", function () {
+  const html = renderCard(card({
+    weight_kg: 5.4,
+    weight_taijin: 9.000000000000002
+  }), "msg_1");
+  assert.match(html, /9 台斤/);
+  assert.doesNotMatch(html, /9\.000000000000002/);
+});
+
 test("養殖魚種標示養殖價格", function () {
   const html = renderCard(card({ is_aquaculture: true }), "msg_1");
   assert.match(html, /養殖價格/);

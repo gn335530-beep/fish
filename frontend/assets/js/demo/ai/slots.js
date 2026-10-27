@@ -2,6 +2,9 @@
 
 import { findSpecies } from "./species.js";
 import { cleanCondition, extractCondition, guessUnknownSpecies } from "./conditions.js";
+import "../../shared/format.js";
+
+const format = window.HaisenFormat;
 
 const NUMBER_SLOTS = ["weight_kg", "quantity"];
 const BARE_LIMIT = 999;
@@ -69,7 +72,7 @@ export function extractSlots(text, assumeSlot, details) {
   if (weightMatch) {
     let kg = Number(weightMatch[1]);
     const unit = weightMatch[2];
-    if (unit === "台斤" || unit === "斤") kg = kg * 0.6;
+    if (unit === "台斤" || unit === "斤") kg = format.kgFromTaijin(kg);
     found.weight_kg = roundWeight(kg);
     rest = strip(rest, weightMatch[0]);
   }
