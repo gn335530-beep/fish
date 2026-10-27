@@ -1,6 +1,6 @@
 # Review 後續修正：交易摘要、訊息去重與單一來源收斂
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Source:** `.scratch/review-followups/spec.md`，源自 2026-10-27 對 `a5ef9fe..c80aa7a`（15 筆提交）的 Standards／Spec 雙軸審查。
 
