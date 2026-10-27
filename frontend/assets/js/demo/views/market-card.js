@@ -1,15 +1,8 @@
 /* 上架行情卡：平均價、7／30 交易日走勢、期間高低與參考整批金額。 */
 
-import { escapeHtml, money } from "./html.js";
+import { escapeHtml, money, priceText } from "./html.js";
+import { marketScope } from "./market.js";
 import { state } from "../store.js";
-
-function priceText(value) {
-  return Number(value).toFixed(1).replace(/\.0$/, "");
-}
-
-function scopeText(card) {
-  return card.scope === "city" ? (card.region || "縣市") + "平均" : "全國平均";
-}
 
 function historyFor(card, days) {
   if (days === 30) return card.history_30 || card.history || [];
@@ -52,7 +45,7 @@ export function renderMarketCard(card, messageId) {
     '<div class="fm-market__head"><b>' + escapeHtml(card.species_name || "行情") + '行情</b>' +
     '<span class="fm-market__ref">新鮮批發參考</span></div>' +
     '<div class="fm-market__price"><b>' + priceText(card.price_per_taijin) + '</b> <span>元／台斤</span></div>' +
-    '<div class="fm-market__meta">' + escapeHtml(scopeText(card)) + ' · ' +
+    '<div class="fm-market__meta">' + escapeHtml(marketScope(card)) + ' · ' +
     escapeHtml(card.trade_date || "") + ' · ' + escapeHtml(card.source || "") + '</div>' +
     (card.is_aquaculture ? '<span class="fm-market__tag">養殖價格</span>' : "") +
     '<div class="fm-market__days">' + dayButton(messageId, 7, days === 7) + dayButton(messageId, 30, days === 30) + '</div>' +

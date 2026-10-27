@@ -8,6 +8,9 @@ import vm from "node:vm";
 const source = fs.readFileSync(
   new URL("../assets/js/app/05-product-view.js", import.meta.url), "utf8"
 );
+const formatSource = fs.readFileSync(
+  new URL("../assets/js/shared/format.js", import.meta.url), "utf8"
+);
 
 function newContext() {
   const ctx = vm.createContext({
@@ -15,6 +18,7 @@ function newContext() {
     normalizeCityName: function (value) { return String(value || "").replace(/臺/g, "台"); },
     document: { getElementById: function () { return null; } }
   });
+  vm.runInContext(formatSource, ctx);
   vm.runInContext(source, ctx);
   return ctx;
 }
@@ -101,7 +105,7 @@ test("商品卡標明每台斤與自動計算", function () {
     price_auto: true
   }));
   assert.match(html, /每台斤/);
-  assert.match(html, /每台斤 200 元/);
+  assert.match(html, /每台斤 NT\$200/);
   assert.match(html, /每尾均價/);
   assert.match(html, /自動計算/);
   assert.match(html, /整批/);

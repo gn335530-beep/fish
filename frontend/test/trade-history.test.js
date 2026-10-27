@@ -11,6 +11,9 @@ const source = fs.readFileSync(
 const labelsSource = fs.readFileSync(
   new URL("../assets/js/shared/deal-status.js", import.meta.url), "utf8"
 );
+const formatSource = fs.readFileSync(
+  new URL("../assets/js/shared/format.js", import.meta.url), "utf8"
+);
 
 function newContext() {
   const ctx = vm.createContext({
@@ -19,6 +22,7 @@ function newContext() {
     getUser: function () { return { id: 2 }; }
   });
   vm.runInContext(labelsSource, ctx);
+  vm.runInContext(formatSource, ctx);
   vm.runInContext(source, ctx);
   return ctx;
 }
