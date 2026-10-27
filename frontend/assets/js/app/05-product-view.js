@@ -1,23 +1,14 @@
 /* 商品（products API）的顯示轉換與卡片。 */
 
-function productEscape(value) {
-  return String(value == null ? "" : value).replace(/[&<>"']/g, function (ch) {
-    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch];
-  });
-}
-
-function productMoney(value) {
-  return Number(value || 0).toLocaleString("en-US") + " 元";
-}
-
-function productDate(value) {
-  if (!value) return "日期未提供";
-  var d = new Date(value);
-  if (isNaN(d.getTime())) return "日期未提供";
-  var month = String(d.getMonth() + 1).padStart(2, "0");
-  var day = String(d.getDate()).padStart(2, "0");
-  return d.getFullYear() + "/" + month + "/" + day;
-}
+/* 格式化集中於 shared/format.js；這裡用延遲取值，classic 腳本不依賴載入順序。 */
+function productEscape(value) { return window.HaisenFormat.escapeHtml(value); }
+function productMoney(value) { return window.HaisenFormat.money(value); }
+function productDate(value) { return window.HaisenFormat.dateOf(value) || "日期未提供"; }
+function hasMarketSnapshot(snapshot) { return window.HaisenFormat.hasMarketSnapshot(snapshot); }
+function marketSnapshotPrice(snapshot) { return window.HaisenFormat.marketSnapshotPrice(snapshot); }
+function marketSnapshotScope(snapshot) { return window.HaisenFormat.marketSnapshotScope(snapshot); }
+function marketSnapshotSource(snapshot) { return window.HaisenFormat.marketSnapshotSource(snapshot); }
+function marketSnapshotMeta(snapshot) { return window.HaisenFormat.marketSnapshotMeta(snapshot); }
 
 function productWeight(p) {
   return Number(p.weight_kg || 0).toFixed(1);
@@ -40,37 +31,12 @@ function productStatus(p) {
   return "可售 " + productAvailable(p) + " 尾";
 }
 
-function hasMarketSnapshot(snapshot) {
-  return !!(snapshot && snapshot.price_per_taijin != null);
-}
-
-function marketSnapshotPrice(snapshot) {
-  if (!hasMarketSnapshot(snapshot)) return "暫無行情";
-  return Number(snapshot.price_per_taijin).toFixed(1).replace(/\.0$/, "") + " 元／台斤";
-}
-
-function marketSnapshotScope(snapshot) {
-  if (!hasMarketSnapshot(snapshot)) return "";
-  return snapshot.scope === "city" ? (snapshot.region || "縣市") + "平均" : "全國平均";
-}
-
-function marketSnapshotSource(snapshot) {
-  const parts = ["新鮮批發參考"];
-  if (hasMarketSnapshot(snapshot) && snapshot.source) parts.unshift(snapshot.source);
-  if (hasMarketSnapshot(snapshot) && snapshot.is_aquaculture) parts.push("養殖價格");
-  return parts.join(" · ");
-}
-
 function marketSnapshotCardHTML(snapshot) {
   if (!hasMarketSnapshot(snapshot)) {
     return '<div class="card__market"><span class="card__market-label">新鮮批發參考</span>' +
       '<span class="card__market-empty">暫無行情</span></div>';
   }
-  var meta = [
-    marketSnapshotScope(snapshot),
-    snapshot.trade_date,
-    marketSnapshotSource(snapshot)
-  ].filter(Boolean).join(" · ");
+  var meta = marketSnapshotMeta(snapshot);
   return '<div class="card__market"><span class="card__market-label">新鮮批發參考</span>' +
     '<b class="card__market-price">' + productEscape(marketSnapshotPrice(snapshot)) + '</b>' +
     '<span class="card__market-meta">' + productEscape(meta) + '</span></div>';

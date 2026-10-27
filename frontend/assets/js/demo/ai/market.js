@@ -1,6 +1,7 @@
 /* 行情問答：魚種與地區都從使用者句子或個人檔案來，數字只取自行情 API。 */
 
 import { getMarketPrice } from "../../api/market.js";
+import "../../shared/format.js";
 import { findSpecies, findRegion, normalizeCityName } from "./species.js";
 import { guessUnknownSpecies } from "./conditions.js";
 
@@ -24,13 +25,12 @@ function noMarketReply() {
   return { replies: [{ text: "暫無行情" }] };
 }
 
-function priceText(data) {
-  return Number(data.price_per_taijin).toFixed(1).replace(/\.0$/, "") + " 元／台斤";
-}
-
 function scopeText(data, requestedRegion) {
-  if (data.scope === "city") return (data.region || requestedRegion || "縣市") + "平均";
-  return "全國平均";
+  return window.HaisenFormat.marketSnapshotScope({
+    scope: data.scope,
+    region: data.region || requestedRegion,
+    price_per_taijin: data.price_per_taijin
+  });
 }
 
 function prefixText(data, explicit, profile, requestedRegion) {
@@ -48,7 +48,8 @@ function foundReply(species, data, context) {
   const detail = "（" + quality + data.trade_date + "，" + place + "，" + data.source + "）";
   const prefix = prefixText(data, context.explicit, context.profile, context.requestedRegion);
   return {
-    replies: [{ text: prefix + species.name + " 的平均價是 " + priceText(data) + detail + "。" }]
+    replies: [{ text: prefix + species.name + " 的平均價是 " +
+      window.HaisenFormat.marketSnapshotPrice(data) + detail + "。" }]
   };
 }
 

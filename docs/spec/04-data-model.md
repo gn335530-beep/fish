@@ -267,15 +267,15 @@
 ### `species_market_codes`
 
 ```jsonc
-{ "code": 2201, "official_name": "石斑魚", "species_id": "grouper",
-  "is_aquaculture": false, "category": "2", "aliases": ["石斑"] }
+{ "code": 2201, "official_name": "玳瑁石斑", "species_id": "grouper",
+  "is_aquaculture": false, "category": "2", "aliases": ["石斑", "石斑魚"] }
 ```
 
 - 每個系統魚種只放一個主要新鮮代碼；`1xxx` 只允許海鱸（1073）、虱目魚（1041）、鰻魚（1031）。
 - 排除 `3xxx` 凍結、`6xxx` 加工。
 - `is_aquaculture = true`：上述三種魚，以及名稱有「養」的牡蠣（5012）、文蛤（5022）。香魚（2631）、白蝦（4015）依目前規則不標。
 - `category` 記官方大分類，供檢查；查詢不靠代碼第一位猜測。
-- 魚種清單仍只來自 `backend/lib/species.js`；本表只補官方代碼。後端啟動時由 `lib/market/mappings.js` 同步到 db。
+- 魚種名稱與別名只來自 `backend/lib/species.js`；`lib/market/mappings.js` 只維護代碼、分類與養殖旗標，`official_name` 與 `aliases` 由魚種清單帶出。後端啟動時由 `lib/market/mappings.js` 同步到 db。
 
 ### `market_locations`
 

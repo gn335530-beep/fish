@@ -58,7 +58,7 @@ function createDb() {
     ],
     products: [
       product("prd_a", 1, "石斑", 2, 2800),
-      product("prd_b", 1, "嘉鱲", 2, 3060),
+      product("prd_b", 1, "黑鯛", 2, 3060),
       product("prd_c", 4, "花枝", 1, 500)
     ],
     conversations: [],

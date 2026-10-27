@@ -1,46 +1,16 @@
-/* 視圖共用的小工具：跳脫、時間、金額、圖片路徑。 */
+/* 視圖共用的小工具：格式函式來自 shared/format.js，這裡只保留頭像與圖片路徑。 */
 
-export function escapeHtml(value) {
-  return String(value == null ? "" : value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
+import "../../shared/format.js";
+
+export const escapeHtml = window.HaisenFormat.escapeHtml;
+export const money = window.HaisenFormat.money;
+export const priceText = window.HaisenFormat.priceText;
+export const timeOf = window.HaisenFormat.timeOf;
+export const dateTimeOf = window.HaisenFormat.dateTimeOf;
+export const localInputOf = window.HaisenFormat.localInputOf;
 
 export function initials(name) {
   return String(name || "魚").trim().slice(0, 1);
-}
-
-export function timeOf(iso) {
-  if (!iso) return "";
-  const date = new Date(iso);
-  if (isNaN(date.getTime())) return "";
-  return String(date.getHours()).padStart(2, "0") + ":" + String(date.getMinutes()).padStart(2, "0");
-}
-
-export function dateTimeOf(iso) {
-  if (!iso) return "";
-  const date = new Date(iso);
-  if (isNaN(date.getTime())) return "";
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return month + "/" + day + " " + timeOf(iso);
-}
-
-/* datetime-local 需要本地時間且不含秒。 */
-export function localInputOf(iso) {
-  if (!iso) return "";
-  const date = new Date(iso);
-  if (isNaN(date.getTime())) return "";
-  const pad = function (value) { return String(value).padStart(2, "0"); };
-  return date.getFullYear() + "-" + pad(date.getMonth() + 1) + "-" + pad(date.getDate()) +
-    "T" + pad(date.getHours()) + ":" + pad(date.getMinutes());
-}
-
-export function money(value) {
-  const number = Number(value) || 0;
-  return "NT$" + number.toLocaleString("zh-TW");
 }
 
 export const NO_ASSISTANT_TEXT = "目前沒有 AI 對話。按「新增 AI 對話」開始。";

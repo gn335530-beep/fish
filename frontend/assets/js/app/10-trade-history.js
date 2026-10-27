@@ -1,30 +1,16 @@
 /* 個人抽屜：交易紀錄列表與單筆詳情。 */
 
+/* 格式化集中於 shared/format.js；這裡用延遲取值，classic 腳本不依賴載入順序。 */
+function hEscape(value) { return window.HaisenFormat.escapeHtml(value); }
+function hMoney(value) { return window.HaisenFormat.money(value); }
+function hDate(iso) { return window.HaisenFormat.dateTimeOf(iso); }
+
 function hStatus(status) {
   return window.dealStatusLabel(status);
 }
 
 let tradeHistory = { loading: false, error: "", rows: [] };
 let tradeDetail = { id: "", loading: false, error: "", deal: null };
-
-function hEscape(value) {
-  return String(value == null ? "" : value).replace(/[&<>"']/g, function (ch) {
-    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch];
-  });
-}
-
-function hMoney(value) {
-  return "NT$" + Number(value || 0).toLocaleString("en-US");
-}
-
-function hDate(iso) {
-  if (!iso) return "";
-  const date = new Date(iso);
-  if (isNaN(date.getTime())) return "";
-  const pad = function (value) { return String(value).padStart(2, "0"); };
-  return (date.getMonth() + 1) + "/" + pad(date.getDate()) + " " +
-    pad(date.getHours()) + ":" + pad(date.getMinutes());
-}
 
 function hReview(row) {
   if (row.deal_status !== "CONFIRMED") return "—";

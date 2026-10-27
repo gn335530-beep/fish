@@ -1,37 +1,37 @@
 /* 行情對照表（唯一來源）：系統魚種 → 一個主要新鮮官方代碼，市場簡稱 → 縣市。
-   魚種清單本身仍來自 ../species.js，這裡只補官方代碼與養殖旗標。 */
+   魚種名稱與別名只來自 ../species.js，這裡只補官方代碼、分類與養殖旗標。 */
 
 const species = require("../species");
 
 const CODE_BY_SPECIES = {
-  amberjack: { code: 2079, official_name: "紅魽", category: "2", aliases: ["紅甘", "紅魽魚"] },
-  seabream: { code: 2011, official_name: "加鱲", category: "2", aliases: ["嘉鱲", "真鯛", "嘉鱲魚", "加臘"] },
-  grouper: { code: 2201, official_name: "石斑魚", category: "2", aliases: ["玳瑁石斑", "石斑"] },
-  tuna: { code: 2114, official_name: "黑鮪", category: "2", aliases: ["黑鮪魚", "鮪魚"] },
-  seabass: { code: 1073, official_name: "七星鱸", category: "1", is_aquaculture: true, aliases: ["海鱸", "鱸魚", "七星鱸"] },
-  mackerel: { code: 2331, official_name: "鯖魚", category: "2", aliases: ["白腹鯖", "鯖魚"] },
-  squid: { code: 2166, official_name: "小卷", category: "2", aliases: ["澎湖小卷", "小卷", "軟絲", "透抽"] },
-  redseabream: { code: 2012, official_name: "赤宗", category: "2", aliases: ["赤鯮"] },
-  blackbream: { code: 2015, official_name: "黑鯛", category: "2", aliases: ["黑格"] },
-  yellowfin: { code: 2113, official_name: "黃鰭鮪", category: "2", aliases: [] },
-  dolphinfish: { code: 2291, official_name: "暑魚", category: "2", aliases: ["鬼頭刀", "鱰魚", "飛烏虎"] },
-  scad: { code: 2074, official_name: "巴闌", category: "2", aliases: ["竹筴魚", "巴攏", "竹莢魚"] },
-  ribbonfish: { code: 2341, official_name: "白帶魚", category: "2", aliases: [] },
-  threadfin: { code: 2271, official_name: "午仔魚", category: "2", aliases: [] },
-  bigeye: { code: 2051, official_name: "紅目鰱", category: "2", aliases: ["紅目"] },
-  tilefish: { code: 2181, official_name: "馬頭魚", category: "2", aliases: [] },
-  rockfish: { code: 2440, official_name: "石狗公", category: "2", aliases: [] },
-  leatherjacket: { code: 2571, official_name: "剝皮魚", category: "2", aliases: [] },
-  cuttlefish: { code: 2163, official_name: "花枝", category: "2", aliases: [] },
-  octopus: { code: 2169, official_name: "章魚", category: "2", aliases: [] },
-  lobster: { code: 4131, official_name: "龍蝦海", category: "4", aliases: ["龍蝦"] },
-  crab: { code: 4513, official_name: "三點仔", category: "4", aliases: ["三點蟹"] },
-  shrimp: { code: 4015, official_name: "白蝦", category: "4", aliases: ["蝦"] },
-  oyster: { code: 5012, official_name: "牡蠣養", category: "5", is_aquaculture: true, aliases: ["牡蠣", "蚵"] },
-  clam: { code: 5022, official_name: "文蛤養", category: "5", is_aquaculture: true, aliases: ["文蛤", "蛤"] },
-  milkfish: { code: 1041, official_name: "虱目魚", category: "1", is_aquaculture: true, aliases: [] },
-  eel: { code: 1031, official_name: "白鰻", category: "1", is_aquaculture: true, aliases: ["鰻魚"] },
-  sweetfish: { code: 2631, official_name: "香魚", category: "2", aliases: [] }
+  amberjack: { code: 2079, category: "2" },
+  seabream: { code: 2011, category: "2" },
+  grouper: { code: 2201, category: "2" },
+  tuna: { code: 2114, category: "2" },
+  seabass: { code: 1073, category: "1" },
+  mackerel: { code: 2331, category: "2" },
+  squid: { code: 2166, category: "2" },
+  redseabream: { code: 2012, category: "2" },
+  blackbream: { code: 2015, category: "2" },
+  yellowfin: { code: 2113, category: "2" },
+  dolphinfish: { code: 2291, category: "2" },
+  scad: { code: 2074, category: "2" },
+  ribbonfish: { code: 2341, category: "2" },
+  threadfin: { code: 2271, category: "2" },
+  bigeye: { code: 2051, category: "2" },
+  tilefish: { code: 2181, category: "2" },
+  rockfish: { code: 2440, category: "2" },
+  leatherjacket: { code: 2571, category: "2" },
+  cuttlefish: { code: 2163, category: "2" },
+  octopus: { code: 2169, category: "2" },
+  lobster: { code: 4131, category: "4" },
+  crab: { code: 4513, category: "4" },
+  shrimp: { code: 4015, category: "4" },
+  oyster: { code: 5012, category: "5" },
+  clam: { code: 5022, category: "5" },
+  milkfish: { code: 1041, category: "1" },
+  eel: { code: 1031, category: "1" },
+  sweetfish: { code: 2631, category: "2" }
 };
 
 const AQUACULTURE_SPECIES = ["seabass", "milkfish", "eel", "oyster", "clam"];
@@ -71,11 +71,11 @@ function speciesCodes() {
     const mapping = CODE_BY_SPECIES[item.id];
     return {
       code: mapping.code,
-      official_name: mapping.official_name,
+      official_name: item.name,
       species_id: item.id,
       is_aquaculture: AQUACULTURE_SPECIES.indexOf(item.id) !== -1,
       category: mapping.category,
-      aliases: mapping.aliases
+      aliases: item.alias
     };
   });
 }
