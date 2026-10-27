@@ -40,9 +40,7 @@
 | `username` | string | 手機號碼，唯一 |
 | `password` | string | **明文**（已知缺陷） |
 | `display_name` | string | 暱稱 |
-| `role` | `BUYER` \| `SELLER` | 顯示標籤，不影響權限 |
 | `is_verified` | boolean | |
-| `completed_orders` | number | 舊欄位，與 `completed_deals` 重複 |
 | `completed_deals` | number | 成交筆數 |
 | `rating_score` | number | 平均星等 |
 | `review_count` | number | 評價數 |
@@ -69,7 +67,7 @@
 | `sold_quantity` | number | 已成交尾數，系統維護 |
 | `condition` | string | 自由文字，最多 20 字 |
 | `photo_url` | string | `/uploads/xxx.jpg` |
-| `price` | number | **上架整批售價（元）**；訂單／協議使用 |
+| `price` | number | **上架整批售價（元）**；使用者明確輸入時原樣保留（可含小數），訂單／協議使用 |
 | `price_per_taijin` | number \| null | 上架每台斤售價（元）；可空 |
 | `price_auto` | boolean | 整批售價是否由每台斤自動計算 |
 | `market_snapshot` | object \| null | 發布時凍結的行情；見第 9 節 |

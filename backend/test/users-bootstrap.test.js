@@ -13,7 +13,6 @@ function user(id, city) {
     username: "0977" + id,
     password: "pw",
     display_name: "測試" + id,
-    role: "BUYER",
     city: city,
     district: "",
     address_line: ""

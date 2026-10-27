@@ -12,6 +12,8 @@ function publicUser(user) {
   delete safe.bank_code;
   delete safe.bank_account;
   delete safe.bank_account_name;
+  delete safe.role;
+  delete safe.completed_orders;
   safe.display_address = [safe.city, safe.district, safe.address_line].filter(Boolean).join("");
   safe.region = safe.city || "";
   safe.seller_terms_accepted_at = safe.seller_terms_accepted_at || null;

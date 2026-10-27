@@ -59,7 +59,7 @@
 
   /* ------------------------------------------------------------------ *
    * 使用者欄位對應：後端 User → 前端 haisen_user_v1
-   * [對應] username=電話、display_name=暱稱、role=SELLER|BUYER
+   * [對應] username=電話、display_name=暱稱
    * ------------------------------------------------------------------ */
   function toLocalUser(user, phone) {
     user = user || {};
@@ -67,9 +67,8 @@
       id: user.id,
       nick: user.display_name || user.username || "會員",
       phone: phone || user.username || "",
-      role: user.role || "BUYER",
       verified: !!user.is_verified,
-      orders: user.completed_deals || user.completed_orders || 0,
+      orders: user.completed_deals || 0,
       rating: user.rating_score || 0,
       city: user.city || "",
       district: user.district || "",

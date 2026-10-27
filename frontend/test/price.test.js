@@ -91,6 +91,12 @@ test("送後端時只填每台斤就不送整批，讓後端計算", function ()
   assert.equal(explicitPayload.price_per_taijin, 200);
 });
 
+test("自動計算使用原始總重", function () {
+  const draft = draftApi.mergeDraft({ weight_kg: 4.55 }, { price_per_taijin: 200 });
+  assert.equal(draft.price, 1517);
+  assert.equal(draft.price_auto, true);
+});
+
 test("草稿卡分別標明整批、每台斤與每尾均價", function () {
   const html = cards.renderCard({
     type: "draft",

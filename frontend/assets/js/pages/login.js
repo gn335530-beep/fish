@@ -78,7 +78,7 @@ function finish(kind, nick, phone, city){
   document.getElementById("auth-go").textContent = "前往首頁";
   document.getElementById("auth-modal").classList.add("show");
   /* 登入狀態（haisen_user_v1 / haisen_token_v1）由 assets/js/api/ 的 HaisenAPI 寫入，
-     不再於此處覆寫，以免遺失 id / role 等欄位。 */
+     不再於此處覆寫，以免遺失 id 等欄位。 */
 }
 
 /* 送出按鈕的忙碌狀態 */
@@ -124,9 +124,9 @@ formRegister.addEventListener("submit", async e=>{
     /* [API 對接點] 會員註冊
        METHOD  : POST
        ENDPOINT: /api/auth/register
-       PARAMS  : { username: 電話, password, display_name: 暱稱, city: 縣市, role: "BUYER" }
+       PARAMS  : { username: 電話, password, display_name: 暱稱, city: 縣市 }
        回應    : { success, message, token, user }（HTTP 201，token 直接登入）
-       資料庫  : users(username, password[bcrypt], display_name, city, role) */
+       資料庫  : users(username, password[bcrypt], display_name, city) */
     const u = await window.HaisenAPI.register({ phone: phone, nick: nick, password: pass, city: city });
     finish("register", u.nick, u.phone, u.city);
   }catch(err){

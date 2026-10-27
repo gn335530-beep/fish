@@ -6,8 +6,8 @@ import { cleanCondition, extractCondition, guessUnknownSpecies } from "./conditi
 const NUMBER_SLOTS = ["weight_kg", "quantity"];
 const BARE_LIMIT = 999;
 
-function round1(value) {
-  return Math.round(Number(value) * 10) / 10;
+function roundWeight(value) {
+  return Math.round(Number(value) * 100) / 100;
 }
 
 function strip(text, match) {
@@ -27,7 +27,7 @@ function bareIntegers(text) {
 }
 
 function valueFor(slot, value) {
-  return slot === "quantity" ? Math.floor(value) : round1(value);
+  return slot === "quantity" ? Math.floor(value) : roundWeight(value);
 }
 
 /* 重量與尾數用消去法補；判不出來的數字留給呼叫端回問。 */
@@ -70,7 +70,7 @@ export function extractSlots(text, assumeSlot, details) {
     let kg = Number(weightMatch[1]);
     const unit = weightMatch[2];
     if (unit === "台斤" || unit === "斤") kg = kg * 0.6;
-    found.weight_kg = round1(kg);
+    found.weight_kg = roundWeight(kg);
     rest = strip(rest, weightMatch[0]);
   }
 
@@ -92,9 +92,6 @@ export function extractSlots(text, assumeSlot, details) {
     }
   }
 
-  const condition = extractCondition(source);
-  if (condition) found.condition = condition;
-
   const perTaijinMatch = /(?:每\s*(?:台斤|斤)|一\s*(?:台斤|斤))\s*(\d+(?:\.\d+)?)/.exec(rest)
     || /(\d+(?:\.\d+)?)\s*(?:元)?\s*[／/]\s*(?:台斤|斤)/.exec(rest)
     || /(\d+(?:\.\d+)?)\s*元?\s*(?:每|一)?\s*(?:台斤|斤)/.exec(rest);
@@ -115,11 +112,14 @@ export function extractSlots(text, assumeSlot, details) {
     rest = strip(rest, amountMatch[0]);
   }
 
+  const condition = extractCondition(rest, found.fish_species);
+  if (condition) found.condition = condition;
+
   /* 價格步驟只認價格，避免把裸數字誤補成重量或尾數。 */
   if (assumeSlot === "price") {
     if (found.price === undefined && found.price_per_taijin === undefined) {
       const barePrice = /(\d+(?:\.\d+)?)/.exec(rest);
-      if (barePrice) found.price = Math.round(Number(barePrice[1]));
+      if (barePrice) found.price = Number(barePrice[1]);
     }
     return found;
   }
@@ -128,7 +128,7 @@ export function extractSlots(text, assumeSlot, details) {
   if (found.weight_kg === undefined && (!assumeSlot || assumeSlot === "weight_kg")) {
     const bareWeight = /(\d+\.\d+)(?!\s*(?:元|塊|nt|NT))/.exec(rest);
     if (bareWeight) {
-      found.weight_kg = round1(Number(bareWeight[1]));
+      found.weight_kg = roundWeight(Number(bareWeight[1]));
       rest = strip(rest, bareWeight[0]);
     }
   }

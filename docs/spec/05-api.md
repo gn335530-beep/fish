@@ -92,10 +92,10 @@
 
 ```json
 { "username": "0912345678", "password": "secret123", "display_name": "阿海",
-  "city": "新北市", "role": "SELLER" }
+  "city": "新北市" }
 ```
 
-回 201：`data = { token, user }`。`role` 只接受 `BUYER` / `SELLER`，其他值一律 `BUYER`。
+回 201：`data = { token, user }`。使用者是單一帳號型態，註冊不帶角色；傳入未知欄位會被忽略。
 `city` 必填，必須在縣市清單內；「臺」正規化為「台」。
 錯誤：400 `MISSING_FIELDS`、400 `MISSING_REGION`、400 `INVALID_REGION`、409 `DUPLICATE_PHONE`。
 
@@ -165,8 +165,8 @@
 - `title` 自動產生：`{魚種}（{總重}kg / {尾數}尾 / {處理}）`。
 - `condition` 是自由文字：trim、非空、最多 20 字。
 - 售價：
-  - 只填 `price` → `price_per_taijin = null`、`price_auto = false`。
-  - 只填 `price_per_taijin` → `price = round(price_per_taijin × weight_kg ÷ 0.6)`、`price_auto = true`。
+  - 只填 `price` → 原樣保留（可含小數）、`price_per_taijin = null`、`price_auto = false`。
+  - 只填 `price_per_taijin` → `price = round(price_per_taijin × 原始輸入 weight_kg ÷ 0.6)`、`price_auto = true`；入庫的 `weight_kg` 仍四捨五入到一位小數，但自動價用未進位的原始總重。
   - 兩者都填 → 都保留、`price_auto = false`，**不檢查一致性**（整批可為折扣）。
   - 至少要有一個 > 0。
 - 發布時查行情並寫入 `market_snapshot`；查無或上游失敗則為 `null`，商品仍建立。

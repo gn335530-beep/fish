@@ -4,15 +4,13 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 
-function user(id, username, displayName, role) {
+function user(id, username, displayName) {
   return {
     id: id,
     username: username,
     password: "pw" + id,
     display_name: displayName,
-    role: role,
     is_verified: true,
-    completed_orders: 0,
     completed_deals: 0,
     city: "新北市",
     district: "",
@@ -53,10 +51,10 @@ function createDb() {
   const file = path.join(dir, "db.json");
   const data = {
     users: [
-      user(1, "0911111111", "釣客甲", "SELLER"),
-      user(2, "0922222222", "買家乙", "BUYER"),
-      user(3, "0933333333", "路人丙", "BUYER"),
-      user(4, "0944444444", "釣客丁", "SELLER")
+      user(1, "0911111111", "釣客甲"),
+      user(2, "0922222222", "買家乙"),
+      user(3, "0933333333", "路人丙"),
+      user(4, "0944444444", "釣客丁")
     ],
     products: [
       product("prd_a", 1, "石斑", 2, 2800),
