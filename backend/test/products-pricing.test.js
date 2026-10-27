@@ -63,6 +63,35 @@ test("兩個售價都沒填、或填了非正數，回對應錯誤碼", async fu
   assert.equal(zeroPerTaijin.body.code, "INVALID_PRICE");
 });
 
+test("明確整批價保留小數，不四捨五入", async function () {
+  const created = await create({ weight_kg: 4.5, quantity: 1, price: 999.5 });
+  assert.equal(created.status, 201);
+  assert.equal(created.body.data.price, 999.5);
+  assert.equal(created.body.data.price_auto, false);
+
+  const detail = await call("GET", "/api/products/" + created.body.data.id);
+  assert.equal(detail.body.data.price, 999.5);
+});
+
+test("自動計算使用未進位的原始總重", async function () {
+  const created = await create({
+    weight_kg: 4.55,
+    quantity: 1,
+    price: undefined,
+    price_per_taijin: 200
+  });
+  assert.equal(created.status, 201);
+  assert.equal(created.body.data.price, 1517);
+  assert.equal(created.body.data.price_auto, true);
+  assert.equal(created.body.data.weight_kg, 4.6);
+});
+
+test("商品標題完整保留處理方式原句", async function () {
+  const created = await create({ condition: "放血後冰鎮" });
+  assert.equal(created.status, 201);
+  assert.match(created.body.data.title, /放血後冰鎮/);
+});
+
 test("商品卡與詳情回應含 price、price_per_taijin、price_auto、unit_price", async function () {
   const created = await create({ weight_kg: 4.5, quantity: 2, price: undefined, price_per_taijin: 200 });
   const detail = await call("GET", "/api/products/" + created.body.data.id);

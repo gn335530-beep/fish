@@ -1,4 +1,4 @@
-/* 處理方式抽取與未知魚種猜測：處理方式本身是自由文字，不做事後對照。 */
+/* 處理方式抽取與未知魚種猜測：處理方式保留原句片段，白名單只用於辨識。 */
 
 const CONDITION_WORDS = [
   "還活著", "放血冰鎮", "三去處理", "去內臟", "處理好", "清內臟",
@@ -9,13 +9,70 @@ const CONDITION_WORDS = [
 
 const CONDITION_NOISE = CONDITION_WORDS.join("|");
 
+const INTENT_NOISE = /(?:我要賣|我要買|想賣|想買|要賣|要買|賣魚|買魚|上架|出售|賣掉|剛釣到|剛釣|釣到|捕獲|今天|現在|目前|最近|近期|這幾天|幫我|請問|麻煩|謝謝|感謝)/g;
+
+const LEADING = /^(?:我們|已經|有|是|為|叫|叫做|大概|大約|左右|差不多|幫我|麻煩|請|今天|現在|目前|最近|近期|這幾天|的)+/;
+const TRAILING = /(?:了|啦|喔|啊|耶|吧|呢|嘛|哦|謝謝|感謝|麻煩了|拜託)+[。.!！?？,，;；\s]*$/;
+
+const GENERIC = [
+  "魚", "海鮮", "海產", "東西", "什麼", "什麼魚", "怎麼", "如何", "多少",
+  "價格", "價錢", "這個", "那個", "未知", "魚種", "不知道", "我", "你", "他",
+  "好", "要", "有", "是", "的"
+];
+
 export function cleanCondition(text) {
   return String(text || "").trim().replace(/[。.!！?？,，;；]+$/, "").trim();
 }
 
-/* 只做語句抽取提示，回傳使用者實際說的詞。 */
-export function extractCondition(text) {
-  return CONDITION_WORDS.find(function (word) { return text.indexOf(word) !== -1; }) || "";
+function trimPhrase(text) {
+  let phrase = String(text || "").replace(/[，,。.!！?？、:：;；\s]+/g, " ").trim();
+  let previous;
+  do {
+    previous = phrase;
+    phrase = phrase.replace(LEADING, "").trim();
+  } while (phrase !== previous && phrase);
+  phrase = phrase.replace(TRAILING, "").trim();
+  phrase = phrase.replace(/\d+(?:\.\d+)?\s*(?:元|塊|公斤|kg|台斤|斤|尾|條|隻|份)?$/i, "").trim();
+  phrase = phrase.replace(/\s+[一二兩三四五六七八九十百千]+\s*(?:尾|條|隻|份)$/, "").trim();
+  return phrase;
+}
+
+function cleanPhrase(text, speciesName) {
+  let phrase = String(text || "");
+  if (speciesName) phrase = phrase.split(speciesName).join(" ");
+  return trimPhrase(phrase.replace(INTENT_NOISE, " "));
+}
+
+/* 從原句找出最早出現的白名單詞，再保留它之後的整段說法。 */
+function anchoredPhrase(text, speciesName) {
+  let index = -1;
+  let word = "";
+  CONDITION_WORDS.forEach(function (candidate) {
+    const found = text.indexOf(candidate);
+    if (found === -1) return;
+    if (index === -1 || found < index || (found === index && candidate.length > word.length)) {
+      index = found;
+      word = candidate;
+    }
+  });
+  if (index === -1) return "";
+  return cleanPhrase(text.slice(index), speciesName) || word;
+}
+
+function residualPhrase(text, speciesName) {
+  return cleanPhrase(text, speciesName);
+}
+
+/* 沒命中白名單時仍保留剩下的原句，不硬改成白名單詞。 */
+export function extractCondition(text, speciesName) {
+  const source = String(text || "").trim();
+  if (!source) return "";
+  const anchored = anchoredPhrase(source, speciesName);
+  if (anchored) return anchored;
+  const phrase = residualPhrase(source, speciesName);
+  if (!/[\u4e00-\u9fff]/.test(phrase)) return "";
+  if (GENERIC.indexOf(phrase) !== -1) return "";
+  return phrase;
 }
 
 /* 字典沒有的魚種：移除意圖、數量、單位與處理方式後，留下名稱。 */

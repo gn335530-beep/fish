@@ -61,6 +61,47 @@ test("一般句子仍可抽出處理方式與其他欄位", function () {
   assert.equal(killed.condition, "殺好");
 });
 
+test("處理方式保留原句片段，不截成白名單第一個詞", function () {
+  const found = extractSlots("3公斤 2尾 放血後冰鎮", null);
+  assert.equal(found.condition, "放血後冰鎮");
+
+  const full = extractSlots("我要賣石斑 3公斤 2尾 放血後冰鎮", null);
+  assert.equal(full.condition, "放血後冰鎮");
+});
+
+test("未知說法保留原句，不丟棄也不改成白名單", function () {
+  const found = extractSlots("石斑 3公斤 2尾 我自己處理", null);
+  assert.equal(found.condition, "我自己處理");
+});
+
+test("常見處理說法仍可辨識", function () {
+  assert.equal(extractSlots("石斑 3公斤 2尾 活體", null).condition, "活體");
+  assert.equal(extractSlots("石斑 3公斤 2尾 放血冰鎮", null).condition, "放血冰鎮");
+  assert.equal(extractSlots("石斑 3公斤 2尾 三去處理", null).condition, "三去處理");
+});
+
+test("處理方式在魚種前後都不會夾帶魚種名稱", function () {
+  assert.equal(extractSlots("活體石斑 3公斤 2尾", null).condition, "活體");
+  assert.equal(extractSlots("冰鎮石斑 3公斤 2尾", null).condition, "冰鎮");
+});
+
+test("處理方式不會夾帶後面的裸數字", function () {
+  const found = extractSlots("石斑 3公斤 2尾 放血後冰鎮 500", "price");
+  assert.equal(found.condition, "放血後冰鎮");
+});
+
+test("草稿卡完整顯示處理方式原句", async function () {
+  const { renderCard } = await import("../assets/js/demo/views/cards.js");
+  const html = renderCard({
+    type: "draft",
+    draft: {
+      fish_species: "石斑", weight_kg: 3, quantity: 2,
+      condition: "放血後冰鎮", price: 1000, price_per_taijin: null
+    }
+  });
+  assert.match(html, /放血後冰鎮/);
+});
+
 test("修改草稿的處理方式提示也不再列固定選項", function () {
   const result = beginEdit({
     mode: "listing",

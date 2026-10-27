@@ -92,7 +92,7 @@
 | --- | --- |
 | `getToken()` / `setToken()` | 讀寫本機 Token |
 | `getUser()` / `setUser()` | 讀寫本機會員資料 |
-| `register({ phone, password, nick, role })` | 註冊並保存登入狀態 |
+| `register({ phone, password, nick, city })` | 註冊並保存登入狀態 |
 | `login({ phone, password })` | 登入並保存登入狀態 |
 | `me()` | 以 Token 取得並同步會員資料 |
 | `logout()` | 清除本機 Token、會員資料與頭像 |

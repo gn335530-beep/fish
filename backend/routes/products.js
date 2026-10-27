@@ -63,7 +63,7 @@ function readPricing(body, weightKg) {
 
   const auto = !hasPrice && hasPerTaijin;
   const price = hasPrice
-    ? Math.round(priceValue)
+    ? priceValue
     : Math.round(perTaijinValue * weightKg / 0.6);
   if (!(price > 0)) return { error: "INVALID_PRICE" };
   return {
@@ -146,7 +146,7 @@ router.post("/api/products/create", requireUser, async function (req, res) {
     fail(res, 400, "FIELD_TOO_LONG", "處理方式最多 20 字");
     return;
   }
-  const pricing = readPricing(body, weight);
+  const pricing = readPricing(body, weightKg);
   if (pricing.error === "MISSING_PRICE") {
     fail(res, 400, "MISSING_PRICE", "請提供整批或每台斤售價");
     return;

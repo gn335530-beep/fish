@@ -104,6 +104,18 @@ test("消去法不套用到四位數以上的裸數字", function () {
   assert.equal(found.weight_kg, undefined);
 });
 
+test("重量保留輸入精度，自動計算才不會先被進位", function () {
+  assert.equal(slots.extractSlots("4.55公斤", null).weight_kg, 4.55);
+  assert.equal(slots.extractSlots("2台斤", null).weight_kg, 1.2);
+});
+
+test("價格步驟保留明確輸入的小數", async function () {
+  const started = await service.handleText(null, "我要賣花枝 3公斤 2尾 放血冰鎮", USER);
+  const photographed = await service.handlePhoto(started.context, "/uploads/a.jpg", USER);
+  const priced = await service.handleText(photographed.context, "999.5", USER);
+  assert.equal(priced.context.draft.price, 999.5);
+});
+
 test("每台斤與整批雙價仍可同時抽出", function () {
   const both = slots.extractSlots("每台斤 200，整批 1000", null);
   assert.equal(both.price_per_taijin, 200);
