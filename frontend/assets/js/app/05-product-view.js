@@ -70,7 +70,6 @@ function productCardHTML(p) {
   var location = normalizeCityName(p.location) || "地點未提供";
   var quantity = Number(p.quantity || 0);
   var available = productAvailable(p);
-  var unknown = !p.species_id;
   var media = photo
     ? '<img src="' + productEscape(photo) + '" alt="' + productEscape(p.fish_species || "商品照片") + '">'
     : '<div class="media-empty">沒有照片</div>';
@@ -78,7 +77,6 @@ function productCardHTML(p) {
   return '<article class="card catch-card">' +
     '<a href="' + href + '" class="card__media">' + media +
     '<div class="card__tags"><span class="badge">' + productEscape(region) + '</span>' +
-    (unknown ? '<span class="badge">未知魚種</span>' : "") +
     '<span class="badge badge--coral">' + productEscape(productStatus(p)) + '</span></div>' +
     '</a>' +
     '<div class="card__body">' +
@@ -90,7 +88,6 @@ function productCardHTML(p) {
     (p.price_per_taijin != null ? '<span>每台斤 ' + productMoney(p.price_per_taijin) + '</span>' : '') +
     '</div>' +
     '<div class="card__meta"><span>' + productEscape(location) + '</span></div>' +
-    (unknown ? '<div class="card__meta"><span>料理資料暫無</span></div>' : "") +
     '<div class="card__price"><b>' + productMoney(p.price) +
     '<span class="unit"> · 整批</span>' +
     (p.price_auto ? '<span class="unit"> · 自動計算</span>' : '') +

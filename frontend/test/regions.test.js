@@ -28,8 +28,7 @@ test("縣市清單只有一份，且同時供 classic 與 module 使用", functi
   assert.doesNotMatch(read("../assets/js/app/04-regions.js"), /"基隆市"/);
 });
 
-test("魚種模組不再提供地區解析", async function () {
-  const species = await import("../assets/js/demo/ai/species.js");
-  assert.equal(species.findRegion, undefined);
-  assert.equal(species.normalizeCityName, undefined);
+test("舊魚種模組已移除", function () {
+  assert.equal(fs.existsSync(new URL("../assets/js/demo/ai/species.js", import.meta.url)), false);
+  assert.equal(fs.existsSync(new URL("../assets/js/api/species.js", import.meta.url)), false);
 });

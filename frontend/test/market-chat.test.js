@@ -13,7 +13,6 @@ const CATALOG = [
 
 let market = null;
 let calls = [];
-let speciesCalls = 0;
 
 function apiError(body, status) {
   const error = new Error(body.message || body.code);
@@ -43,7 +42,6 @@ function quote(overrides) {
 
 globalThis.window = {
   HaisenAPI: {
-    listSpecies: async function () { speciesCalls += 1; throw new Error("舊魚種清單不可用"); },
     request: async function (path) {
       calls.push(path);
       if (path.indexOf("/api/market/codes") === 0) {
@@ -59,10 +57,6 @@ globalThis.window = {
         if (market instanceof Error) throw market;
         const name = CATALOG.find(function (row) { return row.species_code === code; });
         return { data: quote({ species_code: code, official_name: name ? name.official_name : "土魠" }) };
-      }
-      if (path.indexOf("/api/species") === 0) {
-        speciesCalls += 1;
-        throw new Error("不應使用舊魚種清單");
       }
       throw new Error("unexpected path: " + path);
     }
@@ -83,7 +77,6 @@ function quoteCalls() {
 
 test.beforeEach(function () {
   calls = [];
-  speciesCalls = 0;
   market = quote();
 });
 
@@ -99,7 +92,6 @@ test("土魠魚用個人檔案縣市查價，回覆含代碼、官方名稱、�
   assert.match(text, /依你的地區（高雄市）/);
   assert.equal(quoteCalls().length, 1);
   assert.match(decodeURIComponent(quoteCalls()[0]), /q=土魠魚/);
-  assert.equal(speciesCalls, 0);
 });
 
 test("吳郭魚與鮭魚等不在舊清單的魚種也能查詢", async function () {

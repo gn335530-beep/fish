@@ -5,6 +5,7 @@ import { mergeDraft, nextMissingSlot, missingNonPriceSlots } from "./draft.js";
 import { QUESTIONS, ASK_AGAIN, batchFollowupPrompt } from "./prompts.js";
 import { INTENT, detectIntent } from "./rules.js";
 import { quoteForDraft, hasPrice } from "./listing-market.js";
+import { resolveCandidates, candidateReply } from "./listing-species.js";
 
 function makeContext(mode, draft, lastCards) {
   return {
@@ -94,11 +95,23 @@ export async function advance(ctx, user) {
 
   const replies = [];
   let next = ctx;
-  if (!ctx.market_quoted) {
-    const quote = await quoteForDraft(ctx.draft, user);
+
+  /* 草稿還沒有代碼時，先用名稱查官方字典；多候選先問，查無仍可繼續。 */
+  if (!ctx.market_quoted && !ctx.draft.species_code && ctx.draft.fish_species) {
+    const candidates = await resolveCandidates(ctx.draft.fish_species);
+    if (candidates.length > 1) return candidateReply(ctx, ctx.draft.fish_species, candidates);
+    if (candidates.length === 1) {
+      const draft = mergeDraft(ctx.draft, { species_code: candidates[0].species_code });
+      next = Object.assign({}, ctx, { draft: draft, market_quoted: false });
+    }
+  }
+
+  if (!next.market_quoted) {
+    const quote = await quoteForDraft(next.draft, user);
+    if (quote.ambiguous) return candidateReply(next, next.draft.fish_species, quote.ambiguous);
     if (quote.card) replies.push({ card: quote.card });
     else if (quote.text) replies.push({ text: quote.text });
-    next = Object.assign({}, ctx, { market_quoted: true });
+    next = Object.assign({}, next, { market_quoted: true });
   }
 
   if (!hasPrice(next.draft)) {

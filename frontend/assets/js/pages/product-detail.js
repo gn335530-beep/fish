@@ -35,7 +35,6 @@ function renderPhoto(p) {
 function renderSpec(p) {
   const rows = [
     ["魚種", p.fish_species || "—"],
-    ["學名", p.species_latin || "—"],
     ["總重", productWeight(p) + " kg"],
     ["尾數", Number(p.quantity || 0) + " 尾"],
     ["處理方式", p.condition || "—"],
@@ -47,9 +46,6 @@ function renderSpec(p) {
     ["地點", normalizeCityName(p.location) || "—"],
     ["釣獲時間", p.catch_time ? productDate(p.catch_time) : "未提供"]
   ];
-  if (!p.species_id) {
-    rows.push(["料理資料", "暫無"]);
-  }
   document.getElementById("pd-spec").innerHTML = rows.map(function (row) {
     return "<div>" + row[0] + "</div><div>" + productEscape(row[1]) + "</div>";
   }).join("");
@@ -76,7 +72,6 @@ function renderDetail(p) {
   document.getElementById("pd-condition").textContent = p.condition || "處理方式未提供";
   document.getElementById("pd-status").textContent = status;
   document.getElementById("pd-name").textContent = productTitle(p);
-  document.getElementById("pd-latin").textContent = p.species_latin || "";
   document.getElementById("pd-price").innerHTML = productMoney(p.price) +
     '<span class="unit"> / 整批</span>' + (p.price_auto ? '<span class="unit"> · 自動計算</span>' : '');
   document.getElementById("pd-unit-price").textContent = "每尾均價 " + productMoney(p.unit_price);

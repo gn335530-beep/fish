@@ -1,7 +1,7 @@
 /* 槽位抽取：先套明確單位與價格標記，再用消去法處理裸數字。 */
 
-import { findSpecies } from "./species.js";
-import { cleanCondition, extractCondition, guessUnknownSpecies } from "./conditions.js";
+import { findSpeciesMention } from "./species-catalog.js";
+import { cleanCondition, extractCondition } from "./conditions.js";
 import "../../shared/format.js";
 
 const format = window.HaisenFormat;
@@ -83,15 +83,11 @@ export function extractSlots(text, assumeSlot, details) {
     rest = strip(rest, quantityMatch[0]);
   }
 
-  const spice = findSpecies(source);
-  if (spice) {
-    found.fish_species = spice.name;
-    found.species_id = spice.id;
-  } else if (!assumeSlot || assumeSlot === "fish_species") {
-    const guess = guessUnknownSpecies(source);
-    if (guess) {
-      found.fish_species = guess;
-      found.species_id = null;
+  if (!assumeSlot || assumeSlot === "fish_species") {
+    const name = findSpeciesMention(source);
+    if (name) {
+      found.fish_species = name;
+      found.species_code = null;
     }
   }
 

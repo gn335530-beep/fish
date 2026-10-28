@@ -12,7 +12,7 @@ const listing = await import("../assets/js/demo/ai/listing.js");
 function draft() {
   return {
     fish_species: "花枝",
-    species_id: "cuttlefish",
+    species_code: 2166,
     weight_kg: 3,
     quantity: 2,
     condition: "放血冰鎮",

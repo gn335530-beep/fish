@@ -11,7 +11,7 @@ import {
 import { resolveReferent } from "./referents.js";
 import { shoppingReply } from "./shopping.js";
 import { marketReply } from "./market.js";
-import { speciesById, ensureSpecies } from "./species.js";
+import { matchCandidate } from "./listing-species.js";
 
 /* ---- 上架照片 ---- */
 
@@ -70,26 +70,12 @@ async function handleReferent(ctx, ref) {
 
 /* ---- 商品諮詢 ---- */
 
-export async function explainProduct(product, context) {
-  if (!(await ensureSpecies())) {
-    return { context: context || null, replies: [{ text: "目前無法取得魚種資料，請稍後再試。" }] };
-  }
-  const spice = speciesById(product.species_id);
-  const replies = [];
-
-  if (spice) {
-    replies.push({
-      text: product.fish_species + "：" + spice.texture + "，" + spice.bones + "。適合 " + spice.cooking.join("、") + "。"
-    });
-  } else {
-    replies.push({ text: product.fish_species + "：料理資料暫無，暫無行情。" });
-  }
-
-  replies.push({
-    text: "這批 " + product.weight_kg + " kg / " + product.quantity + " 尾，整批 " +
-      product.price + " 元，可售 " + product.available + " 尾。保存建議 0–4°C，2 日內食用。"
-  });
-
+export function explainProduct(product, context) {
+  const replies = [{
+    text: product.fish_species + "：這批 " + product.weight_kg + " kg / " + product.quantity +
+      " 尾，" + (product.condition || "處理方式未提供") + "，整批 " + product.price + " 元，可售 " +
+      product.available + " 尾。保存建議 0–4°C，2 日內食用。"
+  }];
   return { context: context || null, replies: replies };
 }
 
@@ -117,6 +103,19 @@ export async function handleText(context, text, user) {
     return requestConsent(ctx, ctx.pending_sale_text || "我要賣魚");
   }
 
+  if (ctx.listing_pending) {
+    const pending = ctx.listing_pending;
+    const picked = matchCandidate(source, pending.candidates || []);
+    if (picked) {
+      const draft = mergeDraft(ctx.draft, { species_code: picked.species_code });
+      const next = withDraft(Object.assign({}, ctx, { listing_pending: null }), draft, {
+        market_quoted: false
+      });
+      return advance(next, user);
+    }
+    ctx = Object.assign({}, ctx, { listing_pending: null });
+  }
+
   if (ctx.market_pending) {
     const pending = await marketReply(source, user, ctx);
     if (pending.handled !== false) return { context: pending.context || ctx, replies: pending.replies };
@@ -132,9 +131,6 @@ export async function handleText(context, text, user) {
 
   const intent = detectIntent(source);
   if (intent === INTENT.SELL) {
-    if (!(await ensureSpecies())) {
-      return { context: ctx, replies: [{ text: "目前無法取得魚種資料，請確認伺服器後再試。" }] };
-    }
     if (needsConsent(user)) return requestConsent(ctx, source);
     return startListing(source, user, ctx);
   }
@@ -145,12 +141,7 @@ export async function handleText(context, text, user) {
     const result = await marketReply(source, user, ctx);
     return { context: result.context || ctx, replies: result.replies };
   }
-  if (intent === INTENT.BUY) {
-    if (!(await ensureSpecies())) {
-      return { context: ctx, replies: [{ text: "目前無法取得魚種資料，請確認伺服器後再試。" }] };
-    }
-    return shoppingReply(source, user);
-  }
+  if (intent === INTENT.BUY) return shoppingReply(source, user);
 
   return {
     context: ctx,

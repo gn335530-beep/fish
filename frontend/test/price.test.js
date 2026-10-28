@@ -91,6 +91,18 @@ test("送後端時只填每台斤就不送整批，讓後端計算", function ()
   assert.equal(explicitPayload.price_per_taijin, 200);
 });
 
+test("發布商品時送出 species_code", function () {
+  const draft = draftApi.mergeDraft({
+    fish_species: "土魠", weight_kg: 3, quantity: 2,
+    condition: "放血冰鎮", photo_url: "/uploads/a.jpg", price: 1000
+  }, { species_code: 2141 });
+  const payload = draftApi.draftToProduct(draft, { city: "高雄市" });
+  assert.equal(payload.fish_species, "土魠");
+  assert.equal(payload.species_code, 2141);
+  assert.equal("species_id" in payload, false);
+  assert.equal("species_latin" in payload, false);
+});
+
 test("自動計算使用原始總重", function () {
   const draft = draftApi.mergeDraft({ weight_kg: 4.55 }, { price_per_taijin: 200 });
   assert.equal(draft.price, 1517);
