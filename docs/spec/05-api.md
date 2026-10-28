@@ -46,7 +46,7 @@
 | 6 | GET | `/api/products` | 公開 | ✅ |
 | 7 | GET | `/api/products/:id` | 公開 | ✅ |
 | 8 | POST | `/api/products/create` | 登入 | ✅ |
-| 9 | GET | `/api/species` | 公開 | ✅ |
+| 9 | GET | `/api/market/codes` | 公開 | ✅ 官方代碼字典 |
 | 10 | GET | `/api/conversations` | 登入 | ✅ |
 | 11 | POST | `/api/conversations/assistant` | 登入 | ✅ |
 | 12 | GET | `/api/conversations/:id/messages` | 參與者 | ✅ |
@@ -68,9 +68,9 @@
 | 28 | GET | `/api/deals` | 登入 | ✅ 交易紀錄列表 |
 | 29 | POST | `/api/reviews/submit` | 登入（參與者） | ✅ 送出評價 |
 | 30 | GET | `/api/reviews?user_id=` | 公開 | ✅ 使用者的評價與平均 |
-| 31 | GET | `/api/market/species-codes` | 公開 | ✅ 主要新鮮代碼對照 |
+| 31 | GET | `/api/market/quote` | 公開 | ✅ 名稱→代碼→價格整合查詢 |
 | 32 | GET | `/api/market/markets` | 公開 | ✅ 市場對照 |
-| 33 | GET | `/api/market/prices` | 公開 | ✅ 行情（含 `include=history`） |
+| 33 | GET | `/api/market/prices` | 公開 | ✅ 代碼查價（含 `include=history`） |
 
 ### 2.1 本版新增／變更的端點
 
@@ -82,9 +82,10 @@
 | POST | `/api/users/seller-consent` | 登入 | 新增：記錄第一次販賣確認 |
 | POST | `/api/products/create` | 登入 | 變更：每台斤／整批售價、處理方式自由文字 |
 | DELETE | `/api/conversations/:id` | 參與者 | 新增：刪除助手房或已取消交易房 |
-| GET | `/api/market/prices` | 公開 | 新增：行情（含 `include=history`） |
+| GET | `/api/market/codes` | 公開 | 新增：官方代碼字典與候選查詢 |
+| GET | `/api/market/quote` | 公開 | 新增：名稱→代碼→價格整合查詢 |
+| GET | `/api/market/prices` | 公開 | 變更：只接受 `code`，支援 `include=history` |
 | GET | `/api/market/markets` | 公開 | 新增：市場對照表 |
-| GET | `/api/market/species-codes` | 公開 | 新增：主要新鮮代碼對照表 |
 
 ## 3. 會員
 
@@ -133,7 +134,7 @@
 | 參數 | 說明 |
 | --- | --- |
 | `region` | 子字串比對 `region`（例：`新北`） |
-| `species` | 子字串比對 `fish_species` 或 `species_id` |
+| `species` | 子字串比對 `fish_species` |
 | `seller_id` | 精確比對 |
 | `status` | 精確比對衍生狀態 `ACTIVE` / `PARTIALLY_RESERVED` / `SOLD_OUT` |
 | `limit` | 取前 N 筆 |
@@ -151,7 +152,7 @@
 > 2026-10-27：處理方式自由文字、每台斤／整批售價與自動計算已實作（#26、#27）。2026-10-28：移除商品行情快照。
 
 ```json
-{ "fish_species": "石斑", "species_id": "grouper", "weight_kg": 4.5, "quantity": 1,
+{ "fish_species": "石斑", "species_code": 2201, "weight_kg": 4.5, "quantity": 1,
   "condition": "放血冰鎮", "photo_url": "/uploads/ab12.jpg",
   "price": 1000, "price_per_taijin": 200,
   "region": "新北市", "location": "新北市瑞芳區鼻頭路 1 號",
@@ -161,7 +162,7 @@
 伺服器行為：
 
 - `seller_id` 取自 Token，client 傳的值一律忽略。
-- `species_id` 先以 id 比對魚種字典，比對不到再用名稱比對；都沒有則存 `null`。
+- `species_code` 是選填的正整數；空白或非數字存 `null`，未知代碼也不阻擋建立。伺服器不回填、也不改寫使用者輸入的 `fish_species`。
 - `title` 由後端產生並隨商品回應回傳：`{魚種}（{總重}kg / {尾數}尾 / {處理}）`；前端直接顯示，標題缺漏時使用通用文案，不自行拼接。
 - `condition` 是自由文字：trim、非空、最多 20 字。
 - 售價：
@@ -188,19 +189,20 @@
   "avg_weight_kg": 4.5, "status": "ACTIVE" }
 ```
 
-### `GET /api/species`
+### `GET /api/market/codes`
 
-公開魚種清單，回傳 `data` 陣列。欄位：
+公開官方新鮮代碼字典。省略 `q` 回完整字典；帶 `q` 可查精確官方名稱、精確別名或純數字代碼。
 
-| 欄位 | 說明 |
-| --- | --- |
-| `id` | 系統魚種識別碼 |
-| `name`、`latin` | 正式名稱與學名 |
-| `alias` | 別名陣列 |
-| `category` | `fish`／`ceph`／`shellfish` |
-| `texture`、`bones`、`cooking` | 料理屬性 |
+```jsonc
+{ "success": true, "data": { "query": "土魠魚", "candidates": [
+  { "species_code": 2141, "official_name": "土魠", "aliases": ["土魠魚"],
+    "category": "2", "is_aquaculture": false, "last_seen_date": "2026-10-22" }
+] } }
+```
 
-魚種字典不再提供示意行情；行情對照與養殖標記見 `/api/market/species-codes`。
+- 多候選依代碼由小到大排序，不自動選第一個。
+- 查無名稱回 404 `SPECIES_NOT_FOUND`；字典不可用回 503 `CATALOG_UNAVAILABLE`。
+- 同步失敗但已有舊字典時，查詢仍可用。
 
 ## 5. 對話
 
@@ -450,26 +452,28 @@
 
 ### 8.3 行情
 
-> 2026-10-27：三個行情端點、按需抓取與快取已實作。2026-10-28：`/api/market/prices` 每次請求都重抓上游，成功後寫入 `db.json`；上游失敗且無本機資料才回 `found:false`。手動 CLI 仍使用快取，見 `npm run market:fetch`。
+> 2026-10-29：行情全面改以官方代碼為鍵。`/api/market/prices` 只接受 `code`；`/api/market/quote` 接受名稱並完成查代碼與查價。每次價格查詢都重抓上游，成功後寫入 `db.json`；上游失敗且無本機資料才回 `found:false`。手動 CLI 仍使用快取，見 `npm run market:fetch`。
 
 | 方法 | 路徑 | 權限 | 說明 |
 | --- | --- | --- | --- |
-| GET | `/api/market/prices?species_id=&region=&date=&include=history&days=7` | 公開 | 單筆行情；`include=history` 加回歷史；`days` 為最近 7 或 30 個交易日 |
+| GET | `/api/market/codes?q=` | 公開 | 官方代碼字典；省略 `q` 回完整字典 |
+| GET | `/api/market/quote?q=&region=&date=&include=history&days=7` | 公開 | 名稱→代碼→價格；多候選回 `AMBIGUOUS_SPECIES` |
+| GET | `/api/market/prices?code=&region=&date=&include=history&days=7` | 公開 | 代碼查價；`include=history` 加回歷史；`days` 為最近 7 或 30 個交易日 |
 | GET | `/api/market/markets` | 公開 | 市場對照表（唯讀，21 筆） |
-| GET | `/api/market/species-codes` | 公開 | 主要新鮮代碼對照與養殖旗標（唯讀，28 筆） |
 
 - `region` 省略 → 全國平均，回應 `region: null`、`scope: "national"`；`region` 無效 → 400 `INVALID_REGION`。縣市比對前把「臺」正規化為「台」。
 - 縣市平均只納入 `market_locations.verified = true` 的市場；全國平均納入所有已抓到的市場，包含未確認市場。
 - `date` 用 ISO `YYYY-MM-DD`，語意「該日或之前最近交易日」；省略取該魚種最近交易日。
-- `species_id` 不存在於系統 28 種 → 400 `INVALID_SPECIES`；有魚種但沒有官方代碼 → 200 `found:false, reason:"NO_MAPPING"`。
+- 代碼不是數字或缺少代碼 → 400 `INVALID_SPECIES`；字典查無此代碼 → 404 `SPECIES_NOT_FOUND`。
+- 名稱對到多個代碼 → 409 `AMBIGUOUS_SPECIES`，附 `candidates`。
 - 查無交易資料 → 200 `found:false, reason:"NO_TRADE_DATA"`。
 - 上游失敗且無快取 → 200 `found:false, reason:"UPSTREAM_UNAVAILABLE"`；有快取就回快取。
-- 行情 API 公開，不需 Token。
-- `/api/market/species-codes` 的 `official_name` 與 `aliases` 由系統魚種清單帶出；代碼、分類與養殖旗標不隨名稱變更。已接受的顯示名稱變更：七星鱸→海鱸、鯖魚→白腹鯖、小卷→澎湖小卷、巴攏→竹筴魚。
+- 行情 API 公開，不需 Token；字典快取與價格查詢是兩個不同快取層。
 
 ```jsonc
 { "success": true, "data": {
-    "found": true, "scope": "city", "region": "高雄市", "trade_date": "2026-10-22",
+    "found": true, "species_code": 2141, "official_name": "土魠",
+    "scope": "city", "region": "高雄市", "trade_date": "2026-10-22",
     "price_per_kg": 52.4, "price_per_taijin": 31.4,
     "is_aquaculture": false,
     "source": "農業部漁產品交易行情", "source_url": "...",
@@ -481,7 +485,7 @@
 ```
 
 - `price_per_kg`／`price_per_taijin` 都是平均價，不是範圍；四捨五入到小數 1 位。
-- `found:false` 只回 `found`、`reason`、`species_id`，不得帶 `price_per_kg`／`price_per_taijin` 或任何價格數字。
+- `found:false` 只回 `found`、`reason`、`species_code`、`official_name`、`is_aquaculture`，不得帶 `price_per_kg`／`price_per_taijin` 或任何價格數字。
 - `scope = "national"` 時保留請求的 `region`，前端顯示「全國平均」。
 - `include=history` 只回該次查詢的 `scope`（縣市或全國）每日平均價；`days` 是最近 N 個交易日（7 或 30），回傳最多 N 筆有交易的日期；抓取時需涵蓋足夠日曆日。未帶 `include=history` 時省略 `history` 欄位。
 - `is_aquaculture: true` 時，畫面與助手回覆標「養殖價格」。
@@ -506,7 +510,7 @@
 | `INVALID_NICKNAME` | 400 | 個人檔案 |
 | `FIELD_TOO_LONG` | 400 | 個人檔案、上架（處理方式） |
 | `NO_CHANGES` | 400 | 個人檔案、context |
-| `MISSING_SPECIES` | 400 | 上架 |
+| `MISSING_SPECIES` | 400 | 上架、行情整合查詢（缺名稱／代碼） |
 | `INVALID_WEIGHT` | 400 | 上架 |
 | `INVALID_QUANTITY` | 400 | 上架 |
 | `MISSING_CONDITION` | 400 | 上架（處理方式空白） |
@@ -539,10 +543,12 @@
 | `DEAL_NOT_CONFIRMED` | 409 | 評價（訂單未成交） |
 | `ALREADY_REVIEWED` | 409 | 評價（重複送出） |
 | `USER_NOT_FOUND` | 404 | 公開評價列表 |
-| `INVALID_SPECIES` | 400 | 行情（species_id 不在系統 28 種） |
+| `INVALID_SPECIES` | 400 | 行情（缺少代碼或代碼不是數字） |
+| `SPECIES_NOT_FOUND` | 404 | 行情（字典查無名稱或代碼） |
+| `AMBIGUOUS_SPECIES` | 409 | 行情（名稱對到多個代碼） |
+| `CATALOG_UNAVAILABLE` | 503 | 行情（字典尚未同步且沒有舊字典） |
 | `INVALID_DATE` | 400 | 行情（日期格式錯誤） |
 | `NO_TRADE_DATA` | 200 | 行情（查無交易資料，不是錯誤） |
-| `NO_MAPPING` | 200 | 行情（魚種存在但沒有官方代碼） |
 | `UPSTREAM_UNAVAILABLE` | 200 | 行情（上游失敗且無快取） |
 
 ## 10. 契約陷阱（前端容易踩）

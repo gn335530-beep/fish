@@ -23,8 +23,8 @@ test("商品可帶官方 species_code，列表與詳情都回傳", async functio
   const res = await create({ fish_species: "土魠", species_code: 2141 });
   assert.equal(res.status, 201);
   assert.equal(res.body.data.species_code, 2141);
-  assert.equal(res.body.data.species_id, "grouper");
-  assert.ok(res.body.data.species_latin);
+  assert.equal("species_id" in res.body.data, false);
+  assert.equal("species_latin" in res.body.data, false);
 
   const list = await call("GET", "/api/products");
   assert.equal(list.body.data.find(function (row) { return row.id === res.body.data.id; }).species_code, 2141);
@@ -57,7 +57,7 @@ test("商品改價不影響其他欄位", async function () {
 
 test("未知魚種不呼叫行情 API，商品仍可建立", async function () {
   const fetcher = useRows([raw()]);
-  const res = await create({ fish_species: "鮭魚", species_id: null, condition: "冷凍" });
+  const res = await create({ fish_species: "鮭魚", condition: "冷凍" });
 
   assert.equal(res.status, 201);
   assert.equal(fetcher.calls, 0);
@@ -89,12 +89,12 @@ test("處理方式空白或超過 20 字會回對應錯誤碼", async function (
   assert.equal(tooLong.body.code, "FIELD_TOO_LONG");
 });
 
-test("魚種 API 與商品不再帶示意行情", async function () {
+test("舊魚種 API 已移除，商品不再帶舊欄位或示意行情", async function () {
   const species = await call("GET", "/api/species");
-  assert.equal(species.status, 200);
-  assert.ok(species.body.data.length > 0);
-  assert.equal(species.body.data.some(function (row) { return "market" in row; }), false);
+  assert.equal(species.status, 404);
 
   const product = await create();
   assert.equal(product.body.data.market_reference_price, undefined);
+  assert.equal("species_id" in product.body.data, false);
+  assert.equal("species_latin" in product.body.data, false);
 });

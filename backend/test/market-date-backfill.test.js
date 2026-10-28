@@ -6,7 +6,7 @@ const { start, stop } = require("./client");
 const upstream = require("../lib/market/upstream");
 const repository = require("../lib/market/repository");
 const { rocToIso } = require("../lib/market/dates");
-const { raw, resetMarket, getPrices } = require("./market-test-helpers");
+const { raw, resetMarket, seedGrouperCatalog, getPrices } = require("./market-test-helpers");
 
 function rocOf(url, name) {
   const match = url.match(new RegExp(name + "=(\\d{7})"));
@@ -36,11 +36,14 @@ function useRangeRows(rows) {
 
 test.before(start);
 test.after(stop);
-test.beforeEach(resetMarket);
+test.beforeEach(function () {
+  resetMarket();
+  seedGrouperCatalog();
+});
 
 test("冷資料庫查星期日回上一個交易日與實際 trade_date", async function () {
   const fetcher = useRangeRows([raw({ "交易日期": "1151023", "平均價": 333 })]);
-  const res = await getPrices("species_id=grouper&region=高雄市&date=2026-10-25");
+  const res = await getPrices("code=2201&region=高雄市&date=2026-10-25");
 
   assert.equal(res.status, 200);
   assert.equal(res.body.data.found, true);
@@ -56,7 +59,7 @@ test("回補範圍不會取到指定日期之後的行情", async function () {
     raw({ "交易日期": "1151023", "平均價": 100 }),
     raw({ "交易日期": "1151026", "平均價": 999 })
   ]);
-  const res = await getPrices("species_id=grouper&date=2026-10-25");
+  const res = await getPrices("code=2201&date=2026-10-25");
 
   assert.equal(res.body.data.trade_date, "2026-10-23");
   assert.equal(res.body.data.price_per_kg, 100);
@@ -64,7 +67,7 @@ test("回補範圍不會取到指定日期之後的行情", async function () {
 
 test("同一天回補後再查仍會重新抓取（行情 API 每次重抓）", async function () {
   const fetcher = useRangeRows([raw({ "交易日期": "1151023", "平均價": 333 })]);
-  const query = "species_id=grouper&date=2026-10-25";
+  const query = "code=2201&date=2026-10-25";
   await getPrices(query);
   assert.equal(fetcher.calls, 1);
 
@@ -89,7 +92,7 @@ test("同一天並行查詢只發一次上游 request", async function () {
     });
   });
 
-  const query = "species_id=grouper&date=2026-10-25";
+  const query = "code=2201&date=2026-10-25";
   const results = await Promise.all([getPrices(query), getPrices(query)]);
 
   assert.equal(calls, 1);

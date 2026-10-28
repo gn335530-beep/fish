@@ -19,7 +19,7 @@ test("TTL 內第二次不再打上游；超過 30 分鐘會重新抓", async fun
   assert.equal(second.cached, true);
   assert.equal(fetcher.calls, 1);
 
-  repository.saveState(2201, "grouper", {
+  repository.saveState(2201, {
     last_checked_at: new Date(Date.now() - fetchService.TTL_MS - 1000).toISOString(),
     last_latest_at: new Date(Date.now() - fetchService.TTL_MS - 1000).toISOString()
   });
@@ -37,7 +37,7 @@ test("negative cache 在 30 分鐘內有效，之後會重試", async function (
   await fetchService.ensureLatest(mapping);
   assert.equal(fetcher.calls, 1);
 
-  repository.saveState(2201, "grouper", {
+  repository.saveState(2201, {
     last_checked_at: new Date(Date.now() - fetchService.TTL_MS - 1000).toISOString(),
     last_latest_at: new Date(Date.now() - fetchService.TTL_MS - 1000).toISOString()
   });
@@ -86,7 +86,7 @@ test("指定日期抓取不會讓最近交易日誤用快取", async function ()
   const latest = await fetchService.ensureLatest(mapping);
   assert.equal(fetcher.calls, 2);
   assert.equal(latest.status, "ok");
-  assert.equal(repository.latestTradeDate("grouper"), "2026-10-22");
+  assert.equal(repository.latestTradeDateForCode(2201), "2026-10-22");
 });
 
 test("最近交易日視窗內的查無資料可 negative cache", async function () {

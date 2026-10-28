@@ -44,7 +44,7 @@ frontend/                 前端（網站根目錄）
   pages/                  網站頁面
   assets/css/             共用及頁面樣式
   assets/images/          網站圖片
-  assets/js/api/          API 請求、會員、商品與魚種
+  assets/js/api/          API 請求、會員、商品與行情
   assets/js/app/          共用互動與狀態功能
   assets/js/pages/        各頁專屬互動
   assets/js/demo/         對話式交易引擎

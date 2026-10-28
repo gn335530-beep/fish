@@ -1,4 +1,4 @@
-/* market_prices 與 market_fetch_state 的存取；查詢只讀這裡，不直接碰 db。 */
+/* market_prices 與 market_fetch_state 的存取；兩者都以 species_code 為鍵。 */
 
 const { all, findById, insert, patch, remove } = require("../store");
 const { addDays, maxDate, todayIso } = require("./dates");
@@ -25,13 +25,12 @@ function getState(code) {
   return findById("market_fetch_state", stateId(code));
 }
 
-function saveState(code, speciesId, changes) {
+function saveState(code, changes) {
   const existing = getState(code);
   if (existing) return patch("market_fetch_state", existing.id, changes);
   return insert("market_fetch_state", Object.assign({
     id: stateId(code),
     species_code: Number(code),
-    species_id: speciesId,
     last_checked_at: null,
     last_trade_date: null,
     last_row_count: 0,
@@ -50,12 +49,6 @@ function allStates() {
 
 function allPrices() {
   return all("market_prices");
-}
-
-function pricesForDate(speciesId, tradeDate) {
-  return allPrices().filter(function (row) {
-    return row.species_id === speciesId && row.trade_date === tradeDate;
-  });
 }
 
 function pricesForCode(code, tradeDate) {
@@ -97,40 +90,6 @@ function tradeDatesForCode(code, onOrBefore) {
   return [...dates].sort();
 }
 
-function hasPricesForDate(speciesId, tradeDate) {
-  return allPrices().some(function (row) {
-    return row.species_id === speciesId && row.trade_date === tradeDate;
-  });
-}
-
-/* 狀態說抓成功時用來確認資料還在；避免 state 與 market_prices 不一致。 */
-function hasPricesInRange(speciesId, from, to) {
-  if (!from || !to) return false;
-  return allPrices().some(function (row) {
-    return row.species_id === speciesId && row.trade_date >= from && row.trade_date <= to;
-  });
-}
-
-function latestTradeDate(speciesId, onOrBefore) {
-  let latest = null;
-  for (const row of allPrices()) {
-    if (row.species_id !== speciesId) continue;
-    if (onOrBefore && row.trade_date > onOrBefore) continue;
-    latest = maxDate(latest, row.trade_date);
-  }
-  return latest;
-}
-
-function tradeDates(speciesId, onOrBefore) {
-  const dates = new Set();
-  for (const row of allPrices()) {
-    if (row.species_id !== speciesId) continue;
-    if (onOrBefore && row.trade_date > onOrBefore) continue;
-    dates.add(row.trade_date);
-  }
-  return [...dates].sort();
-}
-
 function pruneOlderThan(days) {
   const cutoff = addDays(todayIso(), -days);
   let removed = 0;
@@ -156,11 +115,6 @@ module.exports = {
   saveState: saveState,
   allStates: allStates,
   allPrices: allPrices,
-  pricesForDate: pricesForDate,
-  hasPricesForDate: hasPricesForDate,
-  hasPricesInRange: hasPricesInRange,
-  latestTradeDate: latestTradeDate,
-  tradeDates: tradeDates,
   pricesForCode: pricesForCode,
   hasPricesForCodeDate: hasPricesForCodeDate,
   hasPricesInCodeRange: hasPricesInCodeRange,

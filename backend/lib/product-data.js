@@ -26,6 +26,21 @@ function migrateProducts() {
       delete next.market_snapshot;
       touched = true;
     }
+    let legacySpecies = false;
+    if (Object.prototype.hasOwnProperty.call(next, "species_id")) {
+      delete next.species_id;
+      legacySpecies = true;
+    }
+    if (Object.prototype.hasOwnProperty.call(next, "species_latin")) {
+      delete next.species_latin;
+      legacySpecies = true;
+    }
+    if (legacySpecies) next.species_code = null;
+    if (!Object.prototype.hasOwnProperty.call(next, "species_code")) {
+      next.species_code = null;
+      touched = true;
+    }
+    if (legacySpecies) touched = true;
     if (next.condition === "冷凍" && isLegacy(next)) {
       const oldTitle = next.title;
       next.condition = "放血冰鎮";

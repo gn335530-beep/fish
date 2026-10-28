@@ -34,7 +34,6 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use(require("./routes/auth"));
 app.use(require("./routes/products"));
-app.use(require("./routes/species"));
 app.use(require("./routes/chat"));
 app.use(require("./routes/chat-messages"));
 app.use(require("./routes/conversation-delete"));

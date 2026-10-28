@@ -2,9 +2,9 @@
 
 const { call } = require("./client");
 const upstream = require("../lib/market/upstream");
-const mappings = require("../lib/market/mappings");
 const fetchService = require("../lib/market/fetch");
 const { setAll } = require("../lib/store");
+const { seedCatalog } = require("./market-catalog-helpers");
 
 function raw(overrides) {
   return Object.assign({
@@ -45,14 +45,21 @@ function priceFields(data) {
   return [data.price_per_kg, data.price_per_taijin];
 }
 
+function seedGrouperCatalog() {
+  seedCatalog([
+    raw({ "品種代碼": 2201, "魚貨名稱": "石斑魚" }),
+    raw({ "品種代碼": 1073, "魚貨名稱": "七星鱸" })
+  ]);
+}
+
 module.exports = {
   raw: raw,
   useRows: useRows,
   resetMarket: resetMarket,
+  seedGrouperCatalog: seedGrouperCatalog,
   getPrices: getPrices,
   priceFields: priceFields,
-  mapping: mappings.mappingBySpecies("grouper"),
-  mappings: mappings,
+  mapping: { code: 2201, official_name: "石斑魚", is_aquaculture: false },
   upstream: upstream,
   fetchService: fetchService
 };

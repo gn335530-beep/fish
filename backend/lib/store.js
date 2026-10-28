@@ -31,6 +31,10 @@ function setAll(collection, rows) {
   return rows;
 }
 
+function dropCollection(collection) {
+  db().unset(collection).write();
+}
+
 function patch(collection, id, changes) {
   db().get(collection).find({ id: id }).assign(changes).write();
   return findById(collection, id);
@@ -79,6 +83,7 @@ module.exports = {
   findById: findById,
   insert: insert,
   setAll: setAll,
+  dropCollection: dropCollection,
   patch: patch,
   remove: remove,
   nextCode: nextCode,

@@ -20,15 +20,18 @@ function statusOf(available, reserved) {
   return "ACTIVE";
 }
 
-/* 商品對外的完整樣貌：庫存與價格衍生欄位都在這裡算。 */
+/* 商品對外的完整樣貌：庫存與價格衍生欄位都在這裡算；舊魚種欄位不外露。 */
 function decorateProduct(product, deals) {
+  const clean = Object.assign({}, product);
+  delete clean.species_id;
+  delete clean.species_latin;
   const quantity = Number(product.quantity || 0);
   const sold = Number(product.sold_quantity || 0);
   const reserved = reservedFor(product.id, deals);
   const available = Math.max(0, quantity - sold - reserved);
   const unitPrice = quantity > 0 ? Math.round(Number(product.price || 0) / quantity) : 0;
   const avgWeight = quantity > 0 ? Number((Number(product.weight_kg || 0) / quantity).toFixed(2)) : 0;
-  return Object.assign({}, product, {
+  return Object.assign({}, clean, {
     price_per_taijin: product.price_per_taijin == null ? null : product.price_per_taijin,
     price_auto: product.price_auto === true,
     reserved_quantity: reserved,

@@ -24,7 +24,7 @@
 | 逾時釋放 | ✅ | 商品、對話清單與訂單讀取時掃描 |
 | 評價 | ✅ | `POST /api/reviews/submit`、評價卡、星等與未到次數重算 |
 | 交易紀錄 | ✅ | `GET /api/deals`、抽屜列表與單筆詳情 |
-| 行情抓取與查詢 | ✅ | 21／28 對照（#21）、按需抓取與 CLI 快取（#22）、查詢 API 與 history（#23） |
+| 行情抓取與查詢 | ✅ | 官方代碼字典（market-code-catalog）、21 個市場對照、按需抓取與 CLI 快取、代碼／整合查詢與 history |
 | 行情顯示 | ✅ | 上架行情卡（#29）；商品卡與詳情頁自 2026-10-28 起不顯示行情 |
 | 註冊地區 | 🟡 | 註冊表單尚未要求縣市（#32） |
 | 販賣法規告知與確認 | ⬜ | 登入／註冊左側與第一次販賣確認（#34） |
@@ -37,7 +37,7 @@
 
 | ID | 缺口 | 影響 | 修法 |
 | --- | --- | --- | --- |
-| G-1 | ✅ 未知魚種無法上架（已修正） | 說「鮭魚」會一直回「還缺魚種」，使用者卡死 | 比對不到時保留原字串、`species_id = null`；後端已支援 `null` |
+| G-1 | ✅ 未知魚種無法上架（已修正） | 說「鮭魚」會一直回「還缺魚種」，使用者卡死 | 比對不到時保留原字串、`species_code = null`；後端已支援 `null` |
 | G-2 | ✅ 草稿不能改單一欄位（已修正） | 只能整份重填 | 草稿卡加「修改」→ 重問指定欄位 |
 | G-3 | ✅ 沒有單位時抓不到重量（已修正） | 「石斑 4.5 1 尾」失敗 | 先套明確單位；無單位小數視為公斤；裸數字只補一個缺欄位或用 ≤ 999 的消去法補重量／尾數，判不出來回問；裸數字不當價格 |
 
@@ -64,7 +64,7 @@
 
 | ID | 狀態 | 說明 |
 | --- | --- | --- |
-| G-13 | ✅ 系統魚種 → 官方主要新鮮代碼（#21） | 28 個主要代碼，含養殖旗標；魚種清單仍來自 `species.js` |
+| G-13 | ✅ 官方新鮮代碼字典（#21、market-code-catalog） | 執行時同步全部新鮮代碼，含官方名稱、別名與養殖旗標 |
 | G-14 | ✅ 21 個市場簡稱 → 縣市對照（#21） | 未確認市場 `verified: false`，不參與縣市加權 |
 | G-15 | ✅ 按需抓取、快取與正規化（#22） | 查詢 API 每次重抓；CLI 保留 TTL 30 分鐘、negative cache、in-flight 去重、90 天 prune |
 | G-16 | ✅ 行情查詢 API 與歷史序列（#23） | `GET /api/market/prices`、`include=history` |
@@ -100,7 +100,7 @@
 | R-6 | 移除「聊聊」入口與死分頁 | `assets/js/app/02-cart-account.js`（nav）、`07-drawer-panels.js`、`05-listings.js`、`assets/css/features.css` 的 `.chat`、`chat-auth.css` | ✅ 2026-10-25：個人抽屜改為「個人資訊」＋「交易紀錄」 |
 | R-7 | 移除或封存 `report.html` | `pages/report.html` | 內容與現況不符；若要留，移到 `docs/` |
 | R-8 | 移除未使用的 API 函式與狀態 | `api/fish.js`（`createFish`、`deleteFish`）、`api/auth.js`（`updateProfile` 未接 UI）、`demo/store.js`（`busy`、`resetRoom`）、`demo/views/panel.js`（`setTitle`、`clearInput`、`focusInput`） | |
-| R-9 | 魚種單一來源 | `backend/lib/species.js`、`frontend/assets/js/demo/ai/species.js`、`frontend/assets/js/app/01-data.js` | 後端提供 `GET /api/species`，前端一律取用；移除另兩份 |
+| R-9 | 魚種單一來源 | `backend/lib/market/catalog-*.js`、前端 `species-catalog.js` | ✅ 固定魚種清單已移除，改由官方代碼字典提供 |
 | R-10 | UI 改名與錯字 | 全站 | 「海人直送」→「一支釣」；「紅鰹」→「紅魽」；縣市用字統一為「台」，比對時容納舊資料的「臺」 |
 | R-11 | 逾時掃描補齊 | `backend/routes/chat.js`、未來的 deals 路由 | ✅ 2026-10-25：`GET /api/conversations` 與 `GET /api/deals/:id` 都會 `sweepExpired()` |
 | R-12 | 檔案行數 | `pages/index.html`（255）、`pages/cart.html`（207）、`pages/seller.html`（344） | 前兩者需拆或隨 R-4／R-5 消失；`AGENTS.md` 規定單檔 ≤ 200 行 |
@@ -180,9 +180,9 @@
 | AC-1 | 後端已啟動 | 查一個魚種 → `market_prices` 有該魚種資料、`market_fetch_state` 更新；同一天再查不重複列、不重複抓 |
 | AC-2 | 官方回 `1151022` | 入庫為 `2026-10-22` |
 | AC-3 | 平均價 1237 元／公斤 | API 回 `price_per_taijin = 742.2`（元／台斤，四捨五入到小數 1 位） |
-| AC-4 | 高雄市有石斑行情 | 查 `grouper` + `高雄市` → `scope = "city"`，平均價為該縣市市場以交易量加權 |
+| AC-4 | 高雄市有石斑行情 | 查代碼 `2201` 加 `高雄市` → `scope = "city"`，平均價為該縣市市場以交易量加權 |
 | AC-5 | 澎湖縣當日無石斑 | 回 `scope = "national"` 並標示全國平均 |
-| AC-6 | 查已知魚種在早於資料起點的日期，或查沒有官方代碼的魚種 | 回 `found:false`（`NO_TRADE_DATA`／`NO_MAPPING`），畫面「暫無行情」，**不得出現任何價格數字** |
+| AC-6 | 查已知魚種在早於資料起點的日期，或查沒有官方代碼的魚種 | 有代碼但無交易回 `NO_TRADE_DATA`；查無代碼回 `SPECIES_NOT_FOUND`。畫面「暫無行情」，**不得出現任何價格數字** |
 | AC-7 | 釣客在高雄市上架石斑 | 商品不含 `market_snapshot`，發布流程不呼叫行情上游 |
 | AC-8 | 商品卡／詳情頁 | 不顯示行情、均價或「行情價參考」；商品資訊只顯示售價、重量、尾數、處理與地區 |
 | AC-9 | 海鱸、虱目魚、鰻魚、牡蠣、文蛤 | API `is_aquaculture: true`；行情卡、助手回覆標「養殖價格」；香魚、白蝦不標 |
@@ -239,7 +239,7 @@
 | 官方交易量單位 | 公斤（假設） | 官方文件未明示；先用公斤加權 |
 | 行情歷史回補 | 已實測 `TypeNo` + `StartDate`／`EndDate` 可抓歷史 | 按需抓最近 7／30 個交易日 |
 | 市場 → 縣市對照 | 21 個市場 | #21 人工對照 |
-| 主要新鮮代碼對照 | 28 個主要新鮮代碼 | #21；1xxx 僅三種例外 |
+| 官方代碼字典 | 執行時同步的官方新鮮代碼 | 排除 3xxx 凍結與 6xxx 加工 |
 | 行情保留天數 | 90 天 | 可調整 |
 | 抓取時間 | 無每日 job；查詢 API 每次重抓，CLI 保留 30 分鐘快取 | 可調整 |
 | 是否顯示交易量 | 否 | 只用於加權 |

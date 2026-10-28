@@ -81,7 +81,7 @@ async function performFetch(mapping, from, to, options) {
         last_range_to: to
       };
       if (isLatest) changes.last_latest_at = fetchedAt;
-      repository.saveState(mapping.code, mapping.species_id, changes);
+      repository.saveState(mapping.code, changes);
       repository.pruneOlderThan(KEEP_DAYS);
       remember(mapping.code, from, to, fetchedAt, status);
       return { status: status, rows: rows, cached: false };
@@ -94,7 +94,7 @@ async function performFetch(mapping, from, to, options) {
         last_error_at: fetchedAt
       };
       if (isLatest) changes.last_latest_at = fetchedAt;
-      repository.saveState(mapping.code, mapping.species_id, changes);
+      repository.saveState(mapping.code, changes);
       remember(mapping.code, from, to, fetchedAt, "error");
       return { status: "error", error: message, rows: [], cached: false };
     }
