@@ -96,11 +96,8 @@ export async function explainProduct(product, context) {
 /* ---- 對外單一入口 ---- */
 
 export async function handleText(context, text, user) {
-  const ctx = normalize(context);
+  let ctx = normalize(context);
   const source = String(text || "").trim();
-  if (!(await ensureSpecies())) {
-    return { context: ctx, replies: [{ text: "目前無法取得魚種資料，請確認伺服器後再試。" }] };
-  }
 
   const edited = editText(ctx, source);
   if (edited) {
@@ -120,6 +117,12 @@ export async function handleText(context, text, user) {
     return requestConsent(ctx, ctx.pending_sale_text || "我要賣魚");
   }
 
+  if (ctx.market_pending) {
+    const pending = await marketReply(source, user, ctx);
+    if (pending.handled !== false) return { context: pending.context || ctx, replies: pending.replies };
+    ctx = pending.context;
+  }
+
   if (ctx.mode !== "listing") {
     const referent = resolveReferent(source, ctx.last_cards.length);
     if (referent) return handleReferent(ctx, referent);
@@ -129,6 +132,9 @@ export async function handleText(context, text, user) {
 
   const intent = detectIntent(source);
   if (intent === INTENT.SELL) {
+    if (!(await ensureSpecies())) {
+      return { context: ctx, replies: [{ text: "目前無法取得魚種資料，請確認伺服器後再試。" }] };
+    }
     if (needsConsent(user)) return requestConsent(ctx, source);
     return startListing(source, user, ctx);
   }
@@ -136,10 +142,15 @@ export async function handleText(context, text, user) {
     return { context: resetContext(), replies: [{ text: "好，已經重來。想賣魚或找魚都可以直接說。" }] };
   }
   if (intent === INTENT.MARKET) {
-    const result = await marketReply(source, user);
-    return { context: ctx, replies: result.replies };
+    const result = await marketReply(source, user, ctx);
+    return { context: result.context || ctx, replies: result.replies };
   }
-  if (intent === INTENT.BUY) return shoppingReply(source, user);
+  if (intent === INTENT.BUY) {
+    if (!(await ensureSpecies())) {
+      return { context: ctx, replies: [{ text: "目前無法取得魚種資料，請確認伺服器後再試。" }] };
+    }
+    return shoppingReply(source, user);
+  }
 
   return {
     context: ctx,

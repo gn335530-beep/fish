@@ -56,19 +56,13 @@ export async function quoteForDraft(draft, user) {
 
   let data;
   try {
-    /* 先取 30 個交易日，再取 7 個（後端會命中同一段快取）；卡片預設顯示 7 日。 */
+    /* 一次取 30 個交易日；7 日卡直接從同一份歷史取最後 7 筆。 */
     data = await getMarketPrice(draft.species_id, region || null, 30);
     if (!data || !data.found) return { text: "暫無行情" };
   } catch (error) {
     return { text: "暫無行情" };
   }
 
-  let seven = null;
-  try {
-    seven = await getMarketPrice(draft.species_id, region || null, 7);
-  } catch (error) {
-    seven = null;
-  }
-  const short = seven && seven.found && seven.history ? seven.history : (data.history || []).slice(-7);
-  return { card: buildCard(draft, data, short) };
+  const history = data.history || [];
+  return { card: buildCard(draft, data, history.slice(-7)) };
 }

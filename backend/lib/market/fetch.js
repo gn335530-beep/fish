@@ -39,6 +39,18 @@ function stateCovers(state, from, to) {
   return to < todayIso() || isFresh(state.last_checked_at);
 }
 
+/* 狀態說「抓成功」時，本機必須真的還有對應範圍的資料，否則視為失效。 */
+function hasBackingData(state, mapping, from, to) {
+  if (!state || state.last_status !== "ok") return true;
+  return repository.hasPricesInCodeRange(mapping.code, from, to);
+}
+
+function rangeHasData(entry, mapping, from, to) {
+  if (!entry) return false;
+  if (entry.status !== "ok") return true;
+  return repository.hasPricesInCodeRange(mapping.code, from, to);
+}
+
 function remember(code, from, to, at, status) {
   rangeCache.set(code, { from: from, to: to, at: at, status: status });
 }
@@ -98,19 +110,26 @@ async function performFetch(mapping, from, to, options) {
 
 async function ensureLatest(mapping) {
   const state = repository.getState(mapping.code);
-  if (state && isFresh(state.last_latest_at)) return cachedResult(state.last_status);
   const to = todayIso();
-  return performFetch(mapping, addDays(to, -LATEST_WINDOW_DAYS), to, { latest: true });
+  const from = addDays(to, -LATEST_WINDOW_DAYS);
+  if (state && isFresh(state.last_latest_at) && hasBackingData(state, mapping, from, to)) {
+    return cachedResult(state.last_status);
+  }
+  return performFetch(mapping, from, to, { latest: true });
 }
 
 /* 指定日若無資料（週末、休市），往回抓一週補上最近交易日；查詢仍只取 <= date。 */
 async function ensureDate(mapping, date) {
-  if (repository.hasPricesForDate(mapping.species_id, date)) return cachedResult("ok");
+  if (repository.hasPricesForCodeDate(mapping.code, date)) return cachedResult("ok");
   const from = addDays(date, -DATE_LOOKBACK_DAYS);
   const state = repository.getState(mapping.code);
-  if (stateCovers(state, from, date)) return cachedResult(state.last_status);
+  if (stateCovers(state, from, date) && hasBackingData(state, mapping, from, date)) {
+    return cachedResult(state.last_status);
+  }
   const entry = rangeCache.get(mapping.code);
-  if (entry && cacheCovers(entry, from, date)) return cachedResult(entry.status);
+  if (entry && cacheCovers(entry, from, date) && rangeHasData(entry, mapping, from, date)) {
+    return cachedResult(entry.status);
+  }
   return performFetch(mapping, from, date);
 }
 
@@ -119,16 +138,35 @@ async function ensureHistory(mapping, endDate, days) {
   const to = endDate || todayIso();
   const from = addDays(to, -(days * 2 + 7));
   const state = repository.getState(mapping.code);
-  if (stateCovers(state, from, to)) return cachedResult(state.last_status);
+  if (stateCovers(state, from, to) && hasBackingData(state, mapping, from, to)) {
+    return cachedResult(state.last_status);
+  }
   const entry = rangeCache.get(mapping.code);
-  if (cacheCovers(entry, from, to)) return cachedResult(entry.status);
+  if (entry && cacheCovers(entry, from, to) && rangeHasData(entry, mapping, from, to)) {
+    return cachedResult(entry.status);
+  }
   return performFetch(mapping, from, to);
+}
+
+/* force 一律打上游，但仍共用 in-flight 去重，避免同時查詢重複下載。 */
+function forceFetch(mapping, options) {
+  if (options.days) {
+    const to = options.date || todayIso();
+    return performFetch(mapping, addDays(to, -(options.days * 2 + 7)), to);
+  }
+  if (options.date) {
+    return performFetch(mapping, addDays(options.date, -DATE_LOOKBACK_DAYS), options.date);
+  }
+  const to = todayIso();
+  return performFetch(mapping, addDays(to, -LATEST_WINDOW_DAYS), to, { latest: true });
 }
 
 /* CLI 與查詢服務共用同一套「最近／指定日期／歷史」選擇。 */
 async function ensureFor(mapping, options) {
-  if (options.days) return ensureHistory(mapping, options.date || todayIso(), options.days);
-  if (options.date) return ensureDate(mapping, options.date);
+  const opts = options || {};
+  if (opts.force) return forceFetch(mapping, opts);
+  if (opts.days) return ensureHistory(mapping, opts.date || todayIso(), opts.days);
+  if (opts.date) return ensureDate(mapping, opts.date);
   return ensureLatest(mapping);
 }
 

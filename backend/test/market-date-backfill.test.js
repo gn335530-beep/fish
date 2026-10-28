@@ -5,7 +5,6 @@ const assert = require("node:assert/strict");
 const { start, stop } = require("./client");
 const upstream = require("../lib/market/upstream");
 const repository = require("../lib/market/repository");
-const fetchService = require("../lib/market/fetch");
 const { rocToIso } = require("../lib/market/dates");
 const { raw, resetMarket, getPrices } = require("./market-test-helpers");
 
@@ -63,16 +62,15 @@ test("回補範圍不會取到指定日期之後的行情", async function () {
   assert.equal(res.body.data.price_per_kg, 100);
 });
 
-test("同一天回補後再查不再打上游", async function () {
+test("同一天回補後再查仍會重新抓取（行情 API 每次重抓）", async function () {
   const fetcher = useRangeRows([raw({ "交易日期": "1151023", "平均價": 333 })]);
   const query = "species_id=grouper&date=2026-10-25";
   await getPrices(query);
   assert.equal(fetcher.calls, 1);
 
-  fetchService.resetCache();
   const second = await getPrices(query);
   assert.equal(second.body.data.trade_date, "2026-10-23");
-  assert.equal(fetcher.calls, 1);
+  assert.equal(fetcher.calls, 2);
 });
 
 test("同一天並行查詢只發一次上游 request", async function () {

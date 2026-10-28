@@ -1,73 +1,67 @@
-/* 商品建立：行情快照、自由文字處理方式與移除示意行情。 */
+/* 商品建立：不寫行情快照、自由文字處理方式與移除示意行情。 */
 
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const { start, stop, call } = require("./client");
 const { raw, useRows, resetMarket } = require("./market-test-helpers");
-const { patch } = require("../lib/store");
-const upstream = require("../lib/market/upstream");
 const { create } = require("./product-helpers");
 
 test.before(start);
 test.after(stop);
-test.beforeEach(function () {
-  resetMarket();
-  useRows([]);
-});
+test.beforeEach(resetMarket);
 
-test("上架時依魚種與縣市寫入行情快照", async function () {
-  useRows([raw({ "平均價": 1237, "交易量": 1 })]);
+test("上架商品不寫入行情快照，也不呼叫行情上游", async function () {
+  const fetcher = useRows([raw({ "平均價": 1237, "交易量": 1 })]);
   const res = await create();
+
   assert.equal(res.status, 201);
-  const snapshot = res.body.data.market_snapshot;
-  assert.ok(snapshot);
-  assert.equal(snapshot.scope, "city");
-  assert.equal(snapshot.region, "高雄市");
-  assert.equal(snapshot.trade_date, "2026-10-22");
-  assert.equal(snapshot.price_per_kg, 1237);
-  assert.equal(snapshot.price_per_taijin, 742.2);
-  assert.equal(snapshot.is_aquaculture, false);
-  assert.equal(snapshot.source, "農業部漁產品交易行情");
-  assert.ok(snapshot.source_url);
-  assert.ok(snapshot.fetched_at);
-  assert.equal(snapshot.quality, "official");
-  assert.equal(res.body.data.market_reference_price, undefined);
+  assert.equal("market_snapshot" in res.body.data, false);
+  assert.equal(fetcher.calls, 0);
 });
 
-test("商品改價不影響已寫入的行情快照", async function () {
-  useRows([raw({ "平均價": 1237, "交易量": 1 })]);
+test("商品可帶官方 species_code，列表與詳情都回傳", async function () {
+  const res = await create({ fish_species: "土魠", species_code: 2141 });
+  assert.equal(res.status, 201);
+  assert.equal(res.body.data.species_code, 2141);
+  assert.equal(res.body.data.species_id, "grouper");
+  assert.ok(res.body.data.species_latin);
+
+  const list = await call("GET", "/api/products");
+  assert.equal(list.body.data.find(function (row) { return row.id === res.body.data.id; }).species_code, 2141);
+  const detail = await call("GET", "/api/products/" + res.body.data.id);
+  assert.equal(detail.body.data.species_code, 2141);
+});
+
+test("沒有 species_code 或代碼不合法時仍可建立，代碼為空", async function () {
+  const missing = await create({ species_code: undefined });
+  assert.equal(missing.status, 201);
+  assert.equal(missing.body.data.species_code, null);
+
+  const invalid = await create({ species_code: "石斑" });
+  assert.equal(invalid.status, 201);
+  assert.equal(invalid.body.data.species_code, null);
+
+  const unknown = await create({ species_code: 999999 });
+  assert.equal(unknown.status, 201);
+  assert.equal(unknown.body.data.species_code, 999999);
+});
+
+test("商品改價不影響其他欄位", async function () {
   const created = await create();
   const id = created.body.data.id;
-  patch("products", id, { price: 2000 });
 
   const detail = await call("GET", "/api/products/" + id);
-  assert.equal(detail.body.data.price, 2000);
-  assert.equal(detail.body.data.market_snapshot.price_per_kg, 1237);
-  assert.equal(detail.body.data.market_snapshot.price_per_taijin, 742.2);
+  assert.equal(detail.status, 200);
+  assert.equal("market_snapshot" in detail.body.data, false);
 });
 
-test("查無行情或上游失敗仍可上架，快照為 null", async function () {
-  useRows([]);
-  const empty = await create();
-  assert.equal(empty.status, 201);
-  assert.equal(empty.body.data.market_snapshot, null);
-
-  upstream.setFetcher(async function () { throw new Error("down"); });
-  const failed = await create({ fish_species: "花枝", species_id: "cuttlefish" });
-  assert.equal(failed.status, 201);
-  assert.equal(failed.body.data.market_snapshot, null);
-});
-
-test("未知魚種不呼叫行情 API，快照為 null", async function () {
-  let calls = 0;
-  upstream.setFetcher(async function () {
-    calls += 1;
-    return { ok: true, json: async function () { return []; } };
-  });
+test("未知魚種不呼叫行情 API，商品仍可建立", async function () {
+  const fetcher = useRows([raw()]);
   const res = await create({ fish_species: "鮭魚", species_id: null, condition: "冷凍" });
+
   assert.equal(res.status, 201);
-  assert.equal(res.body.data.market_snapshot, null);
-  assert.equal(calls, 0);
+  assert.equal(fetcher.calls, 0);
+  assert.equal("market_snapshot" in res.body.data, false);
 });
 
 test("處理方式接受任何非空、20 字以內的自由文字", async function () {
@@ -101,7 +95,6 @@ test("魚種 API 與商品不再帶示意行情", async function () {
   assert.ok(species.body.data.length > 0);
   assert.equal(species.body.data.some(function (row) { return "market" in row; }), false);
 
-  useRows([raw()]);
   const product = await create();
   assert.equal(product.body.data.market_reference_price, undefined);
 });

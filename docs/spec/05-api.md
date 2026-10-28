@@ -148,7 +148,7 @@
 
 ### `POST /api/products/create`
 
-> 2026-10-27：處理方式自由文字、每台斤／整批售價、自動計算與發布時行情快照已實作（#24、#26、#27）。
+> 2026-10-27：處理方式自由文字、每台斤／整批售價與自動計算已實作（#26、#27）。2026-10-28：移除商品行情快照。
 
 ```json
 { "fish_species": "石斑", "species_id": "grouper", "weight_kg": 4.5, "quantity": 1,
@@ -169,7 +169,7 @@
   - 只填 `price_per_taijin` → `price = round(price_per_taijin × 原始輸入 weight_kg ÷ 0.6)`、`price_auto = true`；入庫的 `weight_kg` 仍四捨五入到一位小數，但自動價用未進位的原始總重。
   - 兩者都填 → 都保留、`price_auto = false`，**不檢查一致性**（整批可為折扣）。
   - 至少要有一個 > 0。
-- 發布時查行情並寫入 `market_snapshot`；查無或上游失敗則為 `null`，商品仍建立。
+- 發布商品不查行情，也不寫入任何行情欄位；商品仍照常建立。
 - `sold_quantity = 0`；**不寫入 `status`**。
 - `region` 預設個人檔案的縣市；`location` 預設三段地址串接。
 - 回 201，`data` 是含衍生欄位的商品。
@@ -183,7 +183,7 @@
 ```jsonc
 { "...商品欄位": "...",
   "price": 1000, "price_per_taijin": 200, "price_auto": false,
-  "unit_price": 1000, "market_snapshot": { "...": "..." },
+  "unit_price": 1000,
   "reserved_quantity": 0, "available": 1,
   "avg_weight_kg": 4.5, "status": "ACTIVE" }
 ```
@@ -450,7 +450,7 @@
 
 ### 8.3 行情
 
-> 2026-10-27：三個行情端點、按需抓取與快取已實作。沒有每日全量 job；第一次查某魚種會打上游，之後依 TTL 使用 `db.json` 快取。手動 CLI 見 `npm run market:fetch`。
+> 2026-10-27：三個行情端點、按需抓取與快取已實作。2026-10-28：`/api/market/prices` 每次請求都重抓上游，成功後寫入 `db.json`；上游失敗且無本機資料才回 `found:false`。手動 CLI 仍使用快取，見 `npm run market:fetch`。
 
 | 方法 | 路徑 | 權限 | 說明 |
 | --- | --- | --- | --- |
@@ -568,10 +568,10 @@
 | `price_auto: true` 代表整批價由每台斤自動計算 | 畫面標「自動計算」；只填整批時 `price_per_taijin` 為 `null` |
 | 行情查詢回的是平均價數字，不是 low／avg／high 物件 | `data.price_per_kg`、`data.price_per_taijin` 直接是 number |
 | 行情卡走勢要帶 `include=history`；沒有 `summary` 端點 | 用 `days=7` 或 `days=30`（最近 7／30 個交易日） |
-| `is_aquaculture: true` | 商品卡、行情卡、助手回覆都要標「養殖價格」 |
+| `is_aquaculture: true` | 行情卡、助手回覆都要標「養殖價格」 |
 | 助手房可以有多間 | 每間有自己的 `context` 與草稿；不要假設只有一間 |
 | 交易房只有 `CANCELLED` 能刪 | 房內必須沒有 `CONFIRMED` 歷史；刪除會一併移除該房所有訂單與項目 |
-| 商品發布時寫入行情快照 | 小卡是對話訊息，快照才是商品的一部分 |
+| 商品不保存行情 | 商品卡與詳情頁不顯示行情；上架行情卡才是行情顯示處 |
 | 取消上架會刪除目前 AI 對話 | 前端要先確認，再呼叫 `DELETE /api/conversations/:id` |
 | `seller_terms_accepted_at` 有值就永久跳過法規告知 | 不要每次賣魚都重問或重送 consent |
 | 法規告知卡按「取消」不記錄同意 | 取消後回 idle；下次賣魚再顯示 |

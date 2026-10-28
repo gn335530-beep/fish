@@ -58,9 +58,56 @@ function pricesForDate(speciesId, tradeDate) {
   });
 }
 
+function pricesForCode(code, tradeDate) {
+  return allPrices().filter(function (row) {
+    return Number(row.species_code) === Number(code) && row.trade_date === tradeDate;
+  });
+}
+
+function hasPricesForCodeDate(code, tradeDate) {
+  return allPrices().some(function (row) {
+    return Number(row.species_code) === Number(code) && row.trade_date === tradeDate;
+  });
+}
+
+function hasPricesInCodeRange(code, from, to) {
+  if (!from || !to) return false;
+  return allPrices().some(function (row) {
+    return Number(row.species_code) === Number(code) && row.trade_date >= from && row.trade_date <= to;
+  });
+}
+
+function latestTradeDateForCode(code, onOrBefore) {
+  let latest = null;
+  for (const row of allPrices()) {
+    if (Number(row.species_code) !== Number(code)) continue;
+    if (onOrBefore && row.trade_date > onOrBefore) continue;
+    latest = maxDate(latest, row.trade_date);
+  }
+  return latest;
+}
+
+function tradeDatesForCode(code, onOrBefore) {
+  const dates = new Set();
+  for (const row of allPrices()) {
+    if (Number(row.species_code) !== Number(code)) continue;
+    if (onOrBefore && row.trade_date > onOrBefore) continue;
+    dates.add(row.trade_date);
+  }
+  return [...dates].sort();
+}
+
 function hasPricesForDate(speciesId, tradeDate) {
   return allPrices().some(function (row) {
     return row.species_id === speciesId && row.trade_date === tradeDate;
+  });
+}
+
+/* 狀態說抓成功時用來確認資料還在；避免 state 與 market_prices 不一致。 */
+function hasPricesInRange(speciesId, from, to) {
+  if (!from || !to) return false;
+  return allPrices().some(function (row) {
+    return row.species_id === speciesId && row.trade_date >= from && row.trade_date <= to;
   });
 }
 
@@ -111,7 +158,13 @@ module.exports = {
   allPrices: allPrices,
   pricesForDate: pricesForDate,
   hasPricesForDate: hasPricesForDate,
+  hasPricesInRange: hasPricesInRange,
   latestTradeDate: latestTradeDate,
   tradeDates: tradeDates,
+  pricesForCode: pricesForCode,
+  hasPricesForCodeDate: hasPricesForCodeDate,
+  hasPricesInCodeRange: hasPricesInCodeRange,
+  latestTradeDateForCode: latestTradeDateForCode,
+  tradeDatesForCode: tradeDatesForCode,
   pruneOlderThan: pruneOlderThan
 };

@@ -14,7 +14,7 @@ test("修改重量後重新查行情，避免參考金額過期", async function
   resetCalls();
   const edited = await service.handleText(quoted.context, "4 公斤", { city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" });
   assert.equal(edited.context.draft.weight_kg, 4);
-  assert.equal(marketCalls().length, 2);
+  assert.equal(marketCalls().length, 1);
   const card = cardOf(edited);
   assert.equal(card.weight_kg, 4);
   assert.equal(card.estimated_total, 1333);

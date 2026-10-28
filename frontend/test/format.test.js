@@ -1,4 +1,4 @@
-/* 共用格式：跳脫、金額、日期時間與行情快照都從同一個全域取得。 */
+/* 共用格式：跳脫、金額、日期時間與行情文字都從同一個全域取得。 */
 
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -10,8 +10,7 @@ const format = globalThis.window.HaisenFormat;
 
 test("共用格式掛在 window.HaisenFormat", function () {
   ["escapeHtml", "money", "timeOf", "dateTimeOf", "dateOf", "localInputOf",
-    "hasMarketSnapshot", "priceText", "marketSnapshotPrice", "marketSnapshotScope",
-    "marketSnapshotSource", "marketSnapshotMeta", "marketSnapshotLine"].forEach(function (name) {
+    "priceText", "marketPriceText", "marketScopeText"].forEach(function (name) {
     assert.equal(typeof format[name], "function", name);
   });
 });
@@ -42,8 +41,8 @@ test("台斤換算只由共用常數提供", function () {
   assert.equal(format.taijinFromKg(3), 5);
 });
 
-test("行情快照文字只由共用格式產生", function () {
-  const snapshot = {
+test("行情文字只由共用格式產生", function () {
+  const data = {
     price_per_taijin: 742.2,
     scope: "city",
     region: "高雄市",
@@ -51,18 +50,14 @@ test("行情快照文字只由共用格式產生", function () {
     source: "農業部漁產品交易行情",
     is_aquaculture: true
   };
-  assert.equal(format.marketSnapshotPrice(snapshot), "742.2 元／台斤");
+  assert.equal(format.marketPriceText(data), "742.2 元／台斤");
   assert.equal(format.priceText(742.2), "742.2");
   assert.equal(format.priceText(200), "200");
   assert.equal(format.priceText(-1.25), "-1.3");
   assert.equal(format.priceText("200"), "200");
   assert.equal(format.priceText("abc"), "NaN");
-  assert.equal(format.marketSnapshotScope(snapshot), "高雄市平均");
-  assert.equal(format.marketSnapshotMeta(snapshot),
-    "高雄市平均 · 2026-10-22 · 農業部漁產品交易行情 · 新鮮批發參考 · 養殖價格");
-  assert.equal(format.marketSnapshotSource(snapshot),
-    "農業部漁產品交易行情 · 新鮮批發參考 · 養殖價格");
-  assert.equal(format.marketSnapshotLine(snapshot),
-    "新鮮批發參考 · 742.2 元／台斤 · 高雄市平均 · 2026-10-22 · 農業部漁產品交易行情 · 養殖價格");
-  assert.equal(format.marketSnapshotLine(null), "新鮮批發參考 · 暫無行情");
+  assert.equal(format.marketScopeText(data), "高雄市平均");
+  assert.equal(format.marketScopeText({ scope: "national", region: "澎湖縣", price_per_taijin: 1 }), "全國平均");
+  assert.equal(format.marketPriceText(null), "暫無行情");
+  assert.equal(format.marketScopeText(null), "");
 });

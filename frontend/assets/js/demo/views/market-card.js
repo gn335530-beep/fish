@@ -43,7 +43,7 @@ export function renderMarketCard(card, messageId) {
   const weightTaijin = card.weight_taijin == null ? null : priceText(card.weight_taijin) + " 台斤";
   return '<div class="fm-card fm-card--market">' +
     '<div class="fm-market__head"><b>' + escapeHtml(card.species_name || "行情") + '行情</b>' +
-    '<span class="fm-market__ref">新鮮批發參考</span></div>' +
+    '<span class="fm-market__ref">行情價參考</span></div>' +
     '<div class="fm-market__price"><b>' + priceText(card.price_per_taijin) + '</b> <span>元／台斤</span></div>' +
     '<div class="fm-market__meta">' + escapeHtml(marketScope(card)) + ' · ' +
     escapeHtml(card.trade_date || "") + ' · ' + escapeHtml(card.source || "") + '</div>' +
@@ -60,6 +60,6 @@ export function renderMarketCard(card, messageId) {
     (weightTaijin ? '（' + escapeHtml(weightTaijin) + '）' : "") + '</dd></div>' +
     '<div><dt>參考整批</dt><dd>' + money(card.estimated_total) + '</dd></div>' +
     '</dl>' +
-    '<div class="fm-market__note">新鮮批發參考，非售價或保證收購價。</div>' +
+    '<div class="fm-market__note">行情價參考，非售價或保證收購價。</div>' +
     '</div>';
 }

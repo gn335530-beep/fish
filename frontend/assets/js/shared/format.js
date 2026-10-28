@@ -1,4 +1,4 @@
-/* 前端格式單一來源：跳脫、金額、日期時間、台斤換算與行情快照；classic 頁面與 ESM 共用。 */
+/* 前端格式單一來源：跳脫、金額、日期時間、台斤換算與行情文字；classic 頁面與 ESM 共用。 */
 
 function escapeHtml(value) {
   return String(value == null ? "" : value).replace(/[&<>"']/g, function (ch) {
@@ -56,8 +56,8 @@ function taijinFromKg(value) {
   return Number(value) / KG_PER_TAIJIN;
 }
 
-function hasMarketSnapshot(snapshot) {
-  return !!(snapshot && snapshot.price_per_taijin != null);
+function hasMarketPrice(data) {
+  return !!(data && data.price_per_taijin != null);
 }
 
 /* 行情數字固定一位小數，整數不顯示 .0。 */
@@ -65,42 +65,14 @@ function priceText(value) {
   return Number(value).toFixed(1).replace(/\.0$/, "");
 }
 
-function marketSnapshotPrice(snapshot) {
-  if (!hasMarketSnapshot(snapshot)) return "暫無行情";
-  return priceText(snapshot.price_per_taijin) + " 元／台斤";
+function marketPriceText(data) {
+  if (!hasMarketPrice(data)) return "暫無行情";
+  return priceText(data.price_per_taijin) + " 元／台斤";
 }
 
-function marketSnapshotScope(snapshot) {
-  if (!hasMarketSnapshot(snapshot)) return "";
-  return snapshot.scope === "city" ? (snapshot.region || "縣市") + "平均" : "全國平均";
-}
-
-function marketSnapshotSource(snapshot) {
-  const parts = ["新鮮批發參考"];
-  if (hasMarketSnapshot(snapshot) && snapshot.source) parts.unshift(snapshot.source);
-  if (hasMarketSnapshot(snapshot) && snapshot.is_aquaculture) parts.push("養殖價格");
-  return parts.join(" · ");
-}
-
-/* 商品卡用的「地區 · 日期 · 來源」摘要，不含價格。 */
-function marketSnapshotMeta(snapshot) {
-  return [
-    marketSnapshotScope(snapshot),
-    snapshot.trade_date,
-    marketSnapshotSource(snapshot)
-  ].filter(Boolean).join(" · ");
-}
-
-function marketSnapshotLine(snapshot) {
-  if (!hasMarketSnapshot(snapshot)) return "新鮮批發參考 · 暫無行情";
-  return [
-    "新鮮批發參考",
-    marketSnapshotPrice(snapshot),
-    marketSnapshotScope(snapshot),
-    snapshot.trade_date,
-    snapshot.source,
-    snapshot.is_aquaculture ? "養殖價格" : ""
-  ].filter(Boolean).join(" · ");
+function marketScopeText(data) {
+  if (!hasMarketPrice(data)) return "";
+  return data.scope === "city" ? (data.region || "縣市") + "平均" : "全國平均";
 }
 
 window.HaisenFormat = {
@@ -113,11 +85,7 @@ window.HaisenFormat = {
   KG_PER_TAIJIN: KG_PER_TAIJIN,
   kgFromTaijin: kgFromTaijin,
   taijinFromKg: taijinFromKg,
-  hasMarketSnapshot: hasMarketSnapshot,
   priceText: priceText,
-  marketSnapshotPrice: marketSnapshotPrice,
-  marketSnapshotScope: marketSnapshotScope,
-  marketSnapshotSource: marketSnapshotSource,
-  marketSnapshotMeta: marketSnapshotMeta,
-  marketSnapshotLine: marketSnapshotLine
+  marketPriceText: marketPriceText,
+  marketScopeText: marketScopeText
 };

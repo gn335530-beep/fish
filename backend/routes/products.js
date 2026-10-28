@@ -6,7 +6,6 @@ const { requireUser } = require("../lib/auth");
 const { decorateProduct, decorateProducts } = require("../lib/product-stock");
 const { sweepExpired } = require("../lib/timeouts");
 const species = require("../lib/species");
-const market = require("../lib/market/service");
 const { round1 } = require("../lib/round");
 const { buildTitle } = require("../lib/product-title");
 const { readPricing } = require("../lib/product-pricing");
@@ -16,40 +15,16 @@ const { ok, created, fail } = require("../lib/http");
 
 const router = express.Router();
 
-function toSnapshot(data) {
-  if (!data || !data.found) return null;
-  return {
-    scope: data.scope,
-    region: data.region,
-    trade_date: data.trade_date,
-    price_per_kg: data.price_per_kg,
-    price_per_taijin: data.price_per_taijin,
-    is_aquaculture: data.is_aquaculture,
-    source: data.source,
-    source_url: data.source_url,
-    fetched_at: data.fetched_at,
-    quality: data.quality
-  };
-}
-
-/* 行情查不到或上游失敗都不阻擋上架，快照為 null。 */
-async function snapshotFor(speciesId, region) {
-  if (!speciesId) return null;
-  try {
-    const data = await market.getMarketPrice({
-      speciesId: speciesId,
-      region: region || null,
-      date: null,
-      includeHistory: false
-    });
-    return toSnapshot(data);
-  } catch (err) {
-    return null;
-  }
-}
-
 function matches(text, keyword) {
   return String(text || "").indexOf(keyword) !== -1;
+}
+
+/* 官方代碼只是可選標記：非數字或空白一律視為沒有代碼，不阻擋上架。 */
+function speciesCodeOf(value) {
+  const text = String(value === undefined || value === null ? "" : value).trim();
+  if (!/^\d+$/.test(text)) return null;
+  const code = Number(text);
+  return Number.isInteger(code) && code > 0 ? code : null;
 }
 
 router.get("/api/products", function (req, res) {
@@ -136,13 +111,13 @@ router.post("/api/products/create", requireUser, async function (req, res) {
   const user = req.user;
   const rawRegion = String(body.region || user.city || "").trim();
   const region = normalizeRegion(rawRegion);
-  const marketSnapshot = await snapshotFor(match ? match.id : null, region);
 
   const product = insert("products", {
     id: nextCode("products", "prd"),
     seller_id: user.id,
     title: buildTitle(fishSpecies, weightKg, quantity, condition),
     fish_species: fishSpecies,
+    species_code: speciesCodeOf(body.species_code),
     species_id: match ? match.id : null,
     species_latin: (match && match.latin) || String(body.species_latin || ""),
     weight_kg: weight,
@@ -153,7 +128,6 @@ router.post("/api/products/create", requireUser, async function (req, res) {
     price: pricing.price,
     price_per_taijin: pricing.price_per_taijin,
     price_auto: pricing.price_auto,
-    market_snapshot: marketSnapshot,
     region: region || rawRegion,
     location: String(body.location || [user.city, user.district, user.address_line].filter(Boolean).join("")).trim(),
     catch_time: body.catch_time || new Date().toISOString(),

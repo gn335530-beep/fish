@@ -1,10 +1,11 @@
-/* 行情問答：魚種與地區都從使用者句子或個人檔案來，數字只取自行情 API。 */
+/* 行情問答：名稱先查官方代碼字典，再用代碼查價格；多候選時回問。 */
 
-import { getMarketPrice } from "../../api/market.js";
+import { getMarketQuote, getMarketQuoteByCode } from "../../api/market.js";
 import "../../shared/format.js";
-import { findSpecies } from "./species.js";
 import { findRegion, normalizeCityName } from "../../shared/regions.js";
+import { ensureCatalog, findCatalogName } from "./species-catalog.js";
 import { guessUnknownSpecies } from "./conditions.js";
+import { INTENT, detectIntent } from "./rules.js";
 
 function profileRegion(user) {
   return normalizeCityName((user && user.city) || "").trim();
@@ -22,62 +23,141 @@ function unknownSpeciesName(text) {
   return guessUnknownSpecies(rest);
 }
 
-function noMarketReply() {
-  return { replies: [{ text: "暫無行情" }] };
+function marketMeta(text, user) {
+  const explicit = findRegion(text);
+  const profile = profileRegion(user);
+  return {
+    explicit: !!explicit,
+    profile: profile,
+    requestedRegion: explicit || profile
+  };
 }
 
 function scopeText(data, requestedRegion) {
-  return window.HaisenFormat.marketSnapshotScope({
+  return window.HaisenFormat.marketScopeText({
     scope: data.scope,
     region: data.region || requestedRegion,
     price_per_taijin: data.price_per_taijin
   });
 }
 
-function prefixText(data, explicit, profile, requestedRegion) {
-  if (data.scope === "national" && requestedRegion) {
-    return requestedRegion + "暫無行情，改以全國平均：";
+function prefixText(data, meta) {
+  if (data.scope === "national" && meta.requestedRegion) {
+    return meta.requestedRegion + "暫無行情，改以全國平均：";
   }
-  if (!explicit && profile) return "依你的地區（" + profile + "），";
-  if (!explicit && !profile) return "你的個人檔案還沒填縣市，以全國平均查詢：";
+  if (!meta.explicit && meta.profile) return "依你的地區（" + meta.profile + "），";
+  if (!meta.explicit && !meta.profile) return "你的個人檔案還沒填縣市，以全國平均查詢：";
   return "";
 }
 
-function foundReply(species, data, context) {
-  const place = scopeText(data, context.requestedRegion);
+function replyWith(ctx, replies) {
+  return { context: Object.assign({}, ctx, { market_pending: null }), replies: replies };
+}
+
+function priceReply(data, ctx, meta) {
+  const place = scopeText(data, meta.requestedRegion);
   const quality = data.is_aquaculture ? "養殖價格，" : "";
-  const detail = "（" + quality + data.trade_date + "，" + place + "，" + data.source + "）";
-  const prefix = prefixText(data, context.explicit, context.profile, context.requestedRegion);
+  const detail = "（代碼 " + data.species_code + "，" + quality + data.trade_date +
+    "，" + place + "，" + data.source + "）";
+  const prefix = prefixText(data, meta);
+  return replyWith(ctx, [{ text: prefix + data.official_name + " 的平均價是 " +
+    window.HaisenFormat.marketPriceText(data) + detail + "。" }]);
+}
+
+function candidateReply(ctx, name, candidates, meta) {
+  const labels = candidates.map(function (row) {
+    return row.official_name + "（" + row.species_code + "）";
+  }).join("、");
   return {
-    replies: [{ text: prefix + species.name + " 的平均價是 " +
-      window.HaisenFormat.marketSnapshotPrice(data) + detail + "。" }]
+    context: Object.assign({}, ctx, {
+      market_pending: {
+        query: name,
+        candidates: candidates,
+        region: meta.requestedRegion || null,
+        explicit: meta.explicit,
+        profile: meta.profile
+      }
+    }),
+    replies: [{ text: "「" + name + "」對到多個代碼，請選擇：" + labels }]
   };
 }
 
-export async function marketReply(text, user) {
-  const species = findSpecies(text);
-  const explicit = findRegion(text);
-  const profile = profileRegion(user);
-  const requestedRegion = explicit || profile;
-
-  if (!species) {
-    const candidate = unknownSpeciesName(text);
-    if (candidate) return noMarketReply();
-    return { replies: [{ text: "請問想查哪一種魚的行情？" }] };
-  }
-
+async function quoteFor(name, byCode, ctx, meta) {
   let data;
   try {
-    data = await getMarketPrice(species.id, requestedRegion || null);
+    data = byCode
+      ? await getMarketQuoteByCode(name, meta.requestedRegion || null)
+      : await getMarketQuote(name, meta.requestedRegion || null);
   } catch (error) {
-    return noMarketReply();
+    const body = error && error.data ? error.data : {};
+    if (body.code === "AMBIGUOUS_SPECIES") {
+      return candidateReply(ctx, name, body.candidates || [], meta);
+    }
+    if (body.code === "SPECIES_NOT_FOUND") {
+      return replyWith(ctx, [{ text: "查無此魚種代碼：「" + name + "」。" }]);
+    }
+    if (body.code === "CATALOG_UNAVAILABLE") {
+      return replyWith(ctx, [{ text: "目前無法取得官方魚種代碼，請稍後再試。" }]);
+    }
+    return replyWith(ctx, [{ text: "暫無行情" }]);
+  }
+  if (!data || !data.found) return replyWith(ctx, [{ text: "暫無行情" }]);
+  return priceReply(data, ctx, meta);
+}
+
+function namesOf(row) {
+  return [row.official_name].concat(row.aliases || []);
+}
+
+/* 先比完整名稱；只有一個候選被句子包含時才選，避免把「龍膽石斑」誤配到「石斑」。 */
+function matchCandidate(text, candidates) {
+  const source = String(text || "").trim();
+  const exact = candidates.filter(function (row) {
+    return namesOf(row).some(function (name) { return name === source; });
+  });
+  if (exact.length === 1) return exact[0];
+  if (exact.length > 1) return null;
+
+  const contained = candidates.filter(function (row) {
+    return namesOf(row).some(function (name) { return source.indexOf(name) !== -1; });
+  });
+  return contained.length === 1 ? contained[0] : null;
+}
+
+export async function marketReply(text, user, context) {
+  let ctx = context || {};
+  const source = String(text || "").trim();
+
+  if (ctx.market_pending) {
+    const pending = ctx.market_pending;
+    const picked = matchCandidate(source, pending.candidates || []);
+    if (picked) {
+      const meta = {
+        explicit: pending.explicit,
+        profile: pending.profile,
+        requestedRegion: pending.region
+      };
+      return quoteFor(String(picked.species_code), true, ctx, meta);
+    }
+    ctx = Object.assign({}, ctx, { market_pending: null });
+    if (detectIntent(source) !== INTENT.MARKET) return { handled: false, context: ctx };
   }
 
-  if (!data || !data.found) return noMarketReply();
+  let known = findCatalogName(source);
+  let catalogOk = true;
+  if (!known) {
+    catalogOk = await ensureCatalog();
+    known = findCatalogName(source);
+  }
 
-  return foundReply(species, data, {
-    explicit: !!explicit,
-    profile: profile,
-    requestedRegion: requestedRegion
-  });
+  const codeMatch = source.match(/(?:^|[^\d])(\d{2,6})(?:[^\d]|$)/);
+  const name = known || (codeMatch ? codeMatch[1] : "") || unknownSpeciesName(source);
+  if (!name) {
+    if (!catalogOk) {
+      return replyWith(ctx, [{ text: "目前無法取得官方魚種代碼，請稍後再試。" }]);
+    }
+    return { context: ctx, replies: [{ text: "請問想查哪一種魚的行情？" }] };
+  }
+
+  return quoteFor(name, false, ctx, marketMeta(source, user));
 }
