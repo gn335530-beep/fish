@@ -1,6 +1,5 @@
 /* 漁獲列表：資料只來自 GET /api/products，篩選與排序都在前端做。 */
 let PRODUCTS = [];
-let SPECIES_BY_ID = {};
 let productsFailed = false;
 let priceReady = false;
 let lastPriceMax = 0;
@@ -45,25 +44,18 @@ function initPriceRange(force) {
 function activeFilter() {
   const search = document.getElementById("nav-search");
   return {
-    cats: [...document.querySelectorAll(".f-cat:checked")].map(function (el) { return el.value; }),
     maxPrice: Number(document.getElementById("price-range").value),
     inStock: document.getElementById("f-instock").checked,
     q: (search.value || "").trim().toLowerCase()
   };
 }
 
-function categoryOf(p) {
-  const item = SPECIES_BY_ID[p.species_id];
-  return item && item.category ? item.category : "fish";
-}
-
 function passes(p, f) {
-  if (!f.cats.includes(categoryOf(p))) return false;
   if (filterRegion && !sameCity(p.region, filterRegion)) return false;
   if (Number(p.price || 0) > f.maxPrice) return false;
   if (f.inStock && productAvailable(p) <= 0) return false;
   if (f.q) {
-    const hay = [p.title, p.fish_species, p.species_id, p.region, p.location, p.condition]
+    const hay = [p.title, p.fish_species, p.region, p.location, p.condition]
       .join(" ").toLowerCase();
     if (hay.indexOf(f.q) === -1) return false;
   }
@@ -103,13 +95,7 @@ function render() {
 async function loadProducts() {
   renderRegionChips();
   try {
-    const results = await Promise.all([
-      window.HaisenAPI.listProducts(),
-      window.HaisenAPI.listSpecies().catch(function () { return []; })
-    ]);
-    PRODUCTS = results[0];
-    SPECIES_BY_ID = {};
-    results[1].forEach(function (item) { SPECIES_BY_ID[item.id] = item; });
+    PRODUCTS = await window.HaisenAPI.listProducts();
     productsFailed = false;
     document.getElementById("total-count").textContent = String(PRODUCTS.length);
     initPriceRange();
@@ -129,10 +115,8 @@ document.getElementById("price-range").addEventListener("input", function (event
   render();
 });
 document.getElementById("f-instock").addEventListener("change", render);
-document.querySelectorAll(".f-cat").forEach(function (el) { el.addEventListener("change", render); });
 document.getElementById("nav-search").addEventListener("input", render);
 document.getElementById("reset-filters").addEventListener("click", function () {
-  document.querySelectorAll(".f-cat").forEach(function (el) { el.checked = true; });
   document.getElementById("f-instock").checked = false;
   filterRegion = "";
   setRegion("");

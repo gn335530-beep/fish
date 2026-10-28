@@ -3,21 +3,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-const SPECIES = [
-  { id: "grouper", name: "石斑", alias: [], category: "fish", texture: "", bones: "刺少", cooking: ["清蒸"] },
-  { id: "cuttlefish", name: "花枝", alias: [], category: "ceph", texture: "", bones: "無刺", cooking: ["炒"] }
-];
+globalThis.window = { HaisenAPI: {} };
 
-globalThis.window = {
-  HaisenAPI: {
-    listSpecies: async function () { return SPECIES; }
-  }
-};
-
-const { loadSpecies } = await import("../assets/js/demo/ai/species.js");
 const service = await import("../assets/js/demo/ai/service.js");
 const editing = await import("../assets/js/demo/ai/editing.js");
-await loadSpecies();
 
 const USER = { seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" };
 

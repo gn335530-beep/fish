@@ -3,20 +3,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-const SPECIES = [
-  { id: "cuttlefish", name: "花枝", alias: [], category: "ceph", texture: "", bones: "無刺", cooking: ["炒"] }
-];
-
 globalThis.window = {
   HaisenAPI: {
-    listSpecies: async function () { return SPECIES; },
     request: async function () { throw new Error("不應呼叫 API"); }
   }
 };
 
-const { loadSpecies } = await import("../assets/js/demo/ai/species.js");
 const service = await import("../assets/js/demo/ai/service.js");
-await loadSpecies();
 
 function textOf(result) {
   return result.replies.map(function (reply) { return reply.text || ""; }).join("\n");

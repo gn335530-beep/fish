@@ -3,10 +3,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-const SPECIES = [
-  { id: "cuttlefish", name: "花枝", alias: [], category: "ceph", texture: "", bones: "無刺", cooking: ["炒"] }
-];
-
 let calls = [];
 let seq = 0;
 
@@ -15,7 +11,6 @@ globalThis.window = {
   HaisenAPI: {
     getToken: function () { return "token"; },
     BASE: "http://api.test",
-    listSpecies: async function () { return SPECIES; },
     request: async function (path, options) {
       calls.push((options && options.method ? options.method : "GET") + " " + path);
       if (path === "/api/users/seller-consent") {

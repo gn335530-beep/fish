@@ -1,22 +1,8 @@
-/* 導購：從商品 API 找魚，寫入 last_cards 供指涉使用。 */
+/* 導購：從商品 API 找魚，只用魚種名稱、地區與商品欄位篩選。 */
 
 import { listProducts } from "../../api/products.js";
-import { findSpecies, speciesList } from "./species.js";
 import { findRegion, normalizeCityName } from "../../shared/regions.js";
-
-const COOKING_WORDS = ["清蒸", "煮湯", "紅燒", "香煎", "煎", "烤", "川燙", "生魚片", "涼拌", "炒", "滷"];
-
-function cookingMatches(text) {
-  const hasTextureHint = /刺少|長輩|小孩|牙口/.test(text);
-  const method = COOKING_WORDS.find(function (word) { return text.indexOf(word) !== -1; });
-  if (!hasTextureHint && !method) return null;
-
-  return speciesList().filter(function (spice) {
-    if (hasTextureHint && spice.bones.indexOf("多") !== -1) return false;
-    if (method && spice.cooking.indexOf(method) === -1) return false;
-    return true;
-  }).map(function (spice) { return spice.id; });
-}
+import { ensureCatalog, findCatalogName } from "./species-catalog.js";
 
 function productCard(product) {
   return {
@@ -59,6 +45,11 @@ function matchesRegion(product, region) {
   return normalizeCityName(product.region).indexOf(region) !== -1;
 }
 
+function matchesSpecies(product, name) {
+  const species = String(product.fish_species || "").trim();
+  return species !== "" && (species.indexOf(name) !== -1 || name.indexOf(species) !== -1);
+}
+
 function scopeOf(text, user) {
   const explicit = findRegion(text);
   if (explicit) return { region: explicit, explicit: true, profile: profileRegion(user) };
@@ -73,17 +64,16 @@ function scoped(scope, text) {
 }
 
 export async function shoppingReply(text, user) {
-  const spice = findSpecies(text);
   const scope = scopeOf(text, user);
-  const cooking = cookingMatches(text);
+  await ensureCatalog();
+  const name = findCatalogName(text);
   const rows = await listProducts({ limit: 100 });
 
   let matched = rows.filter(function (p) { return Number(p.available) > 0; });
-  if (spice) matched = matched.filter(function (p) { return p.species_id === spice.id; });
+  if (name) matched = matched.filter(function (p) { return matchesSpecies(p, name); });
   if (scope.region) {
     matched = matched.filter(function (p) { return matchesRegion(p, scope.region); });
   }
-  if (cooking) matched = matched.filter(function (p) { return cooking.indexOf(p.species_id) !== -1; });
   matched = matched.slice(0, 5);
 
   if (!matched.length) {

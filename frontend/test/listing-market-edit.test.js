@@ -20,19 +20,25 @@ test("修改重量後重新查行情，避免參考金額過期", async function
   assert.equal(card.estimated_total, 1333);
 });
 
-test("修改魚種會同步 species_id，未知魚種清為 null", function () {
+test("修改魚種會先清空 species_code，等行情查詢再補上新代碼", async function () {
   const context = {
     mode: "listing",
     market_quoted: true,
-    draft: { fish_species: "花枝", species_id: "cuttlefish", weight_kg: 3, quantity: 2 }
+    draft: {
+      fish_species: "花枝", species_code: 2166, weight_kg: 3, quantity: 2,
+      condition: "放血冰鎮", photo_url: "/uploads/a.jpg", price: 1000
+    }
   };
-  const known = editing.editText(editing.beginEdit(context, "fish_species").context, "海鱸");
-  assert.equal(known.context.draft.fish_species, "海鱸");
-  assert.equal(known.context.draft.species_id, "seabass");
+  const cleared = editing.editText(editing.beginEdit(context, "fish_species").context, "海鱸");
+  assert.equal(cleared.context.draft.fish_species, "海鱸");
+  assert.equal(cleared.context.draft.species_code, null);
 
-  const unknown = editing.editText(editing.beginEdit(context, "fish_species").context, "鮭魚");
-  assert.equal(unknown.context.draft.fish_species, "鮭魚");
-  assert.equal(unknown.context.draft.species_id, null);
+  const editingContext = editing.beginEdit(context, "fish_species").context;
+  const resolved = await service.handleText(editingContext, "海鱸", {
+    city: "高雄市",
+    seller_terms_accepted_at: "2026-10-27T00:00:00.000Z"
+  });
+  assert.equal(resolved.context.draft.species_code, 1073);
 });
 
 test("修改魚種後立刻用新魚種重新送行情卡", async function () {
@@ -46,7 +52,8 @@ test("修改魚種後立刻用新魚種重新送行情卡", async function () {
   resetCalls();
   const edited = await service.handleText(editContext, "海鱸", { city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" });
   const card = cardOf(edited);
-  assert.equal(card.species_id, "seabass");
+  assert.equal(edited.context.draft.species_code, 1073);
+  assert.equal(card.species_code, 1073);
   assert.equal(card.species_name, "海鱸");
   assert.ok(edited.replies.some(function (reply) {
     return reply.card && reply.card.type === "draft";

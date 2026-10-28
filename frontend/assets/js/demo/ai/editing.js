@@ -79,8 +79,8 @@ export function beginEdit(context, slot) {
 function finish(context, slot, found) {
   const changes = {};
   changes[slot] = found[slot];
-  /* 魚種名稱與 species_id 必須一起更新；未知魚種要清成 null。 */
-  if (slot === "fish_species") changes.species_id = found.species_id || null;
+  /* 魚種名稱換了先清空代碼，等方式確定後由行情查詢補上。 */
+  if (slot === "fish_species") changes.species_code = found.species_code || null;
   const draft = mergeDraft(context.draft, changes);
   const next = { editing: null, draft: draft };
   const refreshMarket = slot === "fish_species" || slot === "weight_kg";

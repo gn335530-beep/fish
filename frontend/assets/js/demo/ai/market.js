@@ -3,16 +3,15 @@
 import { getMarketQuote, getMarketQuoteByCode } from "../../api/market.js";
 import "../../shared/format.js";
 import { findRegion, normalizeCityName } from "../../shared/regions.js";
-import { ensureCatalog, findCatalogName } from "./species-catalog.js";
-import { guessUnknownSpecies } from "./conditions.js";
+import { ensureCatalog, findSpeciesMention } from "./species-catalog.js";
 import { INTENT, detectIntent } from "./rules.js";
 
 function profileRegion(user) {
   return normalizeCityName((user && user.city) || "").trim();
 }
 
-/* 未知魚種只從句子留下可能的魚名；先把縣市與行情用語去掉，避免把「澎湖縣」當魚名。 */
-function unknownSpeciesName(text) {
+/* 先把縣市從句子拿掉，避免把「澎湖縣」當魚名。 */
+function withoutRegion(text) {
   const region = findRegion(text);
   let rest = text;
   if (region) {
@@ -20,7 +19,7 @@ function unknownSpeciesName(text) {
     const short = region.replace(/[市縣]$/, "");
     if (short) rest = rest.replace(short, " ");
   }
-  return guessUnknownSpecies(rest);
+  return rest;
 }
 
 function marketMeta(text, user) {
@@ -143,15 +142,16 @@ export async function marketReply(text, user, context) {
     if (detectIntent(source) !== INTENT.MARKET) return { handled: false, context: ctx };
   }
 
-  let known = findCatalogName(source);
+  const rest = withoutRegion(source);
+  let name = findSpeciesMention(rest);
   let catalogOk = true;
-  if (!known) {
+  if (!name) {
     catalogOk = await ensureCatalog();
-    known = findCatalogName(source);
+    name = findSpeciesMention(rest);
   }
 
   const codeMatch = source.match(/(?:^|[^\d])(\d{2,6})(?:[^\d]|$)/);
-  const name = known || (codeMatch ? codeMatch[1] : "") || unknownSpeciesName(source);
+  if (!name && codeMatch) name = codeMatch[1];
   if (!name) {
     if (!catalogOk) {
       return replyWith(ctx, [{ text: "目前無法取得官方魚種代碼，請稍後再試。" }]);

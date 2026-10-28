@@ -15,7 +15,7 @@ import { handleFieldInput, handleAddonSelect } from "./deal-actions.js";
 import { handleCancelReason } from "./deal-replies.js";
 import { handleReviewField, handleReviewTag, handleReviewComment } from "./deal-reviews.js";
 import { clearUnread, openRoom, latestAssistant } from "./rooms.js";
-import { loadSpecies } from "./ai/species.js";
+import { ensureCatalog } from "./ai/species-catalog.js";
 import { clearSession } from "./session.js";
 
 const panel = mountPanel({
@@ -126,11 +126,7 @@ async function boot() {
   render();
   if (!api.isLoggedIn()) return;
 
-  try {
-    await loadSpecies();
-  } catch (error) {
-    notify(error);
-  }
+  await ensureCatalog();
   try {
     const user = await api.fetchMe();
     update({ user: user });

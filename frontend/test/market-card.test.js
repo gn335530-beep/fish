@@ -11,7 +11,8 @@ const { renderCard } = await import("../assets/js/demo/views/cards.js");
 function card(overrides) {
   return Object.assign({
     type: "market_quote",
-    species_id: "cuttlefish",
+    species_code: 2166,
+    official_name: "花枝",
     species_name: "花枝",
     scope: "city",
     region: "高雄市",
@@ -54,6 +55,7 @@ test("行情卡顯示平均價、縣市平均、日期、來源與行情價參�
   assert.match(text, /2026-10-22/);
   assert.match(text, /農業部漁產品交易行情/);
   assert.match(text, /行情價參考/);
+  assert.match(text, /花枝 · 代碼 2166/);
   assert.doesNotMatch(text, /新鮮批發參考/);
   assert.doesNotMatch(text, /今日行情|即時均價|上價|中價|下價/);
 });

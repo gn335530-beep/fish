@@ -17,6 +17,9 @@ test("非價格欄位齊了先送行情卡，再問售價", async function () {
   const result = await service.handlePhoto(started.context, "/uploads/a.jpg", { city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" });
   const card = cardOf(result);
   assert.ok(card, "應有行情卡");
+  assert.equal(result.context.draft.species_code, 2166);
+  assert.equal(card.species_code, 2166);
+  assert.equal(card.official_name, "花枝");
   assert.equal(card.price_per_taijin, 200);
   assert.equal(card.weight_kg, 3);
   assert.equal(card.weight_taijin, 5);
@@ -69,17 +72,56 @@ test("補完照片後只出一次行情卡", async function () {
   }).length, 1);
 });
 
-test("未知魚種不呼叫行情 API，顯示暫無行情仍可定價", async function () {
+test("上架土魠魚時草稿保存 fish_species 與官方代碼", async function () {
+  const started = await service.handleText(
+    null,
+    "我要賣土魠魚 3公斤 2尾 放血冰鎮",
+    { city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" }
+  );
+  const result = await service.handlePhoto(started.context, "/uploads/a.jpg", {
+    city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z"
+  });
+  assert.equal(result.context.draft.fish_species, "土魠魚");
+  assert.equal(result.context.draft.species_code, 2141);
+  assert.equal(cardOf(result).species_code, 2141);
+  assert.equal(cardOf(result).official_name, "土魠");
+});
+
+test("查無代碼仍顯示暫無行情並可繼續定價", async function () {
   const started = await service.handleText(
     null,
     "我要賣鮭魚 3公斤 2尾 放血冰鎮",
     { city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" }
   );
   const result = await service.handlePhoto(started.context, "/uploads/a.jpg", { city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" });
-  assert.equal(marketCalls().length, 0);
+  assert.equal(result.context.draft.species_code, null);
   assert.match(textOf(result), /暫無行情/);
   assert.match(textOf(result), /每台斤價格或整批價格/);
   assert.equal(cardOf(result), null);
+});
+
+test("魚種對到多個代碼時先讓使用者選擇，選定後才查行情", async function () {
+  const started = await service.handleText(
+    null,
+    "我要賣石斑 3公斤 2尾 放血冰鎮",
+    { city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" }
+  );
+  const asked = await service.handlePhoto(started.context, "/uploads/a.jpg", {
+    city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z"
+  });
+  assert.match(textOf(asked), /石斑魚（2201）/);
+  assert.match(textOf(asked), /龍膽石斑（2202）/);
+  assert.equal(asked.context.draft.species_code, null);
+  assert.equal(cardOf(asked), null);
+
+  const picked = await service.handleText(asked.context, "龍膽石斑", {
+    city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z"
+  });
+  assert.equal(picked.context.draft.fish_species, "石斑");
+  assert.equal(picked.context.draft.species_code, 2202);
+  assert.equal(picked.context.listing_pending, null);
+  assert.equal(cardOf(picked).species_code, 2202);
+  assert.equal(cardOf(picked).official_name, "龍膽石斑");
 });
 
 test("查無行情時回暫無行情，不編造數字", async function () {
