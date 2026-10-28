@@ -2,7 +2,7 @@
 
 import { escapeHtml, money, resolveImage } from "./html.js";
 import { marketLine } from "./market.js";
-import { normalizeCityName } from "../ai/species.js";
+import { normalizeCityName } from "../../shared/regions.js";
 import { DRAFT_FIELDS } from "../ai/editing.js";
 import { renderDealCard, renderReviewCard } from "./deal-cards.js";
 import { renderMarketCard } from "./market-card.js";
