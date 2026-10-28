@@ -22,7 +22,6 @@ test("第一次抓取寫入行情與狀態", async function () {
   assert.equal(prices.length, 2);
   assert.deepEqual(prices.map(function (row) { return row.trade_date; }), ["2026-10-22", "2026-10-22"]);
   assert.equal(prices[0].species_code, 2201);
-  assert.equal(prices[0].species_id, "grouper");
   assert.equal(prices[0].is_aquaculture, false);
   assert.equal(prices[0].quality, "official");
   assert.ok(prices[0].source);
@@ -56,7 +55,7 @@ test("同一交易日重跑只更新既有列，不產生重複", async function
   useRows([raw({ "平均價": 100 })]);
   await fetchService.ensureLatest(mapping);
 
-  repository.saveState(2201, "grouper", {
+  repository.saveState(2201, {
     last_checked_at: "2020-01-01T00:00:00.000Z",
     last_latest_at: "2020-01-01T00:00:00.000Z"
   });
@@ -72,7 +71,7 @@ test("同一交易日重跑只更新既有列，不產生重複", async function
 test("上游失敗不清空既有行情，狀態記錄 error", async function () {
   useRows([raw()]);
   await fetchService.ensureLatest(mapping);
-  repository.saveState(2201, "grouper", {
+  repository.saveState(2201, {
     last_checked_at: new Date(Date.now() - fetchService.TTL_MS - 1000).toISOString(),
     last_latest_at: new Date(Date.now() - fetchService.TTL_MS - 1000).toISOString()
   });
@@ -93,7 +92,6 @@ test("成功抓取後刪除 90 天以前的行情與狀態", async function () {
   repository.upsertPrices([{
     id: "mkt_old",
     species_code: 2201,
-    species_id: "grouper",
     species_name: "石斑魚",
     market_name: "岡山",
     trade_date: oldDate,
@@ -105,7 +103,7 @@ test("成功抓取後刪除 90 天以前的行情與狀態", async function () {
     fetched_at: "2020-01-01T00:00:00.000Z",
     quality: "official"
   }]);
-  repository.saveState(9999, "grouper", { last_checked_at: "2020-01-01T00:00:00.000Z" });
+  repository.saveState(9999, { last_checked_at: "2020-01-01T00:00:00.000Z" });
 
   useRows([raw()]);
   await fetchService.ensureLatest(mapping);

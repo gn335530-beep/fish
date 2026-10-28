@@ -5,7 +5,6 @@ const { call, tokens } = require("./client");
 function create(overrides) {
   const payload = Object.assign({
     fish_species: "石斑",
-    species_id: "grouper",
     weight_kg: 4.5,
     quantity: 1,
     condition: "放血冰鎮",

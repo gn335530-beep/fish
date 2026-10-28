@@ -22,7 +22,7 @@ const CALLERS = [
 ];
 
 test("demo/api.js 不再實作 products 或 market 請求", function () {
-  assert.doesNotMatch(demoApi, /export function (listProducts|getProduct|createProduct|getMarketPrice)/);
+  assert.doesNotMatch(demoApi, /export function (listProducts|getProduct|createProduct|getMarketQuote)/);
   assert.doesNotMatch(demoApi, /\/api\/products|\/api\/market\/prices/);
 });
 
@@ -31,7 +31,9 @@ test("api/products.js 與 api/market.js 提供請求函式", function () {
   assert.match(productsApi, /export function getProduct/);
   assert.match(productsApi, /export function createProduct/);
   assert.match(productsApi, /Object\.assign\(window\.HaisenAPI/);
-  assert.match(marketApi, /export function getMarketPrice/);
+  assert.match(marketApi, /export function getMarketQuoteByCode/);
+  assert.match(marketApi, /export function getMarketQuote/);
+  assert.doesNotMatch(marketApi, /species_id/);
 });
 
 test("products／market 呼叫端都 import assets/js/api/", function () {

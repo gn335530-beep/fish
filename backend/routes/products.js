@@ -5,7 +5,6 @@ const { all, insert, nextCode } = require("../lib/store");
 const { requireUser } = require("../lib/auth");
 const { decorateProduct, decorateProducts } = require("../lib/product-stock");
 const { sweepExpired } = require("../lib/timeouts");
-const species = require("../lib/species");
 const { round1 } = require("../lib/round");
 const { buildTitle } = require("../lib/product-title");
 const { readPricing } = require("../lib/product-pricing");
@@ -36,9 +35,7 @@ router.get("/api/products", function (req, res) {
     rows = rows.filter(function (p) { return matches(p.region, query.region); });
   }
   if (query.species) {
-    rows = rows.filter(function (p) {
-      return matches(p.fish_species, query.species) || matches(p.species_id, query.species);
-    });
+    rows = rows.filter(function (p) { return matches(p.fish_species, query.species); });
   }
   if (query.seller_id) {
     rows = rows.filter(function (p) { return String(p.seller_id) === String(query.seller_id); });
@@ -107,7 +104,6 @@ router.post("/api/products/create", requireUser, async function (req, res) {
     return;
   }
 
-  const match = species.byId(body.species_id) || species.byName(fishSpecies);
   const user = req.user;
   const rawRegion = String(body.region || user.city || "").trim();
   const region = normalizeRegion(rawRegion);
@@ -118,8 +114,6 @@ router.post("/api/products/create", requireUser, async function (req, res) {
     title: buildTitle(fishSpecies, weightKg, quantity, condition),
     fish_species: fishSpecies,
     species_code: speciesCodeOf(body.species_code),
-    species_id: match ? match.id : null,
-    species_latin: (match && match.latin) || String(body.species_latin || ""),
     weight_kg: weight,
     quantity: quantity,
     sold_quantity: 0,

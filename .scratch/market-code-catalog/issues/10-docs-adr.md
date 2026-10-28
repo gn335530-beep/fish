@@ -4,12 +4,16 @@
 
 **Blocked by:** 09
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] 新增 ADR，記錄以官方代碼字典取代固定魚種清單的決策與取捨。
-- [ ] API 文件記載查代碼、代碼查價與整合行情端點，並移除舊魚種端點與 `species_id` 參數。
-- [ ] 資料模型文件記載商品只保留 `fish_species` 與可選 `species_code`。
-- [ ] 上架、對話、導購與商品頁文件不再描述料理資料或舊魚種白名單。
-- [ ] Glossary 更新為官方代碼字典、候選魚種等用語，不再把 `species_id` 當成主要概念。
-- [ ] 文件不再出現 `/api/species`、`species_market_codes` 或 `species_latin` 的現行用法。
-- [ ] README 與後端說明同步更新，沒有留下舊流程描述。
+- [x] 新增 ADR，記錄以官方代碼字典取代固定魚種清單的決策與取捨。
+- [x] API 文件記載查代碼、代碼查價與整合行情端點，並移除舊魚種端點與 `species_id` 參數。
+- [x] 資料模型文件記載商品只保留 `fish_species` 與可選 `species_code`。
+- [x] 上架、對話、導購與商品頁文件不再描述料理資料或舊魚種白名單。
+- [x] Glossary 更新為官方代碼字典、候選魚種等用語，不再把 `species_id` 當成主要概念。
+- [x] 文件不再出現 `/api/species`、`species_market_codes` 或 `species_latin` 的現行用法。
+- [x] README 與後端說明同步更新，沒有留下舊流程描述。
+
+## Comments
+
+2026-10-29 完成。新增 `docs/adr/0008-official-code-catalog.md`。更新 `docs/spec/01`–`07`、`docs/api/README.md`、`backend/README.md` 與 `GLOSSARY.md`：魚種改為官方代碼字典、候選魚種與 `species_code`；行情改列 `/api/market/codes`、`quote`、`prices?code=`；商品移除學名與料理資料；導購只保留魚種名稱與地區；CLI 改為代碼或魚種。

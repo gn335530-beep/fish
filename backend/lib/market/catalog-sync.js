@@ -26,14 +26,23 @@ function inFailureBackoff(state) {
   return Number.isFinite(at) && Date.now() - at < FAILURE_BACKOFF_MS;
 }
 
-/* 以上游實際回傳筆數推進 $skip，直到空頁；避免上游自行壓低單頁上限時漏資料。 */
+/* 以上游實際回傳筆數推進 $skip，直到空頁或整頁都重複；避免忽略 $skip 的上游無窮迴圈。 */
 async function fetchAllRows(from, to) {
   const rows = [];
+  const seen = new Set();
   let skip = 0;
   while (true) {
     const page = await upstream.fetchRows({ from: from, to: to, skip: skip, top: PAGE_SIZE });
     if (!Array.isArray(page) || page.length === 0) break;
-    rows.push(...page);
+    let added = 0;
+    for (const raw of page) {
+      const key = [raw["交易日期"], raw["品種代碼"], raw["魚貨名稱"], raw["市場名稱"]].join("|");
+      if (seen.has(key)) continue;
+      seen.add(key);
+      rows.push(raw);
+      added += 1;
+    }
+    if (added === 0) break;
     skip += page.length;
     if (skip > MAX_SKIP) break;
   }

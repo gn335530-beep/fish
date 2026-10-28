@@ -2,13 +2,10 @@
 
 const fetchService = require("./fetch");
 const query = require("./query");
-const mappings = require("./mappings");
 const { todayIso } = require("./dates");
 
 async function getMarketPrice(options) {
-  const mapping = options.mapping || mappings.mappingBySpecies(options.speciesId);
-  if (!mapping) return { found: false, reason: "NO_MAPPING", species_id: options.speciesId || null };
-
+  const mapping = options.mapping;
   const fetchOptions = options.includeHistory
     ? { date: options.date || todayIso(), days: options.days || 7, force: options.force === true }
     : { date: options.date, force: options.force === true };
@@ -20,7 +17,6 @@ async function getMarketPrice(options) {
       found: false,
       reason: "UPSTREAM_UNAVAILABLE",
       species_code: mapping.code,
-      species_id: mapping.species_id || null,
       official_name: mapping.official_name || null,
       is_aquaculture: mapping.is_aquaculture === true
     };

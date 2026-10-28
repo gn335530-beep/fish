@@ -12,8 +12,9 @@
 | `messages` | 78 | ✅ |
 | `deals` | 0 | ✅ 草稿由開啟交易房建立 |
 | `reviews` | 0 | ✅ 成交後由 `POST /api/reviews/submit` 寫入 |
-| `market_prices` | 0（第一次查詢後建立） | ✅ 只存平均價、交易量與養殖旗標 |
-| `species_market_codes` | 28 | ✅ 每個系統魚種一個主要新鮮代碼 |
+| `market_prices` | 0（第一次查詢後建立） | ✅ 只存平均價、交易量與養殖旗標；以 `species_code` 為鍵 |
+| `market_species_catalog` | 0（第一次查詢後建立） | ✅ 官方新鮮代碼字典 |
+| `market_catalog_state` | 0（第一次查詢後建立） | ✅ 字典同步狀態與 24 小時快取 |
 | `market_locations` | 21 | ✅ 21 個市場對照；未確認市場不參與縣市加權 |
 | `market_fetch_state` | 0（第一次查詢後建立） | ✅ 每個官方代碼一筆快取狀態 |
 
@@ -60,8 +61,7 @@
 | `seller_id` | number | 由 Token 決定，不由 client 傳 |
 | `title` | string | 伺服器產生 |
 | `fish_species` | string | 使用者說的魚種名稱（未知魚種也存這裡） |
-| `species_id` | string \| null | 對到字典才有 |
-| `species_latin` | string | |
+| `species_code` | number \| null | 對到官方代碼才有；未回填舊商品 |
 | `weight_kg` | number | 整批總重（公斤，一位小數） |
 | `quantity` | number | 總尾數 |
 | `sold_quantity` | number | 已成交尾數，系統維護 |
@@ -79,7 +79,9 @@
 
 **變更（#24、#27、2026-10-28）**：新增 `price_per_taijin`、`price_auto`；移除 `market_reference_price`、`market_snapshot`；`condition` 不再限定四種。自由文字 `condition`、每台斤售價與自動計算已實作（#24、#26、#27）。只填每台斤時，後端在建立商品時計算 `price` 並設 `price_auto = true`；只填整批時 `price_per_taijin = null`；兩者都填時都保留，不檢查一致性。
 
-**索引需求**：`seller_id`、`region`、`species_id`、`created_at`（目前是線性掃描，資料量小可接受）。
+**變更（2026-10-29）**：商品移除 `species_id` 與 `species_latin`，新增可選 `species_code`。啟動正規化會清除舊欄位、保留 `fish_species`，並把舊商品的 `species_code` 設為 `null`，不自動回填。
+
+**索引需求**：`seller_id`、`region`、`fish_species`、`created_at`（目前是線性掃描，資料量小可接受）。
 
 ## 5. `conversations`
 
@@ -103,7 +105,7 @@
 {
   "mode": "idle | listing | shopping",
   "draft": {
-    "fish_species", "species_id", "weight_kg", "quantity", "condition", "photo_url",
+    "fish_species", "species_code", "weight_kg", "quantity", "condition", "photo_url",
     "price", "price_per_taijin", "price_auto"
   },
   "last_cards": ["prd_...", "prd_..."],
@@ -153,7 +155,7 @@
   "condition": "放血冰鎮", "photo_url": "/uploads/a.jpg",
   "price": 1000, "price_per_taijin": 200, "price_auto": false } }
 
-{ "type": "market_quote", "species_id": "cuttlefish", "species_name": "花枝",
+{ "type": "market_quote", "species_code": 2166, "official_name": "花枝", "species_name": "花枝",
   "scope": "city", "region": "高雄市", "trade_date": "2026-10-22",
   "price_per_kg": 52.4, "price_per_taijin": 31.4, "is_aquaculture": false,
   "source": "農業部漁產品交易行情", "source_url": "...", "fetched_at": "...",
@@ -248,7 +250,7 @@
 
 ```jsonc
 { "id": "mkt_20261022_2201_岡山",
-  "species_code": 2201, "species_id": "grouper", "species_name": "石斑魚",
+  "species_code": 2201, "species_name": "石斑魚",
   "market_name": "岡山",
   "trade_date": "2026-10-22",
   "price_per_kg_avg": 52.4,
@@ -258,20 +260,30 @@
   "fetched_at": "...", "quality": "official" }
 ```
 
-唯一鍵：`trade_date + species_code + market_name`。索引需求：`species_id + trade_date`、`trade_date`。**不落庫縣市**；查詢時用 `market_locations` 對照，避免對照變更後舊資料的縣市失準。
+唯一鍵：`trade_date + species_code + market_name`。索引需求：`species_code + trade_date`、`trade_date`。**不落庫縣市**；查詢時用 `market_locations` 對照，避免對照變更後舊資料的縣市失準。
 
-### `species_market_codes`
+### `market_species_catalog`
 
 ```jsonc
-{ "code": 2201, "official_name": "玳瑁石斑", "species_id": "grouper",
-  "is_aquaculture": false, "category": "2", "aliases": ["石斑", "石斑魚"] }
+{ "id": "msc_2141", "species_code": 2141, "official_name": "土魠",
+  "aliases": ["土魠魚"], "category": "2", "is_aquaculture": false,
+  "last_seen_date": "2026-10-22" }
 ```
 
-- 每個系統魚種只放一個主要新鮮代碼；`1xxx` 只允許海鱸（1073）、虱目魚（1041）、鰻魚（1031）。
-- 排除 `3xxx` 凍結、`6xxx` 加工。
-- `is_aquaculture = true`：上述三種魚，以及名稱有「養」的牡蠣（5012）、文蛤（5022）。香魚（2631）、白蝦（4015）依目前規則不標。
-- `category` 記官方大分類，供檢查；查詢不靠代碼第一位猜測。
-- 魚種名稱與別名只來自 `backend/lib/species.js`；`lib/market/mappings.js` 只維護代碼、分類與養殖旗標，`official_name` 與 `aliases` 由魚種清單帶出。後端啟動時由 `lib/market/mappings.js` 同步到 db。
+- 執行時從官方最近 30 天資料同步；`$top=10000` 分頁，直到空頁或整頁重複。
+- 排除 `3xxx` 凍結、`6xxx` 加工，只保留 `1xxx`、`2xxx`、`4xxx`、`5xxx`。
+- 同一代碼跨日期出現多個名稱時全部保留；`official_name` 取最後出現的名稱，其餘放 `aliases`。
+- 查詢以 `species_code` 為準；保留下來的名稱只用於名稱比對。
+
+### `market_catalog_state`
+
+```jsonc
+{ "id": "catalog", "last_status": "ok", "last_synced_at": "...",
+  "last_attempt_at": "...", "last_row_count": 214, "last_error": null }
+```
+
+- 成功同步後 24 小時內不再抓取；失敗時保留既有字典並短暫退避。
+- 完全沒有字典時，查代碼或整合查詢回 `CATALOG_UNAVAILABLE`。
 
 ### `market_locations`
 
@@ -284,7 +296,7 @@
 ### `market_fetch_state`
 
 ```jsonc
-{ "species_code": 2201, "species_id": "grouper",
+{ "species_code": 2201,
   "last_checked_at": "...", "last_trade_date": "2026-10-22",
   "last_row_count": 8, "last_status": "ok",
   "last_error": null, "last_error_at": null,
@@ -301,7 +313,7 @@
 - 上游失敗只更新檢查時間、狀態與錯誤，不清空既有行情，也不改最後交易日與筆數。
 - 成功抓取後刪除 90 天以前的行情與狀態。
 - 同一魚種同時查詢只發一次上游 request（in-flight dedup）。
-- 手動 CLI：`npm run market:fetch -- <species_id> [--date YYYY-MM-DD] [--days 7|30]`；`--status` 看每個代碼的快取狀態。
+- 手動 CLI：`npm run market:fetch -- <代碼或魚種> [--date YYYY-MM-DD] [--days 7|30]`；`--status` 看每個代碼的快取狀態。
 
 ### 商品行情快照（已移除）
 

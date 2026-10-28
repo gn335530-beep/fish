@@ -87,6 +87,10 @@ test("舊冷凍商品、草稿卡、商品卡與上架訊息一起更新", funct
   assert.equal(product.title, "花枝（3kg / 2尾 / 放血冰鎮）");
   assert.equal("market_reference_price" in product, false);
   assert.equal("market_snapshot" in product, false);
+  assert.equal("species_id" in product, false);
+  assert.equal("species_latin" in product, false);
+  assert.equal(product.species_code, null);
+  assert.equal(product.fish_species, "花枝");
 
   const keep = all("products").find(function (row) { return row.id === "prd_keep"; });
   assert.equal(keep.condition, "活體");

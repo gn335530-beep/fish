@@ -1,21 +1,21 @@
 #!/usr/bin/env node
-/* 手動行情 CLI：npm run market:fetch -- <species_id> [--date YYYY-MM-DD] [--days 7|30]
+/* 手動行情 CLI：npm run market:fetch -- <代碼或魚種> [--date YYYY-MM-DD] [--days 7|30]
    或 npm run market:fetch -- --status */
 
-require("../app"); // 初始化 store 與唯讀對照表
-const mappings = require("../lib/market/mappings");
+require("../app"); // 初始化 store 與市場對照表
 const fetchService = require("../lib/market/fetch");
 const repository = require("../lib/market/repository");
+const { resolveCode, resolveName } = require("../lib/market/catalog-mapping");
 const { parseIsoDate } = require("../lib/market/dates");
 
 function parseArgs(argv) {
-  const out = { speciesId: null, date: null, days: null, status: false };
+  const out = { species: null, date: null, days: null, status: false };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
     if (arg === "--status") out.status = true;
     else if (arg === "--date") out.date = argv[i += 1] || null;
     else if (arg === "--days") out.days = Number(argv[i += 1]);
-    else if (arg.indexOf("--") !== 0 && !out.speciesId) out.speciesId = arg;
+    else if (arg.indexOf("--") !== 0 && !out.species) out.species = arg;
   }
   return out;
 }
@@ -28,10 +28,9 @@ function printStatus() {
     console.log("尚無行情抓取紀錄");
     return;
   }
-  console.log("魚種\t代碼\t狀態\t最後交易日\t筆數\t最後檢查\t錯誤");
+  console.log("代碼\t狀態\t最後交易日\t筆數\t最後檢查\t錯誤");
   for (const row of rows) {
     console.log([
-      row.species_id || "",
       row.species_code,
       row.last_status || "",
       row.last_trade_date || "",
@@ -42,19 +41,33 @@ function printStatus() {
   }
 }
 
+async function resolveSpecies(value) {
+  if (/^\d+$/.test(value)) {
+    const result = await resolveCode(value);
+    if (result.error === "CATALOG_UNAVAILABLE") throw new Error("官方魚種代碼字典尚未同步");
+    if (result.error) throw new Error("查無魚種：" + value);
+    return result;
+  }
+  const result = await resolveName(value);
+  if (result.error === "AMBIGUOUS_SPECIES") {
+    const labels = result.candidates.map(function (row) {
+      return row.official_name + "(" + row.species_code + ")";
+    }).join("、");
+    throw new Error("魚種名稱對到多個代碼：" + labels);
+  }
+  if (result.error === "CATALOG_UNAVAILABLE") throw new Error("官方魚種代碼字典尚未同步");
+  if (result.error) throw new Error("查無魚種：" + value);
+  return result;
+}
+
 async function run() {
   const args = parseArgs(process.argv.slice(2));
   if (args.status) {
     printStatus();
     return 0;
   }
-  if (!args.speciesId) {
-    console.error("用法：npm run market:fetch -- <species_id> [--date YYYY-MM-DD] [--days 7|30]");
-    return 1;
-  }
-  const mapping = mappings.mappingBySpecies(args.speciesId);
-  if (!mapping) {
-    console.error("未知魚種：" + args.speciesId);
+  if (!args.species) {
+    console.error("用法：npm run market:fetch -- <代碼或魚種> [--date YYYY-MM-DD] [--days 7|30]");
     return 1;
   }
   if (args.date && !parseIsoDate(args.date)) {
@@ -66,6 +79,8 @@ async function run() {
     return 1;
   }
 
+  const resolved = await resolveSpecies(args.species);
+  const mapping = resolved.mapping;
   const result = await fetchService.ensureFor(mapping, {
     date: args.date,
     days: args.days
@@ -73,8 +88,8 @@ async function run() {
 
   const state = repository.getState(mapping.code);
   const summary = {
-    species_id: mapping.species_id,
     species_code: mapping.code,
+    official_name: mapping.official_name,
     status: result.status,
     rows: result.rows.length,
     last_trade_date: state ? state.last_trade_date : null,

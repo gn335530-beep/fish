@@ -1,4 +1,4 @@
-/* 手動 CLI：單一魚種抓取、過去日期快取、--status 顯示狀態。 */
+/* 手動 CLI：代碼或名稱查詢、過去日期快取、--status 顯示狀態。 */
 
 const test = require("node:test");
 const assert = require("node:assert/strict");
@@ -69,34 +69,39 @@ function run(args, file) {
   });
 }
 
-test("CLI 抓單一魚種、重跑不重複打上游、--status 可看狀態", async function () {
-  const first = await run(["grouper", "--date", "2026-10-22"]);
+test("CLI 用代碼抓行情、重跑不重複打上游、--status 可看狀態", async function () {
+  const first = await run(["2201", "--date", "2026-10-22"]);
   assert.equal(first.status, 0, first.stderr);
   assert.match(first.stdout, /"status": "ok"/);
+  assert.match(first.stdout, /"species_code": 2201/);
+  assert.match(first.stdout, /"official_name": "石斑魚"/);
 
   const db = JSON.parse(fs.readFileSync(dbFile, "utf8"));
   assert.equal(db.market_prices.length, 1);
   assert.equal(db.market_prices[0].trade_date, "2026-10-22");
   assert.equal(db.market_prices[0].price_per_kg_avg, 1237);
+  assert.equal(db.market_prices[0].species_code, 2201);
+  assert.equal("species_id" in db.market_prices[0], false);
   assert.equal(db.market_fetch_state[0].last_status, "ok");
   assert.equal(db.market_fetch_state[0].last_row_count, 1);
+  assert.equal(db.market_fetch_state[0].species_code, 2201);
+  assert.equal("species_id" in db.market_fetch_state[0], false);
 
   const afterFirst = requests;
-  const second = await run(["grouper", "--date", "2026-10-22"]);
+  const second = await run(["2201", "--date", "2026-10-22"]);
   assert.equal(second.status, 0, second.stderr);
   assert.equal(requests, afterFirst, "過去日期已有行情時不應再打上游");
-  assert.equal(JSON.parse(fs.readFileSync(dbFile, "utf8")).market_prices.length, 1);
 
   const status = await run(["--status"]);
   assert.equal(status.status, 0, status.stderr);
-  assert.match(status.stdout, /grouper/);
+  assert.match(status.stdout, /2201/);
   assert.match(status.stdout, /ok/);
 });
 
 test("CLI 指定星期日會回補最近交易日", async function () {
   const coldDb = createDb();
   const before = requests;
-  const result = await run(["grouper", "--date", "2026-10-25"], coldDb);
+  const result = await run(["2201", "--date", "2026-10-25"], coldDb);
 
   assert.equal(result.status, 0, result.stderr);
   assert.match(result.stdout, /"status": "ok"/);
@@ -108,12 +113,18 @@ test("CLI 指定星期日會回補最近交易日", async function () {
   assert.equal(db.market_prices[0].trade_date, "2026-10-22");
 });
 
-test("CLI 拒絕未知魚種與無效日期", async function () {
-  const unknown = await run(["shark"]);
-  assert.equal(unknown.status, 1);
-  assert.match(unknown.stderr, /未知魚種/);
+test("CLI 可用名稱查詢", async function () {
+  const named = await run(["石斑魚", "--date", "2026-10-22"], createDb());
+  assert.equal(named.status, 0, named.stderr);
+  assert.match(named.stdout, /"species_code": 2201/);
+});
 
-  const badDate = await run(["grouper", "--date", "2026/10/22"]);
+test("CLI 拒絕未知魚種與無效日期", async function () {
+  const unknown = await run(["9999"]);
+  assert.equal(unknown.status, 1);
+  assert.match(unknown.stderr, /查無魚種/);
+
+  const badDate = await run(["2201", "--date", "2026/10/22"]);
   assert.equal(badDate.status, 1);
   assert.match(badDate.stderr, /YYYY-MM-DD/);
 });

@@ -1,7 +1,7 @@
 /* 行情查詢：先決定交易日與 scope，再以交易量加權算縣市／全國平均與歷史序列。 */
 
 const repository = require("./repository");
-const mappings = require("./mappings");
+const markets = require("./markets");
 const { round1 } = require("../round");
 const { KG_PER_TAIJIN } = require("../units");
 
@@ -23,7 +23,7 @@ function averageRows(rows) {
 }
 
 function verifiedMarketsFor(region) {
-  return mappings.markets().filter(function (row) {
+  return markets.markets().filter(function (row) {
     return row.verified === true && row.region === region;
   }).map(function (row) { return row.market_name; });
 }
@@ -31,8 +31,8 @@ function verifiedMarketsFor(region) {
 function pickScope(code, tradeDate, region) {
   const rows = repository.pricesForCode(code, tradeDate);
   if (!region) return { scope: "national", rows: rows, region: null };
-  const markets = verifiedMarketsFor(region);
-  const cityRows = rows.filter(function (row) { return markets.indexOf(row.market_name) !== -1; });
+  const names = verifiedMarketsFor(region);
+  const cityRows = rows.filter(function (row) { return names.indexOf(row.market_name) !== -1; });
   if (cityRows.length > 0) return { scope: "city", rows: cityRows, region: region };
   return { scope: "national", rows: rows, region: region };
 }
@@ -51,13 +51,13 @@ function responseSource(rows) {
 }
 
 function historyFor(code, scope, region, endDate, days) {
-  const markets = scope === "city" ? verifiedMarketsFor(region) : null;
+  const names = scope === "city" ? verifiedMarketsFor(region) : null;
   const dates = repository.tradeDatesForCode(code, endDate).slice().reverse();
   const points = [];
   for (const tradeDate of dates) {
     if (points.length >= days) break;
     const rows = repository.pricesForCode(code, tradeDate).filter(function (row) {
-      return markets === null || markets.indexOf(row.market_name) !== -1;
+      return names === null || names.indexOf(row.market_name) !== -1;
     });
     const avg = averageRows(rows);
     if (avg === null) continue;
@@ -73,16 +73,13 @@ function historyFor(code, scope, region, endDate, days) {
 function identityOf(mapping) {
   return {
     species_code: mapping.code,
-    species_id: mapping.species_id || null,
     official_name: mapping.official_name || null,
     is_aquaculture: mapping.is_aquaculture === true
   };
 }
 
 function buildResult(options) {
-  const mapping = options.mapping || mappings.mappingBySpecies(options.speciesId);
-  if (!mapping) return { found: false, reason: "NO_MAPPING", species_id: options.speciesId || null };
-
+  const mapping = options.mapping;
   const identity = identityOf(mapping);
   const tradeDate = repository.latestTradeDateForCode(mapping.code, options.date || null);
   if (!tradeDate) {

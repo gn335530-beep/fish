@@ -28,7 +28,6 @@ function normalizeRows(rawRows, mapping, fetchedAt) {
     byId.set(id, {
       id: id,
       species_code: code,
-      species_id: mapping.species_id,
       species_name: name,
       market_name: marketName,
       trade_date: tradeDate,

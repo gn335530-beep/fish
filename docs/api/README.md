@@ -22,8 +22,7 @@
 | `POST` | `/api/users/seller-consent` | 登入 | 記錄第一次販賣確認，重複呼叫不覆寫時間 |
 | `GET` | `/api/products` | 公開 | 商品清單；支援 `region`、`species`、`seller_id`、`status`、`limit` |
 | `GET` | `/api/products/{id}` | 公開 | 單一商品；不存在回 404 `PRODUCT_NOT_FOUND` |
-| `POST` | `/api/products/create` | 登入 | 上架商品 |
-| `GET` | `/api/species` | 公開 | 魚種清單（id、名稱、別名、分類、料理屬性） |
+| `POST` | `/api/products/create` | 登入 | 上架商品；可帶可選 `species_code` |
 | `GET` | `/api/conversations` | 登入 | 房間清單 |
 | `POST` | `/api/conversations/assistant` | 登入 | 每次建立一間新的助手房（登入時若完全沒有才由前端自動呼叫） |
 | `DELETE` | `/api/conversations/{id}` | 參與者 | 刪除助手房或可刪的交易房 |
@@ -43,16 +42,17 @@
 | `GET` | `/api/deals` | 登入 | 交易紀錄列表 |
 | `POST` | `/api/reviews/submit` | 參與者 | 成交後評價對方 |
 | `GET` | `/api/reviews?user_id=` | 公開 | 評價與平均星等 |
-| `GET` | `/api/market/prices` | 公開 | 行情；每次請求重抓，支援 `species_id`、`region`、`date`、`include=history`、`days` |
-| `GET` | `/api/market/species-codes` | 公開 | 主要新鮮代碼與養殖旗標 |
+| `GET` | `/api/market/codes` | 公開 | 官方代碼字典；帶 `q` 查名稱／別名／代碼，省略回完整字典 |
+| `GET` | `/api/market/quote` | 公開 | 名稱→代碼→價格整合查詢；支援 `q`、`region`、`date`、`include=history`、`days` |
+| `GET` | `/api/market/prices` | 公開 | 代碼查價；每次請求重抓，支援 `code`、`region`、`date`、`include=history`、`days` |
 | `GET` | `/api/market/markets` | 公開 | 市場對照表 |
 | `POST` | `/api/uploads` | 登入 | 上傳圖片（base64 data URL） |
 
 `GET /api/products` 會先掃描逾時訂單並釋放保留，不是純讀取。舊的 `/api/fish/data` 與 `PUT /api/fish/data/{id}` 已移除。
 
-### 行情對照名稱
+### 官方代碼字典
 
-`GET /api/market/species-codes` 的 `official_name` 與 `aliases` 直接來自系統魚種清單（`GET /api/species`）；`lib/market/mappings.js` 只維護代碼、分類與養殖旗標。已接受的顯示名稱變更：七星鱸→海鱸、鯖魚→白腹鯖、小卷→澎湖小卷、巴攏→竹筴魚；舊稱若仍列在魚種清單的 `alias` 中，可繼續作為搜尋與別名使用，代碼、分類與養殖旗標不變。
+`GET /api/market/codes` 回傳官方代碼、官方名稱、別名、分類、養殖旗標與最後出現日期。字典在執行時同步最近 30 天官方資料，成功後快取 24 小時；同步失敗時沿用舊字典。查無名稱回 `404 SPECIES_NOT_FOUND`，字典不可用回 `503 CATALOG_UNAVAILABLE`。
 
 交易房由 `POST /api/deals/initiate-channel` 開啟，房間唯一鍵是 `buyer_id + seller_id`；同一釣客的多個商品會進同一筆草稿訂單。交易房的系統訊息會計入未讀。助手房每次 `POST /api/conversations/assistant` 都是獨立一間，有自己的 `context` 與草稿；`GET /api/conversations` 會回 `deletable` 供收件匣決定是否顯示刪除。
 
@@ -78,7 +78,7 @@
 | --- | --- |
 | `title` | 由後端產生的 `{魚種}（{總重}kg / {尾數}尾 / {處理}）`；前端直接顯示，不得自行拼接 |
 | `fish_species` | 使用者說的魚種名稱；未知魚種也保留原字串 |
-| `species_id` | 對到魚種字典的 id；未知魚種為 `null` |
+| `species_code` | 對到的官方魚種代碼；未知魚種為 `null` |
 | `weight_kg` | 整批總重（公斤） |
 | `quantity` | 總尾數 |
 | `available` | 可售尾數 |
@@ -102,7 +102,6 @@
 | `listProducts()` | 取得商品清單 |
 | `getProduct(id)` | 取得單一商品 |
 | `photoUrl(path)` | 將 `/uploads/...`、`images/...` 轉成可顯示網址 |
-| `listSpecies()` | 取得魚種清單 |
 
 `createFish()`、`deleteFish()`、`updateFish()`、`listFish()`、`rowToCatch()`、`rowsToCatch()`、`updateProfile()` 都已移除。
 
@@ -110,7 +109,7 @@
 
 - `frontend/assets/js/app/08-api-init.js` 只負責導覽、個人選單與 `syncSessionFromApi()`。
 - `syncSessionFromApi()` 在有 Token 時呼叫 `me()`；401／403 會清除本機登入狀態，只有會員資料而沒有 Token 時也會清除。
-- 頁面資料由各頁自己的 API 呼叫載入：首頁與列表用 `listProducts()`，詳情用 `getProduct(id)`，列表分類與助手用 `listSpecies()`。
+- 頁面資料由各頁自己的 API 呼叫載入：首頁與列表用 `listProducts()`，詳情用 `getProduct(id)`；助手魚種查詢用 `/api/market/codes` 與 `/api/market/quote`。
 
 ## 6. 錯誤處理
 

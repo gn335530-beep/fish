@@ -1,9 +1,7 @@
-/* 行情：主要新鮮代碼／市場對照（唯讀）、代碼查價與名稱整合查詢。 */
+/* 行情：市場對照（唯讀）、代碼查價與名稱整合查詢。 */
 
 const express = require("express");
-const species = require("../lib/species");
-const mappings = require("../lib/market/mappings");
-const service = require("../lib/market/service");
+const markets = require("../lib/market/markets");
 const quote = require("../lib/market/quote-service");
 const { normalizeRegion } = require("../lib/regions");
 const { parseIsoDate } = require("../lib/market/dates");
@@ -11,12 +9,8 @@ const { ok, fail } = require("../lib/http");
 
 const router = express.Router();
 
-router.get("/api/market/species-codes", function (req, res) {
-  ok(res, mappings.speciesCodes(), "取得主要新鮮代碼成功");
-});
-
 router.get("/api/market/markets", function (req, res) {
-  ok(res, mappings.markets(), "取得市場對照成功");
+  ok(res, markets.markets(), "取得市場對照成功");
 });
 
 function normalizeDays(value) {
@@ -96,18 +90,8 @@ router.get("/api/market/quote", async function (req, res) {
 router.get("/api/market/prices", async function (req, res) {
   const query = req.query || {};
   const code = String(query.code || "").trim();
-  const speciesId = String(query.species_id || "").trim();
-
-  if (!code && !speciesId) {
-    fail(res, 400, "INVALID_SPECIES", "不支援的魚種");
-    return;
-  }
-  if (code && !/^\d+$/.test(code)) {
+  if (!/^\d+$/.test(code)) {
     fail(res, 400, "INVALID_SPECIES", "魚種代碼必須是數字");
-    return;
-  }
-  if (!code && !species.byId(speciesId)) {
-    fail(res, 400, "INVALID_SPECIES", "不支援的魚種");
     return;
   }
 
@@ -117,13 +101,10 @@ router.get("/api/market/prices", async function (req, res) {
   if (date.error) return;
 
   try {
-    const options = Object.assign(queryOptions(query), {
+    const data = await quote.quoteByCode(code, Object.assign(queryOptions(query), {
       region: region.region,
       date: date.date
-    });
-    const data = code
-      ? await quote.quoteByCode(code, options)
-      : await service.getMarketPrice(Object.assign({ speciesId: speciesId }, options));
+    }));
     sendQuote(res, data, "取得行情成功");
   } catch (err) {
     fail(res, 500, "MARKET_QUERY_FAILED", "行情查詢失敗");

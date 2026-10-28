@@ -2,17 +2,6 @@
 
 import { request } from "./request.js";
 
-/* 舊的系統魚種查價：行情卡暫時沿用，等上架流程改存 species_code 後再切換。 */
-export function getMarketPrice(speciesId, region, days) {
-  const params = new URLSearchParams({ species_id: speciesId });
-  if (region) params.set("region", region);
-  if (days) {
-    params.set("include", "history");
-    params.set("days", String(days));
-  }
-  return request("/api/market/prices?" + params.toString());
-}
-
 /* 以代碼查行情；候選選定後用這支，避免同名再次變成多候選。 */
 export function getMarketQuoteByCode(code, region, days) {
   const params = new URLSearchParams({ code: String(code) });

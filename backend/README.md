@@ -1,6 +1,6 @@
 # 後端（json-server）
 
-此服務以 json-server 的 JSON 檔案儲存資料，並用自訂路由提供登入、會員、商品、魚種、對話、交易房、評價、行情與上傳 API。不是正式後端，不能用於正式環境。
+此服務以 json-server 的 JSON 檔案儲存資料，並用自訂路由提供登入、會員、商品、官方魚種代碼字典、對話、交易房、評價、行情與上傳 API。不是正式後端，不能用於正式環境。
 
 ## 啟動
 
@@ -19,8 +19,8 @@ npm run backend
 行情按需抓取（查詢 API 每次重抓，CLI 使用快取）可手動執行：
 
 ```bash
-npm run market:fetch -- grouper
-npm run market:fetch -- grouper --date 2026-10-22
+npm run market:fetch -- 2201
+npm run market:fetch -- 土魠魚 --date 2026-10-22
 npm run market:fetch -- --status
 ```
 
@@ -36,8 +36,8 @@ python -m http.server 8000 --directory frontend
 backend/
   server.js       啟動
   app.js          middleware、靜態目錄、路由掛載
-  lib/            auth / store / db-file / messages / units / product-stock / product-pricing / timeouts / cards / quantities / deals / deal-items / deal-cancel / deal-transitions / deal-statuses / reviews / conversations / species / regions / market/ / http
-  routes/         auth / products / species / chat / chat-messages / conversation-delete / deals / deal-items / deal-proposal / deal-response / reviews / market / uploads
+  lib/            auth / store / db-file / messages / units / product-stock / product-pricing / timeouts / cards / quantities / deals / deal-items / deal-cancel / deal-transitions / deal-statuses / reviews / conversations / regions / market/ / http
+  routes/         auth / products / chat / chat-messages / conversation-delete / deals / deal-items / deal-proposal / deal-response / reviews / market / market-catalog / uploads
   scripts/        market-fetch.js（行情 CLI）
   test/           node:test 整合測試（使用暫存資料庫）
   db.seed.json    可提交的種子資料
@@ -55,8 +55,9 @@ backend/
 | `messages` | 對話訊息與卡片 |
 | `deals` | 訂單（`DRAFT`、`PENDING_REVIEW`、`NEGOTIATING`、`CONFIRMED`、`CANCELLED`） |
 | `reviews` | 成交後的雙向評價 |
-| `market_prices` | 按需抓取的批發行情（平均價、交易量、養殖旗標） |
-| `species_market_codes` | 28 個系統魚種的主要新鮮官方代碼 |
+| `market_prices` | 按需抓取的批發行情（平均價、交易量、養殖旗標）；以 `species_code` 為鍵 |
+| `market_species_catalog` | 執行時同步的官方新鮮代碼字典 |
+| `market_catalog_state` | 官方代碼字典的同步狀態與 24 小時快取 |
 | `market_locations` | 21 個批發市場簡稱 → 縣市 |
 | `market_fetch_state` | 每個官方代碼的抓取狀態與快取時間 |
 
@@ -71,8 +72,7 @@ backend/
 | `POST` | `/api/users/seller-consent` | 記錄第一次販賣確認，重複呼叫不覆寫時間；需登入 |
 | `GET` | `/api/products` | 商品清單，支援 `region`、`species`、`seller_id`、`status`、`limit` |
 | `GET` | `/api/products/{id}` | 單一商品 |
-| `POST` | `/api/products/create` | 上架商品；需登入 |
-| `GET` | `/api/species` | 魚種清單（名稱、別名、分類與料理屬性） |
+| `POST` | `/api/products/create` | 上架商品；可帶可選 `species_code`；需登入 |
 | `GET` | `/api/conversations` | 目前會員的房間清單；需登入 |
 | `POST` | `/api/conversations/assistant` | 每次建立一間新的助手房；需登入 |
 | `DELETE` | `/api/conversations/{id}` | 刪除助手房或可刪的交易房；需參與者 |
@@ -92,8 +92,9 @@ backend/
 | `GET` | `/api/deals` | 目前使用者的交易紀錄 |
 | `POST` | `/api/reviews/submit` | 成交後評價對方；需參與者 |
 | `GET` | `/api/reviews?user_id=` | 公開評價與平均星等 |
-| `GET` | `/api/market/prices` | 公開行情；每次請求重抓上游，支援 `species_id`、`region`、`date`、`include=history`、`days` |
-| `GET` | `/api/market/species-codes` | 公開主要新鮮代碼對照 |
+| `GET` | `/api/market/codes` | 公開官方代碼字典；`q` 可查名稱、別名或代碼 |
+| `GET` | `/api/market/quote` | 公開整合行情；一次完成名稱→代碼→價格 |
+| `GET` | `/api/market/prices` | 公開行情；每次請求重抓上游，支援 `code`、`region`、`date`、`include=history`、`days` |
 | `GET` | `/api/market/markets` | 公開市場對照 |
 | `POST` | `/api/uploads` | 上傳圖片（base64 data URL）；需登入 |
 
