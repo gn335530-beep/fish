@@ -28,8 +28,8 @@ function verifiedMarketsFor(region) {
   }).map(function (row) { return row.market_name; });
 }
 
-function pickScope(speciesId, tradeDate, region) {
-  const rows = repository.pricesForDate(speciesId, tradeDate);
+function pickScope(code, tradeDate, region) {
+  const rows = repository.pricesForCode(code, tradeDate);
   if (!region) return { scope: "national", rows: rows, region: null };
   const markets = verifiedMarketsFor(region);
   const cityRows = rows.filter(function (row) { return markets.indexOf(row.market_name) !== -1; });
@@ -50,13 +50,13 @@ function responseSource(rows) {
   };
 }
 
-function historyFor(speciesId, scope, region, endDate, days) {
+function historyFor(code, scope, region, endDate, days) {
   const markets = scope === "city" ? verifiedMarketsFor(region) : null;
-  const dates = repository.tradeDates(speciesId, endDate).slice().reverse();
+  const dates = repository.tradeDatesForCode(code, endDate).slice().reverse();
   const points = [];
   for (const tradeDate of dates) {
     if (points.length >= days) break;
-    const rows = repository.pricesForDate(speciesId, tradeDate).filter(function (row) {
+    const rows = repository.pricesForCode(code, tradeDate).filter(function (row) {
       return markets === null || markets.indexOf(row.market_name) !== -1;
     });
     const avg = averageRows(rows);
@@ -70,34 +70,41 @@ function historyFor(speciesId, scope, region, endDate, days) {
   return points.reverse();
 }
 
-function buildResult(options) {
-  const mapping = mappings.mappingBySpecies(options.speciesId);
-  if (!mapping) return { found: false, reason: "NO_MAPPING", species_id: options.speciesId };
+function identityOf(mapping) {
+  return {
+    species_code: mapping.code,
+    species_id: mapping.species_id || null,
+    official_name: mapping.official_name || null,
+    is_aquaculture: mapping.is_aquaculture === true
+  };
+}
 
-  const tradeDate = repository.latestTradeDate(options.speciesId, options.date || null);
+function buildResult(options) {
+  const mapping = options.mapping || mappings.mappingBySpecies(options.speciesId);
+  if (!mapping) return { found: false, reason: "NO_MAPPING", species_id: options.speciesId || null };
+
+  const identity = identityOf(mapping);
+  const tradeDate = repository.latestTradeDateForCode(mapping.code, options.date || null);
   if (!tradeDate) {
-    return { found: false, reason: "NO_TRADE_DATA", species_id: options.speciesId };
+    return Object.assign({ found: false, reason: "NO_TRADE_DATA" }, identity);
   }
 
-  const picked = pickScope(options.speciesId, tradeDate, options.region);
+  const picked = pickScope(mapping.code, tradeDate, options.region);
   const avg = averageRows(picked.rows);
   if (avg === null) {
-    return { found: false, reason: "NO_TRADE_DATA", species_id: options.speciesId };
+    return Object.assign({ found: false, reason: "NO_TRADE_DATA" }, identity);
   }
 
-  const data = {
-    found: true,
-    species_id: options.speciesId,
+  const data = Object.assign({ found: true }, identity, {
     scope: picked.scope,
     region: picked.region,
     trade_date: tradeDate,
     price_per_kg: round1(avg),
-    price_per_taijin: taijinPrice(avg),
-    is_aquaculture: mapping.is_aquaculture === true
-  };
+    price_per_taijin: taijinPrice(avg)
+  });
   Object.assign(data, responseSource(picked.rows));
   if (options.includeHistory) {
-    data.history = historyFor(options.speciesId, picked.scope, picked.region, tradeDate, options.days || 7);
+    data.history = historyFor(mapping.code, picked.scope, picked.region, tradeDate, options.days || 7);
   }
   return data;
 }

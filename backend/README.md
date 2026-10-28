@@ -16,7 +16,7 @@ npm run backend
 
 執行時資料庫預設為 `backend/db.json`（不進版控）；第一次啟動時會從 `backend/db.seed.json` 複製建立，之後保留開發資料。可用 `FISHMATCH_DB` 指定其他路徑。要重置示範資料，刪除 `backend/db.json` 再重新啟動即可。
 
-行情按需抓取可手動執行：
+行情按需抓取（查詢 API 每次重抓，CLI 使用快取）可手動執行：
 
 ```bash
 npm run market:fetch -- grouper
@@ -92,7 +92,7 @@ backend/
 | `GET` | `/api/deals` | 目前使用者的交易紀錄 |
 | `POST` | `/api/reviews/submit` | 成交後評價對方；需參與者 |
 | `GET` | `/api/reviews?user_id=` | 公開評價與平均星等 |
-| `GET` | `/api/market/prices` | 公開行情；支援 `species_id`、`region`、`date`、`include=history`、`days` |
+| `GET` | `/api/market/prices` | 公開行情；每次請求重抓上游，支援 `species_id`、`region`、`date`、`include=history`、`days` |
 | `GET` | `/api/market/species-codes` | 公開主要新鮮代碼對照 |
 | `GET` | `/api/market/markets` | 公開市場對照 |
 | `POST` | `/api/uploads` | 上傳圖片（base64 data URL）；需登入 |

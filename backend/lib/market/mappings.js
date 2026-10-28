@@ -84,6 +84,10 @@ function mappingBySpecies(speciesId) {
   return speciesCodes().find(function (row) { return row.species_id === speciesId; }) || null;
 }
 
+function mappingByCode(code) {
+  return speciesCodes().find(function (row) { return Number(row.code) === Number(code); }) || null;
+}
+
 function locationByMarket(marketName) {
   return MARKET_LOCATIONS.find(function (row) { return row.market_name === marketName; }) || null;
 }
@@ -91,6 +95,7 @@ function locationByMarket(marketName) {
 module.exports = {
   speciesCodes: speciesCodes,
   mappingBySpecies: mappingBySpecies,
+  mappingByCode: mappingByCode,
   markets: function () { return MARKET_LOCATIONS.map(function (row) { return Object.assign({}, row); }); },
   locationByMarket: locationByMarket
 };

@@ -19,7 +19,8 @@ function fixture() {
     sold_quantity: 0,
     condition: "冷凍",
     price: 300,
-    market_reference_price: 1800
+    market_reference_price: 1800,
+    market_snapshot: { scope: "city", region: "高雄市", price_per_taijin: 200 }
   }, {
     id: "prd_keep",
     seller_id: 1,
@@ -30,7 +31,8 @@ function fixture() {
     quantity: 1,
     condition: "活體",
     price: 1000,
-    market_reference_price: 2000
+    market_reference_price: 2000,
+    market_snapshot: null
   }]);
 
   setAll("messages", [{
@@ -84,11 +86,13 @@ test("舊冷凍商品、草稿卡、商品卡與上架訊息一起更新", funct
   assert.equal(product.condition, "放血冰鎮");
   assert.equal(product.title, "花枝（3kg / 2尾 / 放血冰鎮）");
   assert.equal("market_reference_price" in product, false);
+  assert.equal("market_snapshot" in product, false);
 
   const keep = all("products").find(function (row) { return row.id === "prd_keep"; });
   assert.equal(keep.condition, "活體");
   assert.equal(keep.title, "石斑（2kg / 1尾 / 活體）");
   assert.equal("market_reference_price" in keep, false);
+  assert.equal("market_snapshot" in keep, false);
 
   const messages = {};
   all("messages").forEach(function (message) { messages[message.id] = message; });

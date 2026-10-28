@@ -1,7 +1,6 @@
 /* 訊息卡片：商品卡與上架草稿卡。 */
 
 import { escapeHtml, money, resolveImage } from "./html.js";
-import { marketLine } from "./market.js";
 import { normalizeCityName } from "../../shared/regions.js";
 import { DRAFT_FIELDS } from "../ai/editing.js";
 import { renderDealCard, renderReviewCard } from "./deal-cards.js";
@@ -46,7 +45,6 @@ function productCard(card) {
     '<span>每尾均價 ' + money(card.unit_price) + '</span>' +
     '<span>' + escapeHtml(card.weight_kg) + ' kg · ' + escapeHtml(card.quantity) + ' 尾 · ' + escapeHtml(card.condition) + '</span>' +
     '<span>' + escapeHtml(normalizeCityName(card.region)) + '　' + stock + '</span>' +
-    '<span class="fm-card__market">' + escapeHtml(marketLine(card.market_snapshot)) + '</span>' +
     '</div>' +
     dealActions(card) +
     '</div>';

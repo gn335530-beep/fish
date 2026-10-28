@@ -70,7 +70,6 @@
 | `price` | number | **上架整批售價（元）**；使用者明確輸入時原樣保留（可含小數），訂單／協議使用 |
 | `price_per_taijin` | number \| null | 上架每台斤售價（元）；可空 |
 | `price_auto` | boolean | 整批售價是否由每台斤自動計算 |
-| `market_snapshot` | object \| null | 發布時凍結的行情；見第 9 節 |
 | `region` | string | 縣市 |
 | `location` | string | 完整地點，預設為個人地址 |
 | `catch_time` | string | ISO 時間 |
@@ -78,7 +77,7 @@
 
 **衍生**（讀取時算，不落庫）：`reserved_quantity`、`available`、`unit_price`、`avg_weight_kg`、`status`。
 
-**變更（#24、#27）**：新增 `price_per_taijin`、`price_auto` 與 `market_snapshot`；移除 `market_reference_price`；`condition` 不再限定四種。`market_snapshot`、自由文字 `condition`、每台斤售價與自動計算已實作（#24、#26、#27）。只填每台斤時，後端在建立商品時計算 `price` 並設 `price_auto = true`；只填整批時 `price_per_taijin = null`；兩者都填時都保留，不檢查一致性。
+**變更（#24、#27、2026-10-28）**：新增 `price_per_taijin`、`price_auto`；移除 `market_reference_price`、`market_snapshot`；`condition` 不再限定四種。自由文字 `condition`、每台斤售價與自動計算已實作（#24、#26、#27）。只填每台斤時，後端在建立商品時計算 `price` 並設 `price_auto = true`；只填整批時 `price_per_taijin = null`；兩者都填時都保留，不檢查一致性。
 
 **索引需求**：`seller_id`、`region`、`species_id`、`created_at`（目前是線性掃描，資料量小可接受）。
 
@@ -148,10 +147,7 @@
 { "type": "product", "product_id": "prd_...", "title": "...",
   "price": 2800, "price_per_taijin": 373.3, "price_auto": false, "unit_price": 2800,
   "weight_kg": 4.5, "quantity": 1, "available": 1, "condition": "放血冰鎮",
-  "region": "新北市", "location": "...", "catch_time": "...", "seller_id": 1,
-  "market_snapshot": { "scope": "city", "region": "新北市", "trade_date": "2026-10-22",
-    "price_per_kg": 52.4, "price_per_taijin": 31.4, "is_aquaculture": false,
-    "source": "農業部漁產品交易行情", "source_url": "...", "fetched_at": "...", "quality": "official" } }
+  "region": "新北市", "location": "...", "catch_time": "...", "seller_id": 1 }
 
 { "type": "draft", "draft": { "fish_species": "花枝", "weight_kg": 3, "quantity": 2,
   "condition": "放血冰鎮", "photo_url": "/uploads/a.jpg",
@@ -297,28 +293,19 @@
 ```
 
 - 每個官方代碼一筆；`last_status`：`ok`／`no_data`／`error`。
-- `last_range_from`／`last_range_to` 是內部快取提示：同一個過去日期範圍已抓過就不再打上游。
+- `last_range_from`／`last_range_to` 是 CLI 快取提示：同一個過去日期範圍已抓過就不再打上游。
 - `last_latest_at` 只記錄「最近交易日」查詢的成功或失敗時間；指定日期查詢不會刷新它，避免把舊日期誤當成最新交易日。
 - 最新交易日只抓最近 14 個日曆日，足以跨過週末與連續休市；指定日期若當日無資料（例如週末），往回抓 7 個日曆日補最近交易日；歷史查詢抓各自範圍。查詢結果一律只取 `<= date` 的最近一筆，`trade_date` 是實際交易日。
-- 最新交易日快取 30 分鐘；過去日期不變；negative cache 30 分鐘。
+- 查詢 API 每次請求都重抓上游；CLI 仍保留最近交易日 30 分鐘 TTL、過去日期快取與 negative cache。
+- 狀態說 `ok` 但 `market_prices` 已無對應資料時，視為快取失效並重抓。
 - 上游失敗只更新檢查時間、狀態與錯誤，不清空既有行情，也不改最後交易日與筆數。
 - 成功抓取後刪除 90 天以前的行情與狀態。
 - 同一魚種同時查詢只發一次上游 request（in-flight dedup）。
 - 手動 CLI：`npm run market:fetch -- <species_id> [--date YYYY-MM-DD] [--days 7|30]`；`--status` 看每個代碼的快取狀態。
 
-### 商品 `market_snapshot`
+### 商品行情快照（已移除）
 
-```jsonc
-{ "scope": "city", "region": "高雄市", "trade_date": "2026-10-22",
-  "price_per_kg": 52.4, "price_per_taijin": 31.4,
-  "is_aquaculture": false,
-  "source": "農業部漁產品交易行情", "source_url": "...",
-  "fetched_at": "...", "quality": "official" }
-```
-
-- 發布時寫入；之後行情更新或商品改價都不變。
-- 不存走勢歷史；走勢只存在行情卡訊息裡。
-- 查無或上游失敗時為 `null`；商品仍可發布，畫面顯示「暫無行情」。
+2026-10-28 起商品不再保存 `market_snapshot`；啟動遷移會移除舊商品上的欄位。商品卡與詳情頁不顯示行情，行情只存在行情 API 與上架行情卡。
 
 ## 10. 保留與備份
 

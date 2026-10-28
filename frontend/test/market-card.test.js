@@ -46,14 +46,15 @@ test.beforeEach(function () {
   update({ marketDays: {} });
 });
 
-test("行情卡顯示平均價、縣市平均、日期、來源與新鮮批發參考", function () {
+test("行情卡顯示平均價、縣市平均、日期、來源與行情價參考", function () {
   const html = renderCard(card(), "msg_1");
   const text = html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
   assert.match(text, /200 元／台斤/);
   assert.match(text, /高雄市平均/);
   assert.match(text, /2026-10-22/);
   assert.match(text, /農業部漁產品交易行情/);
-  assert.match(text, /新鮮批發參考/);
+  assert.match(text, /行情價參考/);
+  assert.doesNotMatch(text, /新鮮批發參考/);
   assert.doesNotMatch(text, /今日行情|即時均價|上價|中價|下價/);
 });
 

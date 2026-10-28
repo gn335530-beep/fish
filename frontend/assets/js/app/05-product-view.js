@@ -4,11 +4,6 @@
 function productEscape(value) { return window.HaisenFormat.escapeHtml(value); }
 function productMoney(value) { return window.HaisenFormat.money(value); }
 function productDate(value) { return window.HaisenFormat.dateOf(value) || "日期未提供"; }
-function hasMarketSnapshot(snapshot) { return window.HaisenFormat.hasMarketSnapshot(snapshot); }
-function marketSnapshotPrice(snapshot) { return window.HaisenFormat.marketSnapshotPrice(snapshot); }
-function marketSnapshotScope(snapshot) { return window.HaisenFormat.marketSnapshotScope(snapshot); }
-function marketSnapshotSource(snapshot) { return window.HaisenFormat.marketSnapshotSource(snapshot); }
-function marketSnapshotMeta(snapshot) { return window.HaisenFormat.marketSnapshotMeta(snapshot); }
 
 function productWeight(p) {
   return Number(p.weight_kg || 0).toFixed(1);
@@ -27,17 +22,6 @@ function productStatus(p) {
   if (p.status === "PARTIALLY_RESERVED") return "洽談中";
   if (p.status === "SOLD_OUT") return "已售出";
   return "可售 " + productAvailable(p) + " 尾";
-}
-
-function marketSnapshotCardHTML(snapshot) {
-  if (!hasMarketSnapshot(snapshot)) {
-    return '<div class="card__market"><span class="card__market-label">新鮮批發參考</span>' +
-      '<span class="card__market-empty">暫無行情</span></div>';
-  }
-  var meta = marketSnapshotMeta(snapshot);
-  return '<div class="card__market"><span class="card__market-label">新鮮批發參考</span>' +
-    '<b class="card__market-price">' + productEscape(marketSnapshotPrice(snapshot)) + '</b>' +
-    '<span class="card__market-meta">' + productEscape(meta) + '</span></div>';
 }
 
 function productStateHTML(text, isError) {
@@ -105,7 +89,6 @@ function productCardHTML(p) {
     '<div class="card__meta"><span>每尾均價 ' + productMoney(p.unit_price) + '</span>' +
     (p.price_per_taijin != null ? '<span>每台斤 ' + productMoney(p.price_per_taijin) + '</span>' : '') +
     '</div>' +
-    marketSnapshotCardHTML(p.market_snapshot) +
     '<div class="card__meta"><span>' + productEscape(location) + '</span></div>' +
     (unknown ? '<div class="card__meta"><span>料理資料暫無</span></div>' : "") +
     '<div class="card__price"><b>' + productMoney(p.price) +

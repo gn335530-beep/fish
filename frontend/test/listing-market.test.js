@@ -33,8 +33,9 @@ test("非價格欄位齊了先送行情卡，再問售價", async function () {
   assert.equal(card.source, "農業部漁產品交易行情");
   assert.match(textOf(result), /每台斤價格或整批價格/);
   const urls = marketCalls().map(function (path) { return decodeURIComponent(path); });
-  assert.ok(urls.some(function (path) { return /include=history/.test(path) && /days=30/.test(path); }));
-  assert.ok(urls.some(function (path) { return /include=history/.test(path) && /days=7/.test(path); }));
+  assert.equal(urls.length, 1);
+  assert.match(urls[0], /include=history/);
+  assert.match(urls[0], /days=30/);
 });
 
 test("已提供售價時行情卡後直接顯示草稿，不重問價格", async function () {
