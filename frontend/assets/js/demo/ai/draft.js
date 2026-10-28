@@ -1,6 +1,6 @@
 /* 上架草稿：欄位缺漏、價格自動計算與送後端的欄位轉換。 */
 
-import { normalizeCityName } from "./species.js";
+import { normalizeCityName } from "../../shared/regions.js";
 import "../../shared/format.js";
 
 const format = window.HaisenFormat;

@@ -2,7 +2,8 @@
 
 import { getMarketPrice } from "../../api/market.js";
 import "../../shared/format.js";
-import { findSpecies, findRegion, normalizeCityName } from "./species.js";
+import { findSpecies } from "./species.js";
+import { findRegion, normalizeCityName } from "../../shared/regions.js";
 import { guessUnknownSpecies } from "./conditions.js";
 
 function profileRegion(user) {

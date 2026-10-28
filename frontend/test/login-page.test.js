@@ -8,6 +8,7 @@ import vm from "node:vm";
 const html = fs.readFileSync(new URL("../pages/login.html", import.meta.url), "utf8");
 const script = fs.readFileSync(new URL("../assets/js/pages/login.js", import.meta.url), "utf8");
 const apiAuth = fs.readFileSync(new URL("../assets/js/api/auth.js", import.meta.url), "utf8");
+const regionData = fs.readFileSync(new URL("../assets/js/shared/regions-data.js", import.meta.url), "utf8");
 const regions = fs.readFileSync(new URL("../assets/js/app/04-regions.js", import.meta.url), "utf8");
 
 test("註冊表單有必填縣市欄位", function () {
@@ -24,6 +25,7 @@ test("登入彈窗縣市套用臺→台正規化", function () {
   assert.match(script, /normalizeCityName\(city\)/);
 
   const ctx = vm.createContext({});
+  vm.runInContext(regionData, ctx);
   vm.runInContext(regions, ctx);
   assert.equal(vm.runInContext('normalizeCityName("臺北市")', ctx), "台北市");
 });

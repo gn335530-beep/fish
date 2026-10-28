@@ -18,7 +18,8 @@ function baseUrl() {
 }
 
 function buildUrl(options) {
-  const parts = ["$top=10000", "$skip=0", "TypeNo=" + encodeURIComponent(String(options.code))];
+  const parts = ["$top=" + (options.top || 10000), "$skip=" + (options.skip || 0)];
+  if (options.code) parts.push("TypeNo=" + encodeURIComponent(String(options.code)));
   if (options.from) parts.push("StartDate=" + toRocDate(options.from));
   if (options.to) parts.push("EndDate=" + toRocDate(options.to));
   const base = baseUrl();

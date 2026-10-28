@@ -1,7 +1,8 @@
 /* 導購：從商品 API 找魚，寫入 last_cards 供指涉使用。 */
 
 import { listProducts } from "../../api/products.js";
-import { findSpecies, findRegion, normalizeCityName, speciesList } from "./species.js";
+import { findSpecies, speciesList } from "./species.js";
+import { findRegion, normalizeCityName } from "../../shared/regions.js";
 
 const COOKING_WORDS = ["清蒸", "煮湯", "紅燒", "香煎", "煎", "烤", "川燙", "生魚片", "涼拌", "炒", "滷"];
 

@@ -1,7 +1,7 @@
 /* 上架行情卡：只在使用者自己的縣市查行情，查無或上游失敗都不阻擋定價。 */
 
 import { getMarketPrice } from "../../api/market.js";
-import { normalizeCityName } from "./species.js";
+import { normalizeCityName } from "../../shared/regions.js";
 import "../../shared/format.js";
 
 const format = window.HaisenFormat;
