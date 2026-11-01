@@ -23,6 +23,8 @@ test("買家開啟交易房並建立草稿訂單", async function () {
   const data = result.body.data;
   assert.equal(data.conversation.type, "deal");
   assert.equal(data.conversation.peer.username, "0911111111");
+  assert.equal(data.conversation.peer.rating_score, 0);
+  assert.equal(data.conversation.peer.review_count, 0);
   assert.equal(data.deal.deal_status, "DRAFT");
   assert.equal(data.deal.items.length, 1);
   assert.equal(data.deal.items[0].unit_price, 1400);
@@ -30,6 +32,15 @@ test("買家開啟交易房並建立草稿訂單", async function () {
   assert.equal(data.conversation.order.final_price, 1400);
   seen.conversation = data.conversation.id;
   seen.deal = data.deal.id;
+});
+
+test("單筆訂單的對方資料含電話與評價欄位", async function () {
+  const result = await call("GET", "/api/deals/" + seen.deal, { token: tokens.buyer });
+  assert.equal(result.status, 200);
+  assert.equal(result.body.data.peer.display_name, "釣客甲");
+  assert.equal(result.body.data.peer.username, "0911111111");
+  assert.equal(result.body.data.peer.rating_score, 0);
+  assert.equal(result.body.data.peer.review_count, 0);
 });
 
 test("釣客的對話清單會出現新交易房與未讀通知", async function () {

@@ -2,7 +2,7 @@
 
 const express = require("express");
 const { all, findById, patch } = require("../lib/store");
-const { requireUser } = require("../lib/auth");
+const { requireUser, publicUser } = require("../lib/auth");
 const { productAvailability } = require("../lib/product-stock");
 const { systemMessage } = require("../lib/messages");
 const { sweepExpired } = require("../lib/timeouts");
@@ -16,8 +16,13 @@ const router = express.Router();
 function peerOf(deal, userId) {
   const isBuyer = deals.isBuyer(deal, userId);
   const peerId = isBuyer ? deal.seller_id : deal.buyer_id;
-  const peer = findById("users", peerId);
-  return { id: Number(peerId), display_name: peer ? peer.display_name : "對方" };
+  return publicUser(findById("users", peerId)) || {
+    id: Number(peerId),
+    display_name: "對方",
+    username: "",
+    rating_score: 0,
+    review_count: 0
+  };
 }
 
 function forUser(deal, userId) {

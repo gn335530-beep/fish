@@ -2,6 +2,8 @@
 
 import { createBodyRenderer } from "./body-render.js";
 import { shellHtml } from "./panel-shell.js";
+import { initVoice } from "../voice.js";
+import { handleMarketWeightInput, handleMarketUnitChange } from "./market-card.js";
 
 let refs = null;
 let handlers = {};
@@ -33,10 +35,11 @@ api = {
   setBody: function (html, options) {
     if (bodyRenderer) bodyRenderer.setBody(html, options);
   },
-  setStatus: function (text) { refs.status.textContent = text; },
   setFooter: function (visible) { refs.form.hidden = !visible; },
-  setView: function (view) {
-    refs.panel.classList.toggle("fm-panel--wide", view === "deal");
+  setHeader: function (title, subHtml) {
+    refs.title.textContent = title;
+    refs.sub.innerHTML = subHtml || "";
+    refs.sub.hidden = !subHtml;
   },
   setBadge: function (count) {
     const value = Number(count) || 0;
@@ -84,10 +87,19 @@ export function mountPanel(options) {
     file: document.getElementById("fm-file"),
     toggle: document.getElementById("fm-toggle"),
     badge: document.getElementById("fm-badge"),
-    status: document.getElementById("fm-status")
+    title: document.getElementById("fm-title"),
+    sub: document.getElementById("fm-sub"),
+    voice: document.getElementById("fm-voice")
   };
 
   bodyRenderer = createBodyRenderer({ body: refs.body, onRender: handlers.onRender });
+  initVoice({
+    button: refs.voice,
+    input: refs.input,
+    onError: function (message) {
+      if (handlers.onVoiceError) handlers.onVoiceError(message);
+    }
+  });
 
   refs.toggle.addEventListener("click", function () { api.toggle(); });
   refs.file.addEventListener("change", function () {
@@ -108,6 +120,8 @@ export function mountPanel(options) {
     handlers.onAction(node.dataset.action, node.dataset);
   });
   refs.body.addEventListener("input", function (event) {
+    const market = event.target.closest("[data-market-weight]");
+    if (market) handleMarketWeightInput(market);
     const field = event.target.closest("[data-field]");
     if (field && handlers.onInput) handlers.onInput(field.dataset.field, field.value);
     const review = event.target.closest("[data-review-deal]");
@@ -117,6 +131,11 @@ export function mountPanel(options) {
     }
   });
   refs.body.addEventListener("change", function (event) {
+    const unit = event.target.closest("[data-market-unit]");
+    if (unit) {
+      handleMarketUnitChange(unit);
+      return;
+    }
     const addon = event.target.closest("[data-addon-qty]");
     if (addon && handlers.onSelect) handlers.onSelect(addon.dataset.addonQty, addon.value);
     const reason = event.target.closest("[data-cancel-reason]");

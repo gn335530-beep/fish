@@ -11,7 +11,7 @@ const OVERLAYS = "" +
   '</button>';
 
 export function shellHtml() {
-  return '<section class="fm-panel" id="fm-panel" hidden aria-label="一支釣小幫手">' +
+  return '<section class="fm-panel" id="fm-panel" hidden aria-label="AI 聊天小幫手">' +
     headerHtml() +
     '  <div class="fm-panel__body" id="fm-body" aria-live="polite"></div>' +
     footerHtml() +

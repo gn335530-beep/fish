@@ -9,8 +9,9 @@ function clampScore(score) {
   return Math.max(0, Math.min(5, Number(score) || 0));
 }
 
+/* 分數先四捨五入到最近的 0.5，再換成五顆星狀態。 */
 export function starStates(score) {
-  const value = clampScore(score);
+  const value = Math.round(clampScore(score) * 2) / 2;
   return POSITIONS.map(function (position) {
     if (value >= position) return "full";
     if (value >= position - 0.5) return "half";
