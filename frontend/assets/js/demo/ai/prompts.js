@@ -37,7 +37,7 @@ function joinLabels(labels) {
   return labels.slice(0, -1).join("、") + "，與" + labels[labels.length - 1];
 }
 
-/* 先只問魚種；魚種有了再一起問重量、處理方式與照片，不用「還需要」。 */
+/* 先只問魚種；魚種有了再一起問尾數、處理方式與照片，不用「還需要」。 */
 export function batchFollowupPrompt(missing) {
   if (missing.indexOf("fish_species") !== -1) return SPECIES_QUESTION;
   const details = DETAIL_ORDER.filter(function (slot) {

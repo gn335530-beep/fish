@@ -74,7 +74,7 @@ test("發布商品時送出 species_code", function () {
   assert.equal("species_latin" in payload, false);
 });
 
-test("草稿卡分別標明整批、每台斤與每尾均價，不標自動計算", function () {
+test("草稿卡標明整批與每台斤，不顯示每尾均價或自動計算", function () {
   const html = cards.renderCard({
     type: "draft",
     draft: {
@@ -90,7 +90,6 @@ test("草稿卡分別標明整批、每台斤與每尾均價，不標自動計�
   assert.match(html, /NT\$1,500/);
   assert.match(html, /每台斤/);
   assert.match(html, /NT\$200/);
-  assert.match(html, /每尾均價/);
-  assert.match(html, /NT\$750/);
+  assert.doesNotMatch(html, /每尾均價/);
   assert.doesNotMatch(html, /自動計算/);
 });

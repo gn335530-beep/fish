@@ -73,10 +73,6 @@
 
 /* ---------- 洽談購買 ---------- */
 .card__deal{display:flex;gap:8px;margin-top:14px}
-.card__deal-qty{
-  flex:none;width:auto;padding:11px 24px 11px 8px;font-size:.76rem;
-  border:1px solid var(--rule);background-color:transparent;
-}
 .card__deal .btn{flex:1}
 .card__deal-note{font-size:.78rem;color:var(--muted-2)}
 

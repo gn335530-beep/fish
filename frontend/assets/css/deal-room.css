@@ -33,35 +33,6 @@
 .fm-card__deal-terms dt { color: var(--muted); }
 .fm-card__deal-terms dd { margin: 0; }
 
-.fm-card__cancel {
-  display: flex;
-  gap: 6px;
-  margin-top: 6px;
-  padding-top: 8px;
-  border-top: 1px solid var(--rule-2);
-}
-
-.fm-card__cancel select {
-  flex: 1;
-  min-width: 0;
-  padding: 5px 2px;
-  border: 1px solid var(--rule);
-  background: var(--surface);
-  font-size: .66rem;
-}
-
-.fm-card__cancel button {
-  flex: none;
-  padding: 5px 8px;
-  border: 1px solid var(--coral);
-  background: transparent;
-  color: var(--coral);
-  font-size: .66rem;
-  cursor: pointer;
-}
-
-.fm-card__cancel button:hover { background: var(--coral); color: #fff; }
-
 /* 確認取消卡與取消訊息卡 */
 .fm-card--cancel-confirm,
 .fm-card--cancelled { padding: 10px; }

@@ -8,7 +8,7 @@
 - API base 由 `frontend/assets/js/config.js` 設定，預設為目前主機的 `3001` 埠；可在載入 `api/client.js` 前用 `window.HAISEN_API_BASE` 覆寫。
 - 請求使用 JSON；需登入的端點會帶 `Authorization: Bearer <token>`。
 - Token 與會員資料存在 `localStorage` 的 `haisen_token_v1`、`haisen_user_v1`。
-- 商品價格以「整批總價」儲存與回傳；前台另外顯示 `unit_price`（每尾價格），不自行乘尾數。
+- 商品價格以「整批總價」儲存與回傳；`price_per_taijin` 是每台斤售價（可選）。前台不自行乘尾數，也不再自動計算整批。
 
 ## 2. 端點
 
@@ -34,11 +34,13 @@
 | `POST` | `/api/deals/initiate-channel` | 登入 | 由商品開啟或沿用交易房與草稿訂單 |
 | `GET` | `/api/deals/{id}` | 參與者 | 訂單明細，項目附可售尾數 |
 | `POST` | `/api/deals/items` | 買家 | 加購同一釣客的商品 |
+| `POST` | `/api/deals/items/batch` | 買家 | 批次加購多個商品，只留一則系統訊息 |
 | `PATCH` | `/api/deals/items/{itemId}` | 買家 | 改尾數（需帶 `deal_id`） |
-| `DELETE` | `/api/deals/items/{itemId}`、`/api/deals/items` | 買家 | 刪除項目／清空 |
+| `DELETE` | `/api/deals/items/{itemId}`、`/api/deals/items` | 買家 | 刪除項目／清空（舊介面） |
 | `POST` | `/api/deals/propose` | 參與者 | 送出協議，鎖定 30 分鐘 |
-| `POST` | `/api/deals/respond` | 參與者（非發起方） | 同意／退回協議 |
-| `POST` | `/api/deals/cancel` | 參與者 | 取消並選原因 |
+| `POST` | `/api/deals/respond` | 參與者（非發起方） | 確認協議；退回為 legacy |
+| `POST` | `/api/deals/cancel` | 參與者 | 取消並帶自由文字 `note` |
+| `POST` | `/api/deals/reinitiate` | 買家 | 取消後重新發起協議 |
 | `GET` | `/api/deals` | 登入 | 交易紀錄列表 |
 | `POST` | `/api/reviews/submit` | 參與者 | 成交後評價對方 |
 | `GET` | `/api/reviews?user_id=` | 公開 | 評價與平均星等 |
@@ -76,15 +78,15 @@
 
 | 欄位 | 說明 |
 | --- | --- |
-| `title` | 由後端產生的 `{魚種}（{總重}kg / {尾數}尾 / {處理}）`；前端直接顯示，不得自行拼接 |
+| `title` | 由後端產生的 `{魚種}（{尾數}尾 / {處理}）`；前端直接顯示，不得自行拼接 |
 | `fish_species` | 使用者說的魚種名稱；未知魚種也保留原字串 |
 | `species_code` | 對到的官方魚種代碼；未知魚種為 `null` |
-| `weight_kg` | 整批總重（公斤） |
+| `weight_kg` | 選填／legacy；新商品可為 `null`，畫面不顯示 |
 | `quantity` | 總尾數 |
 | `available` | 可售尾數 |
 | `reserved_quantity` | 進行中訂單保留的尾數 |
-| `unit_price` | 每尾價格 |
-| `avg_weight_kg` | 每尾平均重量 |
+| `unit_price` | 每尾價格；只供訂單金額，商品卡與推薦卡不顯示 |
+| `avg_weight_kg` | 每尾平均重量；重量為空時為 `null` |
 | `status` | `ACTIVE` / `PARTIALLY_RESERVED` / `SOLD_OUT` |
 | `region`, `location` | 縣市與完整地點 |
 | `catch_time`, `created_at` | 捕獲與建立時間 |
@@ -109,7 +111,7 @@
 
 - `frontend/assets/js/app/08-api-init.js` 只負責導覽、個人選單與 `syncSessionFromApi()`。
 - `syncSessionFromApi()` 在有 Token 時呼叫 `me()`；401／403 會清除本機登入狀態，只有會員資料而沒有 Token 時也會清除。
-- 頁面資料由各頁自己的 API 呼叫載入：首頁與列表用 `listProducts()`，詳情用 `getProduct(id)`；助手魚種查詢用 `/api/market/codes` 與 `/api/market/quote`。
+- 頁面資料由各頁自己的 API 呼叫載入：首頁與列表用 `listProducts()`；助手魚種查詢用 `/api/market/codes` 與 `/api/market/quote`。商品詳情頁已移除，`getProduct(id)` 只供對話與內部使用。
 
 ## 6. 錯誤處理
 

@@ -50,16 +50,6 @@
 
 .fm-card__acts button:hover { border-color: var(--accent); color: var(--accent); }
 
-.fm-card__qty {
-  flex: none;
-  width: 58px;
-  padding: 6px 2px;
-  border: 1px solid var(--rule);
-  background: var(--surface);
-  color: var(--ink);
-  font-size: .72rem;
-}
-
 .fm-card__sold {
   align-self: center;
   color: var(--muted-2);

@@ -2,7 +2,7 @@
 (function () {
   var SAMPLE = {
     species: "紅魽",
-    meta: "10.4 kg · 3 尾 · 放血冰鎮",
+    meta: "3 尾 · 放血冰鎮",
     price: "NT$9,000",
     stock: 3,
     photo: "../assets/images/amberjack.png"
@@ -14,7 +14,7 @@
       prompt: "我想找今天澎湖釣的魚",
       html: function () {
         return msg("me", "我想找今天澎湖釣的魚") +
-          msg("bot", "今天有 2 筆澎湖上架。這尾紅魽 10.4 kg、3 尾、放血冰鎮，整批 NT$9,000，還剩 3 尾。") +
+          msg("bot", "今天有 2 筆澎湖上架。這尾紅魽 3 尾、放血冰鎮，整批 NT$9,000，還剩 3 尾。") +
           mini() +
           '<div class="ha-quick">' +
           '<button type="button" data-ha-prompt="這尾紅魽還有嗎？">這尾還有嗎？</button>' +
@@ -25,10 +25,10 @@
       status: "上架",
       prompt: "我今天有釣到魚，想上架",
       html: function () {
-        return msg("me", "今天釣到三尾紅魽，10.4 公斤") +
+        return msg("me", "今天釣到三尾紅魽") +
           msg("bot", "收到。處理方式是什麼？想賣多少？（可回每台斤或整批價格）") +
           '<div class="ha-draft"><b>上架草稿</b><dl>' +
-          row("魚種", "紅魽") + row("總重", "10.4 kg") + row("尾數", "3 尾") +
+          row("魚種", "紅魽") + row("尾數", "3 尾") +
           row("處理", "待填") + row("整批售價", "待填") +
           '</dl><div class="ha-draft__act"><button type="button" data-ha-prompt="處理方式：放血冰鎮；整批 NT$9,000">繼續上架</button></div></div>';
       }
@@ -38,15 +38,15 @@
       prompt: "今天花枝的行情？",
       html: function () {
         return msg("me", "今天花枝的行情？") +
-          msg("bot", "現在花枝的行情是 31.4 元／台斤（2026-10-22，高雄市平均，農業部漁產品交易行情）。行情價參考。") +
-          '<div class="ha-market"><div class="ha-market__head"><b>花枝行情</b><span>行情價參考</span></div>' +
+          msg("bot", "現在花枝的行情是 31.4 元／台斤（2026-10-22，高雄市平均，農業部漁產品交易行情）。") +
+          '<div class="ha-market"><div class="ha-market__head"><b>行情卡</b><span>花枝</span></div>' +
           '<div class="ha-market__price"><b>31.4</b><span>元／台斤</span></div>' +
           '<div class="ha-market__meta">高雄市平均 · 2026-10-22 · 農業部漁產品交易行情</div>' +
           '<div class="ha-market__meta">近 7 個交易日</div>' +
           '<svg viewBox="0 0 100 32" preserveAspectRatio="none" role="img" aria-label="花枝近 7 個交易日行情走勢">' +
           '<polyline points="0,30 16,26 33,24 50,27 66,20 83,15 100,8" fill="none" stroke="currentColor" stroke-width="1.6" vector-effect="non-scaling-stroke"></polyline>' +
           '</svg><div class="ha-market__range"><span>最高 31.4</span><span>最低 30.1</span></div>' +
-          '<div class="ha-market__note">行情價參考，非售價或保證收購價。</div></div>';
+          '<div class="ha-market__note">資料來源：農業部 漁業署</div></div>';
       }
     }
   };

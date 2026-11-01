@@ -59,28 +59,33 @@
 | 19 | POST | `/api/deals/initiate-channel` | 登入 | ✅ 開啟／沿用交易房 |
 | 20 | GET | `/api/deals/:id` | 參與者 | ✅ 訂單明細（含商品快照與可售） |
 | 21 | POST | `/api/deals/items` | 登入（買家） | ✅ 加購同一釣客的商品 |
-| 22 | PATCH | `/api/deals/items/:itemId` | 登入（買家） | ✅ 改尾數 |
-| 23 | DELETE | `/api/deals/items/:itemId` | 登入（買家） | ✅ 刪除項目 |
-| 24 | DELETE | `/api/deals/items` | 登入（買家） | ✅ 清空訂單 |
-| 25 | POST | `/api/deals/propose` | 參與者 | ✅ 送出協議 |
-| 26 | POST | `/api/deals/respond` | 參與者（非發起方） | ✅ 同意／退回 |
-| 27 | POST | `/api/deals/cancel` | 參與者 | ✅ 取消並釋放 |
-| 28 | GET | `/api/deals` | 登入 | ✅ 交易紀錄列表 |
-| 29 | POST | `/api/reviews/submit` | 登入（參與者） | ✅ 送出評價 |
-| 30 | GET | `/api/reviews?user_id=` | 公開 | ✅ 使用者的評價與平均 |
-| 31 | GET | `/api/market/quote` | 公開 | ✅ 名稱→代碼→價格整合查詢 |
-| 32 | GET | `/api/market/markets` | 公開 | ✅ 市場對照 |
-| 33 | GET | `/api/market/prices` | 公開 | ✅ 代碼查價（含 `include=history`） |
+| 22 | POST | `/api/deals/items/batch` | 登入（買家） | ✅ 批次加購 |
+| 23 | PATCH | `/api/deals/items/:itemId` | 登入（買家） | ✅ 改尾數 |
+| 24 | DELETE | `/api/deals/items/:itemId` | 登入（買家） | ✅ 刪除項目（舊介面） |
+| 25 | DELETE | `/api/deals/items` | 登入（買家） | ✅ 清空訂單（舊介面） |
+| 26 | POST | `/api/deals/propose` | 參與者 | ✅ 送出協議 |
+| 27 | POST | `/api/deals/respond` | 參與者（非發起方） | ✅ 確認；退回為 legacy |
+| 28 | POST | `/api/deals/cancel` | 參與者 | ✅ 取消並釋放（自由文字 note） |
+| 29 | POST | `/api/deals/reinitiate` | 登入（買家） | ✅ 取消後重新發起 |
+| 30 | GET | `/api/deals` | 登入 | ✅ 交易紀錄列表 |
+| 31 | POST | `/api/reviews/submit` | 登入（參與者） | ✅ 送出評價 |
+| 32 | GET | `/api/reviews?user_id=` | 公開 | ✅ 使用者的評價與平均 |
+| 33 | GET | `/api/market/quote` | 公開 | ✅ 名稱→代碼→價格整合查詢 |
+| 34 | GET | `/api/market/markets` | 公開 | ✅ 市場對照 |
+| 35 | GET | `/api/market/prices` | 公開 | ✅ 代碼查價（含 `include=history`） |
 
 ### 2.1 本版新增／變更的端點
 
-行情三個端點已於 2026-10-27 實作（#21～#23）；其餘標記為目標的端點仍依 ticket 實作。
+交易房改版新增批次加購與重新發起；商品建立改為整批售價必填、重量選填；取消改為自由文字 `note`。
 
 | 方法 | 路徑 | 權限 | 說明 |
 | --- | --- | --- | --- |
 | POST | `/api/auth/register` | 公開 | 變更：新增 `city`（必填） |
 | POST | `/api/users/seller-consent` | 登入 | 新增：記錄第一次販賣確認 |
-| POST | `/api/products/create` | 登入 | 變更：每台斤／整批售價、處理方式自由文字 |
+| POST | `/api/products/create` | 登入 | 變更：整批售價必填、每台斤選填、重量選填、不再自動計算 |
+| POST | `/api/deals/items/batch` | 登入（買家） | 新增：一次加入多個商品，只留一則系統訊息 |
+| POST | `/api/deals/reinitiate` | 登入（買家） | 新增：取消後複製最後一筆訂單為新草稿 |
+| POST | `/api/deals/cancel` | 參與者 | 變更：接受自由文字 `note` |
 | DELETE | `/api/conversations/:id` | 參與者 | 新增：刪除助手房或已取消交易房 |
 | GET | `/api/market/codes` | 公開 | 新增：官方代碼字典與候選查詢 |
 | GET | `/api/market/quote` | 公開 | 新增：名稱→代碼→價格整合查詢 |
@@ -149,10 +154,10 @@
 
 ### `POST /api/products/create`
 
-> 2026-10-27：處理方式自由文字、每台斤／整批售價與自動計算已實作（#26、#27）。2026-10-28：移除商品行情快照。
+> 交易房改版：整批售價必填、每台斤選填、重量選填，不再自動計算整批。2026-10-28：移除商品行情快照。
 
 ```json
-{ "fish_species": "石斑", "species_code": 2201, "weight_kg": 4.5, "quantity": 1,
+{ "fish_species": "石斑", "species_code": 2201, "quantity": 1,
   "condition": "放血冰鎮", "photo_url": "/uploads/ab12.jpg",
   "price": 1000, "price_per_taijin": 200,
   "region": "新北市", "location": "新北市瑞芳區鼻頭路 1 號",
@@ -163,30 +168,33 @@
 
 - `seller_id` 取自 Token，client 傳的值一律忽略。
 - `species_code` 是選填的正整數；空白或非數字存 `null`，未知代碼也不阻擋建立。伺服器不回填、也不改寫使用者輸入的 `fish_species`。
-- `title` 由後端產生並隨商品回應回傳：`{魚種}（{總重}kg / {尾數}尾 / {處理}）`；前端直接顯示，標題缺漏時使用通用文案，不自行拼接。
+- `title` 由後端產生並隨商品回應回傳：`{魚種}（{尾數}尾 / {處理}）`；前端直接顯示，標題缺漏時使用通用文案，不自行拼接。
 - `condition` 是自由文字：trim、非空、最多 20 字。
+- `weight_kg` 是選填／legacy：有值且 > 0 時四捨五入到一位小數，否則存 `null`。不再因缺少重量而拒絕建立。
 - 售價：
-  - 只填 `price` → 原樣保留（可含小數）、`price_per_taijin = null`、`price_auto = false`。
-  - 只填 `price_per_taijin` → `price = round(price_per_taijin × 原始輸入 weight_kg ÷ 0.6)`、`price_auto = true`；入庫的 `weight_kg` 仍四捨五入到一位小數，但自動價用未進位的原始總重。
-  - 兩者都填 → 都保留、`price_auto = false`，**不檢查一致性**（整批可為折扣）。
-  - 至少要有一個 > 0。
+  - `price` 必填且 > 0，原樣保留（可含小數）。
+  - `price_per_taijin` 選填；有值時必須 > 0，否則存 `null`。
+  - 只填 `price_per_taijin`、沒有 `price` → 400 `MISSING_PRICE`（請提供整批售價）。
+  - `price_auto` 一律 `false`；不再自動計算整批。
 - 發布商品不查行情，也不寫入任何行情欄位；商品仍照常建立。
 - `sold_quantity = 0`；**不寫入 `status`**。
 - `region` 預設個人檔案的縣市；`location` 預設三段地址串接。
 - 回 201，`data` 是含衍生欄位的商品。
 
-錯誤：400 `MISSING_SPECIES`、`INVALID_WEIGHT`、`INVALID_QUANTITY`、`MISSING_CONDITION`、`FIELD_TOO_LONG`、`MISSING_PRICE`、`INVALID_PRICE`、`MISSING_PHOTO`。
+錯誤：400 `MISSING_SPECIES`、`INVALID_QUANTITY`、`MISSING_CONDITION`、`INVALID_CONDITION`、`FIELD_TOO_LONG`、`MISSING_PRICE`、`INVALID_PRICE`、`MISSING_PHOTO`。
 
-驗證規則：重量 > 0；尾數 ≥ 1（無條件捨去小數）；處理方式非空、≤ 20 字且不能只有數字或單位；整批與每台斤至少一個 > 0；照片必填。
+驗證規則：尾數 ≥ 1（無條件捨去小數）；處理方式非空、≤ 20 字且不能只有數字或單位；整批售價必填且 > 0；每台斤有值時 > 0；照片必填。
 
 ### 商品衍生欄位
 
 ```jsonc
 { "...商品欄位": "...",
+  "title": "石斑（1尾 / 放血冰鎮）",
   "price": 1000, "price_per_taijin": 200, "price_auto": false,
+  "weight_kg": null,
   "unit_price": 1000,
   "reserved_quantity": 0, "available": 1,
-  "avg_weight_kg": 4.5, "status": "ACTIVE" }
+  "avg_weight_kg": null, "status": "ACTIVE" }
 ```
 
 ### `GET /api/market/codes`
@@ -224,6 +232,8 @@
 ```
 
 `order` 只在交易房有進行中訂單時才有值：`{ id, status, cancel_reason, item_count, total_quantity, final_price, review_status, updated_at }`；`cancel_reason` 讓前端區分逾時與主動取消。`last_order` 是最新一筆訂單的摘要，不限狀態；`orders` 是這間房所有訂單摘要（新到舊），供評價卡等歷史卡片更新。沒有訂單的助手房三者皆為 `null` 或空陣列。`updated_at` 在每次加購、改量、刪除、清空、提案、回應、取消、逾時或評價時更新，前端用來判斷何時重抓明細；`last_order` 的 `id`、`status` 或 `updated_at` 改變時，前端會重取 `GET /api/deals/:id`。
+
+交易房的 `peer` 使用 `publicUser`，因此含 `id`、`display_name`、`username`（完整電話）、`rating_score`、`review_count` 等公開欄位；前端用 `rating_score`／`review_count` 顯示標題列星星，用 `username` 顯示 `tel:` 電話。助手房的 `peer` 固定是 `{ id: "ai", display_name: "小幫手", username: "" }`。
 
 未讀數不含自己送出的訊息。助手房的系統訊息不算未讀；交易房的系統訊息（開房、加購通知）算未讀。`deletable` 表示這間房目前是否可刪（助手房恆為 true；交易房需全部訂單皆已取消）。
 
@@ -334,12 +344,14 @@
 | POST | `/api/deals/initiate-channel` | 登入 | ✅ 由商品建立／沿用交易房與草稿，加入項目 |
 | GET | `/api/deals/:id` | 參與者 | ✅ 訂單明細，項目附目前可售尾數 |
 | POST | `/api/deals/items` | 登入（買家） | ✅ 加購同一釣客的其他商品 |
+| POST | `/api/deals/items/batch` | 登入（買家） | ✅ 批次加購 |
 | PATCH | `/api/deals/items/:itemId` | 登入（買家） | ✅ 改尾數 |
-| DELETE | `/api/deals/items/:itemId` | 登入（買家） | ✅ 移除項目 |
-| DELETE | `/api/deals/items` | 登入（買家） | ✅ 清空項目 |
+| DELETE | `/api/deals/items/:itemId` | 登入（買家） | ✅ 移除項目（舊介面） |
+| DELETE | `/api/deals/items` | 登入（買家） | ✅ 清空項目（舊介面） |
 | POST | `/api/deals/propose` | 參與者 | ✅ 送協議，逐項檢查可售 |
-| POST | `/api/deals/respond` | 參與者（非發起方） | ✅ 同意／退回 |
-| POST | `/api/deals/cancel` | 參與者 | ✅ 取消並釋放 |
+| POST | `/api/deals/respond` | 參與者（非發起方） | ✅ 確認；退回為 legacy |
+| POST | `/api/deals/cancel` | 參與者 | ✅ 取消並釋放（自由文字 note） |
+| POST | `/api/deals/reinitiate` | 登入（買家） | ✅ 取消後重新發起 |
 | GET | `/api/deals` | 登入 | ✅ 交易紀錄列表 |
 
 `POST /api/deals/initiate-channel`
@@ -370,6 +382,17 @@
 
 只有買家、只有 `DRAFT` 可以改。商品必須屬於同一釣客，否則 400 `WRONG_SELLER`。回 201 `{ deal }`，並插入系統訊息。錯誤：409 `INVALID_DEAL_STATUS`、409 `INSUFFICIENT_QUANTITY`（附 `product_id`、`available`、`in_draft`）。
 
+`POST /api/deals/items/batch`
+
+```json
+{ "deal_id": "deal_...", "items": [
+  { "product_id": "prd_a", "quantity": 2 },
+  { "product_id": "prd_b", "quantity": 1 }
+] }
+```
+
+一次加入／累加多個項目，只留一則系統訊息。驗證同賣家、每項可售量與草稿狀態；同一商品重複出現時先合併數量再檢查。錯誤：400 `MISSING_ITEMS`（空陣列）、400 `WRONG_SELLER`、404 `PRODUCT_NOT_FOUND`、409 `INVALID_DEAL_STATUS`、409 `INSUFFICIENT_QUANTITY`。
+
 `PATCH /api/deals/items/:itemId`
 
 ```json
@@ -396,7 +419,7 @@
 
 錯誤：400 `EMPTY_DEAL`（沒有項目）、400 `INVALID_PRICE`、400 `MISSING_TERMS`、400 `FIELD_TOO_LONG`、400 `INVALID_MEETUP_TIME`、403 `FORBIDDEN`（不是退回方）、409 `INVALID_DEAL_STATUS`、409 `INSUFFICIENT_QUANTITY`、409 `DEAL_IN_PROGRESS`。
 
-協議卡內容：`{ type: "deal", deal_id, status: "pending", initiator_id, final_price, meetup_location, meetup_time, items_total, items: [{ title, quantity, unit_price }] }`。
+協議卡內容：`{ type: "deal", deal_id, status: "pending", initiator_id, final_price, meetup_location, meetup_time, items_total, items: [{ fish_species, title, quantity, unit_price, price_per_taijin }] }`。
 
 `POST /api/deals/respond`
 
@@ -404,22 +427,30 @@
 { "deal_id": "deal_...", "action": "AGREE" }
 ```
 
-- `AGREE`：非發起方 → `CONFIRMED`、各項目 `sold_quantity += quantity`、寫 `confirmed_at`、雙方 `completed_deals + 1`、最新協議卡改 `confirmed`、插入系統訊息。評價卡尚未實作。
-- `REJECT`：非發起方 → `NEGOTIATING`、`hold_expires_at = now + 15 分`、`rejected_by` 記下退回方、最新協議卡改 `rejected`、插入系統訊息。之後只有退回方能重送。
+- `AGREE`：非發起方 → `CONFIRMED`、各項目 `sold_quantity += quantity`、寫 `confirmed_at`、雙方 `completed_deals + 1`、最新協議卡改 `confirmed`、插入系統訊息與評價卡。
+- `REJECT`：legacy；非發起方 → `NEGOTIATING`、`hold_expires_at = now + 15 分`、`rejected_by` 記下退回方、最新協議卡改 `rejected`。新介面不再提供此動作。
 
 發起方自己呼叫回 403 `FORBIDDEN`；不是 `PENDING_REVIEW` 回 409 `INVALID_DEAL_STATUS`；`action` 不是 `AGREE`／`REJECT` 回 400 `INVALID_ACTION`。
 
 `POST /api/deals/cancel`
 
 ```json
-{ "deal_id": "deal_...", "reason": "SELLER_OUT_OF_STOCK" }
+{ "deal_id": "deal_...", "note": "臨時有事，改天再約" }
 ```
 
-任一方皆可，`DRAFT`／`PENDING_REVIEW`／`NEGOTIATING` 都能取消。`reason` 只接受 `SELLER_OUT_OF_STOCK`、`BUYER_CHANGED_MIND`、`TERMS_MISMATCH`、`OTHER`；缺少或無效回 400 `INVALID_CANCEL_REASON`。取消後保留尾數立即釋放、最新協議卡改 `cancelled`、交易房留下含原因的系統訊息。已成交或已取消回 409 `INVALID_DEAL_STATUS`。
+任一方皆可，`DRAFT`／`PENDING_REVIEW`／`NEGOTIATING` 都能取消。`note` 是自由文字，最多 200 字；前端必填，API 接受空白（存 `null`），超過 200 字回 400 `FIELD_TOO_LONG`。後端固定寫入 `cancel_reason: "OTHER"` 與 `cancel_note: note`。取消後保留尾數立即釋放、最新協議卡改 `cancelled`、交易房留下系統訊息，並新增一張 `{ type: "deal_cancelled", deal_id, note }` 卡片訊息。已成交或已取消回 409 `INVALID_DEAL_STATUS`。
+
+`POST /api/deals/reinitiate`
+
+```json
+{ "deal_id": "deal_..." }
+```
+
+只有買家、只有 `CANCELLED` 且 `cancel_reason = OTHER` 的訂單可以重新發起。後端在同一間交易房建立新的 `DRAFT`，複製原項目快照與數量；每項數量上限為目前可售，可售 0 的項目略過並在系統訊息提示。回 200 `{ deal, skipped }`，`skipped` 是 `[{ product_id, title }]`。錯誤：403 `FORBIDDEN`（不是買家）、404 `DEAL_NOT_FOUND`、409 `INVALID_DEAL_STATUS`（不是已取消，或不是使用者自行取消的 `OTHER`）、409 `DRAFT_EXISTS`（已有草稿）、409 `NO_AVAILABLE_ITEMS`（全部商品可售 0）。
 
 ### 8.1.1 逾時
 
-`GET /api/conversations` 與 `GET /api/deals/:id` 會先掃描進行中訂單：`PENDING_REVIEW` 超過 `lock_expires_at`、`NEGOTIATING` 超過 `hold_expires_at` 就轉 `CANCELLED`（原因 `LOCK_EXPIRED`／`HOLD_EXPIRED`），最新協議卡改 `expired`，並插入系統訊息。寫入端點（`propose`、`respond`、`cancel`）也會先掃描，過期的協議不能靠舊畫面續命。重複讀取不會重複取消或重複留言。
+`GET /api/conversations` 與 `GET /api/deals/:id` 會先掃描進行中訂單：`PENDING_REVIEW` 超過 `lock_expires_at`、legacy `NEGOTIATING` 超過 `hold_expires_at` 就轉 `CANCELLED`（原因 `LOCK_EXPIRED`／`HOLD_EXPIRED`），最新協議卡改 `expired`，並插入系統訊息。寫入端點（`propose`、`respond`、`cancel`）也會先掃描，過期的協議不能靠舊畫面續命。重複讀取不會重複取消或重複留言。逾時取消不提供重新發起。
 
 ### 8.2 評價
 
@@ -433,7 +464,7 @@
 ```
 
 - `rating` 必須是 1–5 的整數。
-- `tags` 最多 3 個，只接受「準時守約」「魚貨新鮮」「溝通良好」「包裝完善」「臨時放鳥」。
+- `tags` 最多 3 個，只接受「魚貨新鮮」「準時守約」「溝通良好」「臨時放鳥」。
 - `comment` 最多 100 字。
 - `reviewer_id`、`target_user_id`、`reviewer_role` 由訂單與 Token 推導，不接受 client 指定；買家評釣客、釣客評買家。
 - 只有 `CONFIRMED` 的訂單能評價；重複評價回 409 `ALREADY_REVIEWED`。
@@ -488,7 +519,7 @@
 - `found:false` 只回 `found`、`reason`、`species_code`、`official_name`、`is_aquaculture`，不得帶 `price_per_kg`／`price_per_taijin` 或任何價格數字。
 - `scope = "national"` 時保留請求的 `region`，前端顯示「全國平均」。
 - `include=history` 只回該次查詢的 `scope`（縣市或全國）每日平均價；`days` 是最近 N 個交易日（7 或 30），回傳最多 N 筆有交易的日期；抓取時需涵蓋足夠日曆日。未帶 `include=history` 時省略 `history` 欄位。
-- `is_aquaculture: true` 時，畫面與助手回覆標「養殖價格」。
+- `is_aquaculture: true` 時，助手文字回覆標「養殖價格」；行情卡不顯示此標記。
 - `summary` 端點已移除；走勢改用 `include=history`。
 
 ## 9. 錯誤碼總表
@@ -498,7 +529,7 @@
 | `UNAUTHORIZED` | 401 | 所有需登入端點 |
 | `FORBIDDEN` | 403 | 對話 |
 | `NOT_FOUND` | 404 | 未定義路徑 |
-| `PRODUCT_NOT_FOUND` | 404 | 商品詳情、交易 |
+| `PRODUCT_NOT_FOUND` | 404 | 商品查詢、交易 |
 | `DEAL_NOT_FOUND` | 404 | 訂單 |
 | `ITEM_NOT_FOUND` | 404 | 訂單項目 |
 | `CONVERSATION_NOT_FOUND` | 404 | 對話 |
@@ -536,7 +567,9 @@
 | `INVALID_MEETUP_TIME` | 400 | 提案（時間無效） |
 | `DEAL_IN_PROGRESS` | 409 | 提案（房間已有進行中訂單） |
 | `INVALID_ACTION` | 400 | 回應協議（不是 AGREE／REJECT） |
-| `INVALID_CANCEL_REASON` | 400 | 取消（缺原因或原因無效） |
+| `MISSING_ITEMS` | 400 | 批次加購（沒有項目） |
+| `DRAFT_EXISTS` | 409 | 重新發起（已有草稿） |
+| `NO_AVAILABLE_ITEMS` | 409 | 重新發起（全部商品可售 0） |
 | `INVALID_RATING` | 400 | 評價（星等不是 1–5） |
 | `INVALID_TAGS` | 400 | 評價（標籤格式或名稱無效） |
 | `TOO_MANY_TAGS` | 400 | 評價（超過 3 個標籤） |
@@ -563,7 +596,7 @@
 | `GET /api/products` 會順便釋放逾時訂單 | 不要假設它是純讀取 |
 | `/api/fish/data` 已移除 | 瀏覽頁一律用 `/api/products` |
 | `sender_type: "ai"` 不是身分證明 | 只有房間參與者能寫訊息；跨房寫入一律 403 |
-| 交易房的 `peer.username` 是完整電話 | 電話橫幅直接顯示，加 `tel:` 連結 |
+| 交易房的 `peer.username` 是完整電話 | 交易房標題列直接顯示，加 `tel:` 連結；`peer` 另含 `rating_score`、`review_count` 供星星使用 |
 | 交易房訊息只走真人訊息 | 前端不得再呼叫規則引擎；後端也會擋 `sender_type: "ai"` |
 | `item_id` 只在同一筆訂單內唯一 | 改尾數／刪項目要同時帶 `deal_id` |
 | 草稿不保留庫存 | `available` 仍包含草稿中的尾數；同一草稿的累計不得超過 `available` |
@@ -572,14 +605,19 @@
 | 協議卡只有最新一張會跟著狀態更新 | 舊卡保留 `rejected` 等歷史狀態 |
 | 舊文件寫的 `createFish()` / `deleteFish()` 已不存在 | 上架只用 `POST /api/products/create` |
 | `price` 是上架整批售價，`price_per_taijin` 是每台斤售價，`unit_price` 是每尾均價 | 三個都要標清楚；不要把整批價乘以尾數 |
-| `price_auto: true` 代表整批價由每台斤自動計算 | 畫面標「自動計算」；只填整批時 `price_per_taijin` 為 `null` |
+| `price_auto: true` 只會出現在舊資料 | 新商品一律 `false`；畫面不顯示「自動計算」 |
 | 行情查詢回的是平均價數字，不是 low／avg／high 物件 | `data.price_per_kg`、`data.price_per_taijin` 直接是 number |
 | 行情卡走勢要帶 `include=history`；沒有 `summary` 端點 | 用 `days=7` 或 `days=30`（最近 7／30 個交易日） |
-| `is_aquaculture: true` | 行情卡、助手回覆都要標「養殖價格」 |
+| `is_aquaculture: true` | 助手文字回覆標「養殖價格」；行情卡不顯示此標記 |
 | 助手房可以有多間 | 每間有自己的 `context` 與草稿；不要假設只有一間 |
 | 交易房只有 `CANCELLED` 能刪 | 房內必須沒有 `CONFIRMED` 歷史；刪除會一併移除該房所有訂單與項目 |
-| 商品不保存行情 | 商品卡與詳情頁不顯示行情；上架行情卡才是行情顯示處 |
+| 商品不保存行情 | 商品卡與推薦卡不顯示行情；上架行情卡才是行情顯示處 |
 | 取消上架會刪除目前 AI 對話 | 前端要先確認，再呼叫 `DELETE /api/conversations/:id`；刪除成功後立即建立並開啟新的助手房 |
 | `seller_terms_accepted_at` 有值就永久跳過法規告知 | 不要每次賣魚都重問或重送 consent |
 | 法規告知卡按「取消」不記錄同意 | 取消後回 idle；下次賣魚再顯示 |
 | 同意只由 `POST /api/users/seller-consent` 寫入 | `chat/message` 的 `legal_consent` 卡只是 UI，不是同意紀錄 |
+| `weight_kg` 是選填／legacy | 不要因缺少重量而拒絕上架；商品卡、推薦卡、交易房都不顯示重量 |
+| 取消原因改成自由文字 `note` | 不要再傳 `reason`；後端固定寫 `cancel_reason: "OTHER"` 與 `cancel_note` |
+| 批次加購只留一則系統訊息 | 用 `POST /api/deals/items/batch`，不要逐項呼叫 `POST /api/deals/items` |
+| 重新發起只限 `CANCELLED` 且 `cancel_reason = OTHER` | 逾時取消不能重新發起；已有草稿回 409 `DRAFT_EXISTS` |
+| 商品標題格式是 `{魚種}（{尾數}尾 / {處理}）` | 商品卡、推薦卡、交易房、協議卡只顯示 `fish_species`，不要解析長標題 |
