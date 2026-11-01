@@ -1,7 +1,7 @@
 /* 協議表單、條件摘要與狀態說明。 */
 
 import { state } from "../store.js";
-import { escapeHtml, money, dateTimeOf } from "./html.js";
+import { escapeHtml, money, dateTimeOf, definitionRow } from "./html.js";
 import { canResend, isNegotiating } from "../deal-state.js";
 import { dealStatusNote } from "../deal-labels.js";
 
@@ -28,9 +28,9 @@ export function proposalForm() {
 export function termsBlock(deal) {
   const terms = deal.deal_terms || {};
   return '<dl class="fm-order__terms">' +
-    "<div><dt>整單金額</dt><dd>" + money(terms.final_price) + "</dd></div>" +
-    "<div><dt>面交地點</dt><dd>" + escapeHtml(terms.meetup_location) + "</dd></div>" +
-    "<div><dt>面交時間</dt><dd>" + escapeHtml(dateTimeOf(terms.meetup_time)) + "</dd></div>" +
+    definitionRow("整單金額", money(terms.final_price)) +
+    definitionRow("面交地點", terms.meetup_location) +
+    definitionRow("面交時間", dateTimeOf(terms.meetup_time)) +
     "</dl>";
 }
 

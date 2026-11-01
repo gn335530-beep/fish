@@ -1,28 +1,7 @@
 /* 面板外殼：掛載、開關、視圖切換、未讀與尺寸。 */
 
 import { createBodyRenderer } from "./body-render.js";
-
-const SHELL = "" +
-  '<section class="fm-panel" id="fm-panel" hidden aria-label="一支釣小幫手">' +
-  '  <header class="fm-panel__head">' +
-  '    <span class="fm-panel__avatar" aria-hidden="true">魚</span>' +
-  '    <div class="fm-panel__title"><b>一支釣小幫手 <em class="fm-build">v7</em></b><span id="fm-status">找魚・上架・交易</span></div>' +
-  '    <button type="button" class="fm-icon" data-action="inbox" aria-label="收件匣" title="收件匣">☰</button>' +
-  '    <button type="button" class="fm-icon" data-action="minimize" aria-label="縮小" title="縮小">─</button>' +
-  '    <button type="button" class="fm-icon" data-action="close" aria-label="關閉" title="關閉">✕</button>' +
-  '  </header>' +
-  '  <div class="fm-panel__body" id="fm-body" aria-live="polite"></div>' +
-  '  <form class="fm-panel__foot" id="fm-form">' +
-  '    <button type="button" class="fm-attach" data-action="photo" aria-label="上傳照片" title="上傳照片">📷</button>' +
-  '    <input type="text" id="fm-input" placeholder="輸入訊息…" autocomplete="off" maxlength="500" aria-label="訊息">' +
-  '    <button type="submit" class="fm-send">送出</button>' +
-  '  </form>' +
-  '</section>' +
-  '<input type="file" id="fm-file" accept="image/*" hidden>' +
-  '<button type="button" class="fm-toggle" id="fm-toggle" aria-expanded="false" aria-controls="fm-panel" aria-label="開啟小幫手">' +
-  '  <span class="fm-toggle__mark" aria-hidden="true">✦</span>' +
-  '  <span class="fm-toggle__badge" id="fm-badge" hidden>0</span>' +
-  '</button>';
+import { shellHtml } from "./panel-shell.js";
 
 let refs = null;
 let handlers = {};
@@ -94,7 +73,7 @@ export function mountPanel(options) {
   const wrapper = document.createElement("div");
   wrapper.id = "fm-bot";
   wrapper.className = "fm-bot";
-  wrapper.innerHTML = SHELL;
+  wrapper.innerHTML = shellHtml();
   document.body.appendChild(wrapper);
 
   refs = {
