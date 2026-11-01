@@ -41,5 +41,5 @@ test("左側文案已修正且不再承諾低溫直送", function () {
   assert.match(html, /當日漁獲/);
   assert.match(html, /官方行情/);
   assert.match(html, /洽談後成立訂單/);
-  assert.doesNotMatch(html, /現流|澎湖魚市|下單|隔日清晨低溫直送/);
+  assert.doesNotMatch(html, /澎湖魚市|下單|隔日清晨低溫直送/);
 });

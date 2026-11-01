@@ -41,8 +41,8 @@ export function renderMarketCard(card, messageId) {
   const history = historyFor(card, days);
   const stats = statsFor(card, days);
   const weightTaijin = card.weight_taijin == null ? null : priceText(card.weight_taijin) + " 台斤";
-  const official = [card.official_name, card.species_code ? "代碼 " + card.species_code : ""]
-    .filter(Boolean).join(" · ");
+  const official = card.official_name && card.official_name !== card.species_name
+    ? card.official_name : "";
   return '<div class="fm-card fm-card--market">' +
     '<div class="fm-market__head"><b>' + escapeHtml(card.species_name || "行情") + '行情</b>' +
     '<span class="fm-market__ref">行情價參考</span></div>' +

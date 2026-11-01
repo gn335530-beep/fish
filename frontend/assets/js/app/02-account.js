@@ -43,7 +43,7 @@ function refreshNavAvatar(){
   if(u && u.nick){
     slot.outerHTML = `<button type="button" class="nav-user nav-user--in" id="nav-user-slot" aria-label="${u.nick} 的選單"><span class="avatar nav-user__av ${a ? "avatar--img" : ""}">${a ? `<img src="${a}" alt="頭像">` : `<span>${u.nick.slice(0,1)}</span>`}</span><span class="nav-user__name">${u.nick}</span></button>`;
   } else {
-    slot.outerHTML = `<a href="login.html" class="nav-user nav-user--out" id="nav-user-slot" aria-label="登入或註冊"><svg class="nav-user__ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M4.6 20c1.2-3.9 4-5.9 7.4-5.9s6.2 2 7.4 5.9"/></svg><span class="nav-user__name">登入／註冊</span></a>`;
+    slot.outerHTML = `<a href="login.html" class="nav-user nav-user--out" id="nav-user-slot" aria-label="登入／註冊"><svg class="nav-user__ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M4.6 20c1.2-3.9 4-5.9 7.4-5.9s6.2 2 7.4 5.9"/></svg><span class="nav-user__name">登入／註冊</span></a>`;
   }
   const el = document.getElementById("nav-user-slot");
   if(el && el.tagName === "BUTTON") el.addEventListener("click", ()=> toggleNavMenu());

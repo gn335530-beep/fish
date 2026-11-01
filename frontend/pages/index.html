@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="../assets/images/favicon.svg?v=v7">
 <title>一支釣 — 個人釣客的當日漁獲，直接賣給你</title>
-<meta name="description" content="一支釣：個人釣客上網販售當日現流漁獲，買家為一般個人消費者。今天釣到什麼就賣什麼，隔日清晨低溫直送。">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&family=Noto+Serif+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
+<meta name="description" content="一支釣：個人釣客上網販售當日新鮮漁獲，買家為一般個人消費者。今天釣到什麼就賣什麼，隔日清晨低溫直送。">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400..700&family=Noto+Serif+TC:wght@600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/css/base.css?v=v7">
 <link rel="stylesheet" href="../assets/css/layout.css?v=v7">
 <link rel="stylesheet" href="../assets/css/components.css?v=v7">
@@ -24,10 +24,12 @@
 <link rel="stylesheet" href="../assets/css/profile.css?v=v7">
 <link rel="stylesheet" href="../assets/css/grid.css?v=v7">
 <link rel="stylesheet" href="../assets/css/responsive.css?v=v7">
+<link rel="stylesheet" href="../assets/css/reviews.css?v=v8">
+<link rel="stylesheet" href="../assets/css/home-assistant.css?v=v8">
 </head>
 <body>
 <!-- 共用頁殼：導覽列 -->
-<div id="site-header" data-page="index"></div>
+<div id="site-header" data-page="index" data-search="off"></div>
 <script src="../assets/js/app/00-shell.js?v=v7"></script>
 <!-- ============ Hero ============ -->
 <section class="hero">
@@ -37,7 +39,7 @@
     <div class="hero__inner">
       <div class="hero__ket"><i></i>個人釣客直送</div>
       <h1>今天釣到什麼<br>就賣什麼</h1>
-      <p class="lead">一支釣是一個讓個人釣客上網販售當日漁獲的平台。釣客清晨出海、當日回港，把親手釣到的魚直接上架；買家則能買到當日現流、數量有限、產地與捕獲時間都透明的漁獲。</p>
+      <p class="lead">一支釣是一個讓個人釣客上網販售當日漁獲的平台。釣客清晨出海、當日回港，把親手釣到的魚直接上架；買家則能買到當日新鮮、數量有限、產地與捕獲時間都透明的漁獲。</p>
       <div class="hero__cta">
         <a href="products.html" class="btn btn--primary">我要買魚</a>
         <a href="#" class="btn btn--ghost" data-open-assistant>我要賣魚</a>
@@ -47,43 +49,6 @@
         <div><b>產地透明</b>標示釣點、海域與捕獲時間</div>
         <div><b>新鮮直達</b>與釣客約定時間地點保證新鮮</div>
       </div>
-    </div>
-  </div>
-</section>
-<!-- ============ 雙身分入口 ============ -->
-<section class="section">
-  <div class="wrap">
-    <div class="section-head center">
-      <span class="eyebrow">Choose Your Role</span>
-      <h2>你是釣客，還是買家？</h2>
-    </div>
-    <div class="entry">
-      <a href="#" class="entry__card entry__card--seller" data-open-assistant>
-        <div>
-          <div class="entry__no">01 / FOR ANGLERS</div>
-          <h3>我是釣客<br>我要賣魚</h3>
-          <p>把今天釣到的魚交給助手，說清楚魚種、重量與價格，上傳照片就能上架。</p>
-          <div class="entry__list">
-            <span>在助手房對話上架</span>
-            <span>自行決定售價</span>
-            <span>自訂處理方式與照片</span>
-          </div>
-        </div>
-        <span class="entry__go">前往上架 <i>→</i></span>
-      </a>
-      <a href="products.html" class="entry__card">
-        <div>
-          <div class="entry__no">02 / FOR BUYERS</div>
-          <h3>我要買魚<br>找新鮮現釣</h3>
-          <p>瀏覽各地釣客今天上架的新鮮漁獲。依照魚類與地區篩選，查看漁獲與產地，即時與釣客聊聊確認魚況。</p>
-          <div class="entry__list">
-            <span>依魚類與地區篩選</span>
-            <span>查看數量、產地與捕獲時間</span>
-            <span>與釣客聊聊、確認後下單</span>
-          </div>
-        </div>
-        <span class="entry__go">開始選購 <i>→</i></span>
-      </a>
     </div>
   </div>
 </section>
@@ -99,6 +64,29 @@
       <a href="products.html" class="btn btn--quiet">查看全部今日漁獲</a>
     </div>
     <div class="grid grid--4" id="today-catch"><p class="state-msg">載入漁獲中…</p></div>
+  </div>
+</section>
+<!-- ============ 助手 ============ -->
+<section class="section ha" id="assistant">
+  <div class="wrap ha__grid">
+    <div class="ha__intro">
+      <h2>助手幫你找魚，<br>也幫你上架。</h2>
+      <p>不用填表，也不用自己比價。問一句，助手從今天上架裡找，或把你要賣的魚整理成商品。</p>
+      <div class="ha-tabs" role="tablist" aria-label="助手功能">
+        <button type="button" role="tab" id="ha-tab-find" aria-controls="ha-panel" aria-selected="true" data-mode="find"><b>找魚</b><span>說縣市、魚種或預算</span></button>
+        <button type="button" role="tab" id="ha-tab-list" aria-controls="ha-panel" aria-selected="false" data-mode="list"><b>上架</b><span>說魚種、重量、尾數與售價</span></button>
+        <button type="button" role="tab" id="ha-tab-market" aria-controls="ha-panel" aria-selected="false" data-mode="market"><b>問行情</b><span>官方平均價、日期與來源</span></button>
+      </div>
+    </div>
+    <figure class="ha-chat" data-ui id="ha-panel" role="tabpanel" aria-labelledby="ha-tab-find">
+      <div class="ha-chat__head">
+        <span class="ha-chat__avatar" aria-hidden="true">魚</span>
+        <div class="ha-chat__title"><b>一支釣小幫手</b><span id="ha-status">找魚</span></div>
+        <span class="ha-chat__tag">範例</span>
+      </div>
+      <div class="ha-chat__body" id="ha-body"></div>
+      <button type="button" class="ha-chat__cta" id="ha-cta">用這個問題開始 <span aria-hidden="true">→</span></button>
+    </figure>
   </div>
 </section>
 <!-- ============ 平台怎麼運作 ============ -->
@@ -118,63 +106,59 @@
       <div class="tl__item">
         <span class="tl__dot">STEP 02</span>
         <div class="tl__time">回港上架</div>
-        <h4>在助手房對話上架</h4>
+        <h3>在助手房對話上架</h3>
         <p>說清楚魚種、重量與售價</p>
       </div>
       <div class="tl__item">
         <span class="tl__dot">STEP 03</span>
         <div class="tl__time">買家選購</div>
-        <h4>尋找商品</h4>
+        <h3>尋找商品</h3>
         <p>與釣客確認魚況後下單</p>
       </div>
       <div class="tl__item">
         <span class="tl__dot">STEP 04</span>
         <div class="tl__time">與釣客聊聊</div>
-        <h4>確認面交位置</h4>
+        <h3>確認面交位置</h3>
         <p>出發前往面交地點</p>
       </div>
       <div class="tl__item">
         <span class="tl__dot">STEP 05</span>
         <div class="tl__time">交易完成</div>
-        <h4>留下你的寶貴評論</h4>
+        <h3>留下你的寶貴評論</h3>
         <p>期待下次回購</p>
       </div>
     </div>
   </div>
 </section>
-<!-- ============ 買家評價 ============ -->
+<!-- ============ 評價 ============ -->
 <section class="section" style="background:var(--surface)">
   <div class="wrap">
-    <div class="section-head center">
-      <span class="eyebrow">From Our Buyers</span>
-      <h2>買家評價</h2>
+    <div class="section-head section-head--split">
+      <div>
+        <span class="eyebrow">After The Deal</span>
+        <h2>成交後，雙方留下評價</h2>
+        <p class="lead" style="margin-top:14px">一筆訂單，買家與釣客各評一次。星等、標籤與評語都會公開，讓下一個人更好決定。</p>
+      </div>
+      <a href="products.html" class="btn btn--quiet">看今天的漁獲</a>
     </div>
-    <div class="grid grid--3" style="gap:56px;background:none">
-      <div>
-        <p style="font-family:var(--font-display);font-size:1.02rem;line-height:2;color:var(--ink)">「現釣跟冷凍的差別，一吃就知道。收到時魚眼清澈、鰓超紅，一看就是當天釣的。」</p>
-        <div style="margin-top:22px;font-size:.76rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase"><b style="color:var(--ink);letter-spacing:.04em">王小姐</b>　新竹・家庭買家</div>
-      </div>
-      <div>
-        <p style="font-family:var(--font-display);font-size:1.02rem;line-height:2;color:var(--ink)">「可以直接跟釣客聊聊，問清楚規格跟處理方式，買起來很安心。第一次買一支釣的魚就回不去了。」</p>
-        <div style="margin-top:22px;font-size:.76rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase"><b style="color:var(--ink);letter-spacing:.04em">陳先生</b>　台北・個人買家</div>
-      </div>
-      <div>
-        <p style="font-family:var(--font-display);font-size:1.02rem;line-height:2;color:var(--ink)">「依地區篩選很方便，不會買到太遠送不到的。週末訂兩尾全家吃剛剛好。」</p>
-        <div style="margin-top:22px;font-size:.76rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase"><b style="color:var(--ink);letter-spacing:.04em">林小姐</b>　台中・家庭買家</div>
-      </div>
-    </div>
-  </div>
-</section>
-<!-- ============ CTA ============ -->
-<section class="section section--tight">
-  <div class="wrap">
-    <div style="border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:72px 0;text-align:center">
-      <h2>今天的漁貨不等人</h2>
-      <p class="lead" style="max-width:52ch;margin:18px auto 0">今日上架、售完為止。無論你是想賣魚的釣客，還是想買魚的買家，都從這裡開始。</p>
-      <div style="display:flex;gap:16px;justify-content:center;margin-top:36px;flex-wrap:wrap">
-        <a href="products.html" class="btn btn--primary">我要買魚</a>
-        <a href="#" class="btn btn--ghost" data-open-assistant>我要賣魚</a>
-      </div>
+    <div class="review-demo">
+      <article class="review-demo__card" data-ui>
+        <span class="review-demo__who">買家給釣客 · 範例</span>
+        <div class="review-demo__stars" aria-label="5 顆星">★★★★★</div>
+        <p>面交準時，魚貨新鮮，處理方式也寫得很清楚。</p>
+        <div class="review-demo__tags"><span>準時守約</span><span>魚貨新鮮</span><span>溝通良好</span></div>
+      </article>
+      <article class="review-demo__card" data-ui>
+        <span class="review-demo__who">釣客給買家 · 範例</span>
+        <div class="review-demo__stars" aria-label="5 顆星">★★★★★</div>
+        <p>準時到面交地點，溝通清楚，交易順利。</p>
+        <div class="review-demo__tags"><span>準時守約</span><span>溝通良好</span></div>
+      </article>
+      <ul class="review-demo__rules">
+        <li><b>一筆訂單，各評一次</b><span>成交後才能評，評價會公開。</span></li>
+        <li><b>星等、標籤、評語</b><span>最多選 3 個標籤，評語最多 100 字。</span></li>
+        <li><b>買家與釣客互相評</b><span>看得到對方怎麼說，也留下自己的紀錄。</span></li>
+      </ul>
     </div>
   </div>
 </section>
@@ -195,6 +179,7 @@
 <script src="../assets/js/app/09-deal-buy.js?v=v7"></script>
 <script src="../assets/js/shared/deal-status.js?v=v7"></script>
 <script src="../assets/js/app/10-trade-history.js?v=v7"></script>
+<script src="../assets/js/pages/home-assistant.js?v=v8"></script>
 <script src="../assets/js/pages/index.js?v=v7"></script>
 </body>
 </html>

@@ -9,7 +9,8 @@
   .auth__aside h1{font-size:2rem}
   .grid--4{grid-template-columns:repeat(2,1fr)}
   .grid--3{grid-template-columns:repeat(2,1fr)}
-  .layout{grid-template-columns:1fr;gap:44px}
+  .layout{grid-template-columns:minmax(0,1fr);gap:44px}
+  .layout > *{grid-column:1 / -1}
   .filters{position:static}
   .pd{grid-template-columns:1fr;gap:48px}
   .timeline{grid-template-columns:repeat(2,1fr)}

@@ -28,3 +28,4 @@ function toast(msg){
   clearTimeout(el._t);
   el._t = setTimeout(()=>{ el.style.opacity="0"; el.style.transform="translateX(-50%) translateY(14px)"; }, 2400);
 }
+window.toast = toast;

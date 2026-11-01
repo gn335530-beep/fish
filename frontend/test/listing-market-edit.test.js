@@ -20,6 +20,20 @@ test("修改重量後重新查行情，避免參考金額過期", async function
   assert.equal(card.estimated_total, 1333);
 });
 
+test("選欄位時一句話改重量，也會重新查行情", async function () {
+  const user = { city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" };
+  const started = await service.handleText(null, "我要賣花枝 3公斤 2尾 放血冰鎮", user);
+  const quoted = await service.handlePhoto(started.context, "/uploads/a.jpg", user);
+  const choosing = Object.assign({}, quoted.context, { choosing_edit: true });
+  resetCalls();
+  const edited = await service.handleText(choosing, "重量改成 4 公斤", user);
+  assert.equal(edited.context.draft.weight_kg, 4);
+  assert.equal(edited.context.choosing_edit, null);
+  assert.equal(edited.context.editing, null);
+  assert.equal(marketCalls().length, 1);
+  assert.equal(cardOf(edited).weight_kg, 4);
+});
+
 test("修改魚種會先清空 species_code，等行情查詢再補上新代碼", async function () {
   const context = {
     mode: "listing",

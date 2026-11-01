@@ -22,7 +22,7 @@ export function renderLegalCard(card) {
 export function renderCancelCard() {
   return '<div class="fm-card fm-card--legal">' +
     '<b>確定取消上架？</b>' +
-    '<p>此對話會一併刪除。</p>' +
+    '<p>此對話會刪除，並開啟新的 AI 對話。</p>' +
     '<div class="fm-card__acts">' +
     '<button type="button" class="fm-card__primary" data-action="cancel-listing-confirm" aria-label="確定取消上架">確定取消</button>' +
     '<button type="button" data-action="cancel-listing-dismiss" aria-label="繼續上架">繼續上架</button>' +

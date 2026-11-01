@@ -53,6 +53,47 @@ test("回答尾數時把待確認數字補進尾數", async function () {
   assert.equal(answered.context.draft.weight_kg, null);
 });
 
+test("同時缺重量與尾數時，多個無單位數字一律回問", function () {
+  const details = {};
+  const found = slots.extractSlots("1 2", "weight_kg", details);
+
+  assert.equal(found.weight_kg, undefined);
+  assert.equal(found.quantity, undefined);
+  assert.deepEqual(details.ambiguous, [1, 2]);
+
+  const asked = {};
+  const fromQuantity = slots.extractSlots("1 2", "quantity", asked);
+  assert.equal(fromQuantity.quantity, undefined);
+  assert.equal(fromQuantity.weight_kg, undefined);
+  assert.deepEqual(asked.ambiguous, [1, 2]);
+});
+
+test("回答追問的單一裸數字仍直接補該欄位", function () {
+  assert.equal(slots.extractSlots("1", "weight_kg").weight_kg, 1);
+  assert.equal(slots.extractSlots("1", "quantity").quantity, 1);
+});
+
+test("多個無單位數字不會默默補齊而直接上架", async function () {
+  const started = await service.handleText(null, "我要賣花枝", USER);
+  const asked = await service.handleText(started.context, "1 2", USER);
+
+  assert.equal(asked.context.pending_number, 1);
+  assert.equal(asked.context.draft.weight_kg, null);
+  assert.equal(asked.context.draft.quantity, null);
+  assert.match(textOf(asked), /是指重量（公斤），還是數量（尾）/);
+});
+
+test("處理方式只填數字會重問，不會寫進草稿", async function () {
+  assert.deepEqual(slots.extractSlots("1 2", "condition"), {});
+  assert.deepEqual(slots.extractSlots("3公斤 2尾 1", "condition"), {});
+
+  const started = await service.handleText(null, "我要賣花枝 3公斤 2尾", USER);
+  const asked = await service.handleText(started.context, "1 2", USER);
+
+  assert.equal(asked.context.draft.condition, "");
+  assert.match(textOf(asked), /處理方式/);
+});
+
 test("四位數以上的裸數字不補重量，也不當價格", async function () {
   const found = slots.extractSlots("2尾 9000", null);
   assert.equal(found.quantity, 2);

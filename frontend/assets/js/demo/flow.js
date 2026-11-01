@@ -5,13 +5,13 @@ import * as api from "./api.js";
 import { getProduct, createProduct } from "../api/products.js";
 import * as ai from "./ai/service.js";
 import { draftToProduct } from "./ai/draft.js";
-import { beginEdit as beginDraftEdit } from "./ai/editing.js";
 import { uploadImage } from "./upload.js";
 import { openRoom, ensureAssistantRoom } from "./rooms.js";
 
 let ui = {
   render: function () {},
   scrollEnd: function () {},
+  scrollToBatch: function () {},
   notify: function () {}
 };
 
@@ -26,6 +26,12 @@ export async function ensureRoom() {
 function showMessages() {
   ui.render();
   ui.scrollEnd();
+}
+
+function showBatch(created) {
+  ui.render();
+  if (created.length) ui.scrollToBatch(created[0].seq);
+  else ui.scrollEnd();
 }
 
 export async function runReplies(result) {
@@ -53,12 +59,12 @@ export async function runReplies(result) {
       clearError = error;
     }
     replaceMessages(created);
-    showMessages();
+    showBatch(created);
     if (clearError) ui.notify(clearError);
     return;
   }
   appendMessages(created);
-  showMessages();
+  showBatch(created);
 }
 
 export async function submitText(text) {
@@ -122,19 +128,6 @@ export async function publishDraft() {
 
     document.dispatchEvent(new CustomEvent("haisen:products-changed"));
     if (window.toast) window.toast("已上架：" + product.title);
-  } catch (error) {
-    ui.notify(error);
-  }
-}
-
-export async function beginEdit(slot) {
-  const result = beginDraftEdit(state.room && state.room.context, slot);
-  if (!result) {
-    ui.notify(new Error("目前沒有可修改的草稿"));
-    return;
-  }
-  try {
-    await runReplies(result);
   } catch (error) {
     ui.notify(error);
   }

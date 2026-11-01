@@ -28,12 +28,14 @@ const panel = mountPanel({
   onReason: handleCancelReason,
   onReviewField: handleReviewField,
   onReviewTag: handleReviewTag,
-  onReviewComment: handleReviewComment
+  onReviewComment: handleReviewComment,
+  onRender: render
 });
 
 initFlow({
   render: render,
   scrollEnd: function () { panel.scrollToEnd(true); },
+  scrollToBatch: function (seq) { panel.scrollToStart(seq); },
   notify: notify
 });
 
@@ -63,26 +65,49 @@ function bodyWith(html) {
   return '<div class="fm-notice">' + escapeHtml(state.notice) + '</div>' + html;
 }
 
+/* 切房、換視圖、成交或取消這類大事要立刻補畫，即使欄位還有焦點。 */
+function criticalSignature() {
+  const room = state.room || {};
+  const deal = state.deal || {};
+  const order = room.order || room.last_order || {};
+  return [
+    state.user ? state.user.id : "",
+    state.view,
+    room.id || "",
+    deal.id || "",
+    deal.deal_status || "",
+    order.id || "",
+    order.status || ""
+  ].join("|");
+}
+
+let lastCriticalKey = "";
+
 function render() {
+  const criticalKey = criticalSignature();
+  const force = criticalKey !== lastCriticalKey;
+  lastCriticalKey = criticalKey;
+  const bodySettings = force ? { force: true } : {};
+
   panel.setBadge(state.user ? totalUnread() : 0);
   panel.setStatus(statusText());
   panel.setView(state.view);
   panel.setFooter(state.view !== "inbox" && !!state.user && !!state.room);
 
   if (state.view === "inbox") {
-    panel.setBody(bodyWith(renderInbox()));
+    panel.setBody(bodyWith(renderInbox()), bodySettings);
     return;
   }
   if (!state.user) {
-    panel.setBody(bodyWith(renderLogin()));
+    panel.setBody(bodyWith(renderLogin()), bodySettings);
     return;
   }
   if (state.view === "deal" && state.room && state.room.type === "deal") {
-    panel.setBody(bodyWith(renderDealRoom()));
+    panel.setBody(bodyWith(renderDealRoom()), bodySettings);
     panel.scrollToEnd();
     return;
   }
-  panel.setBody(bodyWith(renderAssistant()));
+  panel.setBody(bodyWith(renderAssistant()), bodySettings);
   panel.scrollToEnd();
 }
 

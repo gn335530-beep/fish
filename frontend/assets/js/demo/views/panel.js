@@ -1,5 +1,7 @@
 /* 面板外殼：掛載、開關、視圖切換、未讀與尺寸。 */
 
+import { createBodyRenderer } from "./body-render.js";
+
 const SHELL = "" +
   '<section class="fm-panel" id="fm-panel" hidden aria-label="一支釣小幫手">' +
   '  <header class="fm-panel__head">' +
@@ -25,6 +27,7 @@ const SHELL = "" +
 let refs = null;
 let handlers = {};
 let api = null;
+let bodyRenderer = null;
 
 function setOpen(open) {
   refs.panel.hidden = !open;
@@ -48,25 +51,8 @@ api = {
     if (next && handlers.onOpen) handlers.onOpen();
   },
   isOpen: function () { return !refs.panel.hidden; },
-  setBody: function (html) {
-    /* 輪詢每 3 秒重繪；正在輸入的欄位要保留焦點與游標。 */
-    const active = document.activeElement;
-    const inside = active && refs.body.contains(active);
-    const id = inside ? active.id : "";
-    const field = inside ? active.getAttribute("data-field") : "";
-    const start = inside && typeof active.selectionStart === "number" ? active.selectionStart : null;
-    const end = inside && typeof active.selectionEnd === "number" ? active.selectionEnd : null;
-
-    refs.body.innerHTML = html;
-    if (!inside) return;
-
-    const next = id
-      ? document.getElementById(id)
-      : refs.body.querySelector('[data-field="' + field + '"]');
-    if (!next) return;
-    next.focus();
-    if (start === null) return;
-    try { next.setSelectionRange(start, end); } catch (error) { /* 數字欄位不支援 */ }
+  setBody: function (html, options) {
+    if (bodyRenderer) bodyRenderer.setBody(html, options);
   },
   setStatus: function (text) { refs.status.textContent = text; },
   setFooter: function (visible) { refs.form.hidden = !visible; },
@@ -82,6 +68,21 @@ api = {
     const body = refs.body;
     const nearBottom = body.scrollHeight - body.scrollTop - body.clientHeight < 80;
     if (force || nearBottom) body.scrollTop = body.scrollHeight;
+  },
+  /* 以批次第一則為錨點：整批放得下就滾到底，放不下就把第一則對齊頂端。 */
+  scrollToStart: function (seq) {
+    const body = refs.body;
+    const node = body.querySelector('[data-seq="' + String(seq) + '"]');
+    if (!node) {
+      body.scrollTop = body.scrollHeight;
+      return;
+    }
+    const offset = node.getBoundingClientRect().top - body.getBoundingClientRect().top + body.scrollTop;
+    if (body.scrollHeight - offset <= body.clientHeight) {
+      body.scrollTop = body.scrollHeight;
+    } else {
+      body.scrollTop = Math.max(0, offset - 8);
+    }
   },
   openFilePicker: function () { refs.file.click(); }
 };
@@ -106,6 +107,8 @@ export function mountPanel(options) {
     badge: document.getElementById("fm-badge"),
     status: document.getElementById("fm-status")
   };
+
+  bodyRenderer = createBodyRenderer({ body: refs.body, onRender: handlers.onRender });
 
   refs.toggle.addEventListener("click", function () { api.toggle(); });
   refs.file.addEventListener("change", function () {

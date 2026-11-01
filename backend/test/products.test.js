@@ -89,6 +89,16 @@ test("處理方式空白或超過 20 字會回對應錯誤碼", async function (
   assert.equal(tooLong.body.code, "FIELD_TOO_LONG");
 });
 
+test("處理方式只有數字會回 INVALID_CONDITION", async function () {
+  const numeric = await create({ condition: "1 2" });
+  assert.equal(numeric.status, 400);
+  assert.equal(numeric.body.code, "INVALID_CONDITION");
+
+  const units = await create({ condition: "3公斤 2尾" });
+  assert.equal(units.status, 400);
+  assert.equal(units.body.code, "INVALID_CONDITION");
+});
+
 test("舊魚種 API 已移除，商品不再帶舊欄位或示意行情", async function () {
   const species = await call("GET", "/api/species");
   assert.equal(species.status, 404);

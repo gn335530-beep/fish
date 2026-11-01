@@ -8,6 +8,12 @@ const format = window.HaisenFormat;
 
 const NUMBER_SLOTS = ["weight_kg", "quantity"];
 const BARE_LIMIT = 999;
+const UNIT_WORDS = /(公斤|kg|KG|Kg|台斤|斤|尾|條|隻|份|元|塊)/g;
+
+/* 處理方式必須有文字；只有數字與單位不算。 */
+function hasText(value) {
+  return /[A-Za-z\u4e00-\u9fff]/.test(String(value || "").replace(UNIT_WORDS, ""));
+}
 
 function roundWeight(value) {
   return Math.round(Number(value) * 100) / 100;
@@ -34,13 +40,22 @@ function valueFor(slot, value) {
 }
 
 /* 重量與尾數用消去法補；判不出來的數字留給呼叫端回問。 */
-function applyBareNumbers(found, rest, assumeSlot) {
+function applyBareNumbers(found, rest, assumeSlot, anchored) {
   const missing = NUMBER_SLOTS.filter(function (slot) { return found[slot] === undefined; });
   if (!missing.length) return [];
   const bare = bareIntegers(rest);
+  const asked = assumeSlot === "weight_kg" || assumeSlot === "quantity";
 
-  if ((assumeSlot === "weight_kg" || assumeSlot === "quantity") &&
-      missing.indexOf(assumeSlot) !== -1 && bare.length) {
+  /* 兩欄都缺又沒有單位可定錨：只接受單一裸數字回答追問，多個一律回問。 */
+  if (!anchored && missing.length === NUMBER_SLOTS.length) {
+    if (asked && bare.length === 1) {
+      found[assumeSlot] = valueFor(assumeSlot, bare[0]);
+      return [];
+    }
+    return bare.filter(function (value) { return value > 0 && value <= BARE_LIMIT; });
+  }
+
+  if (asked && missing.indexOf(assumeSlot) !== -1 && bare.length) {
     found[assumeSlot] = valueFor(assumeSlot, bare.shift());
   }
 
@@ -65,7 +80,7 @@ export function extractSlots(text, assumeSlot, details) {
 
   if (assumeSlot === "condition") {
     const condition = cleanCondition(source);
-    return condition ? { condition: condition } : {};
+    return hasText(condition) ? { condition: condition } : {};
   }
 
   const weightMatch = /(\d+(?:\.\d+)?)\s*(公斤|kg|KG|Kg|台斤|斤)/.exec(rest);
@@ -112,7 +127,7 @@ export function extractSlots(text, assumeSlot, details) {
   }
 
   const condition = extractCondition(rest, found.fish_species);
-  if (condition) found.condition = condition;
+  if (condition && hasText(condition)) found.condition = condition;
 
   /* 價格步驟只認價格，避免把裸數字誤補成重量或尾數。 */
   if (assumeSlot === "price") {
@@ -132,7 +147,7 @@ export function extractSlots(text, assumeSlot, details) {
     }
   }
 
-  const ambiguous = applyBareNumbers(found, rest, assumeSlot);
+  const ambiguous = applyBareNumbers(found, rest, assumeSlot, Boolean(weightMatch || quantityMatch));
   if (details && ambiguous.length) details.ambiguous = ambiguous;
   return found;
 }

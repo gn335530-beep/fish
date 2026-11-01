@@ -1,0 +1,98 @@
+/* 首頁第三區：助手功能。只用 .ha 前綴，避免影響其他頁。 */
+
+.ha{background:var(--accent);color:#fff}
+.ha__grid{display:grid;grid-template-columns:.82fr 1.18fr;gap:64px;align-items:start}
+.ha h2{color:#fff;font-size:clamp(2rem,3.2vw,2.5rem);line-height:1.2}
+.ha__intro > p{margin-top:18px;max-width:34ch;font-size:1rem;line-height:1.9;color:rgba(255,255,255,.74)}
+.ha-tabs{display:grid;gap:8px;margin-top:30px}
+.ha-tabs button{display:grid;gap:3px;padding:14px 17px;text-align:left;background:rgba(255,255,255,.07);color:#fff;transition:background .2s,color .2s}
+.ha-tabs button b{font-family:var(--font-display);font-size:1.15rem;line-height:1.35;font-weight:600}
+.ha-tabs button span{font-size:.82rem;line-height:1.5;color:rgba(255,255,255,.62)}
+.ha-tabs button:hover{background:rgba(255,255,255,.13)}
+.ha-tabs button[aria-selected="true"]{background:var(--paper);color:var(--ink)}
+.ha-tabs button[aria-selected="true"] span{color:var(--muted)}
+
+.ha-chat{
+  display:grid;grid-template-rows:auto minmax(0,1fr) auto;margin:0;min-width:0;min-height:480px;
+  background:var(--paper);color:var(--ink);border:0;
+}
+.ha-chat__head{
+  display:grid;grid-template-columns:38px minmax(0,1fr) auto;align-items:center;gap:10px;
+  padding:12px 15px;background:var(--surface);border-bottom:1px solid var(--rule-2);
+}
+.ha-chat__avatar{
+  width:36px;height:36px;display:grid;place-items:center;border-radius:50%;
+  background:var(--accent);color:#fff;font-family:var(--font-display);font-size:.9rem;
+}
+.ha-chat__title b{display:block;font-size:.92rem;line-height:1.35}
+.ha-chat__title span{display:block;margin-top:1px;font-size:.78rem;color:var(--muted)}
+.ha-chat__tag{border:1px solid var(--rule);padding:3px 8px;font-size:.74rem;color:var(--muted);white-space:nowrap}
+.ha-chat__body{
+  display:flex;flex-direction:column;gap:10px;padding:16px;overflow:auto;
+  background:var(--paper-2);min-height:330px;transition:opacity .14s ease;
+}
+.ha-chat__body.is-switching{opacity:0}
+.ha-msg{max-width:88%;padding:10px 13px;font-size:.9rem;line-height:1.7}
+.ha-msg p{margin:0}
+.ha-msg--me{align-self:flex-end;background:var(--accent);color:#fff}
+.ha-msg--bot{align-self:flex-start;background:var(--surface);color:var(--ink)}
+.ha-mini{
+  display:grid;grid-template-columns:60px minmax(0,1fr) auto;gap:10px;align-items:center;
+  background:var(--surface);padding:8px;border:1px solid var(--rule-2);
+}
+.ha-mini img{width:60px;height:60px;object-fit:cover;background:var(--paper-2)}
+.ha-mini b{display:block;font-family:var(--font-display);font-size:.94rem;line-height:1.35}
+.ha-mini span{display:block;font-size:.78rem;color:var(--muted);line-height:1.5}
+.ha-mini em{display:block;margin-top:2px;font-size:.78rem;font-style:normal;color:var(--ink)}
+.ha-mini button{align-self:stretch;padding:0 10px;background:var(--accent);color:#fff;font-size:.78rem}
+.ha-quick{display:flex;gap:7px;flex-wrap:wrap}
+.ha-quick button{padding:6px 10px;border:1px solid var(--rule);background:var(--surface);font-size:.78rem;color:var(--ink)}
+.ha-quick button:hover{border-color:var(--accent);color:var(--accent)}
+.ha-chat__cta{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:15px 17px;background:var(--surface);color:var(--accent);border-top:1px solid var(--rule-2);
+  font-size:.9rem;text-align:left;
+}
+.ha-chat__cta span{font-size:1.05rem;transition:transform .2s}
+.ha-chat__cta:hover span{transform:translateX(3px)}
+
+.ha-draft{border:1px solid var(--rule-2);background:var(--surface);padding:12px;display:grid;gap:6px}
+.ha-draft > b{font-size:.9rem}
+.ha-draft dl{display:grid;gap:4px;margin:0;font-size:.8rem}
+.ha-draft dl div{display:flex;justify-content:space-between;gap:10px}
+.ha-draft dt{color:var(--muted)}
+.ha-draft dd{margin:0;color:var(--ink)}
+.ha-draft__act{margin-top:4px}
+.ha-draft__act button{width:100%;height:34px;background:var(--accent);color:#fff;font-size:.78rem}
+.ha-market{border:1px solid var(--rule-2);background:var(--surface);padding:12px;display:grid;gap:5px}
+.ha-market__head{display:flex;justify-content:space-between;gap:10px;font-size:.9rem}
+.ha-market__head span{font-size:.76rem;color:var(--muted)}
+.ha-market__price{display:flex;align-items:baseline;gap:6px}
+.ha-market__price b{font-family:var(--font-display);font-size:1.4rem;font-variant-numeric:tabular-nums}
+.ha-market__price span{font-size:.76rem;color:var(--muted)}
+.ha-market__meta{font-size:.76rem;line-height:1.6;color:var(--muted)}
+.ha-market svg{width:100%;height:44px;color:var(--accent)}
+.ha-market__range{display:flex;justify-content:space-between;font-size:.76rem;color:var(--muted)}
+.ha-market__note{font-size:.76rem;color:var(--muted)}
+
+@media(max-width:1080px){
+  .ha__grid{grid-template-columns:1fr;gap:32px}
+  .ha__intro > p{max-width:46ch}
+  .ha-tabs{grid-template-columns:repeat(3,1fr);gap:6px}
+  .ha-tabs button{padding:12px 12px}
+  .ha-chat{min-height:0}
+  .ha-chat__body{min-height:0}
+}
+
+@media(max-width:760px){
+  .ha-tabs button{padding:10px 8px;text-align:center;justify-items:center}
+  .ha-tabs button b{font-size:1rem}
+  .ha-tabs button span{display:none}
+  .ha-chat__head{padding:10px 12px}
+  .ha-chat__body{padding:12px;gap:8px}
+  .ha-msg{font-size:.86rem;padding:9px 11px}
+  .ha-mini{grid-template-columns:52px minmax(0,1fr);gap:8px}
+  .ha-mini img{width:52px;height:52px}
+  .ha-mini button{grid-column:1 / -1;height:34px;font-size:.78rem}
+  .ha-chat__cta{padding:13px 14px;font-size:.86rem}
+}

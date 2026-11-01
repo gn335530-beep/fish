@@ -118,8 +118,10 @@ test("石斑回傳候選不自動選第一個，下一句可選擇並完成查�
 
   const asked = await handleText(null, "石斑多少錢", { city: "高雄市" });
   const text = textOf(asked);
-  assert.match(text, /石斑魚（2201）/);
-  assert.match(text, /龍膽石斑（2202）/);
+  assert.match(text, /搜尋到多種石斑，請問是哪一種石斑？請選擇：/);
+  assert.match(text, /石斑魚/);
+  assert.match(text, /龍膽石斑/);
+  assert.doesNotMatch(text, /2201|2202/);
   assert.equal(asked.context.market_pending.candidates.length, 2);
 
   market = quote({ species_code: 2202, official_name: "龍膽石斑" });

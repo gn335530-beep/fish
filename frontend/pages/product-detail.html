@@ -3,11 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="../assets/images/favicon.svg?v=v7">
 <title>漁獲詳情 — 今日漁獲 | 一支釣</title>
 <meta name="description" content="個人釣客今日上架的漁獲詳情：照片、魚種、總重、尾數、處理方式、整批價、每尾均價、可售尾數、地區與釣獲時間。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&family=Noto+Serif+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400..700&family=Noto+Serif+TC:wght@600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/css/base.css?v=v7">
 <link rel="stylesheet" href="../assets/css/layout.css?v=v7">
 <link rel="stylesheet" href="../assets/css/components.css?v=v7">
@@ -29,11 +30,11 @@
 <body>
 
 <!-- 共用頁殼：導覽列 -->
-<div id="site-header" data-page="products"></div>
+<div id="site-header" data-page="products" data-search="off"></div>
 <script src="../assets/js/app/00-shell.js?v=v7"></script>
 
 <div class="wrap">
-  <nav class="crumbs"><a href="index.html">首頁</a><span>/</span><a href="products.html">今日漁獲</a><span>/</span><span id="crumb-name">漁獲詳情</span></nav>
+  <nav class="crumbs"><a href="index.html">首頁</a><span aria-hidden="true">/</span><a href="products.html">今日漁獲</a><span aria-hidden="true">/</span><span id="crumb-name">漁獲詳情</span></nav>
 </div>
 
 <section class="section" id="pd-view" style="padding-top:12px" hidden>
