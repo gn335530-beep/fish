@@ -9,7 +9,14 @@ export const cardStatusForDeal = shared.cardStatusForDeal;
 export const isActionable = shared.isActionable;
 export const canResend = shared.canResend;
 export const isPendingCard = shared.isPendingCard;
+export const isConfirmedCard = shared.isConfirmedCard;
+export const cardStatusTone = shared.cardStatusTone;
 export const isDraft = shared.isDraft;
 export const isNegotiating = shared.isNegotiating;
 export const isConfirmed = shared.isConfirmed;
 export const isFinished = shared.isFinished;
+
+/* 只有買家可以在草稿階段修改商品組合。 */
+export function canEditDeal(deal, user) {
+  return !!(deal && isDraft(deal) && user && String(deal.buyer_id) === String(user.id));
+}

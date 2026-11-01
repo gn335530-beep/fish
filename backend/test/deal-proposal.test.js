@@ -105,6 +105,8 @@ test("協議卡與系統訊息會出現在交易房", async function () {
   assert.equal(card.card.final_price, 1200);
   assert.equal(card.card.meetup_location, "基隆火車站南站 7-11 門口");
   assert.equal(card.card.items[0].quantity, 1);
+  assert.equal(card.card.items[0].fish_species, "石斑");
+  assert.ok(Object.prototype.hasOwnProperty.call(card.card.items[0], "price_per_taijin"));
   assert.ok(result.body.data.some(function (message) {
     return message.type === "system" && message.text.indexOf("已送出協議") !== -1;
   }));

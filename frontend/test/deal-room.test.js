@@ -29,7 +29,7 @@ const ROOM = {
   order: { status: "DRAFT", item_count: 2, total_quantity: 3, final_price: 4330 }
 };
 
-test("交易房顯示訂單摘要與訊息流，不再有電話橫幅", function () {
+test("交易房顯示商品條與訊息流，不再有電話橫幅", function () {
   update({
     user: { id: 2 },
     room: ROOM,
@@ -40,10 +40,10 @@ test("交易房顯示訂單摘要與訊息流，不再有電話橫幅", function
   });
 
   const html = deal.renderDealRoom();
-  assert.match(html, /2 項 · 3 尾 · NT\$4,330/);
+  assert.match(html, /尚未加入商品/);
   assert.match(html, /已進入交易洽談/);
   assert.match(html, /還有貨嗎/);
-  assert.doesNotMatch(html, /href="tel:|fm-deal__bar|交易房<\/span>/);
+  assert.doesNotMatch(html, /href="tel:|fm-deal__bar|2 項 · 3 尾/);
 });
 
 test("交易房訊息只送出一次，不呼叫助手回覆", async function () {

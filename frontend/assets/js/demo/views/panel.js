@@ -122,6 +122,8 @@ export function mountPanel(options) {
   refs.body.addEventListener("input", function (event) {
     const market = event.target.closest("[data-market-weight]");
     if (market) handleMarketWeightInput(market);
+    const addon = event.target.closest("[data-addon-qty]");
+    if (addon && handlers.onSelect) handlers.onSelect(addon.dataset.addonQty, addon.value);
     const field = event.target.closest("[data-field]");
     if (field && handlers.onInput) handlers.onInput(field.dataset.field, field.value);
     const review = event.target.closest("[data-review-deal]");
@@ -136,10 +138,6 @@ export function mountPanel(options) {
       handleMarketUnitChange(unit);
       return;
     }
-    const addon = event.target.closest("[data-addon-qty]");
-    if (addon && handlers.onSelect) handlers.onSelect(addon.dataset.addonQty, addon.value);
-    const reason = event.target.closest("[data-cancel-reason]");
-    if (reason && handlers.onReason) handlers.onReason(reason.dataset.cancelReason, reason.value);
     const review = event.target.closest("[data-review-deal]");
     if (!review) return;
     const field = event.target.closest("[data-review-field]");

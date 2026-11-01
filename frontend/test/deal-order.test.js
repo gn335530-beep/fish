@@ -1,4 +1,4 @@
-/* 訂單摘要：明細、金額、買家操作、協議表單與協議卡。 */
+/* 交易房商品條、發送交易與加購面板。 */
 
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -6,109 +6,145 @@ import assert from "node:assert/strict";
 globalThis.window = {};
 
 const { state, update } = await import("../assets/js/demo/store.js");
-const order = await import("../assets/js/demo/views/deal-order.js");
-const cards = await import("../assets/js/demo/views/cards.js");
+const { renderDealStrip } = await import("../assets/js/demo/views/deal-strip.js");
 const dealActions = await import("../assets/js/demo/deal-actions.js");
 const { draft, reset } = await import("./deal-fixtures.js");
 
 const handleFieldInput = dealActions.handleFieldInput;
 const selectAddon = dealActions.handleAddonSelect;
 
-test("買家看到項目明細、小計與可操作按鈕", function () {
+test("買家草稿看到商品列、加購與發送交易，沒有舊摘要操作", function () {
   reset(draft(), 2);
-  const html = order.renderDealOrder();
-  assert.match(html, /2 項 · 3 尾 · NT\$4,330/);
-  assert.match(html, /石斑（2kg \/ 2尾 \/ 活體）/);
-  assert.match(html, /NT\$2,800/);
-  assert.match(html, /data-action="qty-up"/);
+  const html = renderDealStrip();
+  assert.match(html, /<b>石斑<\/b>/);
+  assert.match(html, /<b>嘉鱲<\/b>/);
+  assert.match(html, /剩 2 尾/);
+  assert.match(html, /NT\$800 元\/台斤/);
   assert.match(html, /data-action="toggle-addon"/);
-  assert.match(html, /data-action="clear-items"/);
-  assert.match(html, /data-action="toggle-propose">協商完畢/);
+  assert.match(html, /data-action="toggle-propose"/);
+  assert.match(html, /發送交易/);
+  assert.doesNotMatch(html, /qty-up|remove-item|clear-items|toggle-order|協商完畢|修改條件並重送/);
+  assert.doesNotMatch(html, /2 項 · 3 尾/);
 });
 
-test("沒有項目時「協商完畢」不可按", function () {
+test("沒有商品時顯示尚未加入商品並停用發送交易", function () {
   const deal = draft();
   deal.items = [];
   deal.items_total = 0;
   reset(deal, 2);
-  const html = order.renderDealOrder();
-  assert.match(html, /0 項 · 0 尾 · NT\$0/);
+  const html = renderDealStrip();
   assert.match(html, /尚未加入商品/);
-  assert.match(html, /data-action="toggle-propose" disabled>協商完畢/);
+  assert.match(html, /data-action="toggle-propose" disabled>發送交易/);
+  assert.match(html, /data-action="toggle-addon"/);
 });
 
-test("釣客看不到買家的改量、加購與清空", function () {
+test("釣客不會看到加購或發送交易", function () {
   reset(draft(), 1);
-  const html = order.renderDealOrder();
-  assert.doesNotMatch(html, /data-action="qty-up"/);
-  assert.doesNotMatch(html, /data-action="toggle-addon"/);
-  assert.doesNotMatch(html, /data-action="clear-items"/);
-  assert.match(html, /data-action="toggle-propose">協商完畢/);
+  const html = renderDealStrip();
+  assert.doesNotMatch(html, /toggle-addon|toggle-propose|發送交易/);
 });
 
-test("待回覆時顯示協議條件與狀態，不能再改", function () {
+test("面板展開時右側動作改成收起", function () {
+  reset(draft(), 2);
+  update({ proposeOpen: true });
+  const html = renderDealStrip();
+  assert.match(html, /data-action="close-sheet">收起/);
+  assert.doesNotMatch(html, /toggle-addon|toggle-propose/);
+});
+
+test("發送交易面板單品可改數量，售價預填整單小計", async function () {
   const deal = draft();
-  deal.deal_status = "PENDING_REVIEW";
-  deal.deal_terms = {
-    final_price: 4800,
-    meetup_location: "基隆火車站南站",
-    meetup_time: "2026-10-26T09:30:00.000Z"
-  };
+  deal.items = [deal.items[0]];
+  deal.items_total = 2800;
   reset(deal, 2);
-  const html = order.renderDealOrder();
-  assert.match(html, /等待確認/);
-  assert.match(html, /整單金額/);
-  assert.match(html, /NT\$4,800/);
-  assert.match(html, /基隆火車站南站/);
-  assert.match(html, /10\/26/);
-  assert.match(html, /等待對方回覆/);
-  assert.doesNotMatch(html, /data-action="toggle-propose"/);
-  assert.doesNotMatch(html, /data-action="qty-up"/);
+  await dealActions.handleDealAction("toggle-propose", {});
+  assert.equal(state.proposeOpen, true);
+  assert.equal(state.proposal.quantity, "2");
+  assert.equal(state.proposal.final_price, "2800");
+  const html = renderDealStrip();
+  assert.match(html, /data-field="quantity"[^>]*value="2"/);
+  assert.match(html, /data-field="final_price"[^>]*value="2800"/);
+  assert.match(html, /data-field="meetup_time"/);
+  assert.match(html, /data-field="meetup_location"/);
+  assert.match(html, /data-action="submit-proposal">確認/);
+  assert.doesNotMatch(html, /toggle-propose">取消/);
 });
 
-test("協議卡顯示品項、金額、地點、時間與等待確認", function () {
-  const html = cards.renderCard({
-    type: "deal",
-    status: "pending",
-    final_price: 4800,
-    meetup_location: "基隆火車站南站",
-    meetup_time: "2026-10-26T09:30:00.000Z",
-    items: [{ title: "石斑", quantity: 1, unit_price: 1400 }]
-  });
-  assert.match(html, /等待確認/);
-  assert.match(html, /石斑 × 1 尾/);
-  assert.match(html, /NT\$4,800/);
-  assert.match(html, /基隆火車站南站/);
-  assert.match(html, /10\/26/);
+test("多品時數量唯讀顯示整單總尾數", async function () {
+  reset(draft(), 2);
+  await dealActions.handleDealAction("toggle-propose", {});
+  const html = renderDealStrip();
+  assert.match(html, /fm-deal-sheet__readonly">3 尾/);
+  assert.doesNotMatch(html, /data-field="quantity"/);
 });
 
-test("加購清單保留已選的尾數", function () {
+test("加購面板列出同釣客商品、已在訂單者與可再加購上限", function () {
   reset(draft(), 2);
   update({
     addonOpen: true,
-    addons: [{ id: "prd_c", title: "花枝（2kg / 3尾 / 活體）", available: 3, unit_price: 500 }],
-    addonQty: { prd_c: "3" }
+    addons: [
+      { id: "prd_a", fish_species: "石斑", available: 5, price_per_taijin: 800, price: 2800 },
+      { id: "prd_c", fish_species: "花枝", available: 3, price_per_taijin: null, price: 500 }
+    ],
+    addonQty: { prd_c: "2" }
   });
-  const html = order.renderDealOrder();
-  assert.match(html, /<option value="3" selected>3 尾<\/option>/);
-  assert.match(html, /data-action="add-item" data-product="prd_c"/);
+  const html = renderDealStrip();
+  assert.match(html, /<b>石斑<\/b>/);
+  assert.match(html, /<b>花枝<\/b>/);
+  assert.match(html, /max="3"[^>]*data-addon-qty="prd_a"/);
+  assert.match(html, /max="3"[^>]*data-addon-qty="prd_c"[^>]*value="2"/);
+  assert.match(html, /整批 NT\$500/);
+  assert.match(html, /data-action="addon-cancel">取消/);
+  assert.match(html, /data-action="addon-submit">確認/);
+});
+
+test("可再加購為 0 時停用輸入", function () {
+  reset(draft(), 2);
+  update({
+    addonOpen: true,
+    addons: [{ id: "prd_a", fish_species: "石斑", available: 2, price_per_taijin: 800, price: 2800 }]
+  });
+  assert.match(renderDealStrip(), /data-addon-qty="prd_a"[^>]*disabled/);
+});
+
+test("沒有可加購商品時顯示對應文案", function () {
+  reset(draft(), 2);
+  update({ addonOpen: true, addons: [] });
+  assert.match(renderDealStrip(), /目前沒有可加購的商品/);
+});
+
+test("沒有每台斤價格時商品條顯示整批價", function () {
+  const deal = draft();
+  deal.items = [{
+    item_id: "itm_01", product_id: "prd_a", title: "石斑（2尾 / 活體）",
+    fish_species: "石斑", unit_price: 500, price: 500,
+    price_per_taijin: null, quantity: 1, available: 1
+  }];
+  reset(deal, 2);
+  const html = renderDealStrip();
+  assert.match(html, /整批 NT\$500/);
+  assert.doesNotMatch(html, /NT\$0/);
+});
+
+test("舊項目沒有魚種快照時從標題取魚種，不顯示長標題", function () {
+  const deal = draft();
+  deal.items = [{
+    item_id: "itm_01", product_id: "prd_a", title: "石斑（2kg / 2尾 / 活體）",
+    unit_price: 1400, price: 2800, price_per_taijin: 800, quantity: 2, available: 2
+  }];
+  reset(deal, 2);
+  const html = renderDealStrip();
+  assert.match(html, /<b>石斑<\/b>/);
+  assert.doesNotMatch(html, /2kg \/ 2尾/);
 });
 
 test("表單與加購選擇會寫回 state", function () {
-  update({ proposal: { final_price: "", meetup_location: "", meetup_time: "" }, addonQty: {} });
+  reset(draft(), 2);
+  update({ proposal: { quantity: "", final_price: "", meetup_location: "", meetup_time: "" }, addonQty: {} });
   handleFieldInput("meetup_location", "瑞芳火車站");
+  handleFieldInput("quantity", "3");
   selectAddon("prd_c", "2");
   assert.equal(state.proposal.meetup_location, "瑞芳火車站");
+  assert.equal(state.proposal.quantity, "3");
   assert.equal(state.addonQty.prd_c, "2");
-});
-
-test("協議必填欄位沒填就不會送出", async function () {
-  const notices = [];
-  dealActions.initDealActions({ notify: function (error) { notices.push(error.message); } });
-  reset(draft(), 2);
-  update({ proposeOpen: true, proposal: { final_price: "", meetup_location: "", meetup_time: "" } });
-
-  await dealActions.handleDealAction("submit-proposal", {});
-
-  assert.deepEqual(notices, ["請填寫整單金額"]);
 });

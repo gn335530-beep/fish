@@ -14,6 +14,9 @@
   font-weight: 600;
 }
 
+.fm-card__pill--confirmed { border-color: var(--accent); color: var(--accent); }
+.fm-card__pill--muted { border-color: var(--rule); color: var(--muted); }
+
 .fm-card__deal-items { display: grid; gap: 3px; list-style: none; margin: 0; padding: 0; }
 .fm-card__deal-items li { display: flex; justify-content: space-between; gap: 8px; font-size: .7rem; }
 .fm-card__deal-items li span:last-child { font-family: var(--font-mono); color: var(--muted); }

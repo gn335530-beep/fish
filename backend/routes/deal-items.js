@@ -42,6 +42,48 @@ router.post("/api/deals/items", requireUser, function (req, res) {
   created(res, { deal: deals.decorateDeal(updated) }, "已加入訂單");
 });
 
+router.post("/api/deals/items/batch", requireUser, function (req, res) {
+  const body = req.body || {};
+  const deal = deals.requireDeal(req, res);
+  if (!deal) return;
+  if (!requireBuyerDraft(deal, req, res)) return;
+
+  const rows = Array.isArray(body.items) ? body.items : [];
+  if (!rows.length) {
+    fail(res, 400, "MISSING_ITEMS", "請選擇要加購的商品");
+    return;
+  }
+
+  const totals = new Map();
+  for (const row of rows) {
+    const stock = productAvailability(row.product_id);
+    if (!stock) {
+      fail(res, 404, "PRODUCT_NOT_FOUND", "找不到商品");
+      return;
+    }
+    if (String(stock.product.seller_id) !== String(deal.seller_id)) {
+      fail(res, 400, "WRONG_SELLER", "只能加購同一位釣客的商品");
+      return;
+    }
+    const quantity = requireQuantity(row.quantity, res);
+    if (quantity === null) return;
+    const key = String(stock.product.id);
+    const current = totals.get(key);
+    if (current) current.quantity += quantity;
+    else totals.set(key, { stock: stock, quantity: quantity });
+  }
+
+  const additions = [];
+  for (const entry of totals.values()) {
+    const quantity = dealItems.requireAddableQuantity(deal, entry.stock, entry.quantity, res);
+    if (quantity === null) return;
+    additions.push({ product: entry.stock.decorated, quantity: quantity });
+  }
+
+  const updated = dealItems.addBatchWithMessage(deal, additions);
+  created(res, { deal: deals.decorateDeal(updated) }, "已加入訂單");
+});
+
 router.patch("/api/deals/items/:itemId", requireUser, function (req, res) {
   const deal = deals.requireDeal(req, res);
   if (!deal) return;

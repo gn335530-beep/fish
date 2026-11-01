@@ -3,8 +3,8 @@
 import { update } from "../assets/js/demo/store.js";
 
 export const ITEMS = [
-  { item_id: "itm_01", product_id: "prd_a", title: "石斑（2kg / 2尾 / 活體）", unit_price: 1400, quantity: 2, available: 2 },
-  { item_id: "itm_02", product_id: "prd_b", title: "嘉鱲（2kg / 2尾 / 活體）", unit_price: 1530, quantity: 1, available: 2 }
+  { item_id: "itm_01", product_id: "prd_a", title: "石斑（2尾 / 活體）", fish_species: "石斑", unit_price: 1400, price_per_taijin: 800, quantity: 2, available: 2 },
+  { item_id: "itm_02", product_id: "prd_b", title: "嘉鱲（2尾 / 活體）", fish_species: "嘉鱲", unit_price: 1530, price_per_taijin: 900, quantity: 1, available: 2 }
 ];
 
 export function draft() {
@@ -25,13 +25,11 @@ export function reset(deal, userId) {
     user: { id: userId },
     room: { id: "conv_1", type: "deal", order: { id: deal.id, status: deal.deal_status } },
     deal: deal,
-    dealOpen: true,
     addonOpen: false,
     addons: [],
     addonQty: {},
     proposeOpen: false,
-    proposal: { final_price: "", meetup_location: "", meetup_time: "" },
-    cancelReasons: {}
+    proposal: { quantity: "", final_price: "", meetup_location: "", meetup_time: "" }
   });
 }
 
@@ -56,6 +54,6 @@ export function cardOf(deal, status) {
     final_price: 4800,
     meetup_location: "基隆火車站南站",
     meetup_time: "2026-10-26T09:30:00.000Z",
-    items: [{ title: "石斑", quantity: 1, unit_price: 1400 }]
+    items: [{ title: "石斑", fish_species: "石斑", quantity: 1, unit_price: 1400, price_per_taijin: 800 }]
   };
 }
