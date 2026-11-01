@@ -35,7 +35,7 @@ test("舊的評價卡跟著訂單顯示已評價", function () {
 
   const html = messages.renderMessages();
 
-  assert.match(html, /已評價/);
+  assert.match(html, /你已經送出評價/);
   assert.doesNotMatch(html, /deal-review/);
 });
 
@@ -64,7 +64,7 @@ test("同一房間有更新的訂單時，舊訂單評價卡仍會更新", funct
 
   const html = messages.renderMessages();
 
-  assert.match(html, /已評價/);
+  assert.match(html, /你已經送出評價/);
   assert.doesNotMatch(html, /deal-review/);
 });
 

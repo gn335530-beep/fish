@@ -98,10 +98,17 @@ export function respondDeal(dealId, action) {
   });
 }
 
-export function cancelDeal(dealId, reason) {
+export function cancelDeal(dealId, note) {
   return call("/api/deals/cancel", {
     method: "POST",
-    body: { deal_id: dealId, reason: reason }
+    body: { deal_id: dealId, note: note }
+  });
+}
+
+export function reinitiateDeal(dealId) {
+  return call("/api/deals/reinitiate", {
+    method: "POST",
+    body: { deal_id: dealId }
   });
 }
 

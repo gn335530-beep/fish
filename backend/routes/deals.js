@@ -9,6 +9,7 @@ const { sweepExpired } = require("../lib/timeouts");
 const { summary } = require("../lib/conversations");
 const deals = require("../lib/deals");
 const dealItems = require("../lib/deal-items");
+const { CANCELLED_STATUS } = require("../lib/deal-statuses");
 const { ok, fail } = require("../lib/http");
 
 const router = express.Router();
@@ -120,6 +121,41 @@ router.get("/api/deals/:id", requireUser, function (req, res) {
   const deal = deals.requireDeal(req, res);
   if (!deal) return;
   ok(res, forUser(deal, req.user.id), "取得訂單成功");
+});
+
+router.post("/api/deals/reinitiate", requireUser, function (req, res) {
+  sweepExpired();
+  const source = deals.requireDeal(req, res);
+  if (!source) return;
+  if (!deals.isBuyer(source, req.user.id)) {
+    fail(res, 403, "FORBIDDEN", "只有買家可以重新發起協議");
+    return;
+  }
+  if (source.deal_status !== CANCELLED_STATUS) {
+    fail(res, 409, "INVALID_DEAL_STATUS", "只有已取消的訂單可以重新發起");
+    return;
+  }
+
+  const result = deals.reinitiateDeal(source, req.user.id, new Date().toISOString());
+  if (result.error === "DRAFT_EXISTS") {
+    fail(res, 409, "DRAFT_EXISTS", "已經有進行中的草稿訂單");
+    return;
+  }
+  if (result.error === "NO_AVAILABLE_ITEMS") {
+    fail(res, 409, "NO_AVAILABLE_ITEMS", "目前沒有可重新發起的商品");
+    return;
+  }
+  if (result.error) {
+    fail(res, 404, result.error, "找不到對話");
+    return;
+  }
+
+  ok(res, {
+    deal: deals.decorateDeal(result.deal),
+    skipped: (result.skipped || []).map(function (item) {
+      return { product_id: item.product_id, title: item.title };
+    })
+  }, "已重新發起交易");
 });
 
 module.exports = router;

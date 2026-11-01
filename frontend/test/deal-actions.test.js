@@ -14,7 +14,15 @@ globalThis.window = {
       if (path.indexOf("/messages") !== -1) return { data: [] };
       if (path === "/api/conversations") return { data: [] };
       if (path.indexOf("/api/conversations/") === 0) return { data: {} };
-      if (path === "/api/deals/deal_1") return { data: {} };
+      if (path === "/api/deals/deal_1") {
+        return {
+          data: {
+            id: "deal_1", deal_status: "DRAFT", buyer_id: 2, seller_id: 1,
+            items: [{ item_id: "itm_01", product_id: "prd_a", fish_species: "石斑", title: "石斑（2尾 / 活體）", quantity: 2, unit_price: 1400, price: 2800, price_per_taijin: 800, available: 2 }],
+            items_total: 2800
+          }
+        };
+      }
       return { data: {} };
     }
   }
@@ -38,11 +46,12 @@ function pendingCard(overrides) {
   }, overrides || {});
 }
 
-test("非發起方在等待確認時只看到確認", function () {
+test("非發起方在等待確認時看到取消與確認", function () {
   reset(pendingDeal(2), 1);
   const html = cards.renderCard(pendingCard(), "msg_1");
+  assert.match(html, /data-action="deal-cancel-open" data-deal="deal_1">取消/);
   assert.match(html, /data-action="deal-agree" data-deal="deal_1">確認/);
-  assert.doesNotMatch(html, /deal-reject|deal-cancel|data-cancel-reason|退回|取消協議/);
+  assert.doesNotMatch(html, /deal-reject|data-cancel-reason|退回/);
 });
 
 test("協議卡顯示魚種、販售數量、最終價格與面交資訊", function () {

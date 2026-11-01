@@ -6,24 +6,33 @@ import { isActionable, isPendingCard, cardStatusTone } from "../deal-state.js";
 import { cardStatusLabel } from "../deal-labels.js";
 import { currentDealFor, displayStatusOf, isCurrentCard } from "./deal-card-state.js";
 import { itemSpecies, totalQuantity } from "./deal-item-text.js";
+import { renderCancelConfirmCard } from "./deal-cancel-card.js";
 
 function statusClass(status) {
   return " fm-card__pill--" + cardStatusTone(status);
 }
 
-function dealCardActions(card, messageId) {
+function canRespond(card, messageId) {
   const deal = currentDealFor(card);
-  if (!deal || !isCurrentCard(card, messageId) || !isActionable(deal)) return "";
+  if (!deal || !isCurrentCard(card, messageId) || !isActionable(deal)) return false;
   const status = displayStatusOf(card, messageId);
-  if (!isPendingCard(status)) return "";
-  const mine = state.user && String(card.initiator_id) === String(state.user.id);
-  if (mine) return "";
+  if (!isPendingCard(status)) return false;
+  return !(state.user && String(card.initiator_id) === String(state.user.id));
+}
+
+function dealCardActions(card, messageId) {
+  if (!canRespond(card, messageId)) return "";
+  const dealId = escapeHtml(card.deal_id);
   return '<div class="fm-card__acts">' +
+    '<button type="button" data-action="deal-cancel-open" data-deal="' + dealId + '">取消</button>' +
     '<button type="button" class="fm-card__primary" data-action="deal-agree" data-deal="' +
-    escapeHtml(card.deal_id) + '">確認</button></div>';
+    dealId + '">確認</button></div>';
 }
 
 export function renderDealCard(card, messageId) {
+  if (state.cancelOpen === String(card.deal_id) && canRespond(card, messageId)) {
+    return renderCancelConfirmCard(card);
+  }
   const items = card.items || [];
   const status = displayStatusOf(card, messageId);
   const tails = totalQuantity(items);

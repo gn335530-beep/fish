@@ -6,7 +6,6 @@ const { sweepExpired } = require("../lib/timeouts");
 const { CANCELLABLE } = require("../lib/deal-statuses");
 const deals = require("../lib/deals");
 const transitions = require("../lib/deal-transitions");
-const { CANCEL_REASONS } = require("../lib/deal-cancel");
 const { ok, fail } = require("../lib/http");
 
 const router = express.Router();
@@ -46,13 +45,13 @@ router.post("/api/deals/cancel", requireUser, function (req, res) {
     return;
   }
 
-  const reason = String((req.body || {}).reason || "");
-  if (!CANCEL_REASONS[reason]) {
-    fail(res, 400, "INVALID_CANCEL_REASON", "請選擇取消原因");
+  const note = String((req.body || {}).note || "").trim();
+  if (note.length > 200) {
+    fail(res, 400, "FIELD_TOO_LONG", "取消原因最多 200 字");
     return;
   }
 
-  const updated = transitions.cancel(deal, req.user.id, reason, new Date().toISOString());
+  const updated = transitions.cancel(deal, req.user.id, note, new Date().toISOString());
   ok(res, { deal: deals.decorateDeal(updated) }, "訂單已取消");
 });
 

@@ -7,7 +7,10 @@ import { handleReviewAction } from "./deal-reviews.js";
 import {
   initOrderActions, toggleAddon, closeAddon, submitAddon
 } from "./deal-order-actions.js";
-import { canEditDeal } from "./deal-state.js";
+import {
+  initCancelActions, openCancel, dismissCancel, submitCancel
+} from "./deal-cancel-actions.js";
+import { canEditDeal, isBuyerOf, isReopenableDeal } from "./deal-state.js";
 import { totalQuantity } from "./views/deal-item-text.js";
 import { localInputOf } from "./views/html.js";
 
@@ -20,6 +23,7 @@ let ui = {
 export function initDealActions(options) {
   ui = Object.assign(ui, options || {});
   initOrderActions(options);
+  initCancelActions(options);
 }
 
 function canEdit() {
@@ -61,6 +65,21 @@ function closeSheet() {
   }
   update({ proposeOpen: false });
   ui.render();
+}
+
+async function startProposal() {
+  const deal = state.deal;
+  if (isBuyerOf(deal, state.user) && isReopenableDeal(deal)) {
+    try {
+      await api.reinitiateDeal(deal.id);
+      await reloadRoom();
+      openPropose();
+    } catch (error) {
+      ui.notify(error);
+    }
+    return;
+  }
+  openPropose();
 }
 
 async function submitProposal() {
@@ -122,7 +141,7 @@ export function handleAddonSelect(productId, value) {
 export async function handleDealAction(action, data) {
   if (await handleReviewAction(action, data)) return true;
   if (action === "toggle-propose") {
-    openPropose();
+    await startProposal();
     return true;
   }
   if (action === "close-sheet") {
@@ -143,6 +162,18 @@ export async function handleDealAction(action, data) {
   }
   if (action === "submit-proposal") {
     await submitProposal();
+    return true;
+  }
+  if (action === "deal-cancel-open") {
+    openCancel(data.deal);
+    return true;
+  }
+  if (action === "cancel-dismiss") {
+    dismissCancel();
+    return true;
+  }
+  if (action === "cancel-submit") {
+    await submitCancel(data.deal);
     return true;
   }
   if (action === "deal-agree") {

@@ -5,6 +5,7 @@ const assert = require("node:assert/strict");
 const { start, stop, call, tokens } = require("./client");
 const { initiate, propose, respond, messagesOf } = require("./deal-helpers");
 const { patch } = require("../lib/store");
+const { REVIEW_TAGS } = require("../lib/reviews");
 
 const seen = {};
 
@@ -40,6 +41,10 @@ test.before(async function () {
   seen.convA = room.body.data.conversation.id;
   await propose(seen.dealA, tokens.buyer);
   await respond(seen.dealA, "AGREE", tokens.seller);
+});
+
+test("評價標籤只有四個，臨時放鳥仍計入未到次數", function () {
+  assert.deepEqual(REVIEW_TAGS, ["魚貨新鮮", "準時守約", "溝通良好", "臨時放鳥"]);
 });
 
 test("成交後交易房出現評價卡", async function () {
@@ -115,7 +120,7 @@ test("星等、標籤與評語都有上限", async function () {
   assert.equal(badRating.body.code, "INVALID_RATING");
 
   const tooMany = await submit(dealB, tokens.buyer, {
-    rating: 5, tags: ["準時守約", "魚貨新鮮", "溝通良好", "包裝完善"]
+    rating: 5, tags: ["魚貨新鮮", "準時守約", "溝通良好", "魚貨新鮮"]
   });
   assert.equal(tooMany.status, 400);
   assert.equal(tooMany.body.code, "TOO_MANY_TAGS");

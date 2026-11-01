@@ -41,7 +41,8 @@ async function loadDeal(deal) {
 
 export async function openRoom(room) {
   const messages = await api.listMessages(room.id, 0);
-  const deal = room.type === "deal" && room.order ? await loadDeal(room.order) : null;
+  const dealRef = room.type === "deal" ? room.order || room.last_order : null;
+  const deal = dealRef ? await loadDeal(dealRef) : null;
   replaceMessages(messages, {
     room: room,
     view: viewOf(room),
@@ -51,6 +52,8 @@ export async function openRoom(room) {
     addonQty: {},
     proposeOpen: false,
     proposal: emptyProposal(),
+    cancelOpen: null,
+    cancelNote: "",
     reviewDrafts: {}
   });
   await api.markRead(room.id);

@@ -105,6 +105,15 @@ function isConfirmed(value) {
   return statusOf(value) === "CONFIRMED";
 }
 
+function isCancelled(value) {
+  return statusOf(value) === "CANCELLED";
+}
+
+/* 只有使用者自行取消（自由文字原因）的訂單可以重新發起。 */
+function isReopenableDeal(deal) {
+  return !!deal && statusOf(deal) === "CANCELLED" && deal.cancel_reason === "OTHER";
+}
+
 function isFinished(value) {
   const status = statusOf(value);
   return status === "CONFIRMED" || status === "CANCELLED";
@@ -131,5 +140,7 @@ window.DealStatus = {
   isDraft: isDraft,
   isNegotiating: isNegotiating,
   isConfirmed: isConfirmed,
+  isCancelled: isCancelled,
+  isReopenableDeal: isReopenableDeal,
   isFinished: isFinished
 };

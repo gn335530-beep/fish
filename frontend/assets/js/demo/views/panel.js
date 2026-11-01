@@ -124,6 +124,8 @@ export function mountPanel(options) {
     if (market) handleMarketWeightInput(market);
     const addon = event.target.closest("[data-addon-qty]");
     if (addon && handlers.onSelect) handlers.onSelect(addon.dataset.addonQty, addon.value);
+    const cancelNote = event.target.closest("[data-cancel-note]");
+    if (cancelNote && handlers.onCancelNote) handlers.onCancelNote(cancelNote.value);
     const field = event.target.closest("[data-field]");
     if (field && handlers.onInput) handlers.onInput(field.dataset.field, field.value);
     const review = event.target.closest("[data-review-deal]");

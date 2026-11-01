@@ -13,6 +13,7 @@ import { initFlow, ensureRoom, submitText, submitPhoto } from "./flow.js";
 import { initListingActions } from "./listing-actions.js";
 import { initActions, handleAction, startDeal } from "./actions.js";
 import { handleFieldInput, handleAddonSelect } from "./deal-actions.js";
+import { handleCancelNote } from "./deal-cancel-actions.js";
 import { handleReviewField, handleReviewTag, handleReviewComment } from "./deal-reviews.js";
 import { clearUnread, openRoom, latestAssistant } from "./rooms.js";
 import { ensureCatalog } from "./ai/species-catalog.js";
@@ -25,6 +26,7 @@ const panel = mountPanel({
   onPhoto: submitPhoto,
   onInput: handleFieldInput,
   onSelect: handleAddonSelect,
+  onCancelNote: handleCancelNote,
   onReviewField: handleReviewField,
   onReviewTag: handleReviewTag,
   onReviewComment: handleReviewComment,
