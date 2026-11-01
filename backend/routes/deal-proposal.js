@@ -102,7 +102,13 @@ router.post("/api/deals/propose", requireUser, function (req, res) {
     meetup_time: parsed.terms.meetup_time,
     items_total: updated.items_total,
     items: itemsOf(updated).map(function (item) {
-      return { title: item.title, quantity: item.quantity, unit_price: item.unit_price };
+      return {
+        title: item.title,
+        fish_species: item.fish_species || null,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        price_per_taijin: item.price_per_taijin == null ? null : Number(item.price_per_taijin)
+      };
     })
   };
   cardMessage(deal.conversation_id, Number(req.user.id), card);

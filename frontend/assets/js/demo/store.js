@@ -1,7 +1,7 @@
 /* 前端共用狀態。任何變更都會通知訂閱者重繪，不做虛擬 DOM。 */
 
 export function emptyProposal() {
-  return { final_price: "", meetup_location: "", meetup_time: "" };
+  return { quantity: "", final_price: "", meetup_location: "", meetup_time: "" };
 }
 
 export function emptyState() {
@@ -14,13 +14,11 @@ export function emptyState() {
     view: "assistant",
     notice: "",
     deal: null,
-    dealOpen: true,
     addonOpen: false,
     addons: [],
     addonQty: {},
     proposeOpen: false,
     proposal: emptyProposal(),
-    cancelReasons: {},
     reviewDrafts: {},
     marketDays: {},
     marketWeights: {},

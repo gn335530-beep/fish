@@ -33,8 +33,11 @@ function snapshot(product, quantity, itemId) {
     item_id: itemId,
     product_id: product.id,
     title: product.title,
+    fish_species: product.fish_species || null,
     photo_url: product.photo_url,
     unit_price: unitPrice,
+    price: product.price == null ? null : Number(product.price),
+    price_per_taijin: product.price_per_taijin == null ? null : Number(product.price_per_taijin),
     weight_kg: product.weight_kg,
     quantity: Number(quantity)
   };
@@ -57,15 +60,26 @@ function writeItems(deal, items) {
 }
 
 /* 同一商品再加購時累加尾數，不新增第二個項目。 */
-function addItem(deal, product, quantity) {
-  const items = itemsOf(deal).map(function (item) { return Object.assign({}, item); });
+function applyAddition(items, product, quantity) {
   const existing = items.find(function (item) {
     return String(item.product_id) === String(product.id);
   });
-
   if (existing) existing.quantity = Number(existing.quantity || 0) + Number(quantity);
   else items.push(snapshot(product, quantity, nextItemId(items)));
+}
 
+function addItem(deal, product, quantity) {
+  const items = itemsOf(deal).map(function (item) { return Object.assign({}, item); });
+  applyAddition(items, product, quantity);
+  return writeItems(deal, items);
+}
+
+/* 批次加購只寫入一次，回傳更新後的訂單。 */
+function addBatch(deal, additions) {
+  const items = itemsOf(deal).map(function (item) { return Object.assign({}, item); });
+  (additions || []).forEach(function (addition) {
+    applyAddition(items, addition.product, addition.quantity);
+  });
   return writeItems(deal, items);
 }
 
@@ -90,6 +104,16 @@ function addWithMessage(deal, stock, quantity) {
   const updated = addItem(deal, stock.decorated, quantity);
   systemMessage(deal.conversation_id,
     "已將「" + stock.decorated.title + "」" + quantity + " 尾加入訂單草稿。");
+  return updated;
+}
+
+/* 批次加購也只留下一則系統訊息。 */
+function addBatchWithMessage(deal, additions) {
+  const updated = addBatch(deal, additions);
+  const text = (additions || []).map(function (addition) {
+    return "「" + addition.product.title + "」" + addition.quantity + " 尾";
+  }).join("、");
+  systemMessage(deal.conversation_id, "已將" + text + "加入訂單草稿。");
   return updated;
 }
 
@@ -124,8 +148,10 @@ module.exports = {
   itemsTotal: itemsTotal,
   quantityOf: quantityOf,
   addItem: addItem,
+  addBatch: addBatch,
   requireAddableQuantity: requireAddableQuantity,
   addWithMessage: addWithMessage,
+  addBatchWithMessage: addBatchWithMessage,
   itemOf: itemOf,
   setItemQuantity: setItemQuantity,
   removeItem: removeItem,

@@ -1,4 +1,4 @@
-/* 訂單項目：加購、改量、刪除、清空與摘要重載。 */
+/* 訂單項目：重新載入房間與批次加購。 */
 
 import { state, update } from "./store.js";
 import * as api from "./api.js";
@@ -34,61 +34,53 @@ export async function refreshDeal() {
 
 export async function toggleAddon() {
   if (state.addonOpen) {
-    update({ addonOpen: false, addons: [], addonQty: {} });
-    ui.render();
+    closeAddon();
     return;
   }
-
   const deal = state.deal;
   if (!deal) return;
   try {
     const rows = await listProducts({ seller_id: deal.seller_id, limit: 100 });
-    const inOrder = (deal.items || []).map(function (item) { return item.product_id; });
-    const addons = (rows || []).filter(function (product) {
-      return Number(product.available) > 0 && inOrder.indexOf(product.id) === -1;
-    });
-    update({ addonOpen: true, addons: addons, addonQty: {} });
+    update({ addonOpen: true, proposeOpen: false, addons: rows || [], addonQty: {} });
     ui.render();
   } catch (error) {
     ui.notify(error);
   }
 }
 
-export async function addItem(productId) {
-  const stored = (state.addonQty || {})[productId];
-  const select = document.querySelector('[data-addon-qty="' + productId + '"]');
-  const quantity = Number(stored) || (select ? Number(select.value) : 1) || 1;
-  try {
-    await api.addDealItem(state.deal.id, productId, quantity);
-    update({ addonOpen: false, addons: [], addonQty: {} });
-    await refreshDeal();
-  } catch (error) {
-    ui.notify(error);
-  }
+export function closeAddon() {
+  update({ addonOpen: false, addonQty: {} });
+  ui.render();
 }
 
-export async function changeQuantity(itemId, quantity) {
-  if (quantity < 1) return;
-  try {
-    await api.updateDealItem(state.deal.id, itemId, quantity);
-    await refreshDeal();
-  } catch (error) {
-    ui.notify(error);
-  }
+function maxAddableOf(product) {
+  const inDraft = (state.deal.items || []).reduce(function (sum, item) {
+    return String(item.product_id) === String(product.id) ? sum + Number(item.quantity || 0) : sum;
+  }, 0);
+  return Math.max(0, Number(product.available || 0) - inDraft);
 }
 
-export async function removeItem(itemId) {
-  try {
-    await api.removeDealItem(state.deal.id, itemId);
-    await refreshDeal();
-  } catch (error) {
-    ui.notify(error);
+export async function submitAddon() {
+  const deal = state.deal;
+  if (!deal) return;
+  const items = [];
+  const rows = state.addons || [];
+  for (const product of rows) {
+    const quantity = Number((state.addonQty || {})[product.id]) || 0;
+    if (quantity <= 0) continue;
+    if (quantity > maxAddableOf(product)) {
+      ui.notify(new Error("「" + (product.fish_species || product.title) + "」加購數量超過可再加購尾數"));
+      return;
+    }
+    items.push({ product_id: product.id, quantity: quantity });
   }
-}
-
-export async function clearItems() {
+  if (!items.length) {
+    ui.notify(new Error("請選擇要加購的數量"));
+    return;
+  }
   try {
-    await api.clearDealItems(state.deal.id);
+    await api.addDealItemsBatch(deal.id, items);
+    closeAddon();
     await refreshDeal();
   } catch (error) {
     ui.notify(error);

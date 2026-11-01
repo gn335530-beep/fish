@@ -11,7 +11,7 @@ const DEAL = {
 const CARD = {
   pending: DEAL.PENDING_REVIEW,
   rejected: "已退回",
-  confirmed: DEAL.CONFIRMED,
+  confirmed: "已確認",
   cancelled: DEAL.CANCELLED,
   expired: "已逾時"
 };
@@ -83,6 +83,16 @@ function isPendingCard(cardStatus) {
   return cardStatus === "pending";
 }
 
+function isConfirmedCard(cardStatus) {
+  return cardStatus === "confirmed";
+}
+
+function cardStatusTone(cardStatus) {
+  if (cardStatus === "confirmed") return "confirmed";
+  if (cardStatus === "cancelled" || cardStatus === "expired") return "muted";
+  return "pending";
+}
+
 function isDraft(value) {
   return statusOf(value) === "DRAFT";
 }
@@ -116,6 +126,8 @@ window.DealStatus = {
   isActionable: isActionable,
   canResend: canResend,
   isPendingCard: isPendingCard,
+  isConfirmedCard: isConfirmedCard,
+  cardStatusTone: cardStatusTone,
   isDraft: isDraft,
   isNegotiating: isNegotiating,
   isConfirmed: isConfirmed,

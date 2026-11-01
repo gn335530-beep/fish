@@ -46,13 +46,11 @@ export async function openRoom(room) {
     room: room,
     view: viewOf(room),
     deal: deal,
-    dealOpen: true,
     addonOpen: false,
     addons: [],
     addonQty: {},
     proposeOpen: false,
     proposal: emptyProposal(),
-    cancelReasons: {},
     reviewDrafts: {}
   });
   await api.markRead(room.id);

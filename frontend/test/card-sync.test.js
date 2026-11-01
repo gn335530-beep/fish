@@ -7,7 +7,7 @@ import { PENDING, ROOM, dealCard, reviewCard } from "./deal-sync-helpers.js";
 const { update } = await import("../assets/js/demo/store.js");
 const messages = await import("../assets/js/demo/views/messages.js");
 
-test("舊的協議卡跟著目前訂單顯示成交且沒有操作", function () {
+test("舊的協議卡跟著目前訂單顯示已確認且沒有操作", function () {
   update({
     user: { id: 1 },
     room: Object.assign({}, ROOM, { order: null }),
@@ -17,7 +17,7 @@ test("舊的協議卡跟著目前訂單顯示成交且沒有操作", function ()
 
   const html = messages.renderMessages();
 
-  assert.match(html, /已成交/);
+  assert.match(html, /已確認/);
   assert.doesNotMatch(html, /等待確認/);
   assert.doesNotMatch(html, /deal-agree|deal-reject|deal-cancel/);
 });
@@ -100,7 +100,7 @@ test("較早的協議卡維持歷史狀態，不跟著新狀態走", function ()
   const html = messages.renderMessages();
 
   assert.match(html, /已退回/);
-  assert.match(html, /已成交/);
+  assert.match(html, /已確認/);
 });
 
 test("訊息節點帶 seq，供批次滾動定位", function () {
