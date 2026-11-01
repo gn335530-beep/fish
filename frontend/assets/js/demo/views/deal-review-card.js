@@ -1,4 +1,4 @@
-/* 評價卡：星等、標籤、評語與送出後的狀態。 */
+/* 評價卡：可點星等、四個標籤、評語與送出後的狀態。 */
 
 import { state } from "../store.js";
 import { escapeHtml } from "./html.js";
@@ -20,6 +20,16 @@ function reviewedStatusOf(card) {
   };
 }
 
+function starsOf(draft, dealId) {
+  return [1, 2, 3, 4, 5].map(function (star) {
+    const on = Number(draft.rating) >= star;
+    return '<button type="button" class="fm-review__star' + (on ? " is-on" : "") +
+      '" aria-pressed="' + (Number(draft.rating) === star) + '"' +
+      ' data-action="review-star" data-deal="' + dealId + '" data-star="' + star +
+      '" aria-label="' + star + ' 星">★</button>';
+  }).join("");
+}
+
 export function renderReviewCard(card) {
   const user = state.user;
   const status = reviewedStatusOf(card);
@@ -27,8 +37,7 @@ export function renderReviewCard(card) {
   const mine = isBuyer ? status.buyer_reviewed : status.seller_reviewed;
   const other = isBuyer ? status.seller_reviewed : status.buyer_reviewed;
   const head = '<div class="fm-card fm-card--review">' +
-    '<div class="fm-card__deal-head"><b>評價</b><span class="fm-card__pill">' +
-    (mine ? "已評價" : "待評價") + "</span></div>";
+    '<div class="fm-card__deal-head"><b>評價</b></div>';
 
   if (!user) return head + "</div>";
   if (mine) {
@@ -38,10 +47,6 @@ export function renderReviewCard(card) {
 
   const draft = draftOf(card.deal_id);
   const dealId = escapeHtml(card.deal_id);
-  const options = [5, 4, 3, 2, 1].map(function (stars) {
-    return '<option value="' + stars + '"' +
-      (Number(draft.rating) === stars ? " selected" : "") + ">" + stars + " 星</option>";
-  }).join("");
   const tags = REVIEW_TAGS.map(function (tag, index) {
     return '<label class="fm-review__tag"><input type="checkbox" id="rv-tag-' + dealId + "-" + index +
       '" data-review-tag="' + escapeHtml(tag) + '"' +
@@ -51,13 +56,14 @@ export function renderReviewCard(card) {
 
   return head +
     '<div class="fm-review__form" data-review-deal="' + dealId + '">' +
-    '<label class="fm-review__rating">星等<select id="rv-rating-' + dealId +
-    '" data-review-field="rating">' + options + "</select></label>" +
+    '<div class="fm-review__rating"><span>整體評分</span>' +
+    '<div class="fm-review__stars" role="group" aria-label="整體評分">' +
+    starsOf(draft, dealId) + "</div></div>" +
     '<div class="fm-review__tags">' + tags + "</div>" +
     '<textarea id="rv-comment-' + dealId +
-    '" data-review-comment maxlength="100" rows="3" placeholder="最多 100 字（選填）">' +
+    '" data-review-comment maxlength="100" rows="3" placeholder="留下你的評價吧！">' +
     escapeHtml(draft.comment) + "</textarea>" +
     '<button type="button" class="fm-card__primary" data-action="deal-review" data-deal="' +
-    dealId + '">送出評價</button>' +
+    dealId + '">確認</button>' +
     "</div></div>";
 }

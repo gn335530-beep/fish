@@ -32,10 +32,10 @@ function respond(dealId, action, token) {
   });
 }
 
-function cancel(dealId, reason, token) {
+function cancel(dealId, note, token) {
   return call("POST", "/api/deals/cancel", {
     token: token,
-    body: { deal_id: dealId, reason: reason }
+    body: { deal_id: dealId, note: note }
   });
 }
 

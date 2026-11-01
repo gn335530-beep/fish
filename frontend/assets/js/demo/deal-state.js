@@ -14,9 +14,15 @@ export const cardStatusTone = shared.cardStatusTone;
 export const isDraft = shared.isDraft;
 export const isNegotiating = shared.isNegotiating;
 export const isConfirmed = shared.isConfirmed;
+export const isCancelled = shared.isCancelled;
+export const isReopenableDeal = shared.isReopenableDeal;
 export const isFinished = shared.isFinished;
+
+export function isBuyerOf(deal, user) {
+  return !!(deal && user && String(deal.buyer_id) === String(user.id));
+}
 
 /* 只有買家可以在草稿階段修改商品組合。 */
 export function canEditDeal(deal, user) {
-  return !!(deal && isDraft(deal) && user && String(deal.buyer_id) === String(user.id));
+  return isBuyerOf(deal, user) && isDraft(deal);
 }

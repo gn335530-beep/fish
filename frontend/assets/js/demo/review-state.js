@@ -2,7 +2,7 @@
 
 import { state } from "./store.js";
 
-export const REVIEW_TAGS = ["準時守約", "魚貨新鮮", "溝通良好", "包裝完善", "臨時放鳥"];
+export const REVIEW_TAGS = ["魚貨新鮮", "準時守約", "溝通良好", "臨時放鳥"];
 
 export function draftOf(dealId) {
   state.reviewDrafts = state.reviewDrafts || {};

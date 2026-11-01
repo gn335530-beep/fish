@@ -19,6 +19,8 @@ export function emptyState() {
     addonQty: {},
     proposeOpen: false,
     proposal: emptyProposal(),
+    cancelOpen: null,
+    cancelNote: "",
     reviewDrafts: {},
     marketDays: {},
     marketWeights: {},

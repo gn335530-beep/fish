@@ -2,8 +2,9 @@
 
 const { all, findById, insert, patch, nextCode } = require("./store");
 const { productAvailability } = require("./product-stock");
-const { itemsOf, itemsTotal } = require("./deal-items");
-const { DRAFT_STATUS, ACTIVE_STATUS } = require("./deal-statuses");
+const { itemsOf, itemsTotal, addSnapshotBatch } = require("./deal-items");
+const { systemMessage } = require("./messages");
+const { DRAFT_STATUS, ACTIVE_STATUS, CANCELLED_STATUS } = require("./deal-statuses");
 const { fail } = require("./http");
 
 const LOCK_MINUTES = 30;
@@ -140,6 +141,43 @@ function applyProposal(deal, userId, terms, now) {
   });
 }
 
+/* 重新發起：複製已取消訂單的項目，數量以目前可售為上限，可售 0 的項目略過。 */
+function reinitiateDeal(source, userId, now) {
+  const conversation = findById("conversations", source.conversation_id);
+  if (!conversation) return { error: "CONVERSATION_NOT_FOUND" };
+  if (draftOf(conversation.id)) return { error: "DRAFT_EXISTS" };
+
+  const additions = [];
+  const skipped = [];
+  itemsOf(source).forEach(function (item) {
+    const stock = productAvailability(item.product_id);
+    if (!stock || stock.available <= 0) {
+      skipped.push(item);
+      return;
+    }
+    const quantity = Math.min(Number(item.quantity || 0), stock.available);
+    if (!(quantity > 0)) {
+      skipped.push(item);
+      return;
+    }
+    additions.push({ item: item, quantity: quantity, label: item.fish_species || item.title });
+  });
+  if (!additions.length) return { error: "NO_AVAILABLE_ITEMS", skipped: skipped };
+
+  const deal = createDeal(conversation, userId, now);
+  const updated = addSnapshotBatch(deal, additions);
+  let text = "已重新發起交易，加入" + additions.map(function (addition) {
+    return "「" + addition.label + "」" + addition.quantity + " 尾";
+  }).join("、") + "。";
+  if (skipped.length) {
+    text += "略過" + skipped.map(function (item) {
+      return "「" + (item.fish_species || item.title) + "」";
+    }).join("、") + "（可售 0 尾）。";
+  }
+  systemMessage(conversation.id, text);
+  return { deal: updated, skipped: skipped };
+}
+
 module.exports = {
   findConversation: findConversation,
   createConversation: createConversation,
@@ -151,5 +189,6 @@ module.exports = {
   isBuyer: isBuyer,
   requireDeal: requireDeal,
   requireDraft: requireDraft,
-  applyProposal: applyProposal
+  applyProposal: applyProposal,
+  reinitiateDeal: reinitiateDeal
 };

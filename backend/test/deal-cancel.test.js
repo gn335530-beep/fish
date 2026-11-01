@@ -21,7 +21,7 @@ test("使用者取消與逾時取消產生相同狀態與釋放，操作者與�
   const userRoom = await initiate("prd_a", 1, tokens.buyer);
   const userDealId = userRoom.body.data.deal.id;
   await propose(userDealId, tokens.buyer);
-  await cancel(userDealId, "TERMS_MISMATCH", tokens.buyer);
+  await cancel(userDealId, "買家臨時有事", tokens.buyer);
 
   const timedRoom = await initiate("prd_b", 1, tokens.third);
   const timedDealId = timedRoom.body.data.deal.id;
@@ -51,10 +51,19 @@ test("使用者取消與逾時取消產生相同狀態與釋放，操作者與�
   assert.equal(lastDealCard(timedMessages, timedDealId).card.status, "expired");
 
   assert.equal(userDeal.cancelled_by, 2);
+  assert.equal(userDeal.cancel_reason, "OTHER");
+  assert.equal(userDeal.cancel_note, "買家臨時有事");
   assert.equal(timedDeal.cancelled_by, "system");
-  assert.ok(userMessages.some(function (message) {
-    return message.type === "system" && message.text.indexOf("條件不合") !== -1;
-  }));
+  assert.equal(timedDeal.cancel_reason, "LOCK_EXPIRED");
+  assert.equal(timedDeal.cancel_note, null);
+  const cancelledCard = userMessages.find(function (message) {
+    return message.card && message.card.type === "deal_cancelled" && message.card.deal_id === userDealId;
+  });
+  assert.ok(cancelledCard);
+  assert.equal(cancelledCard.card.note, "買家臨時有事");
+  assert.equal(timedMessages.some(function (message) {
+    return message.card && message.card.type === "deal_cancelled";
+  }), false);
   assert.ok(timedMessages.some(function (message) {
     return message.type === "system" && message.text.indexOf("逾時未回覆") !== -1;
   }));

@@ -123,15 +123,16 @@ test("退回後進入協商中 15 分鐘，只有退回方能重送", async func
   assert.equal(third.body.data.completed_deals, 1);
 });
 
-test("取消要選原因，取消後立即釋放保留", async function () {
-  const invalid = await cancel(seen.dealC, "WHATEVER", tokens.otherSeller);
-  assert.equal(invalid.status, 400);
-  assert.equal(invalid.body.code, "INVALID_CANCEL_REASON");
+test("取消原因為自由文字，取消後立即釋放保留", async function () {
+  const tooLong = await cancel(seen.dealC, "字".repeat(201), tokens.otherSeller);
+  assert.equal(tooLong.status, 400);
+  assert.equal(tooLong.body.code, "FIELD_TOO_LONG");
 
-  const result = await cancel(seen.dealC, "SELLER_OUT_OF_STOCK", tokens.otherSeller);
+  const result = await cancel(seen.dealC, "釣客缺貨", tokens.otherSeller);
   assert.equal(result.status, 200);
   assert.equal(result.body.data.deal.deal_status, "CANCELLED");
-  assert.equal(result.body.data.deal.cancel_reason, "SELLER_OUT_OF_STOCK");
+  assert.equal(result.body.data.deal.cancel_reason, "OTHER");
+  assert.equal(result.body.data.deal.cancel_note, "釣客缺貨");
   assert.equal(result.body.data.deal.cancelled_by, 4);
 
   const product = await call("GET", "/api/products/prd_c", { token: tokens.third });
@@ -140,12 +141,13 @@ test("取消要選原因，取消後立即釋放保留", async function () {
 
   const messages = await messagesOf(seen.convC, tokens.third);
   const card = messages.filter(function (message) {
-    return message.card && message.card.deal_id === seen.dealC;
+    return message.card && message.card.type === "deal" && message.card.deal_id === seen.dealC;
   }).pop();
   assert.equal(card.card.status, "cancelled");
-  assert.ok(messages.some(function (message) {
-    return message.type === "system" && message.text.indexOf("釣客缺貨") !== -1;
-  }));
+  const cancelled = messages.filter(function (message) {
+    return message.card && message.card.type === "deal_cancelled" && message.card.deal_id === seen.dealC;
+  }).pop();
+  assert.equal(cancelled.card.note, "釣客缺貨");
 });
 
 test("已結束的訂單不能再回應或取消", async function () {

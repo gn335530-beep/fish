@@ -6,7 +6,7 @@ const { syncDealCard } = require("./cards");
 const { systemMessage } = require("./messages");
 const { reviewCardMessage } = require("./reviews");
 const { DRAFT_STATUS } = require("./deal-statuses");
-const { CANCEL_REASONS, cancelDeal } = require("./deal-cancel");
+const { cancelDeal } = require("./deal-cancel");
 
 const HOLD_MINUTES = 15;
 
@@ -58,15 +58,16 @@ function reject(deal, userId, now) {
   return updated;
 }
 
-/* 使用者取消：選原因、立刻釋放保留尾數、留下系統訊息。 */
-function cancel(deal, userId, reason, now) {
+/* 使用者取消：自由文字備註、立刻釋放保留尾數、同步協議卡並留下取消訊息卡。 */
+function cancel(deal, userId, note, now) {
   const wasAgreement = deal.deal_status !== DRAFT_STATUS;
   return cancelDeal(deal, {
     operator: Number(userId),
-    reason: reason,
+    reason: "OTHER",
+    note: note,
     cardStatus: "cancelled",
-    message: (wasAgreement ? "協議已取消" : "訂單已取消") +
-      "（" + CANCEL_REASONS[reason] + "），保留的尾數已釋放。"
+    message: (wasAgreement ? "協議已取消" : "訂單已取消") + "，保留的尾數已釋放。",
+    cancelledCard: true
   }, now);
 }
 

@@ -60,6 +60,11 @@ async function submitReview(dealId) {
 }
 
 export async function handleReviewAction(action, data) {
+  if (action === "review-star") {
+    draftOf(data.deal).rating = Number(data.star) || 5;
+    ui.render();
+    return true;
+  }
   if (action !== "deal-review") return false;
   await submitReview(data.deal);
   return true;

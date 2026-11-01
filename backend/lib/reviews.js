@@ -5,7 +5,7 @@ const { cardMessage } = require("./messages");
 const { syncLatestCard } = require("./cards");
 const { round1 } = require("./round");
 
-const REVIEW_TAGS = ["準時守約", "魚貨新鮮", "溝通良好", "包裝完善", "臨時放鳥"];
+const REVIEW_TAGS = ["魚貨新鮮", "準時守約", "溝通良好", "臨時放鳥"];
 const NO_SHOW_TAG = "臨時放鳥";
 
 function reviewsFor(userId) {

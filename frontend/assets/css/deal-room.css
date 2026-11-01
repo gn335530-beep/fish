@@ -62,6 +62,24 @@
 
 .fm-card__cancel button:hover { background: var(--coral); color: #fff; }
 
+/* 確認取消卡與取消訊息卡 */
+.fm-card--cancel-confirm,
+.fm-card--cancelled { padding: 10px; }
+
+.fm-cancel__hint { margin: 6px 0 0; color: var(--muted); font-size: .7rem; }
+
+.fm-card--cancel-confirm textarea {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  color: var(--ink);
+  font-size: .72rem;
+  resize: vertical;
+}
+
+.fm-card--cancel-confirm textarea:focus { border-color: var(--accent); outline: none; }
+
 /* 評價卡 */
 .fm-card--review { padding: 10px; }
 .fm-review__note { margin: 6px 0 0; color: var(--muted); font-size: .7rem; line-height: 1.7; }
@@ -69,23 +87,30 @@
 .fm-review__form { display: grid; gap: 8px; margin-top: 8px; }
 
 .fm-review__rating {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  display: grid;
+  gap: 4px;
   color: var(--muted);
   font-size: .7rem;
 }
 
-.fm-review__rating select {
-  padding: 4px 6px;
-  border: 1px solid var(--rule);
-  background: var(--surface);
-  color: var(--ink);
-  font-size: .7rem;
+.fm-review__stars { display: flex; gap: 2px; }
+
+.fm-review__star {
+  padding: 0 2px;
+  border: 0;
+  background: transparent;
+  color: var(--rule-2);
+  font-size: 1.15rem;
+  line-height: 1;
+  cursor: pointer;
 }
 
-.fm-review__tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.fm-review__star.is-on { color: var(--coral); }
+.fm-review__star:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.fm-review__tags { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .fm-review__tag { display: inline-flex; align-items: center; gap: 3px; font-size: .66rem; color: var(--ink-2); }
+.fm-review__tag input { accent-color: var(--accent); }
 
 .fm-review__form textarea {
   width: 100%;

@@ -29,7 +29,9 @@ export function reset(deal, userId) {
     addons: [],
     addonQty: {},
     proposeOpen: false,
-    proposal: { quantity: "", final_price: "", meetup_location: "", meetup_time: "" }
+    proposal: { quantity: "", final_price: "", meetup_location: "", meetup_time: "" },
+    cancelOpen: null,
+    cancelNote: ""
   });
 }
 

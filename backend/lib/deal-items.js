@@ -83,6 +83,26 @@ function addBatch(deal, additions) {
   return writeItems(deal, items);
 }
 
+/* 重新發起時複製原項目快照，只更新數量並配置新的 item_id。 */
+function addSnapshotBatch(deal, additions) {
+  const items = itemsOf(deal).map(function (item) { return Object.assign({}, item); });
+  (additions || []).forEach(function (addition) {
+    const source = addition.item || {};
+    const existing = items.find(function (item) {
+      return String(item.product_id) === String(source.product_id);
+    });
+    if (existing) {
+      existing.quantity = Number(existing.quantity || 0) + Number(addition.quantity);
+      return;
+    }
+    items.push(Object.assign({}, source, {
+      item_id: nextItemId(items),
+      quantity: Number(addition.quantity)
+    }));
+  });
+  return writeItems(deal, items);
+}
+
 /* 加購與首次建立共用：驗證尾數與草稿累計；回傳可加入的尾數或 null。 */
 function requireAddableQuantity(deal, stock, value, res, shortMessage) {
   const quantity = requireQuantity(value, res);
@@ -149,6 +169,7 @@ module.exports = {
   quantityOf: quantityOf,
   addItem: addItem,
   addBatch: addBatch,
+  addSnapshotBatch: addSnapshotBatch,
   requireAddableQuantity: requireAddableQuantity,
   addWithMessage: addWithMessage,
   addBatchWithMessage: addBatchWithMessage,
