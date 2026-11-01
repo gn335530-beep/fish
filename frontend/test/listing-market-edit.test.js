@@ -1,4 +1,4 @@
-/* 上架行情卡：修改魚種或重量後用新資料重新查行情。 */
+/* 草稿修改與行情卡：只有改魚種需要重查行情，尾數變更不重查。 */
 
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -8,67 +8,51 @@ import {
 
 test.beforeEach(resetFixture);
 
-test("修改重量後重新查行情，避免參考金額過期", async function () {
-  const started = await service.handleText(null, "我要賣花枝 3公斤 2尾 放血冰鎮", { city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" });
-  const quoted = await service.handlePhoto(started.context, "/uploads/a.jpg", { city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" });
-  resetCalls();
-  const edited = await service.handleText(quoted.context, "4 公斤", { city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" });
-  assert.equal(edited.context.draft.weight_kg, 4);
-  assert.equal(marketCalls().length, 1);
-  const card = cardOf(edited);
-  assert.equal(card.weight_kg, 4);
-  assert.equal(card.estimated_total, 1333);
-});
+const USER = { city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" };
 
-test("選欄位時一句話改重量，也會重新查行情", async function () {
-  const user = { city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" };
-  const started = await service.handleText(null, "我要賣花枝 3公斤 2尾 放血冰鎮", user);
-  const quoted = await service.handlePhoto(started.context, "/uploads/a.jpg", user);
-  const choosing = Object.assign({}, quoted.context, { choosing_edit: true });
-  resetCalls();
-  const edited = await service.handleText(choosing, "重量改成 4 公斤", user);
-  assert.equal(edited.context.draft.weight_kg, 4);
-  assert.equal(edited.context.choosing_edit, null);
-  assert.equal(edited.context.editing, null);
-  assert.equal(marketCalls().length, 1);
-  assert.equal(cardOf(edited).weight_kg, 4);
-});
+function completedDraft(overrides) {
+  return Object.assign({
+    fish_species: "花枝",
+    species_code: 2166,
+    quantity: 2,
+    condition: "放血冰鎮",
+    photo_url: "/uploads/a.jpg",
+    price: 1000
+  }, overrides || {});
+}
 
 test("修改魚種會先清空 species_code，等行情查詢再補上新代碼", async function () {
-  const context = {
-    mode: "listing",
-    market_quoted: true,
-    draft: {
-      fish_species: "花枝", species_code: 2166, weight_kg: 3, quantity: 2,
-      condition: "放血冰鎮", photo_url: "/uploads/a.jpg", price: 1000
-    }
-  };
+  const context = { mode: "listing", market_quoted: true, draft: completedDraft() };
   const cleared = editing.editText(editing.beginEdit(context, "fish_species").context, "海鱸");
   assert.equal(cleared.context.draft.fish_species, "海鱸");
   assert.equal(cleared.context.draft.species_code, null);
 
   const editingContext = editing.beginEdit(context, "fish_species").context;
-  const resolved = await service.handleText(editingContext, "海鱸", {
-    city: "高雄市",
-    seller_terms_accepted_at: "2026-10-27T00:00:00.000Z"
-  });
+  const resolved = await service.handleText(editingContext, "海鱸", USER);
   assert.equal(resolved.context.draft.species_code, 1073);
 });
 
 test("修改魚種後立刻用新魚種重新送行情卡", async function () {
-  const started = await service.handleText(
-    null,
-    "我要賣花枝 3公斤 2尾 放血冰鎮 每台斤 200",
-    { city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" }
-  );
-  const quoted = await service.handlePhoto(started.context, "/uploads/a.jpg", { city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" });
-  const editContext = editing.beginEdit(quoted.context, "fish_species").context;
+  const context = { mode: "listing", market_quoted: true, draft: completedDraft() };
+  const editContext = editing.beginEdit(context, "fish_species").context;
   resetCalls();
-  const edited = await service.handleText(editContext, "海鱸", { city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" });
+  const edited = await service.handleText(editContext, "海鱸", USER);
   const card = cardOf(edited);
   assert.equal(edited.context.draft.species_code, 1073);
   assert.equal(card.species_code, 1073);
   assert.equal(card.species_name, "海鱸");
+  assert.ok(edited.replies.some(function (reply) {
+    return reply.card && reply.card.type === "draft";
+  }));
+});
+
+test("修改尾數不重查行情，直接重畫草稿卡", async function () {
+  const context = { mode: "listing", market_quoted: true, draft: completedDraft() };
+  const editContext = editing.beginEdit(context, "quantity").context;
+  resetCalls();
+  const edited = await service.handleText(editContext, "3 尾", USER);
+  assert.equal(edited.context.draft.quantity, 3);
+  assert.equal(marketCalls().length, 0);
   assert.ok(edited.replies.some(function (reply) {
     return reply.card && reply.card.type === "draft";
   }));

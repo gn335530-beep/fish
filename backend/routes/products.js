@@ -75,16 +75,12 @@ router.post("/api/products/create", requireUser, async function (req, res) {
   const body = req.body || {};
   const fishSpecies = String(body.fish_species || "").trim();
   const weightKg = Number(body.weight_kg);
-  const weight = round1(weightKg);
+  const weight = Number.isFinite(weightKg) && weightKg > 0 ? round1(weightKg) : null;
   const condition = String(body.condition || "").trim();
   const photoUrl = String(body.photo_url || "").trim();
 
   if (!fishSpecies) {
     fail(res, 400, "MISSING_SPECIES", "請提供魚種");
-    return;
-  }
-  if (!(weightKg > 0)) {
-    fail(res, 400, "INVALID_WEIGHT", "重量必須大於 0 公斤");
     return;
   }
   const quantity = requireQuantity(body.quantity, res);
@@ -101,9 +97,9 @@ router.post("/api/products/create", requireUser, async function (req, res) {
     fail(res, 400, "INVALID_CONDITION", "處理方式請描述處理方式，不能只有數字");
     return;
   }
-  const pricing = readPricing(body, weightKg);
+  const pricing = readPricing(body);
   if (pricing.error === "MISSING_PRICE") {
-    fail(res, 400, "MISSING_PRICE", "請提供整批或每台斤售價");
+    fail(res, 400, "MISSING_PRICE", "請提供整批售價");
     return;
   }
   if (pricing.error === "INVALID_PRICE") {
@@ -122,7 +118,7 @@ router.post("/api/products/create", requireUser, async function (req, res) {
   const product = insert("products", {
     id: nextCode("products", "prd"),
     seller_id: user.id,
-    title: buildTitle(fishSpecies, weightKg, quantity, condition),
+    title: buildTitle(fishSpecies, quantity, condition),
     fish_species: fishSpecies,
     species_code: speciesCodeOf(body.species_code),
     weight_kg: weight,

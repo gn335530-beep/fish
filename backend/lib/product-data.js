@@ -44,7 +44,7 @@ function migrateProducts() {
     if (next.condition === "冷凍" && isLegacy(next)) {
       const oldTitle = next.title;
       next.condition = "放血冰鎮";
-      next.title = buildTitle(next.fish_species, next.weight_kg, next.quantity, next.condition);
+      next.title = buildTitle(next.fish_species, next.quantity, next.condition);
       migrated.set(next.id, {
         oldTitle: oldTitle,
         newTitle: next.title,

@@ -1,27 +1,11 @@
-/* 商品（products API）的顯示轉換與卡片。 */
+/* 商品（products API）的顯示轉換與首頁／今日漁獲共用的直式商品卡。 */
 
 /* 格式化集中於 shared/format.js；這裡用延遲取值，classic 腳本不依賴載入順序。 */
 function productEscape(value) { return window.HaisenFormat.escapeHtml(value); }
 function productMoney(value) { return window.HaisenFormat.money(value); }
-function productDate(value) { return window.HaisenFormat.dateOf(value) || "日期未提供"; }
-
-function productWeight(p) {
-  return Number(p.weight_kg || 0).toFixed(1);
-}
 
 function productAvailable(p) {
   return Math.max(0, Number(p.available || 0));
-}
-
-/* 標題只由後端產生；缺漏時用通用文案，不在前端重拼格式。 */
-function productTitle(p) {
-  return p.title || "商品資訊未提供";
-}
-
-function productStatus(p) {
-  if (p.status === "PARTIALLY_RESERVED") return "洽談中";
-  if (p.status === "SOLD_OUT") return "已售出";
-  return "可售 " + productAvailable(p) + " 尾";
 }
 
 function productStateHTML(text, isError) {
@@ -35,65 +19,45 @@ function productErrorText(error, label) {
     : label + "載入失敗：" + error.message;
 }
 
-function productDateLabel(p) {
-  if (p.catch_time) return "釣獲 " + productDate(p.catch_time);
-  if (p.created_at) return "上架 " + productDate(p.created_at);
-  return "日期未提供";
+function placeOf(p) {
+  var region = normalizeCityName(p.region);
+  var location = normalizeCityName(p.location);
+  if (!region || !location) return "地區未提供";
+  return region + "　" + location;
 }
 
-function dealQuantityOptions(available) {
-  var options = "";
-  for (var i = 1; i <= available; i++) {
-    options += '<option value="' + i + '">' + i + ' 尾</option>';
-  }
-  return options;
-}
-
+/* 兩個按鈕並排；賣家資訊目前只保留入口，不註冊任何行為。 */
 function dealControls(p) {
-  var available = productAvailable(p);
-  if (available <= 0) {
-    var note = Number(p.reserved_quantity) > 0 ? "洽談中，暫無法購買" : "已售出，無法洽談";
-    return '<div class="card__deal"><span class="card__deal-note">' + note + '</span></div>';
+  var seller = '<button type="button" class="btn btn--ghost btn--sm" data-action="seller-info">賣家資訊</button>';
+  if (productAvailable(p) <= 0) {
+    var note = Number(p.reserved_quantity) > 0 ? "洽談中，暫無法購買" : "已售出";
+    return '<div class="card__deal">' + seller +
+      '<span class="card__deal-note">' + note + '</span></div>';
   }
-  return '<div class="card__deal">' +
-    '<select class="select card__deal-qty" data-deal-qty="' + productEscape(p.id) + '" aria-label="購買尾數">' +
-    dealQuantityOptions(available) + '</select>' +
+  return '<div class="card__deal">' + seller +
     '<button type="button" class="btn btn--primary btn--sm" data-deal-product="' +
-    productEscape(p.id) + '">洽談購買</button>' +
-    '</div>';
+    productEscape(p.id) + '">洽談購買</button></div>';
 }
 
 function productCardHTML(p) {
-  var href = "product-detail.html?id=" + encodeURIComponent(p.id);
   var photo = window.HaisenAPI.photoUrl(p.photo_url);
-  var region = normalizeCityName(p.region) || "地區未提供";
-  var location = normalizeCityName(p.location) || "地點未提供";
-  var quantity = Number(p.quantity || 0);
-  var available = productAvailable(p);
+  var species = p.fish_species || "商品資訊未提供";
   var media = photo
-    ? '<img src="' + productEscape(photo) + '" alt="' + productEscape(p.fish_species || "商品照片") + '">'
+    ? '<img src="' + productEscape(photo) + '" alt="' + productEscape(species) + '">'
     : '<div class="media-empty">沒有照片</div>';
 
   return '<article class="card catch-card">' +
-    '<a href="' + href + '" class="card__media">' + media +
-    '<div class="card__tags"><span class="badge">' + productEscape(region) + '</span>' +
-    '<span class="badge badge--coral">' + productEscape(productStatus(p)) + '</span></div>' +
-    '</a>' +
+    '<div class="card__media">' + media + '</div>' +
     '<div class="card__body">' +
-    '<div class="card__seller">' + productEscape(productDateLabel(p)) + '</div>' +
-    '<h3 class="card__title"><a href="' + href + '">' + productEscape(productTitle(p)) + '</a></h3>' +
-    '<div class="card__meta"><span>' + productWeight(p) + ' kg · 共 ' + quantity + ' 尾</span>' +
-    '<span>可售 ' + available + ' 尾</span></div>' +
-    '<div class="card__meta"><span>每尾均價 ' + productMoney(p.unit_price) + '</span>' +
-    (p.price_per_taijin != null ? '<span>每台斤 ' + productMoney(p.price_per_taijin) + '</span>' : '') +
-    '</div>' +
-    '<div class="card__meta"><span>' + productEscape(location) + '</span></div>' +
-    '<div class="card__price"><b>' + productMoney(p.price) +
-    '<span class="unit"> · 整批</span>' +
-    (p.price_auto ? '<span class="unit"> · 自動計算</span>' : '') +
-    '</b></div>' +
+    '<h3 class="card__title">' + productEscape(species) + '</h3>' +
+    '<span class="badge badge--coral card__condition">處理方式：' + productEscape(p.condition || "未提供") + '</span>' +
+    '<div class="card__meta"><span>共 ' + Number(p.quantity || 0) + ' 尾</span></div>' +
+    (p.price_per_taijin != null
+      ? '<div class="card__meta"><span>每台斤售價：' + productMoney(p.price_per_taijin) + '</span></div>'
+      : '') +
+    '<div class="card__price"><b>整批售價：' + productMoney(p.price) + '</b></div>' +
+    '<div class="card__meta"><span>' + productEscape(placeOf(p)) + '</span></div>' +
     dealControls(p) +
-    '<a href="' + href + '" class="btn btn--ghost btn--sm" style="margin-top:10px">查看詳情</a>' +
     '</div></article>';
 }
 

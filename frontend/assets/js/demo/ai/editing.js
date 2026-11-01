@@ -31,7 +31,7 @@ function finish(context, slot, found) {
   if (slot === "fish_species") changes.species_code = found.species_code || null;
   const draft = mergeDraft(context.draft, changes);
   const next = { editing: null, draft: draft };
-  const refreshMarket = slot === "fish_species" || slot === "weight_kg";
+  const refreshMarket = slot === "fish_species";
   if (refreshMarket) next.market_quoted = false;
   return {
     context: Object.assign({}, context, next),
@@ -48,6 +48,12 @@ function editPrice(context, text) {
   if (found.price !== undefined) priceFound.price = found.price;
   if (found.price_per_taijin !== undefined) priceFound.price_per_taijin = found.price_per_taijin;
   if (priceFound.price === undefined && priceFound.price_per_taijin === undefined) return null;
+  if (priceFound.price === undefined && !(Number(context.draft.price) > 0)) {
+    return {
+      context: Object.assign({}, context, { editing: null }),
+      replies: [{ text: "請提供整批售價" }]
+    };
+  }
   const draft = mergeDraft(context.draft, priceFound);
   return {
     context: Object.assign({}, context, { editing: null, draft: draft }),

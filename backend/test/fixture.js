@@ -29,7 +29,7 @@ function product(id, sellerId, name, quantity, price) {
   return {
     id: id,
     seller_id: sellerId,
-    title: name + "（2kg / " + quantity + "尾 / 活體）",
+    title: name + "（" + quantity + "尾 / 活體）",
     fish_species: name,
     species_code: null,
     weight_kg: 2,

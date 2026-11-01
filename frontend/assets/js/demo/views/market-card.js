@@ -58,11 +58,12 @@ export function renderMarketCard(card, messageId) {
     '<span>最高 ' + escapeHtml(stats.high == null ? "—" : priceText(stats.high)) + '</span>' +
     '<span>最低 ' + escapeHtml(stats.low == null ? "—" : priceText(stats.low)) + '</span>' +
     '</div>' +
-    '<dl class="fm-market__calc">' +
-    '<div><dt>重量</dt><dd>' + escapeHtml(card.weight_kg) + ' kg' +
-    (weightTaijin ? '（' + escapeHtml(weightTaijin) + '）' : "") + '</dd></div>' +
-    '<div><dt>參考整批</dt><dd>' + money(card.estimated_total) + '</dd></div>' +
-    '</dl>' +
+    (card.weight_kg == null ? "" :
+      '<dl class="fm-market__calc">' +
+      '<div><dt>重量</dt><dd>' + escapeHtml(card.weight_kg) + ' kg' +
+      (weightTaijin ? '（' + escapeHtml(weightTaijin) + '）' : "") + '</dd></div>' +
+      '<div><dt>參考整批</dt><dd>' + money(card.estimated_total) + '</dd></div>' +
+      '</dl>') +
     '<div class="fm-market__note">行情價參考，非售價或保證收購價。</div>' +
     '</div>';
 }

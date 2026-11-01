@@ -72,7 +72,7 @@ async function handleReferent(ctx, ref) {
 
 export function explainProduct(product, context) {
   const replies = [{
-    text: product.fish_species + "：這批 " + product.weight_kg + " kg / " + product.quantity +
+    text: product.fish_species + "：共 " + product.quantity +
       " 尾，" + (product.condition || "處理方式未提供") + "，整批 " + product.price + " 元，可售 " +
       product.available + " 尾。保存建議 0–4°C，2 日內食用。"
   }];

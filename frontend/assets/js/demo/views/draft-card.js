@@ -10,10 +10,9 @@ export function renderDraftCard(card) {
     '<b>上架草稿</b>' +
     '<dl>' +
     definitionRow("魚種", draft.fish_species) +
-    definitionRow("總重", draft.weight_kg + " kg") +
     definitionRow("尾數", draft.quantity + " 尾") +
     definitionRow("處理", draft.condition) +
-    definitionRow("整批售價", money(draft.price) + (draft.price_auto ? "（自動計算）" : "")) +
+    definitionRow("整批售價", money(draft.price)) +
     definitionRow("每台斤", draft.price_per_taijin == null ? "—" : money(draft.price_per_taijin)) +
     definitionRow("每尾均價", unitPrice > 0 ? money(unitPrice) : "—") +
     '</dl>' +

@@ -40,7 +40,7 @@ test("冷凍、自行處理等自由文字都能進草稿", function () {
 test("一般句子仍可抽出處理方式與其他欄位", function () {
   const found = extractSlots("石斑 3公斤 2尾 冷凍", null);
   assert.equal(found.fish_species, "石斑");
-  assert.equal(found.weight_kg, 3);
+  assert.equal(found.weight_kg, undefined);
   assert.equal(found.quantity, 2);
   assert.equal(found.condition, "冷凍");
 
