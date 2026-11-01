@@ -8,7 +8,7 @@ import { initDealActions, handleDealAction } from "./deal-actions.js";
 import { initDealReplies } from "./deal-replies.js";
 import { initDealReviews } from "./deal-reviews.js";
 import {
-  submitText, publishDraft, explainProduct, beginEdit, beginDeal
+  submitText, publishDraft, explainProduct, beginDeal
 } from "./flow.js";
 import {
   editDraft, cancelListing, dismissCancelListing, confirmCancelListing,
@@ -63,7 +63,6 @@ export async function handleAction(action, data) {
     return;
   }
   if (await handleDealAction(action, data)) return;
-  if (action === "edit-slot") return beginEdit(data.slot);
   if (action === "publish") {
     publishDraft();
     return;

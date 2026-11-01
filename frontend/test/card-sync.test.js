@@ -102,3 +102,21 @@ test("較早的協議卡維持歷史狀態，不跟著新狀態走", function ()
   assert.match(html, /已退回/);
   assert.match(html, /已成交/);
 });
+
+test("訊息節點帶 seq，供批次滾動定位", function () {
+  update({
+    user: { id: 1 },
+    room: Object.assign({}, ROOM, { order: null }),
+    deal: null,
+    messages: [{
+      id: "msg_9",
+      seq: 9,
+      sender_id: "ai",
+      type: "text",
+      text: "訊息",
+      created_at: "2026-10-27T10:00:00.000Z"
+    }]
+  });
+
+  assert.match(messages.renderMessages(), /data-seq="9"/);
+});

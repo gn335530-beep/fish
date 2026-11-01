@@ -3,11 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="../assets/images/favicon.svg?v=v7">
 <title>登入 / 註冊 — 一支釣</title>
 <meta name="description" content="一支釣登入與註冊：以電話號碼登入，註冊需填寫暱稱、電話號碼與縣市。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&family=Noto+Serif+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400..700&family=Noto+Serif+TC:wght@600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/css/base.css?v=v7">
 <link rel="stylesheet" href="../assets/css/layout.css?v=v7">
 <link rel="stylesheet" href="../assets/css/components.css?v=v7">
@@ -43,13 +44,14 @@
         <div><b>買家</b>依魚類與地區篩選、與釣客洽談後成立訂單</div>
       </div>
       <div class="auth__legal">
-        <p><strong>販賣魚貨（一支釣）需依照法規申請相關合法證照</strong><br>未申請可依法開罰新臺幣三萬元以上三十萬元以下罰鍰。</p>
+        <p class="auth__legal-notice"><strong>販賣魚貨（一支釣）需依照法規申請相關合法證照</strong><br>未申請可依法開罰新臺幣三萬元以上三十萬元以下罰鍰。</p>
         <p>參考：<a href="https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode=M0050001" target="_blank" rel="noopener">漁業法</a></p>
       </div>
     </div>
 
     <!-- 右：表單卡 -->
     <div class="auth__card">
+      <h2 class="sr-only">登入／註冊</h2>
       <div class="auth__tabs" role="tablist">
         <button type="button" class="auth__tab on" id="tab-login" role="tab">登入</button>
         <button type="button" class="auth__tab" id="tab-register" role="tab">註冊</button>
@@ -58,13 +60,13 @@
       <!-- 登入表單 -->
       <form id="form-login" novalidate>
         <div class="field" id="f-li-phone">
-          <label>電話號碼 <span class="req">*</span></label>
-          <input class="input" type="tel" id="li-phone" placeholder="0912-345-678" autocomplete="tel">
+          <label for="li-phone">電話號碼 <span class="req">*</span></label>
+          <input class="input" type="tel" id="li-phone" placeholder="請輸入電話號碼" autocomplete="tel" aria-describedby="e-li-phone">
           <div class="field-err" id="e-li-phone">請填寫有效的電話號碼（09 開頭，共 10 碼）</div>
         </div>
         <div class="field" id="f-li-pass">
-          <label>密碼 <span class="req">*</span></label>
-          <input class="input" type="password" id="li-pass" placeholder="請輸入密碼" autocomplete="current-password">
+          <label for="li-pass">密碼 <span class="req">*</span></label>
+          <input class="input" type="password" id="li-pass" placeholder="請輸入密碼" autocomplete="current-password" aria-describedby="e-li-pass">
           <div class="field-err" id="e-li-pass">請輸入至少 6 碼密碼</div>
         </div>
         <button type="submit" class="btn btn--primary btn--block" id="li-submit" disabled>登入</button>
@@ -74,13 +76,13 @@
       <!-- 註冊表單 -->
       <form id="form-register" novalidate style="display:none">
         <div class="field" id="f-rg-nick">
-          <label>暱稱 <span class="req">*</span></label>
-          <input class="input" type="text" id="rg-nick" placeholder="請輸入你的名字（買家或賣家皆同）" autocomplete="nickname">
+          <label for="rg-nick">暱稱 <span class="req">*</span></label>
+          <input class="input" type="text" id="rg-nick" placeholder="請輸入你的名字（買家或賣家皆同）" autocomplete="nickname" aria-describedby="e-rg-nick">
           <div class="field-err" id="e-rg-nick">請填寫暱稱（2–20 字）</div>
         </div>
         <div class="field" id="f-rg-city">
-          <label>縣市 <span class="req">*</span></label>
-          <select class="input" id="rg-city" required>
+          <label for="rg-city">縣市 <span class="req">*</span></label>
+          <select class="input" id="rg-city" required aria-describedby="e-rg-city">
             <option value="">請選擇縣市</option>
             <option value="基隆市">基隆市</option>
             <option value="台北市">台北市</option>
@@ -108,13 +110,13 @@
           <div class="field-err" id="e-rg-city">請選擇縣市</div>
         </div>
         <div class="field" id="f-rg-phone">
-          <label>電話號碼 <span class="req">*</span></label>
-          <input class="input" type="tel" id="rg-phone" placeholder="0912-345-678" autocomplete="tel">
+          <label for="rg-phone">電話號碼 <span class="req">*</span></label>
+          <input class="input" type="tel" id="rg-phone" placeholder="請輸入電話號碼" autocomplete="tel" aria-describedby="e-rg-phone">
           <div class="field-err" id="e-rg-phone">請填寫有效的電話號碼（09 開頭，共 10 碼）</div>
         </div>
         <div class="field" id="f-rg-pass">
-          <label>設定密碼 <span class="req">*</span></label>
-          <input class="input" type="password" id="rg-pass" placeholder="至少 6 碼" autocomplete="new-password">
+          <label for="rg-pass">設定密碼 <span class="req">*</span></label>
+          <input class="input" type="password" id="rg-pass" placeholder="至少 6 碼" autocomplete="new-password" aria-describedby="e-rg-pass">
           <div class="field-err" id="e-rg-pass">請設定至少 6 碼密碼</div>
         </div>
         <button type="submit" class="btn btn--primary btn--block" id="rg-submit" disabled>建立帳號</button>
@@ -129,7 +131,7 @@
 <div class="modal" id="auth-modal">
   <div class="modal__card">
     <div class="modal__ic" id="auth-modal-ic">Welcome</div>
-    <h3 id="auth-modal-title">登入成功</h3>
+    <h2 id="auth-modal-title">登入成功</h2>
     <p id="auth-modal-text">正在為你導向首頁…</p>
     <div class="summary-list" id="auth-summary"></div>
     <a class="btn btn--primary btn--block" id="auth-go" href="index.html">繼續</a>

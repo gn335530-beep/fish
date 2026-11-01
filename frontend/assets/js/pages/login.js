@@ -18,52 +18,54 @@ tabRegister.addEventListener("click", ()=> showTab("register"));
 document.getElementById("to-register").addEventListener("click", ()=> showTab("register"));
 document.getElementById("to-login").addEventListener("click", ()=> showTab("login"));
 
-/* 驗證輔助 */
-function setField(id, ok, errId){
+/* 驗證輔助：showError 為 false 時只更新狀態，不顯示錯誤 */
+const touched = new Set();
+function setField(id, ok, errId, showError){
   const f = document.getElementById(id);
-  f.classList.toggle("invalid", !ok);
-  f.classList.toggle("valid", ok);
-  if(errId) document.getElementById(errId).classList.toggle("show", !ok);
+  f.classList.toggle("invalid", showError && !ok);
+  f.classList.toggle("valid", showError && ok);
+  if(errId) document.getElementById(errId).classList.toggle("show", showError && !ok);
+  const control = f.querySelector("input, select, textarea");
+  if(control) control.setAttribute("aria-invalid", showError && !ok ? "true" : "false");
   return ok;
 }
 
 /* 登入驗證 */
-function validateLogin(){
+function validateLogin(showErrors){
   const phone = normPhone(document.getElementById("li-phone").value);
   const pass = document.getElementById("li-pass").value;
   let ok = true;
-  ok = setField("f-li-phone", PHONE_RE.test(phone), "e-li-phone") && ok;
-  ok = setField("f-li-pass", pass.length >= 6, "e-li-pass") && ok;
+  ok = setField("f-li-phone", PHONE_RE.test(phone), "e-li-phone", !!showErrors || touched.has("li-phone")) && ok;
+  ok = setField("f-li-pass", pass.length >= 6, "e-li-pass", !!showErrors || touched.has("li-pass")) && ok;
   document.getElementById("li-submit").disabled = !ok;
   return ok;
 }
 
 /* 註冊驗證 */
-function validateRegister(){
+function validateRegister(showErrors){
   const nick = document.getElementById("rg-nick").value.trim();
   const city = document.getElementById("rg-city").value;
   const phone = normPhone(document.getElementById("rg-phone").value);
   const pass = document.getElementById("rg-pass").value;
   let ok = true;
-  ok = setField("f-rg-nick", nick.length >= 2 && nick.length <= 20, "e-rg-nick") && ok;
-  ok = setField("f-rg-city", !!city, "e-rg-city") && ok;
-  ok = setField("f-rg-phone", PHONE_RE.test(phone), "e-rg-phone") && ok;
-  ok = setField("f-rg-pass", pass.length >= 6, "e-rg-pass") && ok;
+  ok = setField("f-rg-nick", nick.length >= 2 && nick.length <= 20, "e-rg-nick", !!showErrors || touched.has("rg-nick")) && ok;
+  ok = setField("f-rg-city", !!city, "e-rg-city", !!showErrors || touched.has("rg-city")) && ok;
+  ok = setField("f-rg-phone", PHONE_RE.test(phone), "e-rg-phone", !!showErrors || touched.has("rg-phone")) && ok;
+  ok = setField("f-rg-pass", pass.length >= 6, "e-rg-pass", !!showErrors || touched.has("rg-pass")) && ok;
   document.getElementById("rg-submit").disabled = !ok;
   return ok;
 }
 
-["li-phone","li-pass"].forEach(id=>{
-  const el = document.getElementById(id);
-  el.addEventListener("input", validateLogin);
-  el.addEventListener("blur", validateLogin);
-});
-["rg-nick","rg-city","rg-phone","rg-pass"].forEach(id=>{
-  const el = document.getElementById(id);
-  el.addEventListener("input", validateRegister);
-  el.addEventListener("change", validateRegister);
-  el.addEventListener("blur", validateRegister);
-});
+function bindValidation(ids, validate){
+  ids.forEach(id=>{
+    const el = document.getElementById(id);
+    el.addEventListener("input", ()=>validate(false));
+    el.addEventListener("change", ()=>validate(false));
+    el.addEventListener("blur", ()=>{ touched.add(id); validate(false); });
+  });
+}
+bindValidation(["li-phone","li-pass"], validateLogin);
+bindValidation(["rg-nick","rg-city","rg-phone","rg-pass"], validateRegister);
 
 /* 送出 */
 function finish(kind, nick, phone, city){
@@ -91,7 +93,7 @@ function busy(btn, on){
 
 formLogin.addEventListener("submit", async e=>{
   e.preventDefault();
-  if(!validateLogin()) return;
+  if(!validateLogin(true)) return;
   if(!window.HaisenAPI){ toast("API 模組尚未載入"); return; }
   const phone = normPhone(document.getElementById("li-phone").value);
   const pass = document.getElementById("li-pass").value;
@@ -113,7 +115,7 @@ formLogin.addEventListener("submit", async e=>{
 });
 formRegister.addEventListener("submit", async e=>{
   e.preventDefault();
-  if(!validateRegister()) return;
+  if(!validateRegister(true)) return;
   if(!window.HaisenAPI){ toast("API 模組尚未載入"); return; }
   const nick = document.getElementById("rg-nick").value.trim();
   const city = document.getElementById("rg-city").value;
@@ -137,5 +139,5 @@ formRegister.addEventListener("submit", async e=>{
   }
 });
 
-validateLogin();
-validateRegister();
+validateLogin(false);
+validateRegister(false);

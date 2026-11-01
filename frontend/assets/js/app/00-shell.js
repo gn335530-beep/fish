@@ -24,7 +24,7 @@
           '<input type="text" id="nav-search" placeholder="搜尋魚種、地區" aria-label="搜尋">' +
           '</div>'
         : "") +
-      '      <a href="login.html" class="nav-user nav-user--out" id="nav-user-slot" aria-label="登入或註冊"><svg class="nav-user__ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M4.6 20c1.2-3.9 4-5.9 7.4-5.9s6.2 2 7.4 5.9"/></svg><span class="nav-user__name">登入／註冊</span></a>' +
+      '      <a href="login.html" class="nav-user nav-user--out" id="nav-user-slot" aria-label="登入／註冊"><svg class="nav-user__ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M4.6 20c1.2-3.9 4-5.9 7.4-5.9s6.2 2 7.4 5.9"/></svg><span class="nav-user__name">登入／註冊</span></a>' +
       '      <div class="nav-menu" id="nav-menu" hidden>' +
       '        <div class="nav-menu__inner" id="nav-menu-inner"></div>' +
       '      </div>' +
@@ -45,11 +45,10 @@
       '    <div class="footer__grid">' +
       '      <div>' +
       '        <div class="brand"><span class="brand__mark">一</span><span>一支釣<small></small></span></div>' +
-      '        <p>個人釣客上網販售當日現流漁獲的平台<br>今天釣到什麼就賣什麼</p>' +
+      '        <p>個人釣客上網販售當日新鮮漁獲的平台<br>今天釣到什麼就賣什麼</p>' +
       '      </div>' +
-      '      <div><h4>買家</h4><a href="products.html">今日漁獲列表</a><a href="products.html">依魚類與地區篩選</a></div>' +
-      '      <div><h4>釣客</h4><a href="#" data-open-assistant>今日漁獲上架</a><a href="login.html">釣客登入</a></div>' +
-      '      <div><h4>關於</h4><a href="index.html">服務條款</a><a href="index.html">隱私政策</a><a href="index.html">聯絡我們</a></div>' +
+      '      <div><h3>買家</h3><a href="products.html">今日漁獲列表</a><a href="products.html">依魚類與地區篩選</a></div>' +
+      '      <div><h3>釣客</h3><a href="#" data-open-assistant>今日漁獲上架</a><a href="login.html">釣客登入</a></div>' +
       '    </div>' +
       '    <div class="footer__bottom"><span>© 2026 一支釣 </span></div>' +
       '  </div>' +

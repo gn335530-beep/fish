@@ -65,7 +65,7 @@ function priceReply(data, ctx, meta) {
 
 function candidateReply(ctx, name, candidates, meta) {
   const labels = candidates.map(function (row) {
-    return row.official_name + "（" + row.species_code + "）";
+    return row.official_name;
   }).join("、");
   return {
     context: Object.assign({}, ctx, {
@@ -77,7 +77,7 @@ function candidateReply(ctx, name, candidates, meta) {
         profile: meta.profile
       }
     }),
-    replies: [{ text: "「" + name + "」對到多個代碼，請選擇：" + labels }]
+    replies: [{ text: "搜尋到多種" + name + "，請問是哪一種" + name + "？請選擇：" + labels }]
   };
 }
 

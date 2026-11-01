@@ -79,7 +79,7 @@ test("編輯重量時說取消上架會進確認流程", async function () {
 
   const result = await service.handleText(editingContext, "取消上架", USER);
 
-  assert.match(textOf(result), /確定取消上架？此對話會一併刪除/);
+  assert.match(textOf(result), /確定取消上架？此對話會刪除，並開啟新的 AI 對話/);
   assert.ok(result.replies.some(function (reply) {
     return reply.card && reply.card.type === "draft_cancel";
   }));

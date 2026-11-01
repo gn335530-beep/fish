@@ -6,7 +6,7 @@ import { renderCard } from "./cards.js";
 
 function bubble(message) {
   if (message.type === "system") {
-    return '<div class="fm-msg fm-msg--system"><span>' + escapeHtml(message.text) + '</span></div>';
+    return '<div class="fm-msg fm-msg--system" data-seq="' + escapeHtml(message.seq) + '"><span>' + escapeHtml(message.text) + '</span></div>';
   }
 
   const mine = state.user && String(message.sender_id) === String(state.user.id);
@@ -22,7 +22,7 @@ function bubble(message) {
     content = '<span>' + escapeHtml(message.text) + '</span>';
   }
 
-  return '<div class="fm-msg ' + (mine ? "fm-msg--me" : "fm-msg--other") + '">' +
+  return '<div class="fm-msg ' + (mine ? "fm-msg--me" : "fm-msg--other") + '" data-seq="' + escapeHtml(message.seq) + '">' +
     '<div class="fm-msg__meta">' + escapeHtml(speaker) + ' · ' + escapeHtml(timeOf(message.created_at)) + '</div>' +
     '<div class="fm-msg__bubble">' + content + '</div>' +
     '</div>';

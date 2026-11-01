@@ -109,8 +109,9 @@ test("魚種對到多個代碼時先讓使用者選擇，選定後才查行情",
   const asked = await service.handlePhoto(started.context, "/uploads/a.jpg", {
     city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z"
   });
-  assert.match(textOf(asked), /石斑魚（2201）/);
-  assert.match(textOf(asked), /龍膽石斑（2202）/);
+  assert.match(textOf(asked), /搜尋到多種石斑，請問是哪一種石斑？請選擇：/);
+  assert.match(textOf(asked), /龍膽石斑/);
+  assert.doesNotMatch(textOf(asked), /2201|2202/);
   assert.equal(asked.context.draft.species_code, null);
   assert.equal(cardOf(asked), null);
 

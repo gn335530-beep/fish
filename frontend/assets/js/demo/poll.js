@@ -10,6 +10,10 @@ let running = false;
 
 export async function refreshRooms() {
   const conversations = await api.listConversations();
+  /* 資料沒變就不通知，避免每 3 秒重畫正在輸入的畫面。 */
+  if (JSON.stringify(conversations) === JSON.stringify(state.conversations || [])) {
+    return conversations;
+  }
   update({ conversations: conversations });
   return conversations;
 }

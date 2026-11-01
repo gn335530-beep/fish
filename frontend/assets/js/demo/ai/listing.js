@@ -119,7 +119,7 @@ export async function advance(ctx, user) {
     return { context: next, replies: replies };
   }
 
-  replies.push({ text: "資料都齊了，請確認內容後按發布。" });
+  replies.push({ text: "資料都齊了，請確認內容後按「確認上架」。" });
   replies.push({ card: { type: "draft", draft: next.draft } });
   return { context: next, replies: replies };
 }
@@ -143,7 +143,7 @@ export async function startListing(text, user, base) {
 export function dismissCancel(context) {
   return {
     context: context,
-    replies: [{ text: "好，繼續上架。" }, { card: { type: "draft", draft: context.draft } }]
+    replies: [{ text: "好，繼續上架。" }]
   };
 }
 
@@ -151,7 +151,7 @@ export function requestCancel(context) {
   return {
     context: Object.assign({}, context, { editing: null, choosing_edit: null }),
     replies: [
-      { text: "確定取消上架？此對話會一併刪除。" },
+      { text: "確定取消上架？此對話會刪除，並開啟新的 AI 對話。" },
       { card: { type: "draft_cancel" } }
     ]
   };
@@ -172,6 +172,11 @@ export async function continueListing(ctx, text, user) {
   if (!missing) return advance(withDraft(ctx, ctx.draft), user);
   const details = {};
   const found = extractSlots(text, missing, details);
+  if (details.ambiguous && details.ambiguous.length) {
+    const draft = mergeDraft(ctx.draft, found);
+    const changes = invalidateQuote(found) ? { market_quoted: false } : {};
+    return askPendingNumber(withDraft(ctx, draft, changes), details.ambiguous[0]);
+  }
   if (!Object.keys(found).length) {
     return { context: ctx, replies: [{ text: ASK_AGAIN[missing] }] };
   }
@@ -180,8 +185,5 @@ export async function continueListing(ctx, text, user) {
   const changes = {};
   if (invalidateQuote(found)) changes.market_quoted = false;
   const next = withDraft(ctx, draft, changes);
-  if (details.ambiguous && details.ambiguous.length) {
-    return askPendingNumber(next, details.ambiguous[0]);
-  }
   return advance(next, user);
 }

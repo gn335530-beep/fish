@@ -34,13 +34,13 @@ export function matchCandidate(text, candidates) {
 
 export function candidateReply(context, name, candidates) {
   const labels = candidates.map(function (row) {
-    return row.official_name + "（" + row.species_code + "）";
+    return row.official_name;
   }).join("、");
   return {
     context: Object.assign({}, context, {
       listing_pending: { name: name, candidates: candidates },
       market_quoted: false
     }),
-    replies: [{ text: "「" + name + "」對到多個魚種代碼，請選擇：" + labels }]
+    replies: [{ text: "搜尋到多種" + name + "，請問是哪一種" + name + "？請選擇：" + labels }]
   };
 }

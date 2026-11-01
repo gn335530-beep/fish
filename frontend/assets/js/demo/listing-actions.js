@@ -3,7 +3,7 @@
 import { state, update } from "./store.js";
 import * as api from "./api.js";
 import * as ai from "./ai/service.js";
-import { deleteConversation } from "./rooms.js";
+import { deleteConversation, createAssistantRoom } from "./rooms.js";
 import { runReplies } from "./flow.js";
 
 let ui = {
@@ -46,9 +46,17 @@ export async function confirmCancelListing() {
   if (!state.room) return;
   try {
     await deleteConversation(state.room.id, { confirm: false });
-    update({ view: "inbox" });
-    ui.render();
   } catch (error) {
+    ui.notify(error);
+    return;
+  }
+  try {
+    await createAssistantRoom();
+    update({ view: "assistant" });
+    ui.render();
+    if (window.toast) window.toast("已取消上架");
+  } catch (error) {
+    ui.render();
     ui.notify(error);
   }
 }

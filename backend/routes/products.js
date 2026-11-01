@@ -14,6 +14,13 @@ const { ok, created, fail } = require("../lib/http");
 
 const router = express.Router();
 
+const CONDITION_UNITS = /(公斤|kg|KG|Kg|台斤|斤|尾|條|隻|份|元|塊)/g;
+
+/* 處理方式必須有文字；只有數字與單位不算。 */
+function hasConditionText(value) {
+  return /[A-Za-z\u4e00-\u9fff]/.test(String(value || "").replace(CONDITION_UNITS, ""));
+}
+
 function matches(text, keyword) {
   return String(text || "").indexOf(keyword) !== -1;
 }
@@ -88,6 +95,10 @@ router.post("/api/products/create", requireUser, async function (req, res) {
   }
   if (condition.length > 20) {
     fail(res, 400, "FIELD_TOO_LONG", "處理方式最多 20 字");
+    return;
+  }
+  if (!hasConditionText(condition)) {
+    fail(res, 400, "INVALID_CONDITION", "處理方式請描述處理方式，不能只有數字");
     return;
   }
   const pricing = readPricing(body, weightKg);

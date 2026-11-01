@@ -3,11 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="../assets/images/favicon.svg?v=v7">
 <title>今日漁獲 — 一支釣</title>
 <meta name="description" content="各地個人釣客今日上架的漁獲。依魚類與縣市篩選，查看可售尾數、整批價與捕獲日期，售完為止。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&family=Noto+Serif+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400..700&family=Noto+Serif+TC:wght@600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/css/base.css?v=v7">
 <link rel="stylesheet" href="../assets/css/layout.css?v=v7">
 <link rel="stylesheet" href="../assets/css/components.css?v=v7">
@@ -32,7 +33,7 @@
 <script src="../assets/js/app/00-shell.js?v=v7"></script>
 
 <div class="wrap">
-  <nav class="crumbs"><a href="index.html">首頁</a><span>/</span><span>今日漁獲</span></nav>
+  <nav class="crumbs"><a href="index.html">首頁</a><span aria-hidden="true">/</span><span>今日漁獲</span></nav>
 </div>
 
 <section class="section" style="padding-top:12px">
@@ -53,13 +54,13 @@
     <div class="layout grid-12 grid-12--wide" style="margin-top:44px">
       <!-- 篩選側欄 -->
       <aside class="filters col-span-12 col-lg-span-3">
-        <h4>價格上限（整批）</h4>
-        <input type="range" class="range" min="0" max="1000" value="1000" id="price-range">
+        <h3>價格上限（整批）</h3>
+        <input type="range" class="range" min="0" max="1000" value="1000" id="price-range" aria-label="價格上限（整批）">
         <div style="display:flex;justify-content:space-between;font-size:.74rem;color:var(--muted);margin-top:8px;font-family:var(--font-mono)">
           <span>NT$0</span><span id="price-max">NT$1,000</span>
         </div>
 
-        <h4>其他</h4>
+        <h3>其他</h3>
         <label class="check"><input type="checkbox" id="f-instock"> 僅顯示尚有庫存</label>
 
         <button class="btn btn--ghost btn--sm btn--block" style="margin-top:28px" id="reset-filters">重設篩選</button>
@@ -71,7 +72,7 @@
           <div class="toolbar__count">今日供應 <b id="shown-count">0</b> 筆</div>
           <div style="display:flex;align-items:center;gap:12px">
             <span style="font-size:.74rem;color:var(--muted);letter-spacing:.12em;text-transform:uppercase">排序</span>
-            <select class="select" id="sort" style="width:auto;padding:6px 26px 6px 2px;font-size:.84rem">
+            <select class="select" id="sort" aria-label="排序方式" style="width:auto;padding:6px 26px 6px 2px;font-size:.84rem">
               <option value="fresh">捕獲時間（最新）</option>
               <option value="price-asc">價格：低 → 高</option>
               <option value="price-desc">價格：高 → 低</option>

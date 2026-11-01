@@ -55,9 +55,20 @@ test("行情卡顯示平均價、縣市平均、日期、來源與行情價參�
   assert.match(text, /2026-10-22/);
   assert.match(text, /農業部漁產品交易行情/);
   assert.match(text, /行情價參考/);
-  assert.match(text, /花枝 · 代碼 2166/);
+  assert.doesNotMatch(text, /代碼/);
   assert.doesNotMatch(text, /新鮮批發參考/);
   assert.doesNotMatch(text, /今日行情|即時均價|上價|中價|下價/);
+});
+
+test("官方名稱與魚種名相同時不重複顯示官方名稱行", function () {
+  const html = renderCard(card(), "msg_1");
+  assert.doesNotMatch(html, /fm-market__official/);
+});
+
+test("官方名稱與魚種名不同時顯示官方名稱但不顯示代碼", function () {
+  const html = renderCard(card({ species_name: "土魠魚", official_name: "土魠" }), "msg_1");
+  assert.match(html, /fm-market__official">土魠</);
+  assert.doesNotMatch(html, /代碼/);
 });
 
 test("顯示期間最高最低與參考整批金額", function () {

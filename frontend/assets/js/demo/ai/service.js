@@ -98,7 +98,15 @@ export async function handleText(context, text, user) {
   if (ctx.choosing_edit && isCancelListing(source)) {
     return requestCancel(Object.assign({}, ctx, { choosing_edit: null }));
   }
-  if (ctx.choosing_edit) return chooseEditField(ctx, source);
+  if (ctx.choosing_edit) {
+    const chosen = chooseEditField(ctx, source);
+    if (!chosen.refresh_market) return chosen;
+    const refreshed = await advance(chosen.context, user);
+    return {
+      context: refreshed.context,
+      replies: chosen.replies.concat(refreshed.replies)
+    };
+  }
   if (needsConsent(user) && ctx.mode === "listing" && ctx.draft) {
     return requestConsent(ctx, ctx.pending_sale_text || "我要賣魚");
   }

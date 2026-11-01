@@ -4,32 +4,16 @@ import { INTENT, detectIntent, isCancelListing } from "./rules.js";
 import { extractSlots } from "./slots.js";
 import { mergeDraft } from "./draft.js";
 import { EDIT_PROMPTS } from "./prompts.js";
+import { DRAFT_FIELDS, EDIT_LABELS, findEditField, stripFieldWords } from "./edit-fields.js";
 
-export const DRAFT_FIELDS = [
-  { slot: "fish_species", label: "魚種" },
-  { slot: "weight_kg", label: "總重" },
-  { slot: "quantity", label: "尾數" },
-  { slot: "condition", label: "處理方式" },
-  { slot: "photo_url", label: "照片" },
-  { slot: "price", label: "售價" }
-];
+const EDIT_ASK = "你想修改哪一項？（" + DRAFT_FIELDS.map(function (field) {
+  return field.label;
+}).join("、") + "）";
 
-const LABELS = {};
-DRAFT_FIELDS.forEach(function (field) { LABELS[field.slot] = field.label; });
-
-const EDIT_ALIASES = {
-  fish_species: ["魚種", "魚"],
-  weight_kg: ["重量", "總重", "公斤"],
-  quantity: ["尾數", "數量", "幾尾"],
-  condition: ["處理方式", "處理"],
-  photo_url: ["照片", "相片", "圖片"],
-  price: ["售價", "價格", "價錢", "每台斤", "整批"]
-};
-
-function draftReply(context, text) {
+function askText(context) {
   return {
     context: context,
-    replies: [{ text: text }, { card: { type: "draft", draft: context.draft } }]
+    replies: [{ text: EDIT_ASK }]
   };
 }
 
@@ -37,43 +21,7 @@ export function askDraftEdit(context) {
   if (!context || !context.draft) {
     return { context: context, replies: [{ text: "目前沒有可修改的草稿。" }] };
   }
-  return draftReply(
-    Object.assign({}, context, { choosing_edit: true, editing: null }),
-    "請問要修改哪個選項？"
-  );
-}
-
-/* 使用者可用「重量」「售價」等字眼指定要修改哪個欄位。 */
-export function chooseEditField(context, text) {
-  if (detectIntent(text) === INTENT.CANCEL) {
-    return draftReply(
-      Object.assign({}, context, { choosing_edit: null }),
-      "已取消修改。"
-    );
-  }
-  const source = String(text || "");
-  const slot = Object.keys(EDIT_ALIASES).find(function (key) {
-    return EDIT_ALIASES[key].some(function (alias) { return source.indexOf(alias) !== -1; });
-  });
-  if (!slot) {
-    return draftReply(
-      Object.assign({}, context, { choosing_edit: true }),
-      "請問要修改哪個選項？"
-    );
-  }
-  return beginEdit(Object.assign({}, context, { choosing_edit: null }), slot);
-}
-
-export function beginEdit(context, slot) {
-  if (!context || context.mode !== "listing" || !context.draft) return null;
-  if (!LABELS[slot]) return null;
-  return {
-    context: Object.assign({}, context, {
-      choosing_edit: null,
-      editing: { slot: slot, backup: Object.assign({}, context.draft) }
-    }),
-    replies: [{ text: EDIT_PROMPTS[slot] + "（輸入「取消」可保留原值）" }]
-  };
+  return askText(Object.assign({}, context, { choosing_edit: true, editing: null }));
 }
 
 function finish(context, slot, found) {
@@ -88,9 +36,73 @@ function finish(context, slot, found) {
   return {
     context: Object.assign({}, context, next),
     replies: refreshMarket
-      ? [{ text: "已更新" + LABELS[slot] + "。" }]
-      : [{ text: "已更新" + LABELS[slot] + "。" }, { card: { type: "draft", draft: draft } }],
+      ? [{ text: "已更新" + EDIT_LABELS[slot] + "。" }]
+      : [{ text: "已更新" + EDIT_LABELS[slot] + "。" }, { card: { type: "draft", draft: draft } }],
     refresh_market: refreshMarket
+  };
+}
+
+function editPrice(context, text) {
+  const found = extractSlots(text, "price");
+  const priceFound = {};
+  if (found.price !== undefined) priceFound.price = found.price;
+  if (found.price_per_taijin !== undefined) priceFound.price_per_taijin = found.price_per_taijin;
+  if (priceFound.price === undefined && priceFound.price_per_taijin === undefined) return null;
+  const draft = mergeDraft(context.draft, priceFound);
+  return {
+    context: Object.assign({}, context, { editing: null, draft: draft }),
+    replies: [
+      { text: "已更新售價。" },
+      { card: { type: "draft", draft: draft } }
+    ]
+  };
+}
+
+/* 只套用文字裡的新值；讀不到就回 null，讓呼叫端決定要重問還是直接採用。 */
+function applyValue(context, text) {
+  const slot = context.editing.slot;
+  if (slot === "photo_url") return null;
+  if (slot === "price") return editPrice(context, text);
+  const found = extractSlots(text, slot);
+  if (found[slot] === undefined) return null;
+  return finish(context, slot, found);
+}
+
+function askAgain(context, slot) {
+  return {
+    context: context,
+    replies: [{ text: "沒有讀到" + EDIT_LABELS[slot] + "。" + EDIT_PROMPTS[slot] }]
+  };
+}
+
+/* 使用者可用「重量」「售價」等字眼指定欄位；同一句有新值時直接套用。 */
+export function chooseEditField(context, text) {
+  if (detectIntent(text) === INTENT.CANCEL) {
+    return {
+      context: Object.assign({}, context, { choosing_edit: null }),
+      replies: [{ text: "已取消修改。" }]
+    };
+  }
+  const match = findEditField(text);
+  if (!match) {
+    return askText(Object.assign({}, context, { choosing_edit: true }));
+  }
+  const started = beginEdit(Object.assign({}, context, { choosing_edit: null }), match.slot);
+  if (!started) return askText(context);
+  const value = stripFieldWords(text, match);
+  const applied = value ? applyValue(started.context, value) : null;
+  return applied || started;
+}
+
+export function beginEdit(context, slot) {
+  if (!context || context.mode !== "listing" || !context.draft) return null;
+  if (!EDIT_LABELS[slot]) return null;
+  return {
+    context: Object.assign({}, context, {
+      choosing_edit: null,
+      editing: { slot: slot, backup: Object.assign({}, context.draft) }
+    }),
+    replies: [{ text: EDIT_PROMPTS[slot] + "（輸入「取消」可保留原值）" }]
   };
 }
 
@@ -105,7 +117,7 @@ export function editText(context, text) {
     const draft = Object.assign({}, editing.backup);
     return {
       context: Object.assign({}, context, { editing: null, draft: draft }),
-      replies: [{ text: "已取消修改。" }, { card: { type: "draft", draft: draft } }]
+      replies: [{ text: "已取消修改。" }]
     };
   }
 
@@ -113,29 +125,7 @@ export function editText(context, text) {
     return { context: context, replies: [{ text: EDIT_PROMPTS.photo_url }] };
   }
 
-  const found = extractSlots(text, editing.slot);
-  if (editing.slot === "price") {
-    const priceFound = {};
-    if (found.price !== undefined) priceFound.price = found.price;
-    if (found.price_per_taijin !== undefined) priceFound.price_per_taijin = found.price_per_taijin;
-    if (priceFound.price === undefined && priceFound.price_per_taijin === undefined) {
-      return { context: context, replies: [{ text: "沒有讀到售價。" + EDIT_PROMPTS.price }] };
-    }
-    const draft = mergeDraft(context.draft, priceFound);
-    return {
-      context: Object.assign({}, context, { editing: null, draft: draft }),
-      replies: [
-        { text: "已更新售價。" },
-        { card: { type: "draft", draft: draft } }
-      ]
-    };
-  }
-
-  const value = found[editing.slot];
-  if (value === undefined) {
-    return { context: context, replies: [{ text: "沒有讀到" + LABELS[editing.slot] + "。" + EDIT_PROMPTS[editing.slot] }] };
-  }
-  return finish(context, editing.slot, found);
+  return applyValue(context, text) || askAgain(context, editing.slot);
 }
 
 export function editPhoto(context, photoUrl) {
@@ -144,7 +134,7 @@ export function editPhoto(context, photoUrl) {
   if (editing.slot !== "photo_url") {
     return {
       context: context,
-      replies: [{ text: "目前正在修改" + LABELS[editing.slot] + "，照片先保留。" }]
+      replies: [{ text: "目前正在修改" + EDIT_LABELS[editing.slot] + "，照片先保留。" }]
     };
   }
   const draft = Object.assign({}, context.draft, { photo_url: photoUrl });

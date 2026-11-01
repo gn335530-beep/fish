@@ -177,7 +177,7 @@
 
 錯誤：400 `MISSING_SPECIES`、`INVALID_WEIGHT`、`INVALID_QUANTITY`、`MISSING_CONDITION`、`FIELD_TOO_LONG`、`MISSING_PRICE`、`INVALID_PRICE`、`MISSING_PHOTO`。
 
-驗證規則：重量 > 0；尾數 ≥ 1（無條件捨去小數）；處理方式非空且 ≤ 20 字；整批與每台斤至少一個 > 0；照片必填。
+驗證規則：重量 > 0；尾數 ≥ 1（無條件捨去小數）；處理方式非空、≤ 20 字且不能只有數字或單位；整批與每台斤至少一個 > 0；照片必填。
 
 ### 商品衍生欄位
 
@@ -514,6 +514,7 @@
 | `INVALID_WEIGHT` | 400 | 上架 |
 | `INVALID_QUANTITY` | 400 | 上架 |
 | `MISSING_CONDITION` | 400 | 上架（處理方式空白） |
+| `INVALID_CONDITION` | 400 | 上架（處理方式只有數字或單位） |
 | `MISSING_PRICE` | 400 | 上架（整批與每台斤都沒填） |
 | `INVALID_PRICE` | 400 | 上架（售價 ≤ 0） |
 | `OWN_PRODUCT` | 400 | 開啟交易房（自己的商品） |
@@ -578,7 +579,7 @@
 | 助手房可以有多間 | 每間有自己的 `context` 與草稿；不要假設只有一間 |
 | 交易房只有 `CANCELLED` 能刪 | 房內必須沒有 `CONFIRMED` 歷史；刪除會一併移除該房所有訂單與項目 |
 | 商品不保存行情 | 商品卡與詳情頁不顯示行情；上架行情卡才是行情顯示處 |
-| 取消上架會刪除目前 AI 對話 | 前端要先確認，再呼叫 `DELETE /api/conversations/:id` |
+| 取消上架會刪除目前 AI 對話 | 前端要先確認，再呼叫 `DELETE /api/conversations/:id`；刪除成功後立即建立並開啟新的助手房 |
 | `seller_terms_accepted_at` 有值就永久跳過法規告知 | 不要每次賣魚都重問或重送 consent |
 | 法規告知卡按「取消」不記錄同意 | 取消後回 idle；下次賣魚再顯示 |
 | 同意只由 `POST /api/users/seller-consent` 寫入 | `chat/message` 的 `legal_consent` 卡只是 UI，不是同意紀錄 |
