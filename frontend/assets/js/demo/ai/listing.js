@@ -18,8 +18,7 @@ function makeContext(mode, draft, lastCards) {
     market_quoted: false,
     pending_sale_text: null,
     awaiting_consent: false,
-    detail_asked: false,
-    pending_number: null
+    detail_asked: false
   };
 }
 
@@ -37,8 +36,7 @@ export function normalize(context) {
     selected_product_id: source.selected_product_id || null,
     editing: source.editing || null,
     market_quoted: source.market_quoted === true,
-    detail_asked: source.detail_asked === true,
-    pending_number: source.pending_number == null ? null : Number(source.pending_number)
+    detail_asked: source.detail_asked === true
   });
 }
 
@@ -47,33 +45,7 @@ export function withDraft(context, draft, changes) {
 }
 
 function invalidateQuote(found) {
-  if (!found) return false;
-  return Object.prototype.hasOwnProperty.call(found, "fish_species") ||
-    Object.prototype.hasOwnProperty.call(found, "weight_kg");
-}
-
-function askPendingNumber(ctx, value) {
-  return {
-    context: Object.assign({}, ctx, { pending_number: Number(value) }),
-    replies: [{ text: value + " 是指重量（公斤），還是數量（尾）？" }]
-  };
-}
-
-function pendingSlotOf(text) {
-  const source = String(text || "");
-  if (/尾|數量|條|隻|份/.test(source)) return "quantity";
-  if (/重量|公斤|kg|KG|Kg|斤/.test(source)) return "weight_kg";
-  return null;
-}
-
-function fillPendingNumber(ctx, text) {
-  const slot = pendingSlotOf(text);
-  if (!slot) return null;
-  const found = {};
-  found[slot] = ctx.pending_number;
-  const draft = mergeDraft(ctx.draft, found);
-  const changes = invalidateQuote(found) ? { market_quoted: false } : {};
-  return withDraft(Object.assign({}, ctx, { pending_number: null }), draft, changes);
+  return !!found && Object.prototype.hasOwnProperty.call(found, "fish_species");
 }
 
 export async function advance(ctx, user) {
@@ -125,8 +97,7 @@ export async function advance(ctx, user) {
 }
 
 export async function startListing(text, user, base) {
-  const details = {};
-  const draft = mergeDraft(null, extractSlots(text, null, details));
+  const draft = mergeDraft(null, extractSlots(text, null));
   const ctx = withDraft(base, draft, {
     last_cards: [],
     selected_product_id: null,
@@ -134,9 +105,6 @@ export async function startListing(text, user, base) {
     market_quoted: false,
     detail_asked: false
   });
-  if (details.ambiguous && details.ambiguous.length) {
-    return askPendingNumber(ctx, details.ambiguous[0]);
-  }
   return advance(ctx, user);
 }
 
@@ -158,25 +126,13 @@ export function requestCancel(context) {
 }
 
 export async function continueListing(ctx, text, user) {
-  if (ctx.pending_number != null) {
-    const filled = fillPendingNumber(ctx, text);
-    if (filled) return advance(filled, user);
-    ctx = Object.assign({}, ctx, { pending_number: null });
-  }
-
   if (detectIntent(text) === INTENT.CANCEL) {
     return requestCancel(ctx);
   }
 
   const missing = nextMissingSlot(ctx.draft);
   if (!missing) return advance(withDraft(ctx, ctx.draft), user);
-  const details = {};
-  const found = extractSlots(text, missing, details);
-  if (details.ambiguous && details.ambiguous.length) {
-    const draft = mergeDraft(ctx.draft, found);
-    const changes = invalidateQuote(found) ? { market_quoted: false } : {};
-    return askPendingNumber(withDraft(ctx, draft, changes), details.ambiguous[0]);
-  }
+  const found = extractSlots(text, missing);
   if (!Object.keys(found).length) {
     return { context: ctx, replies: [{ text: ASK_AGAIN[missing] }] };
   }

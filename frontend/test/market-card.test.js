@@ -89,6 +89,11 @@ test("行情卡重量使用共用的一位小數格式", function () {
   assert.doesNotMatch(html, /9\.000000000000002/);
 });
 
+test("沒有重量時不顯示重量與參考整批", function () {
+  const html = renderCard(card({ weight_kg: null, weight_taijin: null, estimated_total: null }), "msg_1");
+  assert.doesNotMatch(html, /fm-market__calc|參考整批|0 kg/);
+});
+
 test("養殖魚種標示養殖價格", function () {
   const html = renderCard(card({ is_aquaculture: true }), "msg_1");
   assert.match(html, /養殖價格/);

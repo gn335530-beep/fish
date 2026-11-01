@@ -2,7 +2,6 @@
 
 export const DRAFT_FIELDS = [
   { slot: "fish_species", label: "魚種" },
-  { slot: "weight_kg", label: "總重" },
   { slot: "quantity", label: "尾數" },
   { slot: "condition", label: "處理方式" },
   { slot: "photo_url", label: "照片" },
@@ -11,7 +10,6 @@ export const DRAFT_FIELDS = [
 
 const EDIT_ALIASES = {
   fish_species: ["魚種", "魚名"],
-  weight_kg: ["重量", "總重", "公斤", "kg"],
   quantity: ["尾數", "數量", "幾尾", "尾"],
   condition: ["處理方式", "處理"],
   photo_url: ["照片", "相片", "圖片"],
@@ -43,5 +41,20 @@ export function stripFieldWords(text, match) {
   if (match.slot === "fish_species" || match.slot === "condition") {
     rest = rest.replace(match.alias, " ");
   }
+  /* 一句話講多個欄位時只套用第一個；值本身可以含頓號。 */
+  const cut = firstOtherFieldIndex(rest, match.slot);
+  if (cut !== -1) rest = rest.slice(0, cut).replace(/[、,，;；\s]+$/, "");
   return rest.replace(CONNECTORS, "").trim();
+}
+
+function firstOtherFieldIndex(text, slot) {
+  let index = -1;
+  DRAFT_FIELDS.forEach(function (field) {
+    if (field.slot === slot) return;
+    (EDIT_ALIASES[field.slot] || []).forEach(function (alias) {
+      const at = text.indexOf(alias);
+      if (at !== -1 && (index === -1 || at < index)) index = at;
+    });
+  });
+  return index;
 }

@@ -7,8 +7,7 @@ import "../../shared/format.js";
 const format = window.HaisenFormat;
 
 export function hasPrice(draft) {
-  return (draft.price !== null && draft.price !== undefined && draft.price !== "") ||
-    (draft.price_per_taijin !== null && draft.price_per_taijin !== undefined && draft.price_per_taijin !== "");
+  return draft.price !== null && draft.price !== undefined && draft.price !== "";
 }
 
 function statsOf(history) {
@@ -21,6 +20,7 @@ function statsOf(history) {
 
 function buildCard(draft, data, seven) {
   const weight = Number(draft.weight_kg) || 0;
+  const hasWeight = weight > 0;
   const history = data.history || [];
   const short = statsOf(seven);
   const wide = statsOf(history);
@@ -39,9 +39,9 @@ function buildCard(draft, data, seven) {
     source_url: data.source_url,
     fetched_at: data.fetched_at,
     quality: data.quality,
-    weight_kg: weight,
-    weight_taijin: format.taijinFromKg(weight),
-    estimated_total: Math.round(Number(data.price_per_taijin) * format.taijinFromKg(weight)),
+    weight_kg: hasWeight ? weight : null,
+    weight_taijin: hasWeight ? format.taijinFromKg(weight) : null,
+    estimated_total: hasWeight ? Math.round(Number(data.price_per_taijin) * format.taijinFromKg(weight)) : null,
     history: seven,
     history_30: history,
     high: short.high,

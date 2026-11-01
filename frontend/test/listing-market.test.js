@@ -21,9 +21,9 @@ test("非價格欄位齊了先送行情卡，再問售價", async function () {
   assert.equal(card.species_code, 2166);
   assert.equal(card.official_name, "花枝");
   assert.equal(card.price_per_taijin, 200);
-  assert.equal(card.weight_kg, 3);
-  assert.equal(card.weight_taijin, 5);
-  assert.equal(card.estimated_total, 1000);
+  assert.equal(card.weight_kg, null);
+  assert.equal(card.weight_taijin, null);
+  assert.equal(card.estimated_total, null);
   assert.equal(card.history.length, 7);
   assert.equal(card.history_30.length, 30);
   assert.equal(card.high, 209);
@@ -34,7 +34,7 @@ test("非價格欄位齊了先送行情卡，再問售價", async function () {
   assert.equal(card.region, "高雄市");
   assert.equal(card.trade_date, "2026-10-22");
   assert.equal(card.source, "農業部漁產品交易行情");
-  assert.match(textOf(result), /每台斤價格或整批價格/);
+  assert.match(textOf(result), /整批要賣多少錢/);
   const urls = marketCalls().map(function (path) { return decodeURIComponent(path); });
   assert.equal(urls.length, 1);
   assert.match(urls[0], /include=history/);
@@ -44,12 +44,12 @@ test("非價格欄位齊了先送行情卡，再問售價", async function () {
 test("已提供售價時行情卡後直接顯示草稿，不重問價格", async function () {
   const started = await service.handleText(
     null,
-    "我要賣花枝 3公斤 2尾 放血冰鎮 每台斤 200",
+    "我要賣花枝 2尾 放血冰鎮 整批 1000 每台斤 200",
     { city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" }
   );
   const result = await service.handlePhoto(started.context, "/uploads/a.jpg", { city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" });
   assert.ok(cardOf(result));
-  assert.doesNotMatch(textOf(result), /多少錢|每台斤價格或整批價格/);
+  assert.doesNotMatch(textOf(result), /多少錢|整批要賣多少錢/);
   assert.ok(result.replies.some(function (reply) {
     return reply.card && reply.card.type === "draft";
   }));
@@ -58,7 +58,7 @@ test("已提供售價時行情卡後直接顯示草稿，不重問價格", async
 test("補完照片後只出一次行情卡", async function () {
   const started = await service.handleText(
     null,
-    "我要賣花枝 3公斤 2尾 放血冰鎮 每台斤 200",
+    "我要賣花枝 2尾 放血冰鎮 整批 1000 每台斤 200",
     { city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" }
   );
   const photographed = await service.handlePhoto(started.context, "/uploads/a.jpg", { city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" });
@@ -96,7 +96,7 @@ test("查無代碼仍顯示暫無行情並可繼續定價", async function () {
   const result = await service.handlePhoto(started.context, "/uploads/a.jpg", { city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" });
   assert.equal(result.context.draft.species_code, null);
   assert.match(textOf(result), /暫無行情/);
-  assert.match(textOf(result), /每台斤價格或整批價格/);
+  assert.match(textOf(result), /整批要賣多少錢/);
   assert.equal(cardOf(result), null);
 });
 
@@ -132,7 +132,7 @@ test("查無行情時回暫無行情，不編造數字", async function () {
   assert.match(textOf(result), /暫無行情/);
   assert.doesNotMatch(textOf(result), /沒有今天的/);
   assert.doesNotMatch(textOf(result), /\d|元／/);
-  assert.match(textOf(result), /每台斤價格或整批價格/);
+  assert.match(textOf(result), /整批要賣多少錢/);
 });
 
 test("上游失敗時回暫無行情，仍可繼續定價", async function () {
@@ -141,7 +141,7 @@ test("上游失敗時回暫無行情，仍可繼續定價", async function () {
   const result = await service.handlePhoto(started.context, "/uploads/a.jpg", { city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" });
   assert.match(textOf(result), /暫無行情/);
   assert.doesNotMatch(textOf(result), /暫時無法取得/);
-  assert.match(textOf(result), /每台斤價格或整批價格/);
+  assert.match(textOf(result), /整批要賣多少錢/);
 });
 
 test("保留未知的 context 欄位，法規確認狀態不被清掉", async function () {

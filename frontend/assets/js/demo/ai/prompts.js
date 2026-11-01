@@ -4,37 +4,33 @@ export const SPECIES_QUESTION = "請問想要販售什麼魚類？";
 
 export const QUESTIONS = {
   fish_species: SPECIES_QUESTION,
-  weight_kg: "這批總重大約幾公斤？（也可以說台斤）",
   quantity: "總共幾尾？",
   condition: "目前的處理方式是？（例如：活體、放血冰鎮）",
   photo_url: "請提供一張商品照片，請用相機圖示上傳。",
-  price: "請問要販賣多少錢？（可回覆每台斤價格或整批價格）"
+  price: "請問整批要賣多少錢？（也可以一併說每台斤價格）"
 };
 
 /* 使用者答非所問時只差在語氣，其餘沿用一般提問。 */
 export const ASK_AGAIN = Object.assign({}, QUESTIONS, {
-  weight_kg: "請問這批大約幾公斤？",
   quantity: "請問總共幾尾？",
-  price: "請提供每台斤或整批價格。"
+  price: "請提供整批售價（可另填每台斤）。"
 });
 
 export const EDIT_PROMPTS = {
   fish_species: "請提供新的魚種。",
-  weight_kg: "請提供新的總重（公斤）。",
   quantity: "請提供新的尾數。",
   condition: "請提供新的處理方式（例如：活體、放血冰鎮）。",
   photo_url: "請點輸入框左邊的相機圖示，重新上傳照片。",
-  price: "請提供新的每台斤或整批售價。"
+  price: "請提供新的整批售價（可另填每台斤）。"
 };
 
 const DETAIL_LABELS = {
-  weight_kg: "重量",
   quantity: "尾數",
   condition: "處理方式",
   photo_url: "一張商品照片"
 };
 
-const DETAIL_ORDER = ["weight_kg", "quantity", "condition", "photo_url"];
+const DETAIL_ORDER = ["quantity", "condition", "photo_url"];
 
 function joinLabels(labels) {
   if (labels.length <= 1) return labels[0] || "";

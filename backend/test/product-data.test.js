@@ -84,7 +84,7 @@ test("舊冷凍商品、草稿卡、商品卡與上架訊息一起更新", funct
 
   const product = all("products").find(function (row) { return row.id === "prd_migrate"; });
   assert.equal(product.condition, "放血冰鎮");
-  assert.equal(product.title, "花枝（3kg / 2尾 / 放血冰鎮）");
+  assert.equal(product.title, "花枝（2尾 / 放血冰鎮）");
   assert.equal("market_reference_price" in product, false);
   assert.equal("market_snapshot" in product, false);
   assert.equal("species_id" in product, false);
@@ -102,8 +102,8 @@ test("舊冷凍商品、草稿卡、商品卡與上架訊息一起更新", funct
   all("messages").forEach(function (message) { messages[message.id] = message; });
   assert.equal(messages.msg_draft.card.draft.condition, "放血冰鎮");
   assert.equal(messages.msg_product.card.condition, "放血冰鎮");
-  assert.equal(messages.msg_product.card.title, "花枝（3kg / 2尾 / 放血冰鎮）");
-  assert.equal(messages.msg_listed.text, "已上架：花枝（3kg / 2尾 / 放血冰鎮）");
+  assert.equal(messages.msg_product.card.title, "花枝（2尾 / 放血冰鎮）");
+  assert.equal(messages.msg_listed.text, "已上架：花枝（2尾 / 放血冰鎮）");
   assert.equal(messages.msg_reply.text, "放血冰鎮");
   assert.match(messages.msg_prompt.text, /三去處理或冷凍/);
   assert.equal(messages.msg_unrelated.text, "冷凍");

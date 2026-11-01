@@ -1,4 +1,4 @@
-/* 商品卡與詳情：不顯示學名／料理資料，也不因沒有 species_id 顯示未知魚種。 */
+/* 首頁與漁獲列表的直式商品卡：魚種、處理、尾數、雙價、地區與兩個按鈕。 */
 
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -9,34 +9,27 @@ function read(path) {
   return fs.readFileSync(new URL(path, import.meta.url), "utf8");
 }
 
-const elements = {};
-
-function context() {
-  const ctx = {
+const ctx = (function () {
+  const sandbox = {
     window: {
       HaisenFormat: {
-        escapeHtml: function (value) { return String(value == null ? "" : value); },
-        money: function (value) { return "NT$" + Number(value || 0).toLocaleString("en-US"); },
-        dateOf: function () { return "2026-10-22"; }
+        escapeHtml: function (value) {
+          return String(value == null ? "" : value).replace(/[&<>"']/g, function (ch) {
+            return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch];
+          });
+        },
+        money: function (value) { return "NT$" + Number(value || 0).toLocaleString("en-US"); }
       },
       HaisenAPI: { photoUrl: function (url) { return url; } }
     },
     normalizeCityName: function (value) { return String(value || "").replace(/臺/g, "台"); },
-    document: {
-      getElementById: function (id) {
-        if (!elements[id]) elements[id] = { innerHTML: "", textContent: "" };
-        return elements[id];
-      },
-      addEventListener: function () {}
-    }
+    document: { getElementById: function () { return null; }, addEventListener: function () {} }
   };
-  ctx.globalThis = ctx;
-  return vm.createContext(ctx);
-}
+  sandbox.globalThis = sandbox;
+  return vm.createContext(sandbox);
+})();
 
-const ctx = context();
 vm.runInContext(read("../assets/js/app/05-product-view.js"), ctx);
-vm.runInContext(read("../assets/js/pages/product-detail.js"), ctx);
 
 const PRODUCT = {
   id: "prd_1",
@@ -47,39 +40,69 @@ const PRODUCT = {
   photo_url: "/uploads/a.jpg",
   price: 1000,
   price_per_taijin: 200,
+  price_auto: true,
+  unit_price: 500,
   available: 2,
+  reserved_quantity: 0,
   region: "高雄市",
   location: "高雄市鼓山區",
   catch_time: "2026-10-25T05:00:00+08:00",
   title: "土魠（3kg / 2尾 / 放血冰鎮）"
 };
 
-test("沒有 species_code 的商品仍正常顯示價格、重量、尾數、處理方式與地區", function () {
-  const html = vm.runInContext("productCardHTML(" + JSON.stringify(PRODUCT) + ")", ctx);
-  assert.match(html, /NT\$1,000/);
-  assert.match(html, /3\.0 kg/);
-  assert.match(html, /可售 2 尾/);
+function card(overrides) {
+  return vm.runInContext("productCardHTML(" + JSON.stringify(Object.assign({}, PRODUCT, overrides)) + ")", ctx);
+}
+
+test("商品卡顯示魚種、處理方式、尾數、雙價與地區", function () {
+  const html = card();
+  assert.match(html, /土魠/);
   assert.match(html, /放血冰鎮/);
-  assert.match(html, /高雄市/);
-  assert.doesNotMatch(html, /未知魚種|料理資料|學名/);
+  assert.match(html, /共 2 尾/);
+  assert.match(html, /每台斤售價：NT\$200/);
+  assert.match(html, /NT\$1,000/);
+  assert.match(html, /整批售價/);
+  assert.match(html, /高雄市.*高雄市鼓山區/);
 });
 
-test("商品詳情不顯示學名與料理資料", function () {
-  vm.runInContext("renderSpec(" + JSON.stringify(PRODUCT) + ")", ctx);
-  const html = elements["pd-spec"].innerHTML;
-  assert.match(html, /魚種/);
-  assert.match(html, /總重/);
-  assert.match(html, /處理方式/);
-  assert.match(html, /地區/);
-  assert.doesNotMatch(html, /學名|料理資料/);
+test("商品卡不再顯示重量、每尾均價、日期、查看詳情或自動計算", function () {
+  const html = card();
+  assert.doesNotMatch(html, /3(?:\.0)? kg|重量/);
+  assert.doesNotMatch(html, /每尾均價/);
+  assert.doesNotMatch(html, /釣獲|上架 20/);
+  assert.doesNotMatch(html, /查看詳情|product-detail/);
+  assert.doesNotMatch(html, /自動計算/);
 });
 
-test("商品頁與詳情頁不再載入魚種 API 或用 species_id 篩選", function () {
-  const products = read("../assets/js/pages/products.js");
-  const detail = read("../assets/js/pages/product-detail.js");
-  const detailHtml = read("../pages/product-detail.html");
-  assert.doesNotMatch(products, /listSpecies|species_id|f-cat/);
-  assert.match(products, /fish_species/);
-  assert.match(products, /filterRegion/);
-  assert.doesNotMatch(detail + detailHtml, /species_latin|pd-latin|料理資料/);
+test("有可售量時並排顯示賣家資訊與洽談購買，且沒有數量下拉", function () {
+  const html = card();
+  assert.match(html, /data-action="seller-info"/);
+  assert.match(html, /data-deal-product="prd_1"/);
+  assert.match(html, /洽談購買/);
+  assert.doesNotMatch(html, /data-deal-qty|<select/);
+});
+
+test("沒有可售量時保留賣家資訊並顯示洽談中或已售出", function () {
+  const reserved = card({ available: 0, reserved_quantity: 1 });
+  assert.match(reserved, /data-action="seller-info"/);
+  assert.match(reserved, /洽談中，暫無法購買/);
+  assert.doesNotMatch(reserved, /data-deal-product/);
+
+  const sold = card({ available: 0, reserved_quantity: 0 });
+  assert.match(sold, /data-action="seller-info"/);
+  assert.match(sold, /已售出/);
+  assert.doesNotMatch(sold, /data-deal-product/);
+});
+
+test("缺漏地區或地點時顯示地區未提供", function () {
+  assert.match(card({ location: "" }), /地區未提供/);
+  assert.match(card({ region: "" }), /地區未提供/);
+});
+
+test("商品詳情頁與腳本已刪除，全站沒有指向它的連結", function () {
+  assert.equal(fs.existsSync(new URL("../pages/product-detail.html", import.meta.url)), false);
+  assert.equal(fs.existsSync(new URL("../assets/js/pages/product-detail.js", import.meta.url)), false);
+  ["../pages/index.html", "../pages/products.html", "../assets/js/app/05-product-view.js"].forEach(function (path) {
+    assert.doesNotMatch(read(path), /product-detail|查看詳情/);
+  });
 });

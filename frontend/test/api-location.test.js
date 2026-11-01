@@ -44,10 +44,9 @@ test("products／market 呼叫端都 import assets/js/api/", function () {
 });
 
 test("頁面以 module 載入 products API，並在 DOM ready 後才呼叫", function () {
-  ["index.html", "products.html", "product-detail.html"].forEach(function (page) {
+  ["index.html", "products.html"].forEach(function (page) {
     assert.match(read("../pages/" + page), /type="module" src="\.\.\/assets\/js\/api\/products\.js/);
   });
   assert.match(read("../assets/js/pages/index.js"), /DOMContentLoaded/);
   assert.match(read("../assets/js/pages/products.js"), /DOMContentLoaded/);
-  assert.match(read("../assets/js/pages/product-detail.js"), /DOMContentLoaded/);
 });

@@ -28,18 +28,13 @@ export function initActions(options) {
   initDealReviews(options);
 }
 
-function panelQuantity(productId) {
-  const select = document.querySelector('.fm-card [data-fm-qty="' + productId + '"]');
-  return select ? Number(select.value) || 1 : 1;
-}
-
-/* 商品卡與詳情頁的「洽談購買」入口；未登入先導去登入頁。 */
+/* 商品卡的「洽談購買」入口；未登入先導去登入頁，預設數量 1。 */
 export async function startDeal(productId, quantity) {
   if (!api.isLoggedIn()) {
     window.location.href = "login.html";
     return;
   }
-  await beginDeal(productId, Number(quantity) || panelQuantity(productId));
+  await beginDeal(productId, Number(quantity) > 0 ? Number(quantity) : 1);
   panel.open();
 }
 

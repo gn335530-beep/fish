@@ -1,23 +1,19 @@
-/* 上架草稿：欄位缺漏、價格自動計算與送後端的欄位轉換。 */
+/* 上架草稿：欄位缺漏與送後端的欄位轉換；整批售價必填。 */
 
 import { normalizeCityName } from "../../shared/regions.js";
-import "../../shared/format.js";
 
-const format = window.HaisenFormat;
-const SLOT_ORDER = ["fish_species", "weight_kg", "quantity", "condition", "photo_url", "price"];
+const SLOT_ORDER = ["fish_species", "quantity", "condition", "photo_url", "price"];
 const NON_PRICE_SLOTS = SLOT_ORDER.filter(function (slot) { return slot !== "price"; });
 
 function emptyDraft() {
   return {
     fish_species: "",
     species_code: null,
-    weight_kg: null,
     quantity: null,
     condition: "",
     photo_url: "",
     price: null,
-    price_per_taijin: null,
-    price_auto: false
+    price_per_taijin: null
   };
 }
 
@@ -29,7 +25,6 @@ export function mergeDraft(draft, found) {
   const next = Object.assign(emptyDraft(), draft || {});
   const source = found || {};
   const hasPrice = hasValue(source.price);
-  const hasPerTaijin = hasValue(source.price_per_taijin);
 
   Object.keys(source).forEach(function (key) {
     const value = source[key];
@@ -45,16 +40,6 @@ export function mergeDraft(draft, found) {
 
   if (hasPrice) {
     next.price = Number(source.price);
-    next.price_auto = false;
-    if (!hasPerTaijin) next.price_per_taijin = null;
-  } else if (hasPerTaijin) {
-    /* 已有明確整批價時視為兩者都填，保留折扣；只有先前是自動計算才重算。 */
-    const keepExplicitPrice = next.price != null && next.price !== "" && next.price_auto !== true;
-    if (!keepExplicitPrice) next.price_auto = true;
-  }
-
-  if (next.price_auto && next.price_per_taijin != null && Number(next.weight_kg) > 0) {
-    next.price = Math.round(Number(next.price_per_taijin) * format.taijinFromKg(next.weight_kg));
   }
   return next;
 }
@@ -79,23 +64,18 @@ export function draftReady(draft) {
   return nextMissingSlot(draft) === null;
 }
 
-/* 送給後端前轉成 API 欄位；只填每台斤時讓後端算整批。 */
+/* 送給後端前轉成 API 欄位；每台斤售價只在有值時才送。 */
 export function draftToProduct(draft, user) {
   const payload = {
     fish_species: draft.fish_species,
     species_code: draft.species_code || null,
-    weight_kg: draft.weight_kg,
     quantity: draft.quantity,
     condition: draft.condition,
     photo_url: draft.photo_url,
     region: normalizeCityName((user && user.city) || ""),
-    location: normalizeCityName((user && user.address) || "")
+    location: normalizeCityName((user && user.address) || ""),
+    price: draft.price
   };
-  if (draft.price_auto) {
-    payload.price_per_taijin = draft.price_per_taijin;
-  } else {
-    payload.price = draft.price;
-    if (draft.price_per_taijin != null) payload.price_per_taijin = draft.price_per_taijin;
-  }
+  if (draft.price_per_taijin != null) payload.price_per_taijin = draft.price_per_taijin;
   return payload;
 }
