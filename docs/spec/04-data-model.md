@@ -59,17 +59,17 @@
 | --- | --- | --- |
 | `id` | string | |
 | `seller_id` | number | 由 Token 決定，不由 client 傳 |
-| `title` | string | 伺服器產生 |
+| `title` | string | 伺服器產生：`{魚種}（{尾數}尾 / {處理}）` |
 | `fish_species` | string | 使用者說的魚種名稱（未知魚種也存這裡） |
 | `species_code` | number \| null | 對到官方代碼才有；未回填舊商品 |
-| `weight_kg` | number | 整批總重（公斤，一位小數） |
+| `weight_kg` | number \| null | 選填／legacy；新商品可省略，舊資料保留但不顯示 |
 | `quantity` | number | 總尾數 |
 | `sold_quantity` | number | 已成交尾數，系統維護 |
 | `condition` | string | 自由文字，最多 20 字 |
 | `photo_url` | string | `/uploads/xxx.jpg` |
-| `price` | number | **上架整批售價（元）**；使用者明確輸入時原樣保留（可含小數），訂單／協議使用 |
+| `price` | number | **上架整批售價（元）**；必填，使用者明確輸入時原樣保留（可含小數），訂單／協議使用 |
 | `price_per_taijin` | number \| null | 上架每台斤售價（元）；可空 |
-| `price_auto` | boolean | 整批售價是否由每台斤自動計算 |
+| `price_auto` | boolean | legacy；新商品一律 `false`，舊資料可能為 `true`，畫面不顯示 |
 | `region` | string | 縣市 |
 | `location` | string | 完整地點，預設為個人地址 |
 | `catch_time` | string | ISO 時間 |
@@ -77,7 +77,9 @@
 
 **衍生**（讀取時算，不落庫）：`reserved_quantity`、`available`、`unit_price`、`avg_weight_kg`、`status`。
 
-**變更（#24、#27、2026-10-28）**：新增 `price_per_taijin`、`price_auto`；移除 `market_reference_price`、`market_snapshot`；`condition` 不再限定四種。自由文字 `condition`、每台斤售價與自動計算已實作（#24、#26、#27）。只填每台斤時，後端在建立商品時計算 `price` 並設 `price_auto = true`；只填整批時 `price_per_taijin = null`；兩者都填時都保留，不檢查一致性。
+**變更（#24、#27、2026-10-28）**：新增 `price_per_taijin`、`price_auto`；移除 `market_reference_price`、`market_snapshot`；`condition` 不再限定四種。
+
+**變更（交易房改版）**：`price` 改為必填；`price_per_taijin` 選填；不再自動計算整批，`price_auto` 只保留舊資料。`weight_kg` 改為選填／legacy。標題格式改為 `{魚種}（{尾數}尾 / {處理}）`。
 
 **變更（2026-10-29）**：商品移除 `species_id` 與 `species_latin`，新增可選 `species_code`。啟動正規化會清除舊欄位、保留 `fish_species`，並把舊商品的 `species_code` 設為 `null`，不自動回填。
 
@@ -105,8 +107,8 @@
 {
   "mode": "idle | listing | shopping",
   "draft": {
-    "fish_species", "species_code", "weight_kg", "quantity", "condition", "photo_url",
-    "price", "price_per_taijin", "price_auto"
+    "fish_species", "species_code", "quantity", "condition", "photo_url",
+    "price", "price_per_taijin"
   },
   "last_cards": ["prd_...", "prd_..."],
   "market_quoted": false,
@@ -116,7 +118,7 @@
 }
 ```
 
-`pending_sale_text` 只在法規告知期間有值；`awaiting_consent` 標記等待法規確認。確認後用它進入 listing、兩者清空；取消後也清空。`seller_terms_accepted_at` 一旦寫入永久有效，不因法規文字更新重問。`market_quoted` 標記這份草稿已送過行情卡；魚種或重量改變時重設。`choosing_edit` 標記正在等待使用者選擇要修改的草稿欄位。
+`pending_sale_text` 只在法規告知期間有值；`awaiting_consent` 標記等待法規確認。確認後用它進入 listing、兩者清空；取消後也清空。`seller_terms_accepted_at` 一旦寫入永久有效，不因法規文字更新重問。`market_quoted` 標記這份草稿已送過行情卡；魚種改變時重設。`choosing_edit` 標記正在等待使用者選擇要修改的草稿欄位。
 
 **唯一鍵**：助手房＝`id`（每位使用者可以有多間，不再用 `type + user_ids[0]`）；交易房＝`type + buyer_id + seller_id`。
 
@@ -146,20 +148,21 @@
 **卡片內容**
 
 ```jsonc
-{ "type": "product", "product_id": "prd_...", "title": "...",
-  "price": 2800, "price_per_taijin": 373.3, "price_auto": false, "unit_price": 2800,
-  "weight_kg": 4.5, "quantity": 1, "available": 1, "condition": "放血冰鎮",
-  "region": "新北市", "location": "...", "catch_time": "...", "seller_id": 1 }
+{ "type": "product", "product_id": "prd_...",
+  "fish_species": "石斑", "photo_url": "/uploads/a.jpg",
+  "price": 2800, "price_per_taijin": 373.3,
+  "quantity": 1, "available": 1, "reserved_quantity": 0, "condition": "放血冰鎮",
+  "region": "新北市", "location": "...", "seller_id": 1 }
 
-{ "type": "draft", "draft": { "fish_species": "花枝", "weight_kg": 3, "quantity": 2,
+{ "type": "draft", "draft": { "fish_species": "花枝", "quantity": 2,
   "condition": "放血冰鎮", "photo_url": "/uploads/a.jpg",
-  "price": 1000, "price_per_taijin": 200, "price_auto": false } }
+  "price": 1000, "price_per_taijin": 200 } }
 
 { "type": "market_quote", "species_code": 2166, "official_name": "花枝", "species_name": "花枝",
   "scope": "city", "region": "高雄市", "trade_date": "2026-10-22",
   "price_per_kg": 52.4, "price_per_taijin": 31.4, "is_aquaculture": false,
   "source": "農業部漁產品交易行情", "source_url": "...", "fetched_at": "...",
-  "weight_kg": 3, "weight_taijin": 5, "estimated_total": 157,
+  "weight_kg": null, "weight_taijin": null, "estimated_total": null,
   "history": [{ "trade_date": "2026-10-16", "price_per_taijin": 30.1 },
               { "trade_date": "2026-10-22", "price_per_taijin": 31.4 }],
   "history_30": [{ "trade_date": "2026-09-01", "price_per_taijin": 29.8 }],
@@ -176,17 +179,20 @@
   "initiator_id": 2, "final_price": 4800,
   "meetup_location": "基隆火車站南站 7-11 門口", "meetup_time": "...",
   "items_total": 5000,
-  "items": [{ "title": "...", "quantity": 1, "unit_price": 2800 }] }
-{ "type": "order" }                                               // 目標
+  "items": [{ "fish_species": "石斑", "title": "...", "quantity": 1,
+              "unit_price": 2800, "price_per_taijin": 373.3 }] }
+
+{ "type": "deal_cancelled", "deal_id": "deal_...", "note": "臨時有事，改天再約" }
+
 { "type": "review", "deal_id": "deal_...", "buyer_id": 2, "seller_id": 1,
   "buyer_reviewed": false, "seller_reviewed": false }
 ```
 
-**卡片狀態**：`deal` 卡為 `pending` / `rejected` / `confirmed` / `cancelled` / `expired`。`review` 卡沒有狀態欄位，改用 `buyer_reviewed`／`seller_reviewed` 表示雙方是否已評價。
+**卡片狀態**：`deal` 卡為 `pending` / `rejected` / `confirmed` / `cancelled` / `expired`；`rejected` 只保留舊資料。`deal_cancelled` 是取消後新增的訊息卡，雙方都看得到。`review` 卡沒有狀態欄位，改用 `buyer_reviewed`／`seller_reviewed` 表示雙方是否已評價。行情卡的 `weight_kg`／`weight_taijin`／`estimated_total` 只為舊資料相容，通常為 `null`，畫面改由使用者輸入即時試算。
 
 ## 7. `deals`
 
-`DRAFT` 由開啟交易房建立；送提案後是 `PENDING_REVIEW`，退回是 `NEGOTIATING`，同意是 `CONFIRMED`，取消或逾時是 `CANCELLED`。協議卡的 `status` 會跟著最新一張卡同步為 `pending`／`rejected`／`confirmed`／`cancelled`／`expired`。舊卡保留當時的狀態。
+`DRAFT` 由開啟交易房建立；送提案後是 `PENDING_REVIEW`，確認是 `CONFIRMED`，取消或逾時是 `CANCELLED`。`NEGOTIATING` 只保留舊資料，新流程不再產生。協議卡的 `status` 會跟著最新一張卡同步為 `pending`／`confirmed`／`cancelled`／`expired`；舊資料的 `rejected` 仍可顯示。舊卡保留當時的狀態。
 
 ```jsonc
 {
@@ -197,9 +203,10 @@
   "initiator_id": 2,
   "items": [
     { "item_id": "itm_01", "product_id": "prd_...",
-      "title": "石斑（4.5kg / 1尾 / 放血冰鎮）",
+      "title": "石斑（1尾 / 放血冰鎮）", "fish_species": "石斑",
       "photo_url": "/uploads/a.jpg",
-      "unit_price": 2800, "weight_kg": 4.5, "quantity": 1 }
+      "unit_price": 2800, "price": 2800, "price_per_taijin": 373.3,
+      "weight_kg": null, "quantity": 1 }
   ],
   "items_total": 5000,
   "deal_terms": {
@@ -216,19 +223,22 @@
   "review_status": { "buyer_reviewed": false, "seller_reviewed": false },
   "cancelled_by": null,
   "cancel_reason": null,
+  "cancel_note": null,
   "created_at": "...",
   "updated_at": "...",
   "confirmed_at": null
 }
 ```
 
-- `items[]` 是商品快照，不隨商品變動；`GET /api/deals/:id` 讀取時會為每項附上 `available`（不落庫）。
+- `items[]` 是商品快照，不隨商品變動；快照含 `fish_species`、`price_per_taijin`（可為 `null`）與 `title`。`GET /api/deals/:id` 讀取時會為每項附上 `available`（不落庫）。
 - `updated_at` 會在項目變動、提案、回應、取消或逾時時更新，供前端判斷是否重抓明細。
-- `rejected_by` 記住最後一位按「退回」的人；只有這個人可以把 `NEGOTIATING` 的訂單重新送出。
+- `rejected_by` 是舊 `NEGOTIATING` 流程的欄位；新介面不再提供退回。
 - `deal_terms` 在 `DRAFT` 可以為 `null`。
-- `cancel_reason`：`SELLER_OUT_OF_STOCK`、`BUYER_CHANGED_MIND`、`TERMS_MISMATCH`、`OTHER`、`LOCK_EXPIRED`、`HOLD_EXPIRED`。
+- `cancel_reason`：新流程的使用者取消固定為 `OTHER`；逾時為 `LOCK_EXPIRED`／`HOLD_EXPIRED`。舊資料可能還有 `SELLER_OUT_OF_STOCK`、`BUYER_CHANGED_MIND`、`TERMS_MISMATCH`。
+- `cancel_note`：使用者取消時的自由文字原因（最多 200 字）；逾時或未填時為 `null`。
 - `cancelled_by` 是使用者 id；逾時取消時是 `"system"`。
 - `review_status` 由評價端點維護，成交後插入的評價卡會跟著更新。
+- 重新發起會在同一間房建立新的 `DRAFT`，複製原項目快照並以目前可售為數量上限；原 `CANCELLED` 訂單保留。
 - **刪除**：交易房刪除時，該房所有 `deals` 與其項目一起移除；房內須無 `CONFIRMED` 歷史，且目前訂單為 `CANCELLED`（或全部訂單皆 `CANCELLED`）才可刪。商品的可售／已售不受影響（取消時已釋放保留）。
 
 ## 8. `reviews`
@@ -241,7 +251,7 @@
 ```
 
 - 唯一鍵：`deal_id + reviewer_id`；重複評價回 409。
-- `tags` 最多 3 個（送去重的前長度就必須 ≤ 3），必須是「準時守約／魚貨新鮮／溝通良好／包裝完善／臨時放鳥」之一。
+- `tags` 最多 3 個（送去重的前長度就必須 ≤ 3），必須是「魚貨新鮮／準時守約／溝通良好／臨時放鳥」之一。
 - 送出後用該對象的全部評價重算 `rating_score` 與 `review_count`；含「臨時放鳥」時 `no_show_count` +1，達 3 次 `is_blacklisted = true`。
 
 ## 9. 行情資料表（已實作）

@@ -95,3 +95,10 @@ test("只有已取消的訂單可以重新發起", async function () {
   assert.equal(result.status, 409);
   assert.equal(result.body.code, "INVALID_DEAL_STATUS");
 });
+
+test("逾時取消的訂單不能重新發起", async function () {
+  patch("deals", seen.source, { cancel_reason: "LOCK_EXPIRED" });
+  const result = await reinitiate(seen.source);
+  assert.equal(result.status, 409);
+  assert.equal(result.body.code, "INVALID_DEAL_STATUS");
+});

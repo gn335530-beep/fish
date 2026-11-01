@@ -4,8 +4,6 @@ import { escapeHtml, money, resolveImage, definitionRow } from "./html.js";
 
 export function renderDraftCard(card) {
   const draft = card.draft || {};
-  const quantity = Number(draft.quantity || 0);
-  const unitPrice = quantity > 0 ? Math.round(Number(draft.price || 0) / quantity) : 0;
   return '<div class="fm-card fm-card--draft">' +
     '<b>上架草稿</b>' +
     '<dl>' +
@@ -14,7 +12,6 @@ export function renderDraftCard(card) {
     definitionRow("處理", draft.condition) +
     definitionRow("整批售價", money(draft.price)) +
     definitionRow("每台斤", draft.price_per_taijin == null ? "—" : money(draft.price_per_taijin)) +
-    definitionRow("每尾均價", unitPrice > 0 ? money(unitPrice) : "—") +
     '</dl>' +
     (draft.photo_url ? '<img class="fm-card__thumb" src="' + escapeHtml(resolveImage(draft.photo_url)) + '" alt="商品照片">' : "") +
     '<div class="fm-card__acts">' +

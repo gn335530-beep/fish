@@ -135,6 +135,10 @@ router.post("/api/deals/reinitiate", requireUser, function (req, res) {
     fail(res, 409, "INVALID_DEAL_STATUS", "只有已取消的訂單可以重新發起");
     return;
   }
+  if (source.cancel_reason !== "OTHER") {
+    fail(res, 409, "INVALID_DEAL_STATUS", "只有使用者取消的訂單可以重新發起");
+    return;
+  }
 
   const result = deals.reinitiateDeal(source, req.user.id, new Date().toISOString());
   if (result.error === "DRAFT_EXISTS") {

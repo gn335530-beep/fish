@@ -53,7 +53,7 @@ backend/
 | `products` | 上架商品（唯一真實來源） |
 | `conversations` | 助手房與交易房 |
 | `messages` | 對話訊息與卡片 |
-| `deals` | 訂單（`DRAFT`、`PENDING_REVIEW`、`NEGOTIATING`、`CONFIRMED`、`CANCELLED`） |
+| `deals` | 訂單（`DRAFT`、`PENDING_REVIEW`、`CONFIRMED`、`CANCELLED`；`NEGOTIATING` 只保留舊資料） |
 | `reviews` | 成交後的雙向評價 |
 | `market_prices` | 按需抓取的批發行情（平均價、交易量、養殖旗標）；以 `species_code` 為鍵 |
 | `market_species_catalog` | 執行時同步的官方新鮮代碼字典 |
@@ -72,7 +72,7 @@ backend/
 | `POST` | `/api/users/seller-consent` | 記錄第一次販賣確認，重複呼叫不覆寫時間；需登入 |
 | `GET` | `/api/products` | 商品清單，支援 `region`、`species`、`seller_id`、`status`、`limit` |
 | `GET` | `/api/products/{id}` | 單一商品 |
-| `POST` | `/api/products/create` | 上架商品；可帶可選 `species_code`；需登入 |
+| `POST` | `/api/products/create` | 上架商品；整批售價必填、每台斤與重量選填；可帶可選 `species_code`；需登入 |
 | `GET` | `/api/conversations` | 目前會員的房間清單；需登入 |
 | `POST` | `/api/conversations/assistant` | 每次建立一間新的助手房；需登入 |
 | `DELETE` | `/api/conversations/{id}` | 刪除助手房或可刪的交易房；需參與者 |
@@ -84,11 +84,13 @@ backend/
 | `POST` | `/api/deals/initiate-channel` | 由商品開啟或沿用交易房與草稿訂單；需登入 |
 | `GET` | `/api/deals/{id}` | 訂單明細（項目附可售尾數）；需參與者 |
 | `POST` | `/api/deals/items` | 加購同一釣客的商品；需買家 |
+| `POST` | `/api/deals/items/batch` | 批次加購多個商品；需買家 |
 | `PATCH` | `/api/deals/items/{itemId}` | 改尾數；需買家 |
-| `DELETE` | `/api/deals/items/{itemId}`、`/api/deals/items` | 刪除項目／清空；需買家 |
+| `DELETE` | `/api/deals/items/{itemId}`、`/api/deals/items` | 刪除項目／清空（舊介面）；需買家 |
 | `POST` | `/api/deals/propose` | 送出協議；需參與者 |
-| `POST` | `/api/deals/respond` | 同意／退回；需非發起方 |
-| `POST` | `/api/deals/cancel` | 取消並選原因；需參與者 |
+| `POST` | `/api/deals/respond` | 確認協議；退回為 legacy；需非發起方 |
+| `POST` | `/api/deals/cancel` | 取消並帶自由文字 `note`；需參與者 |
+| `POST` | `/api/deals/reinitiate` | 取消後重新發起協議；需買家 |
 | `GET` | `/api/deals` | 目前使用者的交易紀錄 |
 | `POST` | `/api/reviews/submit` | 成交後評價對方；需參與者 |
 | `GET` | `/api/reviews?user_id=` | 公開評價與平均星等 |
