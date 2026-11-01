@@ -20,6 +20,12 @@ test("超出範圍的分數會夾在 0 到 5 之間", function () {
   assert.deepEqual(stars.starStates("3.5"), ["full", "full", "full", "half", "empty"]);
 });
 
+test("分數先四捨五入到最近的半星", function () {
+  assert.deepEqual(stars.starStates(4.9), ["full", "full", "full", "full", "full"]);
+  assert.deepEqual(stars.starStates(4.7), ["full", "full", "full", "full", "half"]);
+  assert.deepEqual(stars.starStates(3.2), ["full", "full", "full", "empty", "empty"]);
+});
+
 test("唯讀星星輸出五個標記並帶無障礙名稱", function () {
   const html = stars.renderStars(3.5, { label: "評價 3.5 分，2 則" });
   assert.match(html, /role="img"/);

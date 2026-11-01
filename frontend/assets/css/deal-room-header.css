@@ -1,0 +1,29 @@
+/* 交易房標題列：對方名稱、評價星星與電話。 */
+
+.fm-deal__stars { display: flex; align-items: center; gap: 5px; }
+
+.fm-stars { display: inline-flex; gap: 1px; font-size: .72rem; line-height: 1; color: var(--coral); }
+.fm-star { position: relative; display: inline-block; color: var(--coral); }
+.fm-star--empty { color: var(--rule-2); }
+.fm-star--half { color: var(--rule-2); }
+
+.fm-star--half::after {
+  content: "★";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 50%;
+  overflow: hidden;
+  color: var(--coral);
+}
+
+.fm-deal__nostar { color: var(--muted-2); font-size: .64rem; }
+
+.fm-deal__phone {
+  display: block;
+  margin-top: 2px;
+  color: var(--accent);
+  font-size: .68rem;
+  text-decoration: none;
+}
+
+.fm-deal__phone--none { color: var(--muted-2); }

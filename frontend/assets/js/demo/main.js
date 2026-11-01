@@ -5,6 +5,7 @@ import * as api from "./api.js";
 import { mountPanel } from "./views/panel.js";
 import { renderAssistant, renderLogin } from "./views/assistant.js";
 import { renderDealRoom } from "./views/deal.js";
+import { dealRoomHeader } from "./views/deal-room-header.js";
 import { renderInbox } from "./views/inbox.js";
 import { escapeHtml } from "./views/html.js";
 import { startPolling, pollNow } from "./poll.js";
@@ -29,6 +30,7 @@ const panel = mountPanel({
   onReviewField: handleReviewField,
   onReviewTag: handleReviewTag,
   onReviewComment: handleReviewComment,
+  onVoiceError: function (message) { notify(new Error(message)); },
   onRender: render
 });
 
@@ -47,18 +49,6 @@ initActions({
 });
 
 initListingActions({ render: render, notify: notify });
-
-function statusText() {
-  if (!state.user) return "未登入";
-  if (state.view === "inbox") return "收件匣";
-  if (state.room && state.room.type === "deal") {
-    return "與 " + (state.room.peer ? state.room.peer.display_name : "對方") + " 洽談中";
-  }
-  const mode = state.room && state.room.context ? state.room.context.mode : "idle";
-  if (mode === "listing") return "上架中";
-  if (mode === "shopping") return "找魚中";
-  return "找魚・上架・交易";
-}
 
 function bodyWith(html) {
   if (!state.notice) return html;
@@ -89,9 +79,11 @@ function render() {
   lastCriticalKey = criticalKey;
   const bodySettings = force ? { force: true } : {};
 
+  const header = state.view === "deal" && state.room && state.room.type === "deal"
+    ? dealRoomHeader(state.room.peer)
+    : { title: "AI 聊天小幫手", sub: "" };
+  panel.setHeader(header.title, header.sub);
   panel.setBadge(state.user ? totalUnread() : 0);
-  panel.setStatus(statusText());
-  panel.setView(state.view);
   panel.setFooter(state.view !== "inbox" && !!state.user && !!state.room);
 
   if (state.view === "inbox") {

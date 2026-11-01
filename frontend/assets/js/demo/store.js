@@ -22,7 +22,9 @@ export function emptyState() {
     proposal: emptyProposal(),
     cancelReasons: {},
     reviewDrafts: {},
-    marketDays: {}
+    marketDays: {},
+    marketWeights: {},
+    marketUnits: {}
   };
 }
 
