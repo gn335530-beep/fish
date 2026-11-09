@@ -22,7 +22,7 @@ let listingHistory = listingState();
 
 function listingState(changes) {
   return Object.assign({
-    loading: false, error: "", rows: [], tab: "active", pending: null
+    loading: false, error: "", rows: [], tab: "active"
   }, changes || {});
 }
 
@@ -61,11 +61,8 @@ function listingRemaining(row) {
 }
 
 function listingActionButton(action, row, label) {
-  const pending = listingHistory.pending;
-  const confirming = pending && pending.action === action && String(pending.id) === String(row.id);
   return '<button class="listing__btn listing__btn--' + action + '" type="button" data-listing-action="' +
-    action + '" data-product-id="' + lhEscape(row.id) + '">' +
-    (confirming ? "確定" + label + "？" : label) + '</button>';
+    action + '" data-product-id="' + lhEscape(row.id) + '">' + label + '</button>';
 }
 
 function listingActionsHTML(row) {
@@ -78,11 +75,7 @@ function listingActionsHTML(row) {
   } else {
     actions.push(listingActionButton("delist", row, "下架"));
   }
-  const pending = listingHistory.pending;
-  const confirming = pending && String(pending.id) === String(row.id);
-  return '<div class="listing__acts">' + actions.join("") +
-    (confirming ? '<button class="listing__btn listing__btn--cancel" type="button" data-listing-cancel>取消</button>' : "") +
-    '</div>';
+  return '<div class="listing__acts">' + actions.join("") + '</div>';
 }
 
 function listingTabsHTML(counts, activeKey) {
@@ -180,7 +173,7 @@ function bindListingHistory() {
   });
   document.querySelectorAll("[data-listing-tab]").forEach(function (node) {
     node.addEventListener("click", function () {
-      listingHistory = Object.assign({}, listingHistory, { tab: node.dataset.listingTab, pending: null });
+      listingHistory = Object.assign({}, listingHistory, { tab: node.dataset.listingTab });
       renderDrawer();
     });
   });
@@ -188,8 +181,5 @@ function bindListingHistory() {
     node.addEventListener("click", function () {
       listingAction(node.dataset.listingAction, node.dataset.productId);
     });
-  });
-  document.querySelectorAll("[data-listing-cancel]").forEach(function (node) {
-    node.addEventListener("click", cancelListingAction);
   });
 }

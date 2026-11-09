@@ -1,4 +1,4 @@
-/* 上架紀錄動作：按鈕依狀態顯示與兩段式確認。 */
+/* 上架紀錄動作：按鈕依狀態顯示與確認。 */
 
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -42,15 +42,11 @@ test("已下架但沒有未售尾數時只顯示刪除", function () {
   assert.match(markup, /data-listing-action="delete"/);
 });
 
-test("下架採兩段式確認，第二次確認後呼叫 API、顯示 toast 並重新載入", async function () {
+test("下架經確認後呼叫 API、顯示 toast 並重新載入", async function () {
   const harness = newContext();
   withRows(harness, [ACTIVE]);
 
-  await vm.runInContext("listingAction('delist', 'prd_active')", harness.ctx);
-  assert.equal(harness.calls.length, 0);
-  assert.equal(vm.runInContext("listingHistory.pending.action", harness.ctx), "delist");
-  assert.match(html(harness), /確定下架？/);
-  assert.match(html(harness), /data-listing-cancel/);
+  assert.doesNotMatch(html(harness), /確定下架|data-listing-cancel/);
 
   await vm.runInContext("listingAction('delist', 'prd_active')", harness.ctx);
   assert.deepEqual(harness.calls, [{ action: "delist", id: "prd_active" }]);
@@ -61,24 +57,12 @@ test("下架採兩段式確認，第二次確認後呼叫 API、顯示 toast 並
   assert.equal(harness.state.loads, 1);
 });
 
-test("第二次確認按取消時不呼叫 API", async function () {
+test("確認按取消時不呼叫 API", async function () {
   const harness = newContext({ confirm: false });
   withRows(harness, [ACTIVE]);
 
   await vm.runInContext("listingAction('delist', 'prd_active')", harness.ctx);
-  await vm.runInContext("listingAction('delist', 'prd_active')", harness.ctx);
 
   assert.equal(harness.calls.length, 0);
   assert.equal(harness.confirms.length, 1);
-  assert.equal(vm.runInContext("listingHistory.pending", harness.ctx), null);
-});
-
-test("取消確認會清掉 pending 並重畫", function () {
-  const harness = newContext();
-  withRows(harness, [ACTIVE]);
-
-  vm.runInContext("cancelListingAction()", harness.ctx);
-
-  assert.equal(vm.runInContext("listingHistory.pending", harness.ctx), null);
-  assert.equal(harness.state.renders, 1);
 });

@@ -68,8 +68,8 @@ export function newContext(options) {
   return { ctx: ctx, calls: calls, toasts: toasts, events: events, confirms: confirms, state: state };
 }
 
-export function withRows(harness, rows, pending) {
-  const state = { loading: false, error: "", rows: rows, tab: "active", pending: pending || null };
+export function withRows(harness, rows) {
+  const state = { loading: false, error: "", rows: rows, tab: "active" };
   vm.runInContext("listingHistory = " + JSON.stringify(state), harness.ctx);
 }
 

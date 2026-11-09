@@ -1,4 +1,4 @@
-/* 上架紀錄的動作：兩段式確認、呼叫 API、成功後重載列表。 */
+/* 上架紀錄的動作：確認、呼叫 API、成功後重載列表。 */
 
 const LISTING_ACTIONS = {
   delist: {
@@ -14,27 +14,9 @@ const LISTING_ACTIONS = {
   }
 };
 
-function cancelListingAction() {
-  listingHistory = listingState({ rows: listingHistory.rows, tab: listingHistory.tab });
-  if (drawerView === "listings") renderDrawer();
-}
-
 async function listingAction(action, productId) {
   const config = LISTING_ACTIONS[action];
-  const pending = listingHistory.pending;
-  const confirming = pending && pending.action === action
-    && String(pending.id) === String(productId);
-
-  if (config.confirm && !confirming) {
-    listingHistory = Object.assign({}, listingHistory, { pending: { action: action, id: productId } });
-    renderDrawer();
-    return;
-  }
-  if (config.confirm && window.confirm && !window.confirm(config.confirm)) {
-    cancelListingAction();
-    return;
-  }
-
+  if (config.confirm && window.confirm && !window.confirm(config.confirm)) return;
   await runListingAction(action, productId);
 }
 
