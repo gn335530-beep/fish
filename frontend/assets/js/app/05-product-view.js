@@ -29,6 +29,10 @@ function placeOf(p) {
 /* 兩個按鈕並排；賣家資訊目前只保留入口，不註冊任何行為。 */
 function dealControls(p) {
   var seller = '<button type="button" class="btn btn--ghost btn--sm" data-action="seller-info">賣家資訊</button>';
+  if (p.status === "DELISTED") {
+    return '<div class="card__deal">' + seller +
+      '<span class="card__deal-note">已下架</span></div>';
+  }
   if (productAvailable(p) <= 0) {
     var note = Number(p.reserved_quantity) > 0 ? "洽談中，暫無法購買" : "已售出";
     return '<div class="card__deal">' + seller +

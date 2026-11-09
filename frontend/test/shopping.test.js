@@ -12,7 +12,11 @@ const PRODUCTS = [
   { id: "p_new1", fish_species: "石斑魚", title: "石斑 A", available: 2, region: "新北市" },
   { id: "p_taipei", fish_species: "石斑魚", title: "石斑 B", available: 3, region: "臺北市" },
   { id: "p_squid", fish_species: "花枝", title: "花枝 C", available: 1, region: "新北市" },
-  { id: "p_new2", fish_species: "石斑魚", title: "石斑 D", available: 1, region: "新北市" }
+  { id: "p_new2", fish_species: "石斑魚", title: "石斑 D", available: 1, region: "新北市" },
+  {
+    id: "p_reserved", fish_species: "石斑魚", title: "石斑 E",
+    available: 0, reserved_quantity: 1, status: "PARTIALLY_RESERVED", region: "新北市"
+  }
 ];
 
 globalThis.window = {
@@ -27,6 +31,7 @@ globalThis.window = {
 };
 
 const { shoppingReply } = await import("../assets/js/demo/ai/shopping.js");
+const { explainProduct } = await import("../assets/js/demo/ai/service.js");
 
 function cardsOf(result) {
   return result.replies.filter(function (reply) { return reply.card; })
@@ -39,20 +44,20 @@ function textOf(result) {
 
 test("沒有明說地區時，以個人檔案縣市為範圍並說明", async function () {
   const result = await shoppingReply("今天有什麼魚", { city: "新北市" });
-  assert.deepEqual(cardsOf(result), ["p_new1", "p_squid", "p_new2"]);
+  assert.deepEqual(cardsOf(result), ["p_new1", "p_squid", "p_new2", "p_reserved"]);
   assert.match(textOf(result), /依你的地區（新北市）/);
 });
 
 test("明確指定其他縣市時，覆蓋個人檔案縣市", async function () {
   const result = await shoppingReply("新北市有什麼魚", { city: "臺北市" });
-  assert.deepEqual(cardsOf(result), ["p_new1", "p_squid", "p_new2"]);
+  assert.deepEqual(cardsOf(result), ["p_new1", "p_squid", "p_new2", "p_reserved"]);
   assert.match(textOf(result), /^新北市找到/);
   assert.doesNotMatch(textOf(result), /依你的地區/);
 });
 
 test("個人檔案沒有縣市時改為全省查詢並說明", async function () {
   const result = await shoppingReply("今天有什麼魚", { city: "" });
-  assert.deepEqual(cardsOf(result), ["p_new1", "p_taipei", "p_squid", "p_new2"]);
+  assert.deepEqual(cardsOf(result), ["p_new1", "p_taipei", "p_squid", "p_new2", "p_reserved"]);
   assert.match(textOf(result), /還沒填縣市.*全省查詢/);
 });
 
@@ -74,5 +79,26 @@ test("用魚種名稱篩選商品", async function () {
 
 test("料理方式與肉質條件不再影響篩選", async function () {
   const result = await shoppingReply("清蒸 刺少 石斑魚", { city: "" });
-  assert.deepEqual(cardsOf(result), ["p_new1", "p_taipei", "p_new2"]);
+  assert.deepEqual(cardsOf(result), ["p_new1", "p_taipei", "p_new2", "p_reserved"]);
+});
+
+test("洽談中但可售 0 尾的商品仍留在推薦卡並保留狀態", async function () {
+  const result = await shoppingReply("石斑魚", { city: "新北市" });
+  const card = result.replies.map(function (reply) { return reply.card; })
+    .find(function (row) { return row && row.product_id === "p_reserved"; });
+  assert.ok(card);
+  assert.equal(card.available, 0);
+  assert.equal(card.reserved_quantity, 1);
+  assert.equal(card.status, "PARTIALLY_RESERVED");
+});
+
+test("已下架商品不再顯示一般商品說明", function () {
+  const result = explainProduct({
+    id: "p_delisted",
+    fish_species: "石斑魚",
+    quantity: 2,
+    available: 0,
+    status: "DELISTED"
+  });
+  assert.match(textOf(result), /此商品已下架/);
 });

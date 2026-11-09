@@ -13,6 +13,12 @@ export function getProduct(productId) {
   return request("/api/products/" + encodeURIComponent(productId));
 }
 
+export function listMyProducts() {
+  return request("/api/products/mine").then(function (data) {
+    return data || [];
+  });
+}
+
 export function createProduct(payload) {
   return request("/api/products/create", { method: "POST", body: payload });
 }
@@ -33,6 +39,7 @@ export function photoUrl(path) {
 if (window.HaisenAPI) {
   Object.assign(window.HaisenAPI, {
     listProducts: listProducts,
+    listMyProducts: listMyProducts,
     getProduct: getProduct,
     createProduct: createProduct,
     photoUrl: photoUrl

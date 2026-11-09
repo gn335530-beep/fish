@@ -1,4 +1,5 @@
-/* 啟動時修正既有商品資料：移除示意行情與商品行情快照，並把舊的「冷凍」處理方式改成「放血冰鎮」。
+/* 啟動時修正既有商品資料：回填上架時間與下架欄位、移除示意行情與商品行情快照，
+   並把舊的「冷凍」處理方式改成「放血冰鎮」。
    只處理 2026-10-27 前建立的商品，之後釣客自己輸入的「冷凍」不會被改寫。 */
 
 const { all, setAll } = require("./store");
@@ -18,6 +19,14 @@ function migrateProducts() {
   const rows = all("products").map(function (product) {
     const next = Object.assign({}, product);
     let touched = false;
+    if (!next.listed_at) {
+      next.listed_at = next.created_at || null;
+      touched = true;
+    }
+    if (!Object.prototype.hasOwnProperty.call(next, "delisted_at")) {
+      next.delisted_at = null;
+      touched = true;
+    }
     if (Object.prototype.hasOwnProperty.call(next, "market_reference_price")) {
       delete next.market_reference_price;
       touched = true;

@@ -18,6 +18,7 @@ function productCard(product) {
     condition: product.condition,
     region: product.region,
     location: product.location,
+    status: product.status,
     seller_id: product.seller_id
   };
 }
@@ -65,7 +66,7 @@ export async function shoppingReply(text, user) {
   const name = findCatalogName(text);
   const rows = await listProducts({ limit: 100 });
 
-  let matched = rows.filter(function (p) { return Number(p.available) > 0; });
+  let matched = rows.slice();
   if (name) matched = matched.filter(function (p) { return matchesSpecies(p, name); });
   if (scope.region) {
     matched = matched.filter(function (p) { return matchesRegion(p, scope.region); });

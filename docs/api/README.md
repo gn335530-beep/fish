@@ -20,8 +20,9 @@
 | `GET` | `/api/auth/me` | 登入 | 目前會員 |
 | `PUT` | `/api/users/profile` | 登入 | 更新暱稱、地址、銀行資料（後端端點；目前前端沒有 UI 呼叫） |
 | `POST` | `/api/users/seller-consent` | 登入 | 記錄第一次販賣確認，重複呼叫不覆寫時間 |
-| `GET` | `/api/products` | 公開 | 商品清單；支援 `region`、`species`、`seller_id`、`status`、`limit` |
-| `GET` | `/api/products/{id}` | 公開 | 單一商品；不存在回 404 `PRODUCT_NOT_FOUND` |
+| `GET` | `/api/products` | 公開 | 商品清單，只回傳上架中／洽談中；支援 `region`、`species`、`seller_id`、`status`、`limit` |
+| `GET` | `/api/products/mine` | 登入 | 目前釣客所有未刪除商品（含已下架、已售出），依 `listed_at` 由新到舊 |
+| `GET` | `/api/products/{id}` | 公開 | 單一商品（含已下架、已售出）；不存在回 404 `PRODUCT_NOT_FOUND` |
 | `POST` | `/api/products/create` | 登入 | 上架商品；可帶可選 `species_code` |
 | `GET` | `/api/conversations` | 登入 | 房間清單 |
 | `POST` | `/api/conversations/assistant` | 登入 | 每次建立一間新的助手房（登入時若完全沒有才由前端自動呼叫） |
@@ -87,9 +88,10 @@
 | `reserved_quantity` | 進行中訂單保留的尾數 |
 | `unit_price` | 每尾價格；只供訂單金額，商品卡與推薦卡不顯示 |
 | `avg_weight_kg` | 每尾平均重量；重量為空時為 `null` |
-| `status` | `ACTIVE` / `PARTIALLY_RESERVED` / `SOLD_OUT` |
+| `status` | `ACTIVE` / `PARTIALLY_RESERVED` / `SOLD_OUT` / `DELISTED` |
 | `region`, `location` | 縣市與完整地點 |
 | `catch_time`, `created_at` | 捕獲與建立時間 |
+| `listed_at`, `delisted_at` | 最近上架時間與下架時間；未下架時 `delisted_at` 為 `null` |
 
 ## 4. 前端公開函式
 
@@ -101,7 +103,8 @@
 | `login({ phone, password })` | 登入並保存登入狀態 |
 | `me()` | 以 Token 取得並同步會員資料 |
 | `logout()` | 清除本機 Token、會員資料與頭像 |
-| `listProducts()` | 取得商品清單 |
+| `listProducts()` | 取得公開商品清單（上架中／洽談中） |
+| `listMyProducts()` | 取得目前釣客所有未刪除商品（上架紀錄） |
 | `getProduct(id)` | 取得單一商品 |
 | `photoUrl(path)` | 將 `/uploads/...`、`images/...` 轉成可顯示網址 |
 
@@ -111,7 +114,7 @@
 
 - `frontend/assets/js/app/08-api-init.js` 只負責導覽、個人選單與 `syncSessionFromApi()`。
 - `syncSessionFromApi()` 在有 Token 時呼叫 `me()`；401／403 會清除本機登入狀態，只有會員資料而沒有 Token 時也會清除。
-- 頁面資料由各頁自己的 API 呼叫載入：首頁與列表用 `listProducts()`；助手魚種查詢用 `/api/market/codes` 與 `/api/market/quote`。商品詳情頁已移除，`getProduct(id)` 只供對話與內部使用。
+- 頁面資料由各頁自己的 API 呼叫載入：首頁與列表用 `listProducts()`；助手魚種查詢用 `/api/market/codes` 與 `/api/market/quote`；上架紀錄用 `listMyProducts()`。商品詳情頁已移除，`getProduct(id)` 只供對話與內部使用。
 
 ## 6. 錯誤處理
 

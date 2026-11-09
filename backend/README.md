@@ -70,8 +70,9 @@ backend/
 | `GET` | `/api/auth/me` | 取得目前會員；需登入 |
 | `PUT` | `/api/users/profile` | 更新暱稱、地址與銀行資料；需登入 |
 | `POST` | `/api/users/seller-consent` | 記錄第一次販賣確認，重複呼叫不覆寫時間；需登入 |
-| `GET` | `/api/products` | 商品清單，支援 `region`、`species`、`seller_id`、`status`、`limit` |
-| `GET` | `/api/products/{id}` | 單一商品 |
+| `GET` | `/api/products` | 商品清單，只回傳可購買的上架中／洽談中商品；支援 `region`、`species`、`seller_id`、`status`、`limit` |
+| `GET` | `/api/products/mine` | 目前登入釣客所有未刪除商品（含已下架與已售出），依 `listed_at` 由新到舊；需登入 |
+| `GET` | `/api/products/{id}` | 單一商品（含已下架與已售出） |
 | `POST` | `/api/products/create` | 上架商品；整批售價必填、每台斤與重量選填；可帶可選 `species_code`；需登入 |
 | `GET` | `/api/conversations` | 目前會員的房間清單；需登入 |
 | `POST` | `/api/conversations/assistant` | 每次建立一間新的助手房；需登入 |
