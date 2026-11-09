@@ -13,7 +13,7 @@ const { raw, useRows, resetMarket, mapping } = require("./market-test-helpers");
 test.beforeEach(resetMarket);
 
 test("TTL 內第二次不再打上游；超過 30 分鐘會重新抓", async function () {
-  const fetcher = useRows([raw()]);
+  const fetcher = useRows([raw({ "交易日期": toRocDate(addDays(todayIso(), -1)) })]);
   await fetchService.ensureLatest(mapping);
   const second = await fetchService.ensureLatest(mapping);
   assert.equal(second.cached, true);
