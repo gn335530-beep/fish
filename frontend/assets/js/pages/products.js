@@ -72,7 +72,8 @@ function sortProducts(list) {
     if (sort === "price-asc") return Number(a.price || 0) - Number(b.price || 0);
     if (sort === "price-desc") return Number(b.price || 0) - Number(a.price || 0);
     if (sort === "stock") return productAvailable(b) - productAvailable(a);
-    return new Date(b.catch_time || b.created_at || 0) - new Date(a.catch_time || a.created_at || 0);
+    return new Date(b.listed_at || b.catch_time || b.created_at || 0) -
+      new Date(a.listed_at || a.catch_time || a.created_at || 0);
   });
 }
 

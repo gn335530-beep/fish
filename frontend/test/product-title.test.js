@@ -73,4 +73,8 @@ test("沒有可售量時顯示洽談中或已售出且沒有購買按鈕", funct
   const sold = renderCard(productCard({ available: 0, reserved_quantity: 0 }), "msg_1");
   assert.match(sold, /已售出/);
   assert.doesNotMatch(sold, /start-deal/);
+
+  const delisted = renderCard(productCard({ available: 0, status: "DELISTED" }), "msg_1");
+  assert.match(delisted, /已下架/);
+  assert.doesNotMatch(delisted, /start-deal/);
 });

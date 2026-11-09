@@ -3,7 +3,7 @@
 const express = require("express");
 const { all, insert, nextCode } = require("../lib/store");
 const { requireUser } = require("../lib/auth");
-const { decorateProduct, decorateProducts } = require("../lib/product-stock");
+const { decorateProduct, decorateProducts, isPublicProduct } = require("../lib/product-stock");
 const { sweepExpired } = require("../lib/timeouts");
 const { round1 } = require("../lib/round");
 const { buildTitle } = require("../lib/product-title");
@@ -33,6 +33,19 @@ function speciesCodeOf(value) {
   return Number.isInteger(code) && code > 0 ? code : null;
 }
 
+function listedTimeOf(product) {
+  const time = Date.parse(product.listed_at || product.created_at || "");
+  return Number.isFinite(time) ? time : 0;
+}
+
+function newestListedFirst(a, b) {
+  return listedTimeOf(b) - listedTimeOf(a);
+}
+
+function ownedBy(product, sellerId) {
+  return String(product.seller_id) === String(sellerId);
+}
+
 router.get("/api/products", function (req, res) {
   sweepExpired();
   const query = req.query || {};
@@ -45,12 +58,10 @@ router.get("/api/products", function (req, res) {
     rows = rows.filter(function (p) { return matches(p.fish_species, query.species); });
   }
   if (query.seller_id) {
-    rows = rows.filter(function (p) { return String(p.seller_id) === String(query.seller_id); });
+    rows = rows.filter(function (p) { return ownedBy(p, query.seller_id); });
   }
 
-  let data = decorateProducts(rows).sort(function (a, b) {
-    return new Date(b.created_at) - new Date(a.created_at);
-  });
+  let data = decorateProducts(rows).filter(isPublicProduct).sort(newestListedFirst);
 
   if (query.status) {
     data = data.filter(function (p) { return p.status === query.status; });
@@ -59,6 +70,14 @@ router.get("/api/products", function (req, res) {
   if (limit > 0) data = data.slice(0, limit);
 
   ok(res, data, "取得商品清單成功");
+});
+
+router.get("/api/products/mine", requireUser, function (req, res) {
+  sweepExpired();
+  const rows = all("products").filter(function (product) {
+    return ownedBy(product, req.user.id);
+  });
+  ok(res, decorateProducts(rows).sort(newestListedFirst), "取得上架紀錄成功");
 });
 
 router.get("/api/products/:id", function (req, res) {
@@ -114,6 +133,7 @@ router.post("/api/products/create", requireUser, async function (req, res) {
   const user = req.user;
   const rawRegion = String(body.region || user.city || "").trim();
   const region = normalizeRegion(rawRegion);
+  const now = new Date().toISOString();
 
   const product = insert("products", {
     id: nextCode("products", "prd"),
@@ -131,8 +151,10 @@ router.post("/api/products/create", requireUser, async function (req, res) {
     price_auto: pricing.price_auto,
     region: region || rawRegion,
     location: String(body.location || [user.city, user.district, user.address_line].filter(Boolean).join("")).trim(),
-    catch_time: body.catch_time || new Date().toISOString(),
-    created_at: new Date().toISOString()
+    catch_time: body.catch_time || now,
+    created_at: now,
+    listed_at: now,
+    delisted_at: null
   });
 
   created(res, decorateProduct(product, all("deals")), "商品已上架");

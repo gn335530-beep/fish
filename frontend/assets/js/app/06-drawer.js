@@ -25,6 +25,7 @@ function ensureDrawer(){
   el.querySelectorAll("[data-close]").forEach(n => n.addEventListener("click", closeDrawer));
   document.getElementById("dr-logout").addEventListener("click", ()=>{
     resetTradeHistory();
+    resetListingHistory();
     drawerView = "profile";
     logoutUser(); closeDrawer(); toast("已登出"); renderAuthNav();
   });
@@ -50,7 +51,7 @@ function setDrawerView(view){
 
 function drawerLoginHTML(){
   return '<div class="drawer__sec"><h4>請先登入</h4>' +
-    '<p class="drawer__note">登入後才能查看個人資訊與交易紀錄。</p>' +
+    '<p class="drawer__note">登入後才能查看個人資訊、交易紀錄與上架紀錄。</p>' +
     '<a class="btn btn--primary btn--sm" href="login.html" style="margin-top:14px">前往登入</a></div>';
 }
 
@@ -75,6 +76,7 @@ function renderDrawer(){
   document.getElementById("dr-nick").textContent = u.nick || "會員";
   document.getElementById("dr-phone").textContent = u.phone || "—";
   if(drawerView === "history") body.innerHTML = tradeHistoryHTML();
+  else if(drawerView === "listings") body.innerHTML = listingHistoryHTML();
   else if(drawerView === "detail") body.innerHTML = tradeDetailHTML();
   else body.innerHTML = profileHTML(u);
   bindDrawerBody();

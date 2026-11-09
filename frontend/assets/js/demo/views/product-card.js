@@ -4,6 +4,9 @@ import { escapeHtml, money, resolveImage } from "./html.js";
 import { normalizeCityName } from "../../shared/regions.js";
 
 function actionOf(card) {
+  if (card.status === "DELISTED") {
+    return '<span class="fm-card__sold">已下架</span>';
+  }
   if (Number(card.available) <= 0) {
     const note = Number(card.reserved_quantity) > 0 ? "洽談中，暫無法購買" : "已售出";
     return '<span class="fm-card__sold">' + note + "</span>";

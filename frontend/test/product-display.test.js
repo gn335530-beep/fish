@@ -92,6 +92,11 @@ test("沒有可售量時保留賣家資訊並顯示洽談中或已售出", funct
   assert.match(sold, /data-action="seller-info"/);
   assert.match(sold, /已售出/);
   assert.doesNotMatch(sold, /data-deal-product/);
+
+  const delisted = card({ available: 0, status: "DELISTED" });
+  assert.match(delisted, /data-action="seller-info"/);
+  assert.match(delisted, /已下架/);
+  assert.doesNotMatch(delisted, /data-deal-product/);
 });
 
 test("缺漏地區或地點時顯示地區未提供", function () {

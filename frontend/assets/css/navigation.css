@@ -49,5 +49,7 @@
 }
 
 @media(max-width:760px){
+  /* 手機時以整個導覽列定位，避免選單被 .nav__right 壓成窄欄 */
+  .nav__right{position:static}
   .nav-menu{right:var(--gut);left:var(--gut);width:auto;max-width:none}
 }

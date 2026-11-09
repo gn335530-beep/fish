@@ -71,6 +71,9 @@ async function handleReferent(ctx, ref) {
 /* ---- 商品諮詢 ---- */
 
 export function explainProduct(product, context) {
+  if (product.status === "DELISTED") {
+    return { context: context || null, replies: [{ text: "此商品已下架。" }] };
+  }
   const replies = [{
     text: product.fish_species + "：共 " + product.quantity +
       " 尾，" + (product.condition || "處理方式未提供") + "，整批 " + product.price + " 元，可售 " +

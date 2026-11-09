@@ -87,6 +87,36 @@
 .history__terms dt{color:var(--muted)}
 .history__terms dd{margin:0;text-align:right}
 
+/* ---------- 上架紀錄 ---------- */
+.listing__tabs{display:flex;gap:4px;margin-bottom:14px;border-bottom:1px solid var(--rule-2)}
+.listing__tab{
+  margin-bottom:-1px;padding:8px 10px;border:none;border-bottom:2px solid transparent;
+  background:none;color:var(--muted);font-size:.74rem;letter-spacing:.04em;cursor:pointer;
+}
+.listing__tab:hover{color:var(--ink)}
+.listing__tab.is-on{border-bottom-color:var(--accent);color:var(--ink);font-weight:600}
+.listing__count{
+  display:inline-block;min-width:17px;margin-left:3px;padding:0 5px;
+  border:1px solid var(--rule-2);color:var(--muted);
+  font-family:var(--font-mono);font-size:.62rem;text-align:center;vertical-align:1px;
+}
+.listing__tab.is-on .listing__count{border-color:var(--accent);color:var(--accent)}
+.listing{display:grid;gap:9px}
+.listing__item{display:flex;gap:12px;padding:12px;border:1px solid var(--rule-2);background:var(--surface)}
+.listing__photo{width:64px;height:64px;flex:none;object-fit:cover;background:#EDEAE3}
+.listing__photo--empty{display:block}
+.listing__main{display:grid;flex:1;gap:3px;min-width:0}
+.listing__top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.listing__species{font-family:var(--font-display);font-size:.92rem;font-weight:600}
+.listing__condition,.listing__meta{font-size:.7rem;color:var(--muted)}
+.listing__prices,.listing__times{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:.68rem;color:var(--muted)}
+.listing__prices span:first-child{color:var(--ink);font-family:var(--font-mono)}
+.listing__times{color:var(--muted-2)}
+.listing__badge{flex:none;padding:2px 7px;border:1px solid var(--rule);font-size:.62rem;letter-spacing:.06em}
+.listing__badge--active{border-color:var(--accent);color:var(--accent)}
+.listing__badge--partial{border-color:var(--coral);color:var(--coral)}
+.listing__badge--sold,.listing__badge--delisted{color:var(--muted-2)}
+
 /* ---------- v10 響應式 ---------- */
 @media(max-width:1080px){
   .drawer__panel{width:400px}

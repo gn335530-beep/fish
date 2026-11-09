@@ -28,6 +28,7 @@ test("demo/api.js 不再實作 products 或 market 請求", function () {
 
 test("api/products.js 與 api/market.js 提供請求函式", function () {
   assert.match(productsApi, /export function listProducts/);
+  assert.match(productsApi, /export function listMyProducts/);
   assert.match(productsApi, /export function getProduct/);
   assert.match(productsApi, /export function createProduct/);
   assert.match(productsApi, /Object\.assign\(window\.HaisenAPI/);
