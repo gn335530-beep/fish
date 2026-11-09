@@ -25,7 +25,11 @@ function statusOf(available, reserved, delisted) {
 const PUBLIC_STATUSES = ["ACTIVE", "PARTIALLY_RESERVED"];
 
 function isPublicProduct(product) {
-  return PUBLIC_STATUSES.indexOf(product.status) !== -1;
+  return isLiveStatus(product.status);
+}
+
+function isLiveStatus(status) {
+  return PUBLIC_STATUSES.indexOf(status) !== -1;
 }
 
 /* 商品對外的完整樣貌：庫存與價格衍生欄位都在這裡算；舊魚種欄位不外露。 */
@@ -67,6 +71,7 @@ function productAvailability(productId) {
 }
 
 module.exports = {
+  isLiveStatus: isLiveStatus,
   isPublicProduct: isPublicProduct,
   decorateProduct: decorateProduct,
   decorateProducts: decorateProducts,

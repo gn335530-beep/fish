@@ -18,7 +18,13 @@ const LISTING_TABS = [
   { key: "sold", label: "已售出", statuses: ["SOLD_OUT"], empty: "目前沒有已售出的商品。" }
 ];
 
-let listingHistory = { loading: false, error: "", rows: [], tab: "active" };
+let listingHistory = listingState();
+
+function listingState(changes) {
+  return Object.assign({
+    loading: false, error: "", rows: [], tab: "active", pending: null
+  }, changes || {});
+}
 
 function listingTabOf(key) {
   return LISTING_TABS.find(function (tab) { return tab.key === key; }) || LISTING_TABS[0];
@@ -48,6 +54,35 @@ function listingCounts() {
     counts[tab.key] = listingRowsFor(tab).length;
   });
   return counts;
+}
+
+function listingRemaining(row) {
+  return Number(row.quantity || 0) - Number(row.sold_quantity || 0);
+}
+
+function listingActionButton(action, row, label) {
+  const pending = listingHistory.pending;
+  const confirming = pending && pending.action === action && String(pending.id) === String(row.id);
+  return '<button class="listing__btn listing__btn--' + action + '" type="button" data-listing-action="' +
+    action + '" data-product-id="' + lhEscape(row.id) + '">' +
+    (confirming ? "確定" + label + "？" : label) + '</button>';
+}
+
+function listingActionsHTML(row) {
+  const actions = [];
+  if (row.status === "DELISTED") {
+    if (listingRemaining(row) > 0) actions.push(listingActionButton("relist", row, "重新上架"));
+    actions.push(listingActionButton("delete", row, "刪除"));
+  } else if (row.status === "SOLD_OUT") {
+    actions.push(listingActionButton("delete", row, "刪除"));
+  } else {
+    actions.push(listingActionButton("delist", row, "下架"));
+  }
+  const pending = listingHistory.pending;
+  const confirming = pending && String(pending.id) === String(row.id);
+  return '<div class="listing__acts">' + actions.join("") +
+    (confirming ? '<button class="listing__btn listing__btn--cancel" type="button" data-listing-cancel>取消</button>' : "") +
+    '</div>';
 }
 
 function listingTabsHTML(counts, activeKey) {
@@ -89,6 +124,7 @@ function listingRowHTML(row) {
     '</div>' +
     '<div class="listing__times"><span>上架：' + lhDate(row.listed_at || row.created_at) + '</span>' +
     delistedAt + '</div>' +
+    listingActionsHTML(row) +
     '</div></article>';
 }
 
@@ -114,9 +150,9 @@ function listingHistoryHTML() {
 async function loadListingHistory() {
   try {
     const rows = await window.HaisenAPI.listMyProducts();
-    listingHistory = { loading: false, error: "", rows: rows || [], tab: listingHistory.tab };
+    listingHistory = listingState({ rows: rows || [], tab: listingHistory.tab });
   } catch (error) {
-    listingHistory = { loading: false, error: error.message || "載入失敗", rows: [], tab: listingHistory.tab };
+    listingHistory = listingState({ error: error.message || "載入失敗", tab: listingHistory.tab });
   }
   if (drawerView === "listings") renderDrawer();
 }
@@ -126,13 +162,13 @@ async function openListings() {
     setDrawerView("listings");
     return;
   }
-  listingHistory = { loading: true, error: "", rows: listingHistory.rows, tab: listingHistory.tab };
+  listingHistory = listingState({ loading: true, rows: listingHistory.rows, tab: listingHistory.tab });
   setDrawerView("listings");
   await loadListingHistory();
 }
 
 function resetListingHistory() {
-  listingHistory = { loading: false, error: "", rows: [], tab: "active" };
+  listingHistory = listingState();
 }
 
 function bindListingHistory() {
@@ -144,8 +180,16 @@ function bindListingHistory() {
   });
   document.querySelectorAll("[data-listing-tab]").forEach(function (node) {
     node.addEventListener("click", function () {
-      listingHistory = Object.assign({}, listingHistory, { tab: node.dataset.listingTab });
+      listingHistory = Object.assign({}, listingHistory, { tab: node.dataset.listingTab, pending: null });
       renderDrawer();
     });
+  });
+  document.querySelectorAll("[data-listing-action]").forEach(function (node) {
+    node.addEventListener("click", function () {
+      listingAction(node.dataset.listingAction, node.dataset.productId);
+    });
+  });
+  document.querySelectorAll("[data-listing-cancel]").forEach(function (node) {
+    node.addEventListener("click", cancelListingAction);
   });
 }

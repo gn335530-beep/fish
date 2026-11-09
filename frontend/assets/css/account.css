@@ -116,6 +116,15 @@
 .listing__badge--active{border-color:var(--accent);color:var(--accent)}
 .listing__badge--partial{border-color:var(--coral);color:var(--coral)}
 .listing__badge--sold,.listing__badge--delisted{color:var(--muted-2)}
+.listing__acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.listing__btn{
+  padding:5px 10px;border:1px solid var(--rule);background:none;
+  color:var(--ink);font-size:.68rem;letter-spacing:.04em;cursor:pointer;
+}
+.listing__btn:hover{border-color:var(--ink)}
+.listing__btn--relist{border-color:var(--accent);color:var(--accent)}
+.listing__btn--delist,.listing__btn--delete{border-color:var(--coral);color:var(--coral)}
+.listing__btn--cancel{border-color:var(--rule-2);color:var(--muted)}
 
 /* ---------- v10 響應式 ---------- */
 @media(max-width:1080px){

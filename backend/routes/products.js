@@ -1,7 +1,7 @@
 /* 商品：查詢與 AI 上架建立。 */
 
 const express = require("express");
-const { all, insert, nextCode } = require("../lib/store");
+const { all, insert, nextProductCode } = require("../lib/store");
 const { requireUser } = require("../lib/auth");
 const { decorateProduct, decorateProducts, isPublicProduct } = require("../lib/product-stock");
 const { sweepExpired } = require("../lib/timeouts");
@@ -136,7 +136,7 @@ router.post("/api/products/create", requireUser, async function (req, res) {
   const now = new Date().toISOString();
 
   const product = insert("products", {
-    id: nextCode("products", "prd"),
+    id: nextProductCode(),
     seller_id: user.id,
     title: buildTitle(fishSpecies, quantity, condition),
     fish_species: fishSpecies,

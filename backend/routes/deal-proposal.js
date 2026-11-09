@@ -6,7 +6,7 @@ const { productAvailability } = require("../lib/product-stock");
 const { isActive } = require("../lib/deal-statuses");
 const { cardMessage, systemMessage } = require("../lib/messages");
 const { sweepExpired } = require("../lib/timeouts");
-const { itemsOf, quantityOf } = require("../lib/deal-items");
+const { itemsOf, quantityOf, requirePurchasable } = require("../lib/deal-items");
 const { insufficientQuantity } = require("../lib/quantities");
 const { DRAFT_STATUS } = require("../lib/deal-statuses");
 const deals = require("../lib/deals");
@@ -39,8 +39,10 @@ function shortageOf(deal) {
   const items = itemsOf(deal);
   for (const item of items) {
     const stock = productAvailability(item.product_id);
+    if (!stock) return { missing: true, item: item };
+    if (stock.product.delisted_at) return { delisted: true, item: item, stock: stock };
     const own = isActive(deal) ? quantityOf(deal, item.product_id) : 0;
-    const available = (stock ? stock.available : 0) + own;
+    const available = stock.available + own;
     if (Number(item.quantity) > available) return { item: item, available: available };
   }
   return null;
@@ -80,6 +82,14 @@ router.post("/api/deals/propose", requireUser, function (req, res) {
 
   const missing = shortageOf(deal);
   if (missing) {
+    if (missing.missing) {
+      fail(res, 404, "PRODUCT_NOT_FOUND", "找不到商品");
+      return;
+    }
+    if (missing.delisted) {
+      requirePurchasable(missing.stock, res, "送出協議");
+      return;
+    }
     insufficientQuantity(res,
       "「" + missing.item.title + "」可售 " + missing.available + " 尾，不足 " + missing.item.quantity + " 尾", {
         item_id: missing.item.item_id,
