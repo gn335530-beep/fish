@@ -19,6 +19,18 @@ export function listMyProducts() {
   });
 }
 
+export function delistProduct(productId) {
+  return request("/api/products/" + encodeURIComponent(productId) + "/delist", { method: "POST" });
+}
+
+export function relistProduct(productId) {
+  return request("/api/products/" + encodeURIComponent(productId) + "/relist", { method: "POST" });
+}
+
+export function deleteProduct(productId) {
+  return request("/api/products/" + encodeURIComponent(productId), { method: "DELETE" });
+}
+
 export function createProduct(payload) {
   return request("/api/products/create", { method: "POST", body: payload });
 }
@@ -40,6 +52,9 @@ if (window.HaisenAPI) {
   Object.assign(window.HaisenAPI, {
     listProducts: listProducts,
     listMyProducts: listMyProducts,
+    delistProduct: delistProduct,
+    relistProduct: relistProduct,
+    deleteProduct: deleteProduct,
     getProduct: getProduct,
     createProduct: createProduct,
     photoUrl: photoUrl

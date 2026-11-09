@@ -103,6 +103,7 @@ router.patch("/api/deals/items/:itemId", requireUser, function (req, res) {
     fail(res, 404, "PRODUCT_NOT_FOUND", "找不到商品");
     return;
   }
+  if (!dealItems.requirePurchasable(stock, res, "購買")) return;
   if (quantity > stock.available) {
     insufficientQuantity(res,
       "「" + item.title + "」可售 " + stock.available + " 尾，無法改成 " + quantity + " 尾", {

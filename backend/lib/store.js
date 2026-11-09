@@ -64,6 +64,23 @@ function nextCode(collection, prefix) {
   return base + pad3(max + 1);
 }
 
+/* 商品硬刪後仍不重用 ID：每日流水號另存於 counters，只保留數字。 */
+function nextProductCode() {
+  const day = todayCode();
+  const base = "prd_" + day + "_";
+  const existingMax = all("products").reduce(function (m, row) {
+    const id = String(row.id || "");
+    if (id.indexOf(base) !== 0) return m;
+    return Math.max(m, Number(id.slice(base.length)) || 0);
+  }, 0);
+  const key = "products_" + day;
+  const counter = findById("counters", key);
+  const next = Math.max(existingMax, Number(counter && counter.value) || 0) + 1;
+  if (counter) patch("counters", key, { value: next });
+  else insert("counters", { id: key, value: next });
+  return base + pad3(next);
+}
+
 function nextNumericId(collection) {
   return all(collection).reduce(function (m, row) {
     return Math.max(m, Number(row.id) || 0);
@@ -87,6 +104,7 @@ module.exports = {
   patch: patch,
   remove: remove,
   nextCode: nextCode,
+  nextProductCode: nextProductCode,
   nextNumericId: nextNumericId,
   nextSeq: nextSeq
 };

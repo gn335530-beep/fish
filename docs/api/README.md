@@ -23,6 +23,9 @@
 | `GET` | `/api/products` | 公開 | 商品清單，只回傳上架中／洽談中；支援 `region`、`species`、`seller_id`、`status`、`limit` |
 | `GET` | `/api/products/mine` | 登入 | 目前釣客所有未刪除商品（含已下架、已售出），依 `listed_at` 由新到舊 |
 | `GET` | `/api/products/{id}` | 公開 | 單一商品（含已下架、已售出）；不存在回 404 `PRODUCT_NOT_FOUND` |
+| `POST` | `/api/products/{id}/delist` | 登入 | 下架自己的商品 |
+| `POST` | `/api/products/{id}/relist` | 登入 | 重新上架自己的已下架商品 |
+| `DELETE` | `/api/products/{id}` | 登入 | 刪除已下架或已售出商品 |
 | `POST` | `/api/products/create` | 登入 | 上架商品；可帶可選 `species_code` |
 | `GET` | `/api/conversations` | 登入 | 房間清單 |
 | `POST` | `/api/conversations/assistant` | 登入 | 每次建立一間新的助手房（登入時若完全沒有才由前端自動呼叫） |
@@ -105,6 +108,9 @@
 | `logout()` | 清除本機 Token、會員資料與頭像 |
 | `listProducts()` | 取得公開商品清單（上架中／洽談中） |
 | `listMyProducts()` | 取得目前釣客所有未刪除商品（上架紀錄） |
+| `delistProduct(id)` | 下架自己的商品 |
+| `relistProduct(id)` | 重新上架自己的已下架商品 |
+| `deleteProduct(id)` | 刪除已下架或已售出的商品 |
 | `getProduct(id)` | 取得單一商品 |
 | `photoUrl(path)` | 將 `/uploads/...`、`images/...` 轉成可顯示網址 |
 

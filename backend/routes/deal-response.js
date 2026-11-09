@@ -6,6 +6,7 @@ const { sweepExpired } = require("../lib/timeouts");
 const { CANCELLABLE } = require("../lib/deal-statuses");
 const deals = require("../lib/deals");
 const transitions = require("../lib/deal-transitions");
+const { unavailableKind, cancelUnavailable } = require("../lib/product-deals");
 const { ok, fail } = require("../lib/http");
 
 const router = express.Router();
@@ -30,6 +31,14 @@ router.post("/api/deals/respond", requireUser, function (req, res) {
   }
 
   const now = new Date().toISOString();
+  if (action === "REJECT") {
+    const kind = unavailableKind(deal);
+    if (kind) {
+      const cancelled = cancelUnavailable(deal, req.user.id, kind, now);
+      ok(res, { deal: deals.decorateDeal(cancelled) }, "協議已取消");
+      return;
+    }
+  }
   const updated = action === "AGREE"
     ? transitions.agree(deal, now)
     : transitions.reject(deal, req.user.id, now);

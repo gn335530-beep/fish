@@ -3,6 +3,7 @@
 const { patch } = require("./store");
 const { systemMessage } = require("./messages");
 const { requireQuantity, insufficientQuantity } = require("./quantities");
+const { fail } = require("./http");
 
 function itemsOf(deal) {
   return Array.isArray(deal.items) ? deal.items : [];
@@ -104,7 +105,15 @@ function addSnapshotBatch(deal, additions) {
 }
 
 /* 加購與首次建立共用：驗證尾數與草稿累計；回傳可加入的尾數或 null。 */
+function requirePurchasable(stock, res, action) {
+  if (!stock.product.delisted_at) return true;
+  fail(res, 409, "PRODUCT_DELISTED",
+    "「" + (stock.decorated.fish_species || stock.decorated.title) + "」已下架，無法" + (action || "購買"));
+  return false;
+}
+
 function requireAddableQuantity(deal, stock, value, res, shortMessage) {
+  if (!requirePurchasable(stock, res, "購買")) return null;
   const quantity = requireQuantity(value, res);
   if (quantity === null) return null;
 
@@ -167,9 +176,11 @@ module.exports = {
   itemsOf: itemsOf,
   itemsTotal: itemsTotal,
   quantityOf: quantityOf,
+  writeItems: writeItems,
   addItem: addItem,
   addBatch: addBatch,
   addSnapshotBatch: addSnapshotBatch,
+  requirePurchasable: requirePurchasable,
   requireAddableQuantity: requireAddableQuantity,
   addWithMessage: addWithMessage,
   addBatchWithMessage: addBatchWithMessage,
