@@ -8,6 +8,7 @@
 | --- | ---: | --- |
 | `users` | 4 | ✅ |
 | `products` | 5 | ✅ |
+| `counters` | 0（第一次建立商品後建立） | ✅ 每日商品流水號；硬刪後不重用 |
 | `conversations` | 3 | ✅（助手房可多間；交易房由開啟交易房建立） |
 | `messages` | 78 | ✅ |
 | `deals` | 0 | ✅ 草稿由開啟交易房建立 |
@@ -25,13 +26,19 @@
 | 對象 | 格式 | 規則 |
 | --- | --- | --- |
 | 使用者 | 整數 | 目前最大值 + 1 |
-| 商品 | `prd_YYYYMMDD_NNN` | 以台灣時間取日期，當日流水號 |
+| 商品 | `prd_YYYYMMDD_NNN` | 以台灣時間取日期；`max(當日現有最大流水號, counters 值) + 1`，並寫回 `counters`。硬刪後不重用 |
 | 對話 | `conv_YYYYMMDD_NNN` | 同上 |
 | 訊息 | `msg_YYYYMMDD_NNN` + `seq` | `seq` 是**全域**單調遞增，不是每個房間各自編號 |
 | 訂單 | `deal_YYYYMMDD_NNN` | 同上（草稿已實作） |
 | 評價 | `rev_YYYYMMDD_NNN` | 同上（目標） |
 
 `seq` 全域遞增是刻意的：輪詢用「大於上次序號」取增量，同毫秒的多則訊息也不會漏。
+
+**商品流水號計數器**：`counters` 只存每日商品流水號，不保留商品內容。
+
+```jsonc
+{ "id": "products_20261108", "value": 3 }
+```
 
 ## 3. `users`
 
@@ -74,6 +81,8 @@
 | `location` | string | 完整地點，預設為個人地址 |
 | `catch_time` | string | ISO 時間 |
 | `created_at` | string | ISO 時間 |
+| `listed_at` | string | 最近一次上架時間；建立時等於 `created_at`，重新上架時更新為 now |
+| `delisted_at` | string \| null | 下架時間；未下架為 `null`，重新上架時清空 |
 
 **衍生**（讀取時算，不落庫）：`reserved_quantity`、`available`、`unit_price`、`avg_weight_kg`、`status`。
 
@@ -83,7 +92,9 @@
 
 **變更（2026-10-29）**：商品移除 `species_id` 與 `species_latin`，新增可選 `species_code`。啟動正規化會清除舊欄位、保留 `fish_species`，並把舊商品的 `species_code` 設為 `null`，不自動回填。
 
-**索引需求**：`seller_id`、`region`、`fish_species`、`created_at`（目前是線性掃描，資料量小可接受）。
+**變更（2026-11-08）**：新增 `listed_at`、`delisted_at`；既有商品啟動時回填 `listed_at = created_at`。商品可下架、重新上架與硬刪；刪除不新增 `deleted_at`，也不刪照片檔。商品 ID 另存於 `counters`，避免硬刪後重用。
+
+**索引需求**：`seller_id`、`region`、`fish_species`、`listed_at`、`created_at`（目前是線性掃描，資料量小可接受）。
 
 ## 5. `conversations`
 
@@ -333,7 +344,9 @@
 
 | 資料 | 保留 | 說明 |
 | --- | --- | --- |
-| 商品、成交訂單、評價 | 永久 | 商品不可刪；成交訂單不可刪 |
+| 商品 | 可刪除 | 硬刪 `products`；照片與訂單快照保留 |
+| 成交訂單、評價 | 永久 | 成交訂單不可刪 |
+| 商品流水號計數器 | 永久 | 只存數字；硬刪商品後仍保留，避免 ID 重用 |
 | AI 對話、已取消交易房 | 可刪除 | 助手房任何時候；交易房須無 `CONFIRMED` 歷史且目前訂單 `CANCELLED`；刪除交易房一併刪該房所有訂單與項目 |
 | 行情 | 90 天 | 目標；只快取被查詢過的魚種與日期 |
 | 行情原始檔 | 7 天 | 目標 |

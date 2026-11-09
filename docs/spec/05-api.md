@@ -73,6 +73,10 @@
 | 33 | GET | `/api/market/quote` | 公開 | ✅ 名稱→代碼→價格整合查詢 |
 | 34 | GET | `/api/market/markets` | 公開 | ✅ 市場對照 |
 | 35 | GET | `/api/market/prices` | 公開 | ✅ 代碼查價（含 `include=history`） |
+| 36 | GET | `/api/products/mine` | 登入 | ✅ 上架紀錄（所有未刪除商品） |
+| 37 | POST | `/api/products/:id/delist` | 登入（擁有者） | ✅ 下架 |
+| 38 | POST | `/api/products/:id/relist` | 登入（擁有者） | ✅ 重新上架 |
+| 39 | DELETE | `/api/products/:id` | 登入（擁有者） | ✅ 硬刪 |
 
 ### 2.1 本版新增／變更的端點
 
@@ -82,7 +86,12 @@
 | --- | --- | --- | --- |
 | POST | `/api/auth/register` | 公開 | 變更：新增 `city`（必填） |
 | POST | `/api/users/seller-consent` | 登入 | 新增：記錄第一次販賣確認 |
-| POST | `/api/products/create` | 登入 | 變更：整批售價必填、每台斤選填、重量選填、不再自動計算 |
+| POST | `/api/products/create` | 登入 | 變更：整批售價必填、每台斤選填、重量選填、不再自動計算；ID 使用 `nextProductCode()`、寫入 `listed_at` |
+| GET | `/api/products` | 公開 | 變更：只回 `ACTIVE`／`PARTIALLY_RESERVED`，依 `listed_at` 排序 |
+| GET | `/api/products/mine` | 登入 | 新增：目前釣客所有未刪除商品 |
+| POST | `/api/products/:id/delist` | 登入（擁有者） | 新增：下架 |
+| POST | `/api/products/:id/relist` | 登入（擁有者） | 新增：重新上架 |
+| DELETE | `/api/products/:id` | 登入（擁有者） | 新增：刪除已下架或已售出商品 |
 | POST | `/api/deals/items/batch` | 登入（買家） | 新增：一次加入多個商品，只留一則系統訊息 |
 | POST | `/api/deals/reinitiate` | 登入（買家） | 新增：取消後複製最後一筆訂單為新草稿 |
 | POST | `/api/deals/cancel` | 參與者 | 變更：接受自由文字 `note` |
@@ -141,16 +150,29 @@
 | `region` | 子字串比對 `region`（例：`新北`） |
 | `species` | 子字串比對 `fish_species` |
 | `seller_id` | 精確比對 |
-| `status` | 精確比對衍生狀態 `ACTIVE` / `PARTIALLY_RESERVED` / `SOLD_OUT` |
+| `status` | 精確比對衍生狀態；公開端點只接受 `ACTIVE`／`PARTIALLY_RESERVED`，查其他狀態回空陣列 |
 | `limit` | 取前 N 筆 |
 
-回傳 `data` 是商品陣列（含衍生欄位），依 `created_at` 由新到舊。
+回傳 `data` 是商品陣列（含衍生欄位），只包含 `ACTIVE` 與 `PARTIALLY_RESERVED`，依 `listed_at` 由新到舊。`seller_id` 也只回該釣客的公開商品；完整清單請用 `/api/products/mine`。
 
 **副作用**：每次呼叫前會掃描逾時訂單並釋放保留（`sweepExpired`）。GET 有寫入副作用是刻意的（沒有排程），文件化即可。
 
+### `GET /api/products/mine`
+
+需登入。回傳目前釣客所有未刪除商品，包含 `ACTIVE`、`PARTIALLY_RESERVED`、`SOLD_OUT`、`DELISTED`，依 `listed_at` 由新到舊。
+
+```json
+{ "success": true, "data": [
+  { "id": "prd_20261108_001", "seller_id": 1, "fish_species": "石斑",
+    "quantity": 3, "sold_quantity": 1, "price": 2800, "price_per_taijin": 373,
+    "listed_at": "2026-11-08T05:00:00.000Z", "delisted_at": null,
+    "reserved_quantity": 0, "available": 2, "status": "ACTIVE" }
+], "message": "取得上架紀錄成功" }
+```
+
 ### `GET /api/products/:id`
 
-回傳單一商品＋衍生欄位。錯誤：404 `PRODUCT_NOT_FOUND`。
+回傳單一商品＋衍生欄位。`SOLD_OUT`／`DELISTED` 仍回 200 並帶狀態；已刪除回 404 `PRODUCT_NOT_FOUND`。
 
 ### `POST /api/products/create`
 
@@ -178,12 +200,67 @@
   - `price_auto` 一律 `false`；不再自動計算整批。
 - 發布商品不查行情，也不寫入任何行情欄位；商品仍照常建立。
 - `sold_quantity = 0`；**不寫入 `status`**。
+- `id` 使用 `nextProductCode()`：每日流水號寫回 `counters`，硬刪後不重用。
+- `listed_at = now`、`delisted_at = null`。
 - `region` 預設個人檔案的縣市；`location` 預設三段地址串接。
 - 回 201，`data` 是含衍生欄位的商品。
 
 錯誤：400 `MISSING_SPECIES`、`INVALID_QUANTITY`、`MISSING_CONDITION`、`INVALID_CONDITION`、`FIELD_TOO_LONG`、`MISSING_PRICE`、`INVALID_PRICE`、`MISSING_PHOTO`。
 
 驗證規則：尾數 ≥ 1（無條件捨去小數）；處理方式非空、≤ 20 字且不能只有數字或單位；整批售價必填且 > 0；每台斤有值時 > 0；照片必填。
+
+### `POST /api/products/:id/delist`
+
+需登入，只能操作自己的商品。`ACTIVE`／`PARTIALLY_RESERVED` 可隨時下架。
+
+- 設定 `delisted_at = now`，可售視為 0，狀態變 `DELISTED`。
+- 從公開列表移除，仍留在 `/api/products/mine`。
+- `PENDING_REVIEW` 訂單不變。
+- `NEGOTIATING` 訂單自動取消：`cancel_reason = OTHER`、`cancel_note = "商品已下架"`，同步協議卡並留下系統訊息「商品已下架，協議已取消。」
+- `DRAFT` 訂單移除該商品、重算 `items_total`，並留下系統訊息「『魚種』已下架，已從訂單草稿移除。」
+
+回 200：
+
+```json
+{ "success": true, "data": {
+  "product": { "id": "prd_20261108_001", "status": "DELISTED", "available": 0 },
+  "cancelled_deals": 1, "removed_drafts": 2
+}, "message": "商品已下架" }
+```
+
+錯誤：404 `PRODUCT_NOT_FOUND`、403 `FORBIDDEN`、409 `PRODUCT_ALREADY_DELISTED`（「此商品已下架」）、409 `PRODUCT_SOLD_OUT`。
+
+### `POST /api/products/:id/relist`
+
+需登入，只能操作自己的商品，且商品必須是 `DELISTED` 且 `總尾數 − 已售 > 0`。
+
+- 清空 `delisted_at`、設定 `listed_at = now`。
+- 狀態依公式重算，可能是 `ACTIVE` 或 `PARTIALLY_RESERVED`。
+- 回到公開列表最前面。
+
+回 200 `data.product` 是更新後的商品。錯誤：404 `PRODUCT_NOT_FOUND`、403 `FORBIDDEN`、409 `PRODUCT_NOT_DELISTED`、409 `PRODUCT_HAS_NO_STOCK`。
+
+### `DELETE /api/products/:id`
+
+需登入，只能操作自己的商品。`SOLD_OUT` 可直接刪除；`DELISTED` 可刪除；`ACTIVE`／`PARTIALLY_RESERVED` 必須先下架。
+
+- 硬刪 `products` 資料列；照片檔保留。
+- 從上架紀錄與公開列表消失。
+- `PENDING_REVIEW` 訂單不變，買家仍可確認成交。
+- `NEGOTIATING` 自動取消、`DRAFT` 移除該商品，規則同下架。
+- 已成交訂單、訂單項目快照與評價保留。
+- 商品 ID 由 `counters` 保留，不重用。
+
+回 200：
+
+```json
+{ "success": true, "data": {
+  "product_id": "prd_20261108_001",
+  "cancelled_deals": 1, "removed_drafts": 2
+}, "message": "商品已刪除" }
+```
+
+錯誤：404 `PRODUCT_NOT_FOUND`、403 `FORBIDDEN`、409 `PRODUCT_MUST_BE_DELISTED`。
 
 ### 商品衍生欄位
 
@@ -192,10 +269,13 @@
   "title": "石斑（1尾 / 放血冰鎮）",
   "price": 1000, "price_per_taijin": 200, "price_auto": false,
   "weight_kg": null,
+  "listed_at": "2026-11-08T05:00:00.000Z", "delisted_at": null,
   "unit_price": 1000,
   "reserved_quantity": 0, "available": 1,
   "avg_weight_kg": null, "status": "ACTIVE" }
 ```
+
+`status` 為 `ACTIVE`／`PARTIALLY_RESERVED`／`SOLD_OUT`／`DELISTED`；已下架時 `available` 一律為 0。
 
 ### `GET /api/market/codes`
 
@@ -354,6 +434,8 @@
 | POST | `/api/deals/reinitiate` | 登入（買家） | ✅ 取消後重新發起 |
 | GET | `/api/deals` | 登入 | ✅ 交易紀錄列表 |
 
+**商品已下架／已刪除時的交易阻擋**：`initiate-channel`、`items`、`items/batch`、`PATCH items/:itemId` 與 `propose` 在商品已下架時回 409 `PRODUCT_DELISTED`（「『魚種』已下架，無法購買」或「無法送出協議」）；商品已刪除回 404 `PRODUCT_NOT_FOUND`。`GET /api/deals/:id` 與歷史訂單快照不受影響。
+
 `POST /api/deals/initiate-channel`
 
 ```json
@@ -428,7 +510,7 @@
 ```
 
 - `AGREE`：非發起方 → `CONFIRMED`、各項目 `sold_quantity += quantity`、寫 `confirmed_at`、雙方 `completed_deals + 1`、最新協議卡改 `confirmed`、插入系統訊息與評價卡。
-- `REJECT`：legacy；非發起方 → `NEGOTIATING`、`hold_expires_at = now + 15 分`、`rejected_by` 記下退回方、最新協議卡改 `rejected`。新介面不再提供此動作。
+- `REJECT`：legacy；非發起方 → `NEGOTIATING`、`hold_expires_at = now + 15 分`、`rejected_by` 記下退回方、最新協議卡改 `rejected`。新介面不再提供此動作。若訂單中任一商品已下架或已刪除，`REJECT` 直接取消訂單（`cancel_reason = OTHER`，`cancel_note` 為「商品已下架」或「商品已刪除」），不進入 `NEGOTIATING`，並留下系統訊息「商品已下架／已刪除，協議已取消。」
 
 發起方自己呼叫回 403 `FORBIDDEN`；不是 `PENDING_REVIEW` 回 409 `INVALID_DEAL_STATUS`；`action` 不是 `AGREE`／`REJECT` 回 400 `INVALID_ACTION`。
 
@@ -527,9 +609,15 @@
 | code | HTTP | 出現位置 |
 | --- | --- | --- |
 | `UNAUTHORIZED` | 401 | 所有需登入端點 |
-| `FORBIDDEN` | 403 | 對話 |
+| `FORBIDDEN` | 403 | 對話、商品生命週期 |
 | `NOT_FOUND` | 404 | 未定義路徑 |
-| `PRODUCT_NOT_FOUND` | 404 | 商品查詢、交易 |
+| `PRODUCT_NOT_FOUND` | 404 | 商品查詢、交易、生命週期 |
+| `PRODUCT_ALREADY_DELISTED` | 409 | 下架（已下架） |
+| `PRODUCT_SOLD_OUT` | 409 | 下架（已售出，請直接刪除） |
+| `PRODUCT_NOT_DELISTED` | 409 | 重新上架（商品未下架） |
+| `PRODUCT_HAS_NO_STOCK` | 409 | 重新上架（已無未售尾數） |
+| `PRODUCT_MUST_BE_DELISTED` | 409 | 刪除（上架中／洽談中須先下架） |
+| `PRODUCT_DELISTED` | 409 | 交易流程（商品已下架） |
 | `DEAL_NOT_FOUND` | 404 | 訂單 |
 | `ITEM_NOT_FOUND` | 404 | 訂單項目 |
 | `CONVERSATION_NOT_FOUND` | 404 | 對話 |
@@ -593,6 +681,9 @@
 | 訊息增量參數是 `after_seq`，不是 ISO 時間 | 傳上次的 `seq` |
 | 建立訂單以外，`user_id` 一律由 Token 決定 | 不要傳 `seller_id` / `reviewer_id` |
 | 商品 `price` 是整批總價 | 不要乘尾數 |
+| `GET /api/products` 只回公開狀態 | 需要已下架／已售出清單請用 `/api/products/mine` |
+| 商品刪除是硬刪 | `GET /api/products/:id` 回 404；照片與訂單快照仍保留 |
+| 重新上架會更新 `listed_at` | 公開列表會排到最前面 |
 | `GET /api/products` 會順便釋放逾時訂單 | 不要假設它是純讀取 |
 | `/api/fish/data` 已移除 | 瀏覽頁一律用 `/api/products` |
 | `sender_type: "ai"` 不是身分證明 | 只有房間參與者能寫訊息；跨房寫入一律 403 |
