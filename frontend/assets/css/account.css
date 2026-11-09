@@ -124,7 +124,6 @@
 .listing__btn:hover{border-color:var(--ink)}
 .listing__btn--relist{border-color:var(--accent);color:var(--accent)}
 .listing__btn--delist,.listing__btn--delete{border-color:var(--coral);color:var(--coral)}
-.listing__btn--cancel{border-color:var(--rule-2);color:var(--muted)}
 
 /* ---------- v10 響應式 ---------- */
 @media(max-width:1080px){

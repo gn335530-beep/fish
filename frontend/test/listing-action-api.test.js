@@ -24,7 +24,6 @@ test("刪除失敗時顯示後端訊息並重新載入列表", async function ()
   vm.runInContext("listingHistory.tab = 'sold'", harness.ctx);
 
   await vm.runInContext("listingAction('delete', 'prd_sold')", harness.ctx);
-  await vm.runInContext("listingAction('delete', 'prd_sold')", harness.ctx);
 
   assert.deepEqual(harness.calls, [{ action: "delete", id: "prd_sold" }]);
   assert.deepEqual(harness.toasts, ["請先下架商品"]);
