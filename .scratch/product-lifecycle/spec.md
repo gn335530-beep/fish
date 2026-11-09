@@ -32,7 +32,7 @@ Date: 2026-11-08
 ## 3. 名詞
 
 - **上架紀錄**：目前登入的釣客所有未刪除商品的清單，依狀態分成上架中、已下架、已售出。
-- **下架**：釣客停止販售商品剩餘尾數。商品從公開列表移除，但保留在上架紀錄；可重新上架。
+- **下架**：釣客停止販售商品剩餘尾數。商品從公開列表移除，但保留在上架紀錄；若還有未售尾數，可重新上架。
 - **重新上架**：把已下架商品恢復販售。狀態依剩餘尾數與保留量重新推導。
 - **刪除**：把商品從上架紀錄與資料庫永久移除。刪除前必須先下架，`SOLD_OUT` 例外。
 - **取消上架**：既有名詞，只指助手房草稿階段放棄整筆草稿；**不是**已發布商品的下架。兩者不可混用。
@@ -180,7 +180,7 @@ SOLD_OUT ──刪除──> 消失
 
 - 清空 `delisted_at`。
 - 設定 `listed_at = now`。
-- 狀態依公式重新推導（可能是 `ACTIVE`、`PARTIALLY_RESERVED` 或 `SOLD_OUT`）。
+- 狀態依公式重新推導（`ACTIVE` 或 `PARTIALLY_RESERVED`）。
 - 回到公開列表，依 `listed_at` 排序，會出現在最前面。
 
 **限制**：
@@ -489,22 +489,22 @@ let listingHistory = { loading: false, error: "", rows: [], tab: "active" };
 
 ## 14. 驗收條件
 
-- [ ] 導覽列「我的」與個人資訊抽屜都有「上架紀錄」入口。
-- [ ] 上架紀錄抽屜有三個 tabs、數量、預設上架中、各自的空狀態。
-- [ ] 公開列表只顯示 `ACTIVE` 與 `PARTIALLY_RESERVED`。
-- [ ] `SOLD_OUT` 不出現在今日漁獲與已下架 tab。
-- [ ] `ACTIVE`／`PARTIALLY_RESERVED` 可下架；下架後公開消失、上架紀錄保留。
-- [ ] 下架時 `PENDING_REVIEW` 照走、`NEGOTIATING` 取消、`DRAFT` 移除。
-- [ ] `DELISTED` 有未售尾數可重新上架，`listed_at` 更新並回到公開列表最前面。
-- [ ] `SOLD_OUT` 可直接刪除。
-- [ ] `ACTIVE`／`PARTIALLY_RESERVED` 未下架直接刪除會被擋下。
-- [ ] `DELISTED` 可刪除；刪除後上架紀錄消失，已成交訂單與照片快照仍存在。
-- [ ] 刪除時 `PENDING_REVIEW` 照走、`NEGOTIATING` 取消、`DRAFT` 移除。
-- [ ] 商品已下架／刪除時，買家退回協議直接取消。
-- [ ] 商品 ID 不重用。
-- [ ] 非擁有者不能操作；未登入回 401。
-- [ ] 後端與前端測試通過。
-- [ ] 文件與 ADR 已更新。
+- [x] 導覽列「我的」與個人資訊抽屜都有「上架紀錄」入口。
+- [x] 上架紀錄抽屜有三個 tabs、數量、預設上架中、各自的空狀態。
+- [x] 公開列表只顯示 `ACTIVE` 與 `PARTIALLY_RESERVED`。
+- [x] `SOLD_OUT` 不出現在今日漁獲與已下架 tab。
+- [x] `ACTIVE`／`PARTIALLY_RESERVED` 可下架；下架後公開消失、上架紀錄保留。
+- [x] 下架時 `PENDING_REVIEW` 照走、`NEGOTIATING` 取消、`DRAFT` 移除。
+- [x] `DELISTED` 有未售尾數可重新上架，`listed_at` 更新並回到公開列表最前面。
+- [x] `SOLD_OUT` 可直接刪除。
+- [x] `ACTIVE`／`PARTIALLY_RESERVED` 未下架直接刪除會被擋下。
+- [x] `DELISTED` 可刪除；刪除後上架紀錄消失，已成交訂單與照片快照仍存在。
+- [x] 刪除時 `PENDING_REVIEW` 照走、`NEGOTIATING` 取消、`DRAFT` 移除。
+- [x] 商品已下架／刪除時，買家退回協議直接取消。
+- [x] 商品 ID 不重用。
+- [x] 非擁有者不能操作；未登入回 401。
+- [x] 後端與前端測試通過。
+- [x] 文件與 ADR 已更新。
 
 ## 15. 不在範圍
 

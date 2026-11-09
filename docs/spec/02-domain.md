@@ -100,28 +100,35 @@
 
 ```
 保留       = Σ(進行中訂單中該商品的尾數)      // 進行中 = PENDING_REVIEW 或 NEGOTIATING
-可售       = 總尾數 − 已售 − 保留
-狀態       = 保留 > 0 → PARTIALLY_RESERVED（畫面顯示「洽談中」）
-             可售 ≤ 0 → SOLD_OUT
-             否則     → ACTIVE
+可售       = 已下架 ? 0 : max(0, 總尾數 − 已售 − 保留)
+狀態       = 已下架     → DELISTED（畫面顯示「已下架」）
+             保留 > 0   → PARTIALLY_RESERVED（畫面顯示「洽談中」）
+             可售 ≤ 0   → SOLD_OUT
+             否則       → ACTIVE
 ```
 
 - `DRAFT` 訂單**不**計入保留。
 - 有保留就先算「洽談中」，即使可售已經 0（全部尾數都在談，還沒成交）。
 - 狀態與可售尾數**即時計算、不落庫**（ADR 0002）。
-- 全部售完且沒有保留才是 `SOLD_OUT`；部分售出且還有可售，仍是 `ACTIVE`。
+- 已下架優先於其他狀態：只要 `delisted_at` 有值就是 `DELISTED`，即使仍有保留或已售完。
+- `SOLD_OUT` 必須是「可售 0 且沒有保留」。
+- 公開列表只顯示 `ACTIVE` 與 `PARTIALLY_RESERVED`；`SOLD_OUT`、`DELISTED` 與已刪除商品都不出現。
 
 ### 3.3 生命週期
 
 ```
-上架（ACTIVE） → 有人提案（PARTIALLY_RESERVED） → 成交（已售增加）
-                     ↑                              ↓
-                取消／逾時（釋放）            售完（SOLD_OUT）
+ACTIVE / PARTIALLY_RESERVED ──下架──> DELISTED ──重新上架──> 狀態重算
+ACTIVE / PARTIALLY_RESERVED ──下架──> DELISTED ──刪除──> 消失
+SOLD_OUT ──刪除──> 消失
 ```
 
-商品沒有「下架」狀態；本版不提供刪除，商品一旦上架就留在清單上，直到售完。
+- `SOLD_OUT` 不能下架，只能直接刪除。
+- `DELISTED` 若還有未售尾數（總尾數 − 已售 > 0）可重新上架；沒有未售尾數只能刪除。
+- 重新上架會清空 `delisted_at`、更新 `listed_at = now`，狀態依公式重算。
+- 刪除是硬刪 `products` 資料列，不新增 `deleted_at`；照片檔保留，因為舊訂單快照與對話卡片仍可能使用。
+- 商品 ID 由隱藏計數器避免重用（ADR 0009）。
 
-**狀態**：✅ 已實作整批售價必填、每台斤售價選填、重量選填與移除自動計算；訂單／協議仍使用整批售價。商品不含行情快照。
+**狀態**：✅ 已實作整批售價必填、每台斤售價選填、重量選填與移除自動計算；訂單／協議仍使用整批售價。商品不含行情快照；已支援下架、重新上架與刪除。
 
 ---
 
@@ -225,6 +232,7 @@
 9. **取消需自由文字原因**：`cancel_reason` 固定寫 `OTHER`，原文存 `cancel_note`（最多 200 字），並留下一張 `deal_cancelled` 卡片訊息給雙方。
 10. **重新發起**：買家可在使用者自行取消（`cancel_reason = OTHER`）後，用最後一筆已取消訂單建立新的 `DRAFT`；複製原項目與數量，上限為目前可售，可售 0 的項目略過。
 11. **交易房刪除**：只有當房內沒有任何 `CONFIRMED` 訂單，且目前訂單為 `CANCELLED`（或全部訂單皆 `CANCELLED`）時，才能連同交易房刪除；刪除時對話、訊息、訂單與項目一起移除，交易紀錄不再顯示。有成交歷史或進行中的訂單不可刪。
+12. **商品下架／刪除對訂單的影響**：`DRAFT` 訂單移除該商品並重算金額；`NEGOTIATING` 自動取消；`PENDING_REVIEW` 照走。商品已下架或已刪除時，買家在 `PENDING_REVIEW` 退回（legacy API）會直接取消，不進入 `NEGOTIATING`。
 
 ### 6.3 逾時
 
