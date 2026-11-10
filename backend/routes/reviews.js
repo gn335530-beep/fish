@@ -4,7 +4,8 @@ const express = require("express");
 const { all, findById, insert, patch, nextCode } = require("../lib/store");
 const { requireUser, publicUser } = require("../lib/auth");
 const {
-  REVIEW_TAGS, NO_SHOW_TAG, reviewsFor, averageRating, recomputeUser, reviewStatusOf, syncReviewCard
+  REVIEW_TAGS, NO_SHOW_TAG, reviewsFor, averageRating, distributionOf, reviewProducts,
+  recomputeUser, reviewStatusOf, syncReviewCard
 } = require("../lib/reviews");
 const deals = require("../lib/deals");
 const { ok, created, fail } = require("../lib/http");
@@ -86,7 +87,7 @@ const ROLE_REVIEWER = { seller: "buyer", buyer: "seller" };
 
 function reviewRow(review) {
   const reviewer = findById("users", review.reviewer_id);
-  return {
+  return Object.assign({
     id: review.id,
     rating: Number(review.rating || 0),
     tags: review.tags || [],
@@ -96,7 +97,17 @@ function reviewRow(review) {
     reviewer_name: (reviewer && reviewer.display_name) || "會員",
     reviewer_avatar_url: (reviewer && reviewer.avatar_url) || "",
     reviewer_role: review.reviewer_role
-  };
+  }, reviewProducts(review));
+}
+
+function sortRows(rows, sort) {
+  return rows.slice().sort(function (a, b) {
+    if (sort === "highest" || sort === "lowest") {
+      const diff = Number(a.rating || 0) - Number(b.rating || 0);
+      if (diff !== 0) return sort === "highest" ? -diff : diff;
+    }
+    return new Date(b.created_at) - new Date(a.created_at);
+  });
 }
 
 router.get("/api/reviews", function (req, res) {
@@ -117,12 +128,18 @@ router.get("/api/reviews", function (req, res) {
     });
   }
 
-  const summary = averageRating(rows);
+  const summary = Object.assign(averageRating(rows), { distribution: distributionOf(rows) });
+  const sort = req.query.sort === "highest" || req.query.sort === "lowest"
+    ? req.query.sort
+    : "newest";
+  const rating = Number(req.query.rating);
+  const ratingFilter = Number.isInteger(rating) && rating >= 1 && rating <= 5 ? rating : 0;
+  const listed = ratingFilter
+    ? rows.filter(function (review) { return Number(review.rating) === ratingFilter; })
+    : rows;
   const offset = Math.max(Number(req.query.offset) || 0, 0);
   const limit = Math.min(Math.max(Number(req.query.limit) || 20, 1), 50);
-  const sorted = rows.slice().sort(function (a, b) {
-    return new Date(b.created_at) - new Date(a.created_at);
-  });
+  const sorted = sortRows(listed, sort);
   const reviews = sorted.slice(offset, offset + limit).map(reviewRow);
 
   ok(res, {

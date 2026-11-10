@@ -18,6 +18,15 @@
 
 .fm-deal__nostar { color: var(--muted-2); font-size: .64rem; }
 
+.fm-deal__profile-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.fm-deal__profile-link:hover {
+  color: var(--accent);
+}
+
 .fm-deal__phone {
   display: grid;
   min-width: 86px;

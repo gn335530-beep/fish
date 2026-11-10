@@ -4,14 +4,18 @@
 
 **Blocked by:** 06
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] 每個角色 tab 的摘要含 5→1 分布；分布少於 3 則時不顯示分布
-- [ ] 點分布長條可篩選星等；列表只顯示該星等，分布仍顯示全部；再次切換可清除篩選
-- [ ] 排序支援最新（預設）、最高、最低；`sort` 參數套用到列表
-- [ ] 星等篩選為 1–5，只影響列表與 `total`，不影響 `summary` 與分布
-- [ ] 每個 tab 各自保留排序與星等篩選；換排序或篩選時 offset 重設；重新載入頁面回到預設
-- [ ] 評價卡最多顯示 3 張商品照片，超過顯示 `+N`；沒有照片顯示 placeholder
-- [ ] 照片與商品資訊來自評價對應訂單的項目快照；不連商品頁、不做 lightbox
-- [ ] 後端回應含 `distribution`、`products`（最多 3 筆）與 `product_count`；沒有訂單或商品時 `products` 為空陣列
-- [ ] 後端測試涵蓋分布、排序、星等篩選、offset 重設與照片上限；前端測試涵蓋分布點擊、排序、篩選、`+N` 與 placeholder
+- [x] 每個角色 tab 的摘要含 5→1 分布；分布少於 3 則時不顯示分布
+- [x] 點分布長條可篩選星等；列表只顯示該星等，分布仍顯示全部；再次切換可清除篩選
+- [x] 排序支援最新（預設）、最高、最低；`sort` 參數套用到列表
+- [x] 星等篩選為 1–5，只影響列表與 `total`，不影響 `summary` 與分布
+- [x] 每個 tab 各自保留排序與星等篩選；換排序或篩選時 offset 重設；重新載入頁面回到預設
+- [x] 評價卡最多顯示 3 張商品照片，超過顯示 `+N`；沒有照片顯示 placeholder
+- [x] 照片與商品資訊來自評價對應訂單的項目快照；不連商品頁、不做 lightbox
+- [x] 後端回應含 `distribution`、`products`（最多 3 筆）與 `product_count`；沒有訂單或商品時 `products` 為空陣列
+- [x] 後端測試涵蓋分布、排序、星等篩選、offset 重設與照片上限；前端測試涵蓋分布點擊、排序、篩選、`+N` 與 placeholder
+
+## Comments
+
+- 2026-11-10：`GET /api/reviews` 加入分布、排序與星等篩選；`products`／`product_count` 由訂單項目快照帶出。個人資訊頁每個角色 tab 各自保存排序與篩選、換條件時 offset 重設，評價卡支援最多 3 張照片、`+N` 與 placeholder。新增 `reviews-list.test.js` 與評價控制器測試。

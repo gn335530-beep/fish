@@ -1,6 +1,7 @@
 /* 評價：送出一方評價後重算對方的星等、評價數與未到次數。 */
 
 const { all, findById, patch } = require("./store");
+const { itemsOf } = require("./deal-items");
 const { cardMessage } = require("./messages");
 const { syncLatestCard } = require("./cards");
 const { round1 } = require("./round");
@@ -23,6 +24,31 @@ function averageRating(rows) {
 }
 
 /* 角色別評分：作為釣客＝買家給的評價（reviewer_role buyer）；作為買家＝釣客給的評價。 */
+function distributionOf(rows) {
+  const distribution = { "5": 0, "4": 0, "3": 0, "2": 0, "1": 0 };
+  rows.forEach(function (review) {
+    const star = Math.round(Number(review.rating) || 0);
+    if (star >= 1 && star <= 5) distribution[String(star)] += 1;
+  });
+  return distribution;
+}
+
+/* 評價卡照片來自訂單項目快照；最多 3 筆，其餘只給數量。 */
+function reviewProducts(review) {
+  const deal = findById("deals", review.deal_id);
+  const items = deal ? itemsOf(deal) : [];
+  return {
+    products: items.slice(0, 3).map(function (item) {
+      return {
+        title: item.title || "",
+        fish_species: item.fish_species || null,
+        photo_url: item.photo_url || ""
+      };
+    }),
+    product_count: items.length
+  };
+}
+
 function ratingBreakdown(userId) {
   const rows = reviewsFor(userId);
   return {
@@ -84,6 +110,8 @@ module.exports = {
   NO_SHOW_TAG: NO_SHOW_TAG,
   reviewsFor: reviewsFor,
   averageRating: averageRating,
+  distributionOf: distributionOf,
+  reviewProducts: reviewProducts,
   ratingBreakdown: ratingBreakdown,
   recomputeUser: recomputeUser,
   reviewStatusOf: reviewStatusOf,

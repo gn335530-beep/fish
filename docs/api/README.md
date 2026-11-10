@@ -38,7 +38,7 @@
 | `POST` | `/api/conversations/{id}/clear` | 參與者（助手房） | 清除舊訊息 |
 | `POST` | `/api/deals/initiate-channel` | 登入 | 由商品開啟或沿用交易房與草稿訂單 |
 | `POST` | `/api/deals/initiate-room` | 登入 | 由個人資訊開啟或沿用交易房；無商品時純聊天 |
-| `GET` | `/api/deals/{id}` | 參與者 | 訂單明細，項目附可售尾數與角色評分 peer |
+| `GET` | `/api/deals/{id}` | 參與者 | 訂單明細，項目附可售尾數、角色評分 peer 與 `has_products` |
 | `POST` | `/api/deals/items` | 買家 | 加購同一釣客的商品 |
 | `POST` | `/api/deals/items/batch` | 買家 | 批次加購多個商品，只留一則系統訊息 |
 | `PATCH` | `/api/deals/items/{itemId}` | 買家 | 改尾數（需帶 `deal_id`）；購物車使用 |
@@ -67,7 +67,7 @@
 
 ### 對話摘要欄位
 
-`GET /api/conversations` 的每間房除了 `peer`、`last_message`、`unread_count`、`deletable`，另有訂單摘要：
+`GET /api/conversations` 的每間房除了 `peer`、`last_message`、`unread_count`、`deletable`、`has_products`（釣客目前是否有公開商品；助手房與純聊天房為 `false`），另有訂單摘要：
 
 | 欄位 | 說明 |
 | --- | --- |
@@ -109,7 +109,7 @@
 | `login({ phone, password })` | 登入並保存登入狀態 |
 | `me()` | 以 Token 取得並同步會員資料 |
 | `getPublicUser(id)` | 取得公開個人資訊與角色評分 |
-| `listReviews(userId, params)` | 取得角色別評價與分頁；分布與商品照片待 07 |
+| `listReviews(userId, params)` | 取得角色別評價、摘要分布、商品照片與分頁；支援 `sort`、`rating` |
 | `updateProfile(payload)` | 更新暱稱、電話、頭像與地址 |
 | `logout()` | 清除本機 Token、會員資料與頭像 |
 | `listProducts()` | 取得公開商品清單（上架中／洽談中） |
@@ -127,7 +127,7 @@
 - `frontend/assets/js/app/08-api-init.js` 只負責導覽、個人選單與 `syncSessionFromApi()`。
 - `syncSessionFromApi()` 在有 Token 時呼叫 `me()`；401／403 會清除本機登入狀態，只有會員資料而沒有 Token 時也會清除。
 - 頁面資料由各頁自己的 API 呼叫載入：首頁與列表用 `listProducts()`；助手魚種查詢用 `/api/market/codes` 與 `/api/market/quote`；上架紀錄用 `listMyProducts()`。商品詳情頁已移除，`getProduct(id)` 只供對話與內部使用。
-- 個人資訊頁：公開頁用 `getPublicUser(id)`、`listReviews(id, { role, offset, limit })` 與 `listProducts({ seller_id })`；自己的頁面商品改用 `listMyProducts()`，商品管理沿用下架／重新上架／刪除端點。
+- 個人資訊頁：公開頁用 `getPublicUser(id)`、`listReviews(id, { role, sort, rating, offset, limit })` 與 `listProducts({ seller_id })`；自己的頁面商品改用 `listMyProducts()`，商品管理沿用下架／重新上架／刪除端點。
 - 設定頁：用 `me()` 載入，`updateProfile()` 儲存；頭像先上傳 `/api/uploads`，再把 URL 寫入 `avatar_url`。
 - 個人資訊頁的「聊聊」由交易引擎呼叫 `POST /api/deals/initiate-room`；不要直接開空房。
 

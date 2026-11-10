@@ -73,7 +73,7 @@
 | 29 | POST | `/api/deals/reinitiate` | 登入（買家） | ✅ 取消後重新發起 |
 | 30 | GET | `/api/deals` | 登入 | ✅ 交易紀錄列表 |
 | 31 | POST | `/api/reviews/submit` | 登入（參與者） | ✅ 送出評價 |
-| 32 | GET | `/api/reviews?user_id=&role=&sort=&rating=&offset=&limit=` | 公開 | 🟡 角色／分頁已完成；⬜ 排序／篩選／分布 |
+| 32 | GET | `/api/reviews?user_id=&role=&sort=&rating=&offset=&limit=` | 公開 | ✅ 角色、排序、篩選、分布與商品照片 |
 | 33 | GET | `/api/market/quote` | 公開 | ✅ 名稱→代碼→價格整合查詢 |
 | 34 | GET | `/api/market/markets` | 公開 | ✅ 市場對照 |
 | 35 | GET | `/api/market/prices` | 公開 | ✅ 代碼查價（含 `include=history`） |
@@ -339,7 +339,7 @@
   "created_at": "...", "last_message_at": "..." }
 ```
 
-`order` 只在交易房有進行中訂單時才有值：`{ id, status, cancel_reason, item_count, total_quantity, final_price, review_status, updated_at }`；`cancel_reason` 讓前端區分逾時與主動取消。`last_order` 是最新一筆訂單的摘要，不限狀態；`orders` 是這間房所有訂單摘要（新到舊），供評價卡等歷史卡片更新。沒有訂單的助手房三者皆為 `null` 或空陣列。`updated_at` 在每次加購、改量、刪除、清空、提案、回應、取消、逾時或評價時更新，前端用來判斷何時重抓明細；`last_order` 的 `id`、`status` 或 `updated_at` 改變時，前端會重取 `GET /api/deals/:id`。
+`has_products` 表示交易房的釣客目前是否有公開商品；純聊天房與助手房為 `false`，前端據此決定是否顯示浮動購物車。`order` 只在交易房有進行中訂單時才有值：`{ id, status, cancel_reason, item_count, total_quantity, final_price, review_status, updated_at }`；`cancel_reason` 讓前端區分逾時與主動取消。`last_order` 是最新一筆訂單的摘要，不限狀態；`orders` 是這間房所有訂單摘要（新到舊），供評價卡等歷史卡片更新。沒有訂單的助手房三者皆為 `null` 或空陣列。`updated_at` 在每次加購、改量、刪除、清空、提案、回應、取消、逾時或評價時更新，前端用來判斷何時重抓明細；`last_order` 的 `id`、`status` 或 `updated_at` 改變時，前端會重取 `GET /api/deals/:id`。
 
 交易房的 `peer` 使用 `publicUser`，因此含 `id`、`display_name`、`username`（完整電話）、`rating_score`、`review_count` 等公開欄位；前端用 `rating_score`／`review_count` 顯示標題列星星，用 `username` 顯示 `tel:` 電話。交易房開啟後，`GET /api/deals/:id` 的 `peer` 會依目前使用者的交易角色提供角色評分；對話摘要的 `peer` 仍是整體評分。助手房的 `peer` 固定是 `{ id: "ai", display_name: "小幫手", username: "" }`。
 
@@ -453,7 +453,7 @@
 | 方法 | 路徑 | 權限 | 說明 |
 | --- | --- | --- | --- |
 | POST | `/api/deals/initiate-channel` | 登入 | ✅ 由商品建立／沿用交易房與草稿，加入項目 |
-| POST | `/api/deals/initiate-room` | 登入 | ⬜ 由個人資訊建立／沿用交易房；無商品時純聊天 |
+| POST | `/api/deals/initiate-room` | 登入 | ✅ 由個人資訊建立／沿用交易房；無商品時純聊天 |
 | GET | `/api/deals/:id` | 參與者 | ✅ 訂單明細，項目附目前可售尾數 |
 | POST | `/api/deals/items` | 登入（買家） | ✅ 加購同一釣客的其他商品 |
 | POST | `/api/deals/items/batch` | 登入（買家） | ✅ 批次加購 |
@@ -494,13 +494,13 @@
 
 `GET /api/deals/:id`
 
-回 200 `data` 是訂單：`items[]` 每項附 `available`（目前可售尾數），`items_total` 由 `unit_price × quantity` 重算；另附 `cancel_reason`、`cancelled_by`（取消原因與操作者，未取消為 `null`）、`peer`（對方的公開資料；依目前使用者的交易角色附角色評分 `rating_score`／`review_count`）、`role`（`buyer`／`seller`）、`my_reviewed` 與 `peer_reviewed`。非參與者 403 `FORBIDDEN`，不存在 404 `DEAL_NOT_FOUND`。
+回 200 `data` 是訂單：`items[]` 每項附 `available`（目前可售尾數），`items_total` 由 `unit_price × quantity` 重算；另附 `cancel_reason`、`cancelled_by`（取消原因與操作者，未取消為 `null`）、`has_products`（釣客目前是否有公開商品）、`peer`（對方的公開資料；依目前使用者的交易角色附角色評分 `rating_score`／`review_count`）、`role`（`buyer`／`seller`）、`my_reviewed` 與 `peer_reviewed`。非參與者 403 `FORBIDDEN`，不存在 404 `DEAL_NOT_FOUND`。
 
 **副作用**：讀取前會先做逾期掃描，可能讓這筆訂單轉為 `CANCELLED` 並留下系統訊息。
 
 `GET /api/deals`
 
-回目前使用者參與的所有訂單，依「成交時間，未成交則建立時間」由新到舊（`confirmed_at || created_at`）。每筆含 `id`、`deal_status`、`created_at`、`confirmed_at`、`item_count`、`total_quantity`、`items_total`、`final_price`（有 `deal_terms` 用整單金額，否則用小計）、`review_status`、`role`、`my_reviewed`、`peer_reviewed`、`peer`。讀取前同樣會做逾期掃描。
+回目前使用者參與的所有訂單，依「成交時間，未成交則建立時間」由新到舊（`confirmed_at || created_at`）。每筆含 `id`、`deal_status`、`created_at`、`confirmed_at`、`item_count`、`total_quantity`、`items_total`、`final_price`（有 `deal_terms` 用整單金額，否則用小計）、`review_status`、`role`、`my_reviewed`、`peer_reviewed`、`peer`。交易紀錄的 `peer` 維持整體評價；角色評價只用在交易房明細。讀取前同樣會做逾期掃描。
 
 `POST /api/deals/items`
 
@@ -619,7 +619,7 @@
 - `sort`：`newest`（預設）／`highest`／`lowest`；同分時以 `created_at` 新到舊。`rating`：1–5，只影響列表，不影響 `summary`。
 - `offset` 預設 0；`limit` 預設 20、最大 50；個人資訊頁傳 6。
 - `summary` 是該 role 的全部評價；`total` 是 role＋rating 篩選後的筆數；`has_more = offset + reviews.length < total`。
-- `products` 從 `reviews.deal_id` 對到 `deals.items` 快照，最多 3 筆；超過時另回 `product_count`。
+- `products` 從 `reviews.deal_id` 對到 `deals.items` 快照，最多 3 筆；`product_count` 一律回傳該訂單的項目總數，讓前端顯示 `+N`。
 - 評價者只回 `reviewer_name` 與 `reviewer_avatar_url`，不回電話、地址或其他會員欄位。找不到使用者回 404 `USER_NOT_FOUND`。
 - 省略 `role` 時，回應可同時保留舊的 `rating_score`／`review_count` 別名，避免舊呼叫端壞掉。
 

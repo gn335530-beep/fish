@@ -30,6 +30,7 @@ test("對方有公開商品時建立空草稿並沿用同方向房間", async fu
   const first = await initiateRoom(1);
   assert.equal(first.status, 200);
   assert.equal(first.body.data.has_products, true);
+  assert.equal(first.body.data.conversation.has_products, true);
   assert.equal(first.body.data.conversation.type, "deal");
   assert.equal(first.body.data.conversation.peer.id, 1);
   assert.equal(first.body.data.deal.deal_status, "DRAFT");
@@ -85,6 +86,7 @@ test("對方沒有公開商品時只開純聊天房，且任何時候都能刪�
   const room = await initiateRoom(3);
   assert.equal(room.status, 200);
   assert.equal(room.body.data.has_products, false);
+  assert.equal(room.body.data.conversation.has_products, false);
   assert.equal(room.body.data.deal, null);
   assert.equal(room.body.data.conversation.order, null);
   assert.equal(room.body.data.conversation.deletable, true);

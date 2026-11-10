@@ -7,9 +7,10 @@ globalThis.window = {};
 
 await import("../assets/js/shared/format.js");
 const {
-  roleCounts, defaultRole, reviewTabsHTML, reviewSummaryHTML,
-  reviewCardHTML, reviewSectionHTML, relativeTime
+  roleCounts, defaultRole, reviewTabsHTML, reviewSummaryHTML, reviewDistributionHTML,
+  reviewSortHTML, reviewSectionHTML
 } = await import("../assets/js/profile/reviews.js");
+const { reviewCardHTML, relativeTime } = await import("../assets/js/profile/review-card.js");
 
 const RATING = {
   overall: { score: 4.3, count: 7 },
@@ -75,6 +76,82 @@ test("時間顯示：30 天內相對時間，超過顯示 YYYY/MM/DD", function 
   assert.equal(relativeTime("2026-11-10T09:00:00.000Z", NOW), "3 小時前");
   assert.equal(relativeTime("2026-11-01T12:00:00.000Z", NOW), "9 天前");
   assert.equal(relativeTime("2026-10-01T12:00:00.000Z", NOW), "2026/10/01");
+});
+
+test("分布顯示 5→1，少於 3 則不顯示，點擊長條帶星等", function () {
+  assert.equal(reviewDistributionHTML({ count: 2, distribution: { "5": 2 } }, 0), "");
+
+  const html = reviewDistributionHTML({
+    count: 5,
+    distribution: { "5": 2, "4": 1, "3": 1, "2": 0, "1": 1 }
+  }, 5);
+  assert.match(html, /data-review-rating="5"/);
+  assert.match(html, /data-review-rating="1"/);
+  assert.match(html, /data-review-rating="5"[^>]*aria-pressed="true"/);
+  assert.match(html, />2</);
+  assert.match(html, /aria-label="依星等篩選"/);
+});
+
+test("排序選單提供最新、最高與最低，並標出目前選擇", function () {
+  const html = reviewSortHTML("highest");
+  assert.match(html, /<select[^>]*data-review-sort/);
+  assert.match(html, /<option value="newest">最新<\/option>/);
+  assert.match(html, /<option value="highest" selected>最高<\/option>/);
+  assert.match(html, /<option value="lowest">最低<\/option>/);
+});
+
+test("篩選後沒有結果時顯示該星等沒有評價與清除入口", function () {
+  const html = reviewSectionHTML({
+    role: "seller",
+    counts: { seller: 5, buyer: 0 },
+    summary: { score: 3.6, count: 5, distribution: { "5": 2, "4": 1, "3": 1, "2": 0, "1": 1 } },
+    reviews: [],
+    total: 0,
+    hasMore: false,
+    loading: false,
+    error: "",
+    sort: "newest",
+    rating: 4
+  }, NOW);
+  assert.match(html, /沒有 4 星的評價/);
+  assert.match(html, /data-review-clear-rating/);
+});
+
+test("評價卡帶出訂單商品快照，最多 3 張並顯示 +N，缺照片有 placeholder", function () {
+  const review = Object.assign({}, REVIEW, {
+    products: [
+      { title: "石斑（2尾 / 活體）", fish_species: "石斑", photo_url: "/uploads/a.jpg" },
+      { title: "黑鯛（2尾 / 活體）", fish_species: "黑鯛", photo_url: "" },
+      { title: "花枝（1尾 / 活體）", fish_species: "花枝", photo_url: "/uploads/c.jpg" }
+    ],
+    product_count: 5
+  });
+  const html = reviewCardHTML(review, NOW);
+  assert.equal((html.match(/profile-review__product"/g) || []).length, 3);
+  assert.match(html, /src="\/uploads\/a\.jpg"/);
+  assert.match(html, /照片未提供/);
+  assert.match(html, /\+2/);
+  assert.match(html, /石斑/);
+  assert.doesNotMatch(html, /product-detail|lightbox|data-lightbox|<a[^>]*profile-review__product/);
+
+  const empty = reviewCardHTML(Object.assign({}, REVIEW, { products: [], product_count: 0 }), NOW);
+  assert.match(empty, /照片未提供/);
+});
+
+test("載入中顯示載入訊息，載入更多時按鈕停用", function () {
+  const first = reviewSectionHTML({
+    role: "seller", counts: { seller: 2, buyer: 0 }, summary: null,
+    reviews: [], hasMore: false, loading: true, error: ""
+  }, NOW);
+  assert.match(first, /載入評價中/);
+  assert.doesNotMatch(first, /尚無評價/);
+
+  const more = reviewSectionHTML({
+    role: "seller", counts: { seller: 8, buyer: 0 },
+    summary: { score: 4.3, count: 8 }, reviews: [REVIEW], hasMore: true,
+    loading: true, error: ""
+  }, NOW);
+  assert.match(more, /data-review-more disabled>載入中…/);
 });
 
 test("評價列表有載入更多、錯誤重試與尚無評價", function () {

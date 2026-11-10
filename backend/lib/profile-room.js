@@ -1,7 +1,7 @@
 /* 由個人資訊開交易房：方向固定為買家→被看的釣客；有商品才建立空草稿。 */
 
 const { all, findById } = require("./store");
-const { decorateProducts, isPublicProduct } = require("./product-stock");
+const { hasPublicProducts } = require("./product-stock");
 const { systemMessage } = require("./messages");
 const { summary } = require("./conversations");
 const deals = require("./deals");
@@ -16,13 +16,6 @@ function activeDealOf(conversationId) {
     .sort(function (a, b) {
       return new Date(b.created_at) - new Date(a.created_at);
     })[0] || null;
-}
-
-function hasPublicProducts(sellerId) {
-  const rows = all("products").filter(function (product) {
-    return String(product.seller_id) === String(sellerId);
-  });
-  return decorateProducts(rows).some(isPublicProduct);
 }
 
 function initiateProfileRoom(buyer, sellerId, now) {

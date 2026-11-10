@@ -3,8 +3,13 @@
 import { request } from "./request.js";
 
 export function listReviews(userId, params) {
-  const query = new URLSearchParams(Object.assign({ user_id: userId }, params || {}));
-  return request("/api/reviews?" + query.toString());
+  const values = Object.assign({ user_id: userId }, params || {});
+  Object.keys(values).forEach(function (key) {
+    if (values[key] === undefined || values[key] === null || values[key] === "") {
+      delete values[key];
+    }
+  });
+  return request("/api/reviews?" + new URLSearchParams(values).toString());
 }
 
 if (window.HaisenAPI) {

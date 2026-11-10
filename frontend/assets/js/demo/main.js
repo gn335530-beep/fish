@@ -5,7 +5,7 @@ import * as api from "./api.js";
 import { mountPanel } from "./views/panel.js";
 import { renderAssistant, renderLogin } from "./views/assistant.js";
 import { renderDealRoom } from "./views/deal.js";
-import { dealRoomHeader } from "./views/deal-room-header.js";
+import { dealRoomHeader, peerForHeader } from "./views/deal-room-header.js";
 import { renderInbox } from "./views/inbox.js";
 import { escapeHtml } from "./views/html.js";
 import { startPolling, pollNow } from "./poll.js";
@@ -13,6 +13,7 @@ import { initFlow, ensureRoom, submitText, submitPhoto } from "./flow.js";
 import { initListingActions } from "./listing-actions.js";
 import { initActions, handleAction, startDeal, startProfileRoom } from "./actions.js";
 import { handleFieldInput, handleAddonSelect } from "./deal-actions.js";
+import { setDealItemQuantity } from "./deal-cart-actions.js";
 import { handleCancelNote } from "./deal-cancel-actions.js";
 import { handleReviewField, handleReviewTag, handleReviewComment } from "./deal-reviews.js";
 import { clearUnread, openRoom, latestAssistant } from "./rooms.js";
@@ -26,6 +27,7 @@ const panel = mountPanel({
   onPhoto: submitPhoto,
   onInput: handleFieldInput,
   onSelect: handleAddonSelect,
+  onItemQty: setDealItemQuantity,
   onCancelNote: handleCancelNote,
   onReviewField: handleReviewField,
   onReviewTag: handleReviewTag,
@@ -80,9 +82,9 @@ function render() {
   const bodySettings = force ? { force: true } : {};
 
   const header = state.view === "deal" && state.room && state.room.type === "deal"
-    ? dealRoomHeader(state.room.peer)
+    ? dealRoomHeader(peerForHeader(state.deal, state.room))
     : { title: "AI 聊天小幫手", sub: "" };
-  panel.setHeader(header.title, header.sub, header.aside);
+  panel.setHeader(header.title, header.sub, header.aside, header.titleHtml);
   panel.setBadge(state.user ? totalUnread() : 0);
   panel.setFooter(state.view !== "inbox" && !!state.user && !!state.room);
 

@@ -3,6 +3,7 @@
 const { all, findById } = require("./store");
 const { publicUser } = require("./auth");
 const { itemsOf } = require("./deal-items");
+const { hasPublicProducts } = require("./product-stock");
 const { ACTIVE_ORDER } = require("./deal-statuses");
 const { fail } = require("./http");
 
@@ -83,6 +84,9 @@ function summary(conversation, user) {
     mode: conversation.mode,
     context: conversation.context,
     peer: peerOf(conversation, user.id),
+    has_products: conversation.type === "deal"
+      ? hasPublicProducts(conversation.seller_id)
+      : false,
     order: active ? orderSummary(active) : null,
     last_order: orders[0] || null,
     orders: orders,

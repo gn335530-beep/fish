@@ -3,12 +3,13 @@
 const express = require("express");
 const { all, findById, patch } = require("../lib/store");
 const { requireUser, publicUser } = require("../lib/auth");
-const { productAvailability } = require("../lib/product-stock");
+const { productAvailability, hasPublicProducts } = require("../lib/product-stock");
 const { systemMessage } = require("../lib/messages");
 const { sweepExpired } = require("../lib/timeouts");
 const { summary } = require("../lib/conversations");
 const deals = require("../lib/deals");
 const dealItems = require("../lib/deal-items");
+const { ratingBreakdown } = require("../lib/reviews");
 const { initiateProfileRoom } = require("../lib/profile-room");
 const { CANCELLED_STATUS } = require("../lib/deal-statuses");
 const { ok, fail } = require("../lib/http");
@@ -16,8 +17,7 @@ const { ok, fail } = require("../lib/http");
 const router = express.Router();
 
 function peerOf(deal, userId) {
-  const isBuyer = deals.isBuyer(deal, userId);
-  const peerId = isBuyer ? deal.seller_id : deal.buyer_id;
+  const peerId = deals.isBuyer(deal, userId) ? deal.seller_id : deal.buyer_id;
   return publicUser(findById("users", peerId)) || {
     id: Number(peerId),
     display_name: "對方",
@@ -27,13 +27,26 @@ function peerOf(deal, userId) {
   };
 }
 
-function forUser(deal, userId) {
+/* 交易房內看角色評價：買家看釣客，釣客看買家，不混用整體平均。 */
+function rolePeerOf(deal, userId) {
+  const isBuyer = deals.isBuyer(deal, userId);
+  const peerId = isBuyer ? deal.seller_id : deal.buyer_id;
+  const ratings = ratingBreakdown(peerId);
+  const roleRating = isBuyer ? ratings.as_seller : ratings.as_buyer;
+  return Object.assign(peerOf(deal, userId), {
+    rating_score: roleRating.score,
+    review_count: roleRating.count
+  });
+}
+
+function forUser(deal, userId, roleAware) {
   const data = deals.decorateDeal(deal);
   const status = data.review_status || {};
   const isBuyer = deals.isBuyer(deal, userId);
   return Object.assign(data, {
     role: isBuyer ? "buyer" : "seller",
-    peer: peerOf(deal, userId),
+    has_products: hasPublicProducts(deal.seller_id),
+    peer: roleAware ? rolePeerOf(deal, userId) : peerOf(deal, userId),
     my_reviewed: isBuyer ? !!status.buyer_reviewed : !!status.seller_reviewed,
     peer_reviewed: isBuyer ? !!status.seller_reviewed : !!status.buyer_reviewed
   });
@@ -137,7 +150,7 @@ router.get("/api/deals/:id", requireUser, function (req, res) {
   sweepExpired();
   const deal = deals.requireDeal(req, res);
   if (!deal) return;
-  ok(res, forUser(deal, req.user.id), "取得訂單成功");
+  ok(res, forUser(deal, req.user.id, true), "取得訂單成功");
 });
 
 router.post("/api/deals/reinitiate", requireUser, function (req, res) {

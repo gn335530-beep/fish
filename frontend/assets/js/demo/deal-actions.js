@@ -7,6 +7,7 @@ import { handleReviewAction } from "./deal-reviews.js";
 import {
   initOrderActions, toggleAddon, closeAddon, submitAddon
 } from "./deal-order-actions.js";
+import { initCartActions, handleCartAction } from "./deal-cart-actions.js";
 import {
   initCancelActions, openCancel, dismissCancel, submitCancel
 } from "./deal-cancel-actions.js";
@@ -19,10 +20,10 @@ let ui = {
   notify: function () {},
   scrollEnd: function () {}
 };
-
 export function initDealActions(options) {
   ui = Object.assign(ui, options || {});
   initOrderActions(options);
+  initCartActions(options);
   initCancelActions(options);
 }
 
@@ -140,6 +141,7 @@ export function handleAddonSelect(productId, value) {
 
 export async function handleDealAction(action, data) {
   if (await handleReviewAction(action, data)) return true;
+  if (await handleCartAction(action, data)) return true;
   if (action === "toggle-propose") {
     await startProposal();
     return true;
