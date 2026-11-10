@@ -76,13 +76,12 @@ router.post("/api/deals/initiate-channel", requireUser, function (req, res) {
   }
 
   const stock = productAvailability(product.id);
-  const replaceItems = body.replace_items === true;
   let conversation = deals.findConversation(req.user.id, product.seller_id);
   let deal = conversation ? deals.draftOf(conversation.id) : null;
 
-  /* 洽談購買以本次商品為準；指定 replace_items 時不累計舊草稿的尾數。 */
+  /* 洽談購買一律加入或累加；舊客戶端帶 replace_items 也忽略。 */
   const quantity = dealItems.requireAddableQuantity(
-    replaceItems ? null : deal, stock, body.quantity, res, "可售尾數不足");
+    deal, stock, body.quantity, res, "可售尾數不足");
   if (quantity === null) return;
 
   const now = new Date().toISOString();
@@ -95,7 +94,6 @@ router.post("/api/deals/initiate-channel", requireUser, function (req, res) {
   }
 
   if (!deal) deal = deals.createDeal(conversation, req.user.id, now);
-  else if (replaceItems) deal = dealItems.clearItems(deal);
   if (createdRoom) systemMessage(conversation.id, "已進入交易洽談。");
   deal = dealItems.addWithMessage(deal, stock, quantity);
   conversation = findById("conversations", conversation.id);

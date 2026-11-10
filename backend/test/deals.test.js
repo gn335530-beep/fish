@@ -148,25 +148,16 @@ test("不能洽談自己上架的商品", async function () {
   assert.equal(result.body.code, "OWN_PRODUCT");
 });
 
-test("洽談購買可只保留本次點選的商品", async function () {
-  const first = await call("POST", "/api/deals/initiate-channel", {
+test("舊客戶端帶 replace_items 也只累加，不清空草稿", async function () {
+  const result = await call("POST", "/api/deals/initiate-channel", {
     token: tokens.buyer,
     body: { product_id: "prd_b", quantity: 1, replace_items: true }
   });
-  assert.equal(first.status, 200);
-  assert.equal(first.body.data.conversation.id, seen.conversation);
-  assert.equal(first.body.data.deal.id, seen.deal);
-  assert.equal(first.body.data.deal.items.length, 1);
-  assert.equal(first.body.data.deal.items[0].product_id, "prd_b");
-  assert.equal(first.body.data.deal.items[0].quantity, 1);
-  assert.equal(first.body.data.deal.items_total, 1530);
-
-  const second = await call("POST", "/api/deals/initiate-channel", {
-    token: tokens.buyer,
-    body: { product_id: "prd_b", quantity: 2, replace_items: true }
+  assert.equal(result.status, 200);
+  assert.equal(result.body.data.deal.items.length, 2);
+  const added = result.body.data.deal.items.find(function (item) {
+    return item.product_id === "prd_b";
   });
-  assert.equal(second.status, 200);
-  assert.equal(second.body.data.deal.items.length, 1);
-  assert.equal(second.body.data.deal.items[0].quantity, 2);
-  assert.equal(second.body.data.deal.items_total, 3060);
+  assert.equal(added.quantity, 2);
+  assert.equal(result.body.data.deal.items_total, 5860);
 });

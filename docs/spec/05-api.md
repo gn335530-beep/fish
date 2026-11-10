@@ -439,10 +439,10 @@
 `POST /api/deals/initiate-channel`
 
 ```json
-{ "product_id": "prd_...", "quantity": 2, "replace_items": true }
+{ "product_id": "prd_...", "quantity": 2 }
 ```
 
-回 200：`{ conversation, deal, product }`。行為：以 `product.seller_id` 找或建立交易房（唯一鍵 `buyer_id + seller_id`）→ 找或建立草稿訂單 → 加入或累加項目 → 房間轉 `HUMAN` → 插入系統訊息（第一次開房時另有「已進入交易洽談」）。`replace_items: true` 時會先清空草稿舊項目，只保留本次商品；未帶時維持加入或累加。`conversation` 是對話摘要（含 `peer.username` 完整電話與 `order`），`deal` 是草稿訂單，項目為商品快照。
+回 200：`{ conversation, deal, product }`。行為：以 `product.seller_id` 找或建立交易房（唯一鍵 `buyer_id + seller_id`）→ 找或建立草稿訂單 → 加入或累加項目 → 房間轉 `HUMAN` → 插入系統訊息（第一次開房時另有「已進入交易洽談」）。再次洽談同一位釣客的另一個商品時，一律加入或累加，不清空既有草稿；舊客戶端若帶 `replace_items` 也忽略。`conversation` 是對話摘要（含 `peer.username` 完整電話與 `order`），`deal` 是草稿訂單，項目為商品快照。
 
 錯誤：404 `PRODUCT_NOT_FOUND`、400 `INVALID_QUANTITY`、400 `OWN_PRODUCT`（自己的商品）、409 `INSUFFICIENT_QUANTITY`（附 `product_id`、`available`、`in_draft`）。
 

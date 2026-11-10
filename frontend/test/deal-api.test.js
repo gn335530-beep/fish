@@ -1,4 +1,4 @@
-/* 洽談購買 API：每次都以本次商品取代草稿，避免舊商品留在交易房。 */
+/* 洽談購買 API：加入或累加草稿，不清空其他商品。 */
 
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -16,12 +16,12 @@ globalThis.window = {
 
 const api = await import("../assets/js/demo/api.js");
 
-test("洽談購買送出 replace_items，讓交易房只保留本次商品", async function () {
+test("洽談購買不送取代旗標，讓草稿加入或累加", async function () {
   const result = await api.initiateChannel("prd_1", 2);
   assert.equal(result.conversation.id, "conv_1");
   assert.equal(seen.path, "/api/deals/initiate-channel");
   assert.equal(seen.options.method, "POST");
   assert.equal(seen.options.body.product_id, "prd_1");
   assert.equal(seen.options.body.quantity, 2);
-  assert.equal(seen.options.body.replace_items, true);
+  assert.equal("replace_items" in seen.options.body, false);
 });
