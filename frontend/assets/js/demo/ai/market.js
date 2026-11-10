@@ -6,10 +6,6 @@ import { ensureCatalog, findSpeciesMention } from "./species-catalog.js";
 import { buildMarketQuoteCard } from "./market-quote-card.js";
 import { INTENT, detectIntent } from "./rules.js";
 
-function profileRegion(user) {
-  return normalizeCityName((user && user.city) || "").trim();
-}
-
 /* 先把縣市從句子拿掉，避免把「澎湖縣」當魚名。 */
 function withoutRegion(text) {
   const region = findRegion(text);
@@ -22,23 +18,11 @@ function withoutRegion(text) {
   return rest;
 }
 
-function marketMeta(text, user) {
-  return {
-    requestedRegion: findRegion(text) || profileRegion(user)
-  };
-}
-
 function replyWith(ctx, replies) {
   return { context: Object.assign({}, ctx, { market_pending: null }), replies: replies };
 }
 
-function priceReply(data, ctx) {
-  return replyWith(ctx, [{
-    card: buildMarketQuoteCard(data, { speciesName: data.official_name })
-  }]);
-}
-
-function candidateReply(ctx, name, candidates, meta) {
+function candidateReply(ctx, name, candidates, requestedRegion) {
   const labels = candidates.map(function (row) {
     return row.official_name;
   }).join("、");
@@ -47,23 +31,23 @@ function candidateReply(ctx, name, candidates, meta) {
       market_pending: {
         query: name,
         candidates: candidates,
-        region: meta.requestedRegion || null
+        region: requestedRegion || null
       }
     }),
     replies: [{ text: "搜尋到多種" + name + "，請問是哪一種" + name + "？請選擇：" + labels }]
   };
 }
 
-async function quoteFor(name, byCode, ctx, meta) {
+async function quoteFor(name, byCode, ctx, requestedRegion) {
   let data;
   try {
     data = byCode
-      ? await getMarketQuoteByCode(name, meta.requestedRegion || null, 30)
-      : await getMarketQuote(name, meta.requestedRegion || null, 30);
+      ? await getMarketQuoteByCode(name, requestedRegion || null, 30)
+      : await getMarketQuote(name, requestedRegion || null, 30);
   } catch (error) {
     const body = error && error.data ? error.data : {};
     if (body.code === "AMBIGUOUS_SPECIES") {
-      return candidateReply(ctx, name, body.candidates || [], meta);
+      return candidateReply(ctx, name, body.candidates || [], requestedRegion);
     }
     if (body.code === "SPECIES_NOT_FOUND") {
       return replyWith(ctx, [{ text: "查無此魚種代碼：「" + name + "」。" }]);
@@ -74,7 +58,9 @@ async function quoteFor(name, byCode, ctx, meta) {
     return replyWith(ctx, [{ text: "暫無行情" }]);
   }
   if (!data || !data.found) return replyWith(ctx, [{ text: "暫無行情" }]);
-  return priceReply(data, ctx);
+  return replyWith(ctx, [{
+    card: buildMarketQuoteCard(data, { speciesName: data.official_name })
+  }]);
 }
 
 function namesOf(row) {
@@ -104,7 +90,7 @@ export async function marketReply(text, user, context) {
     const pending = ctx.market_pending;
     const picked = matchCandidate(source, pending.candidates || []);
     if (picked) {
-      return quoteFor(String(picked.species_code), true, ctx, { requestedRegion: pending.region });
+      return quoteFor(String(picked.species_code), true, ctx, pending.region);
     }
     ctx = Object.assign({}, ctx, { market_pending: null });
     if (detectIntent(source) !== INTENT.MARKET) return { handled: false, context: ctx };
@@ -127,5 +113,6 @@ export async function marketReply(text, user, context) {
     return { context: ctx, replies: [{ text: "請問想查哪一種魚的行情？" }] };
   }
 
-  return quoteFor(name, false, ctx, marketMeta(source, user));
+  const requestedRegion = findRegion(source) || normalizeCityName((user && user.city) || "").trim();
+  return quoteFor(name, false, ctx, requestedRegion);
 }

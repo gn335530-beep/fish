@@ -1,4 +1,4 @@
-/* 對話式交易引擎：右下角面板外殼與輸入區。 */
+/* 對話式交易引擎：浮動開啟鈕、badge 與 bot 容器。 */
 
 .fm-bot {
   position: fixed;
@@ -16,7 +16,7 @@
   height: 58px;
   display: grid;
   place-items: center;
-  border: 1px solid var(--accent);
+  border: 0;
   border-radius: 50%;
   background: var(--accent);
   color: #fff;
@@ -25,7 +25,13 @@
   transition: transform .2s, background .2s;
 }
 
-.fm-toggle:hover { transform: translateY(-2px); background: var(--accent-2); }
+.fm-toggle:hover {
+  transform: translateY(-2px);
+  background: var(--accent-2);
+  color: #fff;
+}
+
+.fm-toggle__mark { font-size: 1.25rem; line-height: 1; }
 
 .fm-toggle__badge {
   position: absolute;
@@ -46,139 +52,7 @@
 
 .fm-toggle__badge[hidden] { display: none; }
 
-.fm-panel {
-  width: clamp(320px, calc((100vw - 64px) / 3), 400px);
-  height: min(520px, calc(100vh - 120px));
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
-  overflow: hidden;
-  border: 1px solid var(--rule-2);
-  background: var(--paper);
-  box-shadow: 0 12px 36px rgba(26, 29, 27, .18);
-  transition: width .18s, height .18s;
-}
-
-.fm-panel[hidden] { display: none; }
-
-.fm-panel__head {
-  display: grid;
-  grid-template-columns: 38px minmax(0, 1fr) repeat(3, 30px);
-  align-items: center;
-  gap: 10px;
-  padding: 14px 16px;
-  border-bottom: 1px solid var(--rule-2);
-  background: var(--surface);
-}
-
-.fm-panel__avatar {
-  width: 36px;
-  height: 36px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: var(--accent);
-  color: #fff;
-  font-size: .9rem;
-}
-
-.fm-panel__title { min-width: 0; }
-.fm-panel__title b { display: block; font-size: .9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-.fm-panel__sub {
-  margin-top: 3px;
-  color: var(--muted);
-  font-size: .68rem;
-  line-height: 1.5;
-}
-
-.fm-panel__sub[hidden] { display: none; }
-
-.fm-icon {
-  width: 30px;
-  height: 30px;
-  display: grid;
-  place-items: center;
-  color: var(--muted);
-  font-size: .9rem;
-  background: transparent;
-  border: 0;
-  cursor: pointer;
-}
-
-.fm-icon:hover { color: var(--ink); }
-
-.fm-panel__body {
-  min-height: 0;
-  overflow-y: auto;
-  padding: 16px;
-  background: var(--paper-2);
-}
-
-.fm-panel__foot {
-  display: grid;
-  grid-template-columns: auto auto minmax(0, 1fr) auto;
-  gap: 8px;
-  padding: 12px;
-  border-top: 1px solid var(--rule-2);
-  background: var(--surface);
-}
-
-.fm-attach,
-.fm-voice {
-  width: 36px;
-  display: grid;
-  place-items: center;
-  border: 1px solid var(--rule);
-  background: transparent;
-  font-size: 1rem;
-  cursor: pointer;
-}
-
-.fm-attach:hover,
-.fm-voice:hover { border-color: var(--accent); }
-
-.fm-voice[aria-pressed="true"] {
-  border-color: var(--coral);
-  background: var(--coral);
-  color: #fff;
-}
-
-.fm-panel__foot[hidden] { display: none; }
-
-.fm-panel__foot input {
-  min-width: 0;
-  padding: 9px 10px;
-  border: 1px solid var(--rule);
-  outline: none;
-  font-size: .82rem;
-  background: var(--paper);
-}
-
-.fm-panel__foot input:focus { border-color: var(--accent); }
-
-.fm-send {
-  width: 38px;
-  padding: 0;
-  display: grid;
-  place-items: center;
-  background: var(--accent);
-  color: #fff;
-  border: 0;
-  cursor: pointer;
-}
-
-.fm-send svg { width: 17px; height: 17px; fill: currentColor; }
-
-.fm-send:hover { background: var(--accent-2); }
-
 @media (max-width: 760px) {
   .fm-bot { right: 0; bottom: 0; }
   .fm-toggle { margin: 0 16px 16px; }
-  .fm-panel {
-    position: fixed;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    border: 0;
-  }
 }

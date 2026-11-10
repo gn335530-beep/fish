@@ -38,9 +38,11 @@ playwright.config.js       Playwright 專案與 webServer 設定
 e2e/
   config.js                測試前後端位址與資料庫路徑
   fixtures/market.js       行情卡與魚種字典固定資料
+  fixtures/market-card.html 以真實行情卡 view 載入固定資料
   helpers/auth.js          seed 買家／釣客登入
   helpers/layout.js        水平溢出與字型等待
   helpers/market-fixture.js 行情 API 攔截
+  helpers/market-card-page.js 載入行情卡 fixture
   helpers/prepare-page.js  每個 spec 共用的頁面前置
   helpers/product-card.js  商品卡照片框量測
   helpers/test-api.js      把前台 API base 指到測試後端

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="/assets/css/base.css?v=v8">
+<link rel="stylesheet" href="/assets/css/market-card.css?v=v16">
+<link rel="stylesheet" href="/assets/css/market-card-chart.css?v=v10">
+<link rel="stylesheet" href="/assets/css/market-card-calc.css?v=v15">
+<style>
+  body { margin: 0; padding: 32px; background: #F7F5F0; }
+  #host, #legacy { width: 295px; }
+  #legacy { margin-top: 24px; }
+</style>
+</head>
+<body>
+<div id="host"></div>
+<div id="legacy" hidden></div>
+<script type="module">
+import { update } from "/assets/js/demo/store.js";
+import {
+  renderMarketCard,
+  handleMarketWeightInput,
+  handleMarketUnitChange
+} from "/assets/js/demo/views/market-card.js";
+
+window.renderMarketFixture = function (card, days) {
+  update({
+    marketDays: { fixture: days },
+    marketWeights: {},
+    marketUnits: {}
+  });
+  document.getElementById("host").innerHTML = renderMarketCard(card, "fixture");
+};
+
+window.renderLegacyMarketPrice = function () {
+  const legacy = document.getElementById("legacy");
+  legacy.hidden = false;
+  legacy.innerHTML = '<div class="fm-card fm-card--market">' +
+    '<b class="fm-market__price" id="legacy-price">285.5</b>' +
+    '<span class="fm-market__price-unit">元/台斤</span></div>';
+};
+
+const host = document.getElementById("host");
+host.addEventListener("input", function (event) {
+  const weight = event.target.closest("[data-market-weight]");
+  if (weight) handleMarketWeightInput(weight);
+});
+host.addEventListener("change", function (event) {
+  const unit = event.target.closest("[data-market-unit]");
+  if (unit) handleMarketUnitChange(unit);
+});
+</script>
+</body>
+</html>
