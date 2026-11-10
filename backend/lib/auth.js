@@ -17,6 +17,7 @@ function publicUser(user) {
   safe.display_address = [safe.city, safe.district, safe.address_line].filter(Boolean).join("");
   safe.region = safe.city || "";
   safe.seller_terms_accepted_at = safe.seller_terms_accepted_at || null;
+  safe.avatar_url = safe.avatar_url || "";
   return safe;
 }
 

@@ -50,12 +50,27 @@
     // 回應    : { success, message, data: User }
     var data = await API.request("/api/auth/me", { auth: true });
     if (data && data.data) {
-      var local = API.getUser() || {};
-      var u = API.toLocalUser(data.data, local.phone);
+      var u = API.toLocalUser(data.data);
       API.setUser(u);
       return u;
     }
     return null;
+  }
+
+  async function getPublicUser(id) {
+    // [API 對接點] 公開個人資訊：只回公開欄位與角色評分
+    var data = await API.request("/api/users/" + encodeURIComponent(id));
+    return data && data.data ? data.data : null;
+  }
+
+  async function updateProfile(payload) {
+    // [API 對接點] 設定頁：暱稱、電話、頭像與地址一次更新
+    var data = await API.request("/api/users/profile", {
+      method: "PUT",
+      auth: true,
+      body: payload
+    });
+    return data && data.data ? data.data : null;
   }
 
   function logout() {
@@ -63,5 +78,8 @@
     API.setUser(null);
   }
 
-  Object.assign(API, { register: register, login: login, me: me, logout: logout });
+  Object.assign(API, {
+    register: register, login: login, me: me, logout: logout,
+    getPublicUser: getPublicUser, updateProfile: updateProfile
+  });
 })();

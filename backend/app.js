@@ -30,9 +30,11 @@ app.use(function (req, res, next) {
 });
 
 app.use(jsonServer.bodyParser);
+app.use("/uploads", express.static(path.join(__dirname, "seed-assets")));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use(require("./routes/auth"));
+app.use(require("./routes/users"));
 app.use(require("./routes/products"));
 app.use(require("./routes/product-lifecycle"));
 app.use(require("./routes/chat"));

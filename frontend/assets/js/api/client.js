@@ -71,6 +71,7 @@
       id: user.id,
       nick: user.display_name || user.username || "會員",
       phone: phone || user.username || "",
+      avatarUrl: user.avatar_url || "",
       verified: !!user.is_verified,
       orders: user.completed_deals || 0,
       rating: user.rating_score || 0,
@@ -80,6 +81,17 @@
       address: user.display_address || ""
     };
   }
+  /* [對應] 圖片路徑：/uploads 走 API base，種子 images/ 走前端 assets。 */
+  function photoUrl(path) {
+    if (!path) return "";
+    if (/^https?:\/\//i.test(path)) return path;
+    if (path.charAt(0) === "/") return BASE + path;
+    if (path.indexOf("../assets/") === 0) return path;
+    if (path.indexOf("assets/") === 0) return "../" + path;
+    if (path.indexOf("images/") === 0) return "../assets/" + path;
+    return path;
+  }
+
   window.HaisenAPI = {
     BASE: BASE,
     getToken: getToken,
@@ -87,6 +99,7 @@
     getUser: getUser,
     setUser: setUser,
     request: request,
-    toLocalUser: toLocalUser
+    toLocalUser: toLocalUser,
+    photoUrl: photoUrl
   };
 })();

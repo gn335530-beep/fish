@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="小魚買家頭像">
+  <rect width="120" height="120" fill="#E7EDED"/>
+  <circle cx="60" cy="46" r="21" fill="#14343F"/>
+  <path d="M22 112c4-24 18-36 38-36s34 12 38 36z" fill="#14343F"/>
+  <path d="M24 26c8-6 17-8 27-5-6 9-15 13-27 11z" fill="#3C7086"/>
+</svg>

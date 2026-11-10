@@ -20,13 +20,16 @@ function logoutUser(){
   if(window.FishMatchBot && typeof window.FishMatchBot.logout === "function") window.FishMatchBot.logout();
 }
 
-/* ---------- 個人頭像（選填；存 localStorage，跨頁保留） ---------- */
-const AVATAR_KEY = "haisen_avatar_v1";
-function getUserAvatar(){ try{ return localStorage.getItem(AVATAR_KEY) || ""; }catch(e){ return ""; } }
-function setUserAvatar(dataUrl){
-  if(dataUrl) localStorage.setItem(AVATAR_KEY, dataUrl);
-  else localStorage.removeItem(AVATAR_KEY);
+/* ---------- 個人頭像（唯一真實來源：後端 avatar_url，存在本機會員快取） ---------- */
+const LEGACY_AVATAR_KEY = "haisen_avatar_v1";
+function avatarSrc(path){
+  if(!path) return "";
+  if(window.HaisenAPI && typeof window.HaisenAPI.photoUrl === "function") return window.HaisenAPI.photoUrl(path);
+  return path;
 }
+function getUserAvatar(){ const u = getUser(); return avatarSrc(u && u.avatarUrl ? u.avatarUrl : ""); }
+/* 舊版瀏覽器本機頭像不再使用；保留清除動作讓登出能帶走舊資料，不做遷移。 */
+function setUserAvatar(){ try{ localStorage.removeItem(LEGACY_AVATAR_KEY); }catch(e){} }
 /* 頭像內容：有上傳顯示圖片，否則顯示暱稱首字 */
 function avatarInner(){
   const a = getUserAvatar();
@@ -67,24 +70,18 @@ function renderAuthNav(){
       </div>
       <div class="nav-menu__sec">
         <div class="nav-menu__label">我的</div>
-        <button class="nav-menu__item" type="button" data-open-drawer>個人資訊</button>
+        <a class="nav-menu__item" href="profile.html?id=${encodeURIComponent(u.id || "")}">個人資訊</a>
+        <a class="nav-menu__item" href="settings.html">設定</a>
         <button class="nav-menu__item" type="button" data-open-history>交易紀錄</button>
         <button class="nav-menu__item" type="button" data-open-listings>上架紀錄</button>
-      </div>
-      ${links}
-      <div class="nav-menu__sec">
         <button class="nav-menu__item nav-menu__item--out" type="button" id="nav-menu-logout">登出</button>
-      </div>`;
+      </div>
+      ${links}`;
   } else {
     inner.innerHTML = `
       <div class="nav-menu__sec">
         <div class="nav-menu__label">會員</div>
         <a class="nav-menu__item" href="login.html">登入 / 註冊</a>
-      </div>
-      <div class="nav-menu__sec">
-        <div class="nav-menu__label">我的</div>
-        <button class="nav-menu__item" type="button" data-open-history>交易紀錄</button>
-        <button class="nav-menu__item" type="button" data-open-listings>上架紀錄</button>
       </div>
       ${links}`;
   }
@@ -94,10 +91,6 @@ function renderAuthNav(){
 function bindNavMenu(){
   const inner = document.getElementById("nav-menu-inner");
   if(!inner) return;
-  inner.querySelectorAll("[data-open-drawer]").forEach(b => b.addEventListener("click", ()=>{
-    closeNavMenu();
-    openDrawer();
-  }));
   inner.querySelectorAll("[data-open-history]").forEach(b => b.addEventListener("click", ()=>{
     closeNavMenu();
     openDrawer();

@@ -123,7 +123,7 @@ function listingRowHTML(row) {
 
 function listingHistoryHTML() {
   const head = '<div class="drawer__sec"><div class="history__head">' +
-    '<button class="drawer__back" type="button" data-listing-back>← 個人資訊</button>' +
+    '<button class="drawer__back" type="button" data-listing-back>← 返回</button>' +
     '<h4>上架紀錄</h4></div>';
 
   if (listingHistory.loading) return head + '<p class="drawer__note">載入中…</p></div>';

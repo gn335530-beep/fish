@@ -22,6 +22,20 @@ function averageRating(rows) {
   return { count: count, score: round1(total / count) };
 }
 
+/* 角色別評分：作為釣客＝買家給的評價（reviewer_role buyer）；作為買家＝釣客給的評價。 */
+function ratingBreakdown(userId) {
+  const rows = reviewsFor(userId);
+  return {
+    overall: averageRating(rows),
+    as_seller: averageRating(rows.filter(function (review) {
+      return review.reviewer_role === "buyer";
+    })),
+    as_buyer: averageRating(rows.filter(function (review) {
+      return review.reviewer_role === "seller";
+    }))
+  };
+}
+
 /* 用全部評價重算星等與評價數；未到次數只累加，不因重算而減少。 */
 function recomputeUser(userId, addNoShow) {
   const rows = reviewsFor(userId);
@@ -70,6 +84,7 @@ module.exports = {
   NO_SHOW_TAG: NO_SHOW_TAG,
   reviewsFor: reviewsFor,
   averageRating: averageRating,
+  ratingBreakdown: ratingBreakdown,
   recomputeUser: recomputeUser,
   reviewStatusOf: reviewStatusOf,
   reviewCardMessage: reviewCardMessage,

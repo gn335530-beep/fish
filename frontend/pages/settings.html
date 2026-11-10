@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="../assets/images/favicon.svg?v=v8">
+<title>設定 — 一支釣</title>
+<meta name="description" content="一支釣個人設定：編輯頭像、暱稱、電話、縣市、區與詳細地址。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400..700&family=Noto+Serif+TC:wght@600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/base.css?v=v8">
+<link rel="stylesheet" href="../assets/css/layout.css?v=v9">
+<link rel="stylesheet" href="../assets/css/product-card.css?v=v16">
+<link rel="stylesheet" href="../assets/css/product-card-photo.css?v=v13">
+<link rel="stylesheet" href="../assets/css/components.css?v=v9">
+<link rel="stylesheet" href="../assets/css/market.css?v=v8">
+<link rel="stylesheet" href="../assets/css/features.css?v=v8">
+<link rel="stylesheet" href="../assets/css/auth.css?v=v8">
+<link rel="stylesheet" href="../assets/css/deal-bot.css?v=v9">
+<link rel="stylesheet" href="../assets/css/deal-views.css?v=v9">
+<link rel="stylesheet" href="../assets/css/deal-cards.css?v=v9">
+<link rel="stylesheet" href="../assets/css/recommendation-card.css?v=v3">
+<link rel="stylesheet" href="../assets/css/market-card.css?v=v17">
+<link rel="stylesheet" href="../assets/css/market-card-chart.css?v=v10">
+<link rel="stylesheet" href="../assets/css/market-card-calc.css?v=v15">
+<link rel="stylesheet" href="../assets/css/deal-room.css?v=v9">
+<link rel="stylesheet" href="../assets/css/agreement-card.css?v=v4">
+<link rel="stylesheet" href="../assets/css/agreement-cancel-card.css?v=v3">
+<link rel="stylesheet" href="../assets/css/deal-room-header.css?v=v9">
+<link rel="stylesheet" href="../assets/css/chat-frame.css?v=v3">
+<link rel="stylesheet" href="../assets/css/chat-frame-content.css?v=v1">
+<link rel="stylesheet" href="../assets/css/chat-bubbles.css?v=v4">
+<link rel="stylesheet" href="../assets/css/deal-room-layout.css?v=v2">
+<link rel="stylesheet" href="../assets/css/deal-room-sheets.css?v=v2">
+<link rel="stylesheet" href="../assets/css/account.css?v=v9">
+<link rel="stylesheet" href="../assets/css/navigation.css?v=v8">
+<link rel="stylesheet" href="../assets/css/profile.css?v=v8">
+<link rel="stylesheet" href="../assets/css/profile-page.css?v=v1">
+<link rel="stylesheet" href="../assets/css/grid.css?v=v8">
+<link rel="stylesheet" href="../assets/css/responsive.css?v=v8">
+</head>
+<body>
+<div id="site-header" data-page="settings" data-search="off"></div>
+<script src="../assets/js/app/00-shell.js?v=v8"></script>
+
+<main class="wrap account-page">
+  <nav class="crumbs"><a href="index.html">首頁</a><span aria-hidden="true">/</span><span>設定</span></nav>
+  <div class="page-head">
+    <span class="eyebrow">Settings</span>
+    <h1>設定</h1>
+    <p class="lead">編輯頭像、暱稱、電話與地址；儲存後立即更新導覽列。</p>
+  </div>
+
+  <form class="settings" id="settings-form" novalidate>
+    <section class="settings__block">
+      <h2>頭像</h2>
+      <div class="settings__avatar-row">
+        <div id="avatar-preview"></div>
+        <div class="settings__avatar-acts">
+          <input type="file" class="upload__input" id="avatar-file" accept="image/jpeg,image/png,image/webp">
+          <button class="btn btn--ghost btn--sm" type="button" id="avatar-pick">上傳頭像</button>
+          <button class="btn btn--quiet btn--sm" type="button" id="avatar-remove">移除頭像</button>
+          <p class="hint">JPG / PNG / WEBP，單檔上限 5MB；沒有頭像時顯示名字首字。</p>
+        </div>
+      </div>
+      <div class="field-err" id="e-avatar"></div>
+    </section>
+
+    <section class="settings__block">
+      <h2>基本資料</h2>
+      <div class="field" id="f-name">
+        <label for="set-name">暱稱 <span class="req">*</span></label>
+        <input class="input" type="text" id="set-name" maxlength="20" autocomplete="nickname" aria-describedby="e-name">
+        <div class="field-err" id="e-name">請填寫 2 到 20 字</div>
+      </div>
+      <div class="field" id="f-phone">
+        <label for="set-phone">電話 <span class="req">*</span></label>
+        <input class="input" type="tel" id="set-phone" autocomplete="tel" placeholder="09xxxxxxxx" aria-describedby="e-phone">
+        <div class="field-err" id="e-phone">請填寫有效的電話號碼（09 開頭，共 10 碼）</div>
+        <p class="hint">電話是登入帳號；修改後下一次登入請使用新號碼。</p>
+      </div>
+      <div class="field" id="f-city">
+        <label for="set-city">縣市 <span class="req">*</span></label>
+        <select class="input" id="set-city" aria-describedby="e-city">
+          <option value="">請選擇縣市</option>
+        </select>
+        <div class="field-err" id="e-city">請選擇縣市</div>
+      </div>
+      <div class="field" id="f-district">
+        <label for="set-district">鄉鎮市區 <span class="opt-tag">選填</span></label>
+        <input class="input" type="text" id="set-district" maxlength="20" autocomplete="address-level2" aria-describedby="e-district">
+        <div class="field-err" id="e-district">最多 20 字</div>
+      </div>
+      <div class="field" id="f-address">
+        <label for="set-address">詳細地址 <span class="opt-tag">選填</span></label>
+        <input class="input" type="text" id="set-address" maxlength="100" autocomplete="street-address" aria-describedby="e-address">
+        <div class="field-err" id="e-address">最多 100 字</div>
+      </div>
+    </section>
+
+    <div class="settings__acts">
+      <button class="btn btn--primary" type="submit" id="settings-save">儲存變更</button>
+      <a class="btn btn--quiet" id="settings-profile" href="profile.html">查看個人資訊</a>
+    </div>
+  </form>
+</main>
+
+<div id="site-footer"></div>
+
+<script src="../assets/js/config.js?v=v8"></script>
+<script src="../assets/js/api/client.js?v=v10"></script>
+<script src="../assets/js/api/auth.js?v=v10"></script>
+<script src="../assets/js/app/02-account.js?v=v10"></script>
+<script src="../assets/js/app/03-ui.js?v=v8"></script>
+<script src="../assets/js/shared/regions-data.js?v=v8"></script>
+<script src="../assets/js/app/04-regions.js?v=v8"></script>
+<script src="../assets/js/app/05-product-view.js?v=v12"></script>
+<script type="module" src="../assets/js/demo/main.js?v=v14"></script>
+<script src="../assets/js/app/06-drawer.js?v=v10"></script>
+<script src="../assets/js/app/07-drawer-panels.js?v=v9"></script>
+<script src="../assets/js/app/08-api-init.js?v=v8"></script>
+<script src="../assets/js/app/09-deal-buy.js?v=v8"></script>
+<script src="../assets/js/shared/deal-status.js?v=v8"></script>
+<script src="../assets/js/app/10-trade-history.js?v=v9"></script>
+<script src="../assets/js/app/11-listing-history.js?v=v4"></script>
+<script src="../assets/js/app/12-listing-actions.js?v=v1"></script>
+<script type="module" src="../assets/js/pages/settings.js?v=v1"></script>
+</body>
+</html>

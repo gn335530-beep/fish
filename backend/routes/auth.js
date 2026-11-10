@@ -14,6 +14,7 @@ function newUser(data) {
     username: String(data.username),
     password: String(data.password),
     display_name: String(data.display_name),
+    avatar_url: "",
     is_verified: false,
     city: normalizeRegion(data.city),
     district: "",
@@ -75,6 +76,38 @@ router.get("/api/auth/me", requireUser, function (req, res) {
 
 const PROFILE_TEXT_FIELDS = ["city", "district", "address_line", "bank_code", "bank_account", "bank_account_name"];
 const PROFILE_LIMITS = { city: 20, district: 20, address_line: 100, bank_code: 10, bank_account: 30, bank_account_name: 30 };
+const PHONE_RE = /^09\d{8}$/;
+const AVATAR_RE = /^\/uploads\/[A-Za-z0-9._-]+$/;
+
+/* 電話是登入帳號；修改後 token 仍綁 user id，下一次登入才用新號碼。 */
+function validPhone(body, user, res) {
+  if (body.phone === undefined) return true;
+  const value = String(body.phone).trim();
+  if (!PHONE_RE.test(value)) {
+    fail(res, 400, "INVALID_PHONE", "電話需為 09 開頭共 10 碼");
+    return false;
+  }
+  const duplicate = all("users").some(function (row) {
+    return row.username === value && String(row.id) !== String(user.id);
+  });
+  if (duplicate) {
+    fail(res, 409, "PHONE_TAKEN", "此電話號碼已被使用");
+    return false;
+  }
+  body.phone = value;
+  return true;
+}
+
+function validAvatar(body, res) {
+  if (body.avatar_url === undefined) return true;
+  const value = String(body.avatar_url).trim();
+  if (value && !AVATAR_RE.test(value)) {
+    fail(res, 400, "INVALID_AVATAR", "頭像網址必須是 /uploads/ 開頭");
+    return false;
+  }
+  body.avatar_url = value;
+  return true;
+}
 
 router.put("/api/users/profile", requireUser, function (req, res) {
   const body = req.body || {};
@@ -90,6 +123,10 @@ router.put("/api/users/profile", requireUser, function (req, res) {
     changes.display_name = value;
   }
 
+  if (!validPhone(body, req.user, res) || !validAvatar(body, res)) return;
+  if (body.phone !== undefined) changes.username = body.phone;
+  if (body.avatar_url !== undefined) changes.avatar_url = body.avatar_url;
+
   for (const field of PROFILE_TEXT_FIELDS) {
     if (body[field] === undefined) continue;
     const value = String(body[field]).trim();
@@ -99,8 +136,8 @@ router.put("/api/users/profile", requireUser, function (req, res) {
     }
     if (field === "city") {
       const normalized = value ? normalizeRegion(value) : "";
-      if (value && !normalized) {
-        fail(res, 400, "INVALID_REGION", "請選擇有效的縣市");
+      if (!normalized) {
+        fail(res, 400, "INVALID_REGION", value ? "請選擇有效的縣市" : "請選擇縣市");
         return;
       }
       changes.city = normalized;

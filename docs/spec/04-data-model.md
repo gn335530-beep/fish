@@ -7,19 +7,19 @@
 | 集合 | 筆數（2026-10-25） | 狀態 |
 | --- | ---: | --- |
 | `users` | 4 | ✅ |
-| `products` | 5 | ✅ |
+| `products` | 8 | ✅ |
 | `counters` | 0（第一次建立商品後建立） | ✅ 每日商品流水號；硬刪後不重用 |
-| `conversations` | 3 | ✅（助手房可多間；交易房由開啟交易房建立） |
-| `messages` | 78 | ✅ |
-| `deals` | 0 | ✅ 草稿由開啟交易房建立 |
-| `reviews` | 0 | ✅ 成交後由 `POST /api/reviews/submit` 寫入 |
+| `conversations` | 5 | ✅（助手房可多間；交易房由開啟交易房建立） |
+| `messages` | 210 | ✅ |
+| `deals` | 7 | ✅ 草稿由開啟交易房建立；種子另有 7 筆 `CONFIRMED` 示範訂單 |
+| `reviews` | 10 | ✅ 成交後由 `POST /api/reviews/submit` 寫入；種子有 10 筆雙向示範評價 |
 | `market_prices` | 0（第一次查詢後建立） | ✅ 只存平均價、交易量與養殖旗標；以 `species_code` 為鍵 |
 | `market_species_catalog` | 0（第一次查詢後建立） | ✅ 官方新鮮代碼字典 |
 | `market_catalog_state` | 0（第一次查詢後建立） | ✅ 字典同步狀態與 24 小時快取 |
 | `market_locations` | 21 | ✅ 21 個市場對照；未確認市場不參與縣市加權 |
 | `market_fetch_state` | 0（第一次查詢後建立） | ✅ 每個官方代碼一筆快取狀態 |
 
-> `db.json` 是開發資料，筆數會隨測試變動；上表只是寫這份文件時的快照。
+> `db.json` 是開發資料，筆數會隨測試變動；上表只是寫這份文件時的快照。個人資訊頁的示範資料另需補 `CONFIRMED` 訂單、訂單項目與 reviews，見 `.scratch/personal-profile/spec.md`。
 
 ## 2. 識別碼與序號
 
@@ -45,9 +45,10 @@
 | 欄位 | 型態 | 說明 |
 | --- | --- | --- |
 | `id` | number | |
-| `username` | string | 手機號碼，唯一 |
+| `username` | string | 手機號碼，唯一；可透過設定頁修改，登入帳號也跟著改變 |
 | `password` | string | **明文**（已知缺陷） |
 | `display_name` | string | 暱稱 |
+| `avatar_url` | string | 頭像網址（`/uploads/...`）；可為空，空時顯示名字首字 |
 | `is_verified` | boolean | |
 | `completed_deals` | number | 成交筆數 |
 | `rating_score` | number | 平均星等 |
@@ -59,6 +60,10 @@
 | `bank_code` / `bank_account` / `bank_account_name` | string | 不對外回傳 |
 
 **回應時衍生**（不落庫）：`display_address` = 三段串接；`region` = `city`。密碼與三個銀行欄位一律移除。
+
+**公開個人資訊**（`GET /api/users/:id`）只回 `id`、`display_name`、`avatar_url`、`region`、`is_verified`、`completed_deals` 與角色評分；**不回** `username`、`password`、地址、銀行欄位、`seller_terms_accepted_at`。
+
+**角色評分**（不落庫）：整體 `rating_score`／`review_count` 保留；作為釣客的評分用 `reviewer_role = buyer` 的評價計算，作為買家的評分用 `reviewer_role = seller` 的評價計算。角色評分只在讀取時算，不新增欄位。
 
 ## 4. `products`
 
@@ -133,10 +138,13 @@
 
 **唯一鍵**：助手房＝`id`（每位使用者可以有多間，不再用 `type + user_ids[0]`）；交易房＝`type + buyer_id + seller_id`。
 
+交易房方向固定：`buyer_id` 是按「聊聊」或「洽談購買」的人，`seller_id` 是被看／商品擁有者。同一組人反向交易會是另一間房，不共用同一間。由個人資訊開啟的交易房可以沒有任何 `deals` 資料列；沒有商品時是純聊天房。
+
 **刪除**：
 
 - 助手房任何時候都能刪；刪除時移除該房訊息與 context。
-- 交易房必須沒有任何 `CONFIRMED` 訂單，且目前訂單 `CANCELLED`（或全部訂單皆 `CANCELLED`）時才能刪；刪除時一併移除訊息、`deals` 與 `deal_items`，交易紀錄不再顯示。有成交歷史或進行中（`DRAFT`／`PENDING_REVIEW`／`NEGOTIATING`）不可刪。
+- 沒有任何 `deals` 的純聊天房任何時候都能刪；刪除時移除該房訊息。
+- 有訂單的交易房必須沒有任何 `CONFIRMED` 訂單，且目前訂單 `CANCELLED`（或全部訂單皆 `CANCELLED`）時才能刪；刪除時一併移除訊息、`deals` 與 `deal_items`，交易紀錄不再顯示。有成交歷史或進行中（`DRAFT`／`PENDING_REVIEW`／`NEGOTIATING`）不可刪。
 
 **權限**：一律以 `user_ids` 判斷。`buyer_id` / `seller_id` 只作為語意標籤與查詢用，**必須與 `user_ids` 一致**（ADR 0001）。
 
@@ -241,7 +249,8 @@
 }
 ```
 
-- `items[]` 是商品快照，不隨商品變動；快照含 `fish_species`、`condition`、`price_per_taijin`（可為 `null`）與 `title`。`GET /api/deals/:id` 讀取時會為每項附上 `available`（不落庫）。舊訂單若沒有 `condition`，前端只省略處理方式，不從長標題解析處理方式。
+- `items[]` 是商品快照，不隨商品變動；快照含 `fish_species`、`condition`、`price_per_taijin`（可為 `null`）、`photo_url` 與 `title`。`GET /api/deals/:id` 讀取時會為每項附上 `available`（不落庫）。舊訂單若沒有 `condition`，前端只省略處理方式，不從長標題解析處理方式。
+- 草稿可以為空；買家可逐項移除與改尾數，移除與改數量不留系統訊息；UI 不提供清空全部。沒有商品時不建立草稿，也不顯示浮動框。
 - `updated_at` 會在項目變動、提案、回應、取消或逾時時更新，供前端判斷是否重抓明細。
 - `rejected_by` 是舊 `NEGOTIATING` 流程的欄位；新介面不再提供退回。
 - `deal_terms` 在 `DRAFT` 可以為 `null`。
@@ -262,6 +271,10 @@
 ```
 
 - 唯一鍵：`deal_id + reviewer_id`；重複評價回 409。
+- `reviewer_role = buyer` 是買家給的評價（被評價者是釣客）；`reviewer_role = seller` 是釣客給的評價（被評價者是買家）。個人資訊頁依此分開呈現。
+- 公開評價列表不新增評價照片欄位；商品照片從 `reviews.deal_id` 對到 `deals.items` 快照的 `photo_url`、`fish_species`、`title`，最多回 3 筆。
+- 角色別平均與分布即時由 reviews 計算，不落庫；`users.rating_score`／`review_count` 仍是整體值。
+- 公開列表只回評價者 `id`、`display_name` 與 `avatar_url`（可為空），不回電話、地址或其他會員欄位。
 - `tags` 最多 3 個（送去重的前長度就必須 ≤ 3），必須是「魚貨新鮮／準時守約／溝通良好／臨時放鳥」之一。
 - 送出後用該對象的全部評價重算 `rating_score` 與 `review_count`；含「臨時放鳥」時 `no_show_count` +1，達 3 次 `is_blacklisted = true`。
 

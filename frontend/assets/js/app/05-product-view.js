@@ -33,9 +33,10 @@ function conditionClass(condition) {
   return "";
 }
 
-/* 兩個按鈕並排；賣家資訊目前只保留入口，不註冊任何行為。 */
+/* 兩個按鈕並排；釣客資訊連到公開個人資訊，不再只是沒有行為的按鈕。 */
 function dealControls(p) {
-  var seller = '<button type="button" class="catch-card__btn catch-card__btn--seller" data-action="seller-info">賣家資訊</button>';
+  var seller = '<a class="catch-card__btn catch-card__btn--seller" href="profile.html?id=' +
+    encodeURIComponent(p.seller_id == null ? "" : p.seller_id) + '">釣客資訊</a>';
   if (p.status === "DELISTED") {
     return '<div class="catch-card__acts">' + seller +
       '<span class="catch-card__note">已下架</span></div>';
