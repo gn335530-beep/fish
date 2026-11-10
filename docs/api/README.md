@@ -118,7 +118,7 @@
 | `relistProduct(id)` | 重新上架自己的已下架商品 |
 | `deleteProduct(id)` | 刪除已下架或已售出的商品 |
 | `getProduct(id)` | 取得單一商品 |
-| `photoUrl(path)` | 將 `/uploads/...`、`images/...` 轉成可顯示網址 |
+| `photoUrl(path)` | 將 `/uploads/...` 轉成可顯示網址；`images/...` 僅保留舊資料相容 |
 
 `createFish()`、`deleteFish()`、`updateFish()`、`listFish()`、`rowToCatch()`、`rowsToCatch()` 都已移除。`getPublicUser()`、`listReviews()` 與 `updateProfile()` 已實作。
 

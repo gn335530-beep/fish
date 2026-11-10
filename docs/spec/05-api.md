@@ -429,9 +429,11 @@
 
 - 只接受 `image/jpeg`、`image/png`、`image/webp`。
 - 解碼後上限 5MB。
-- 存成 `backend/uploads/{uuid}.{ext}`。
+- 存成 `backend/uploads/{uuid}.{ext}`（不進版控，只存在該台機器）。
 - 商品照片與個人頭像共用這個端點；上傳後把 URL 寫入商品或 `users.avatar_url`。
 - 回 200：`{ "url": "/uploads/ab12cd34.jpg" }`（在 `data` 裡）。
+
+種子示範圖片另外放在 `backend/seed-assets/`，會進版控，並由 `GET /uploads/*` 以唯讀靜態檔提供；`POST /api/uploads` 不會寫入該目錄。
 
 錯誤：400 `MISSING_IMAGE`、`INVALID_IMAGE`、`UNSUPPORTED_TYPE`、`EMPTY_IMAGE`、413 `IMAGE_TOO_LARGE`。
 
