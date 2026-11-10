@@ -16,5 +16,5 @@
 ## Comments
 
 - 2026-11-10：ticket 03 改了 `layout.css` 與 `product-card-photo.css`，已同步把三個頁面的 layout 提到 `v9`、首頁與商品列表的 product-card-photo 提到 `v13`，避免舊 product-card-photo 快取搭配新 layout 時失去照片框裁切。
-- 2026-11-10：ticket 04 改了 `deal-bot.css`、`chat-frame.css`、`chat-bubbles.css` 並新增 `chat-frame-input.css`；三個頁面的 deal-bot 提到 `v9`、chat-frame 提到 `v3`、chat-bubbles 提到 `v4`，新檔以 `v1` 載入。ticket 05 改了 `market-card.css`，三個頁面提到 `v17`。本票只剩 components、deal-cards 提版與最終驗證。
+- 2026-11-10：ticket 04 改了 `deal-bot.css`、`chat-frame.css`、`chat-bubbles.css` 並新增 `chat-frame-content.css`；三個頁面的 deal-bot 提到 `v9`、chat-frame 提到 `v3`、chat-bubbles 提到 `v4`，新檔以 `v1` 載入。ticket 05 改了 `market-card.css`，三個頁面提到 `v17`。本票只剩 components、deal-cards 提版與最終驗證。
 
