@@ -13,8 +13,15 @@ export function initials(name) {
   return String(name || "魚").trim().slice(0, 1);
 }
 
-export function definitionRow(label, value) {
-  return "<div><dt>" + escapeHtml(label) + "</dt><dd>" + escapeHtml(value) + "</dd></div>";
+export function definitionRow(label, value, options) {
+  const opts = options || {};
+  const className = opts.className
+    ? ' class="' + escapeHtml(opts.className) + '"'
+    : "";
+  const content = opts.strong
+    ? "<b>" + escapeHtml(value) + "</b>"
+    : escapeHtml(value);
+  return "<div" + className + "><dt>" + escapeHtml(label) + "</dt><dd>" + content + "</dd></div>";
 }
 
 export const NO_ASSISTANT_TEXT = "目前沒有 AI 對話。按「新增 AI 對話」開始。";

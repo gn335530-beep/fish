@@ -70,8 +70,7 @@
 
 .fm-msg--market .fm-msg__bubble,
 .fm-msg--product .fm-msg__bubble,
-.fm-msg--deal .fm-msg__bubble,
-.fm-msg__bubble--bare {
+.fm-msg--deal .fm-msg__bubble {
   width: 100%;
   padding: 0;
   border: 0;

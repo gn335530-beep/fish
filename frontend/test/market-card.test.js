@@ -67,6 +67,8 @@ test("行情卡顯示標題、魚種、平均價、範圍、日期、走勢與�
   assert.match(text, /最低 190/);
   assert.match(text, /資料來源：農業部 漁業署/);
   assert.match(html, /viewBox="0 0 295 345"/);
+  assert.match(html, /class="fm-market__line"/);
+  assert.doesNotMatch(html, /stroke="#/);
 });
 
 test("不再顯示行情價參考、養殖價格、官方名稱獨立行或參考整批", function () {

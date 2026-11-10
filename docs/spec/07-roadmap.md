@@ -107,7 +107,7 @@
 | R-9 | 魚種單一來源 | `backend/lib/market/catalog-*.js`、前端 `species-catalog.js` | ✅ 固定魚種清單已移除，改由官方代碼字典提供 |
 | R-10 | UI 改名與錯字 | 全站 | 「海人直送」→「一支釣」；「紅鰹」→「紅魽」；縣市用字統一為「台」，比對時容納舊資料的「臺」 |
 | R-11 | 逾時掃描補齊 | `backend/routes/chat.js`、未來的 deals 路由 | ✅ 2026-10-25：`GET /api/conversations` 與 `GET /api/deals/:id` 都會 `sweepExpired()` |
-| R-12 | 檔案行數 | `pages/index.html`（255）、`pages/cart.html`（207）、`pages/seller.html`（344） | 前兩者需拆或隨 R-4／R-5 消失；`AGENTS.md` 規定單檔 ≤ 200 行 |
+| R-12 | 檔案行數 | `pages/index.html`（175）、`pages/cart.html`、`pages/seller.html` | ✅ 2026-11-10：`index.html` 已低於 200 行；`cart.html` 與 `seller.html` 已隨 R-4／R-5 移除 |
 | R-13 | 安全性（若要上正式環境） | `routes/auth.js`、`lib/auth.js`、`app.js` | 密碼雜湊、Token 持久化、CORS 收斂、上傳驗證實際檔頭 |
 
 ## 4. 缺陷清單（B）

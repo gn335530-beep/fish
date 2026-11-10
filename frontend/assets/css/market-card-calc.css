@@ -17,11 +17,11 @@
   width: 33.65%;
   height: 23.92px;
   padding: 0 7px;
-  border: 1px solid #E5E7EB;
+  border: 1px solid var(--market-rule);
   border-radius: 8px;
   outline: none;
-  background: #fff;
-  color: #111827;
+  background: var(--market-surface);
+  color: var(--market-ink);
   font-family: var(--font-sans);
   font-size: 14px;
   line-height: 21.92px;
@@ -64,10 +64,10 @@
   place-items: center;
   width: 100%;
   height: 100%;
-  border: 1px solid #E5E7EB;
+  border: 1px solid var(--market-rule);
   border-radius: 8px;
-  background: #fff;
-  color: #4B5563;
+  background: var(--market-surface);
+  color: var(--market-control-ink);
   font-size: 15px;
   font-weight: 500;
   line-height: 1;
@@ -75,19 +75,19 @@
 }
 
 .fm-market__unit-btn input:not(:checked):hover + span {
-  border-color: #D1D5DB;
+  border-color: var(--market-rule-strong);
   background: var(--market-btn-soft);
-  color: #111827;
+  color: var(--market-ink);
 }
 
 .fm-market__unit-btn input:checked + span {
   border-color: var(--market-btn);
   background: var(--market-btn);
-  color: #fff;
+  color: var(--market-on-primary);
 }
 
 .fm-market__unit-btn input:checked:hover + span {
-  background: #2B4FA3;
+  background: var(--market-btn-hover);
 }
 
 .fm-market__unit-btn input:focus-visible + span {
@@ -121,7 +121,7 @@
   position: absolute;
   top: 303.2px;
   left: 4.3%;
-  color: #6B7280;
+  color: var(--market-muted);
   font-size: 9px;
   letter-spacing: -1px;
   line-height: 10px;
@@ -131,7 +131,7 @@
   position: absolute;
   top: 318.5px;
   right: 11.5%;
-  color: #6B7280;
+  color: var(--market-muted);
   font-size: 9px;
   letter-spacing: -.2px;
   line-height: 11px;

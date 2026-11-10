@@ -30,7 +30,7 @@ function bubble(message) {
     (isProduct ? " fm-msg--product" : "") + (isDeal ? " fm-msg--deal" : "") +
     '" data-seq="' + escapeHtml(message.seq) + '">' +
     '<div class="fm-msg__meta">' + escapeHtml(speaker) + ' · ' + escapeHtml(timeOf(message.created_at)) + '</div>' +
-    '<div class="fm-msg__bubble' + (isMarket ? " fm-msg__bubble--bare" : "") + '">' + content + '</div>' +
+    '<div class="fm-msg__bubble">' + content + '</div>' +
     '</div>';
 }
 

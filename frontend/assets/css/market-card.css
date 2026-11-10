@@ -1,8 +1,17 @@
 /* 行情卡：幾何以行情卡.svg 的 295×345 畫布為基準。 */
 
 .fm-card--market {
+  --market-surface: #FFFFFF;
+  --market-on-primary: #FFFFFF;
+  --market-ink: #111827;
+  --market-muted: #6B7280;
+  --market-control-ink: #4B5563;
+  --market-rule: #E5E7EB;
+  --market-rule-strong: #D1D5DB;
   --market-btn: #3561C0;
   --market-btn-soft: #F3F4F6;
+  --market-btn-hover: #2B4FA3;
+  --market-shadow: rgba(0, 0, 0, .1);
   position: relative;
   display: block;
   width: 295px;
@@ -11,9 +20,9 @@
   padding: 0;
   border: 0;
   border-radius: 16px;
-  background: #FFFFFF url("../images/market-card-lines.svg?v=v12") 0 0 / 100% 100% no-repeat;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, .1);
-  color: #111827;
+  background: var(--market-surface) url("../images/market-card-lines.svg?v=v12") 0 0 / 100% 100% no-repeat;
+  box-shadow: 0 8px 24px var(--market-shadow);
+  color: var(--market-ink);
   font-family: var(--font-sans);
   line-height: normal;
 }
@@ -63,7 +72,7 @@
   position: absolute;
   top: 95px;
   left: 77.53%;
-  color: #6B7280;
+  color: var(--market-muted);
   font-size: 13.5px;
   line-height: 16px;
 }
@@ -75,7 +84,7 @@
   right: 7%;
   overflow: hidden;
   margin: 0;
-  color: #6B7280;
+  color: var(--market-muted);
   font-size: 11.5px;
   line-height: 14px;
   text-overflow: ellipsis;
@@ -96,10 +105,10 @@
   width: 34.75px;
   height: 24.95px;
   padding: 0;
-  border: 1px solid #E5E7EB;
+  border: 1px solid var(--market-rule);
   border-radius: 8px;
-  background: #FFFFFF;
-  color: #4B5563;
+  background: var(--market-surface);
+  color: var(--market-control-ink);
   font-family: var(--font-sans);
   font-size: 12px;
   font-weight: 500;
@@ -108,17 +117,17 @@
 }
 
 .fm-market__days button[aria-pressed="false"]:hover {
-  border-color: #D1D5DB;
+  border-color: var(--market-rule-strong);
   background: var(--market-btn-soft);
-  color: #111827;
+  color: var(--market-ink);
 }
 
 .fm-market__days button[aria-pressed="true"] {
   border-color: var(--market-btn);
   background: var(--market-btn);
-  color: #FFFFFF;
+  color: var(--market-on-primary);
 }
 
 .fm-market__days button[aria-pressed="true"]:hover {
-  background: #2B4FA3;
+  background: var(--market-btn-hover);
 }

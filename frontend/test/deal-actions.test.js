@@ -63,6 +63,9 @@ test("協議卡顯示魚種、販售數量、最終價格與面交資訊", funct
   assert.match(html, /販售數量/);
   assert.match(html, /3 尾/);
   assert.match(html, /最終價格/);
+  assert.match(
+    html,
+    /<div class="fm-card__deal-price"><dt>最終價格<\/dt><dd><b>NT\$4,800<\/b><\/dd><\/div>/);
   assert.match(html, /NT\$4,800/);
   assert.match(html, /基隆火車站南站/);
   assert.match(html, /10\/26/);

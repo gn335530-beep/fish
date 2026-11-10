@@ -38,8 +38,10 @@ function speciesList(items) {
 }
 
 function priceRow(card) {
-  return '<div class="fm-card__deal-price"><dt>最終價格</dt><dd><b>' +
-    escapeHtml(money(card.final_price)) + "</b></dd></div>";
+  return definitionRow("最終價格", money(card.final_price), {
+    className: "fm-card__deal-price",
+    strong: true
+  });
 }
 
 export function renderDealCard(card, messageId) {
