@@ -1,0 +1,76 @@
+/* 個人資訊評價區：5→1 分布與排序控制。 */
+
+.profile-review__distribution {
+  display: grid;
+  gap: 3px;
+  max-width: 360px;
+  margin-bottom: 16px;
+}
+
+.profile-review__bar {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 26px;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.profile-review__bar:hover,
+.profile-review__bar.is-on {
+  color: var(--ink);
+}
+
+.profile-review__bar-label,
+.profile-review__bar-count {
+  font-family: var(--font-mono);
+  font-size: .66rem;
+  text-align: left;
+}
+
+.profile-review__bar-count {
+  text-align: right;
+}
+
+.profile-review__bar-track {
+  display: block;
+  height: 6px;
+  overflow: hidden;
+  background: var(--rule-2);
+}
+
+.profile-review__bar-track > span {
+  display: block;
+  height: 100%;
+  background: var(--muted-2);
+}
+
+.profile-review__bar.is-on .profile-review__bar-track > span {
+  background: var(--accent);
+}
+
+.profile-review__toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 14px;
+}
+
+.profile-review__sort {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: .7rem;
+}
+
+.profile-review__sort select {
+  padding: 6px 26px 6px 10px;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+}

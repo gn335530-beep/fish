@@ -30,11 +30,61 @@
 
 .fm-deal-strip__row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  align-items: baseline;
-  gap: 2px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
   min-width: 0;
   font-size: .7rem;
+}
+
+.fm-deal-strip__main {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.fm-deal-strip__item-acts {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fm-deal-strip__qty {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--muted);
+  font-size: .62rem;
+  white-space: nowrap;
+}
+
+.fm-deal-strip__qty input {
+  width: 42px;
+  padding: 4px 4px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: .7rem;
+  text-align: center;
+}
+
+.fm-deal-strip__qty input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.fm-deal-strip__remove {
+  padding: 4px 6px;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-size: .64rem;
+  cursor: pointer;
+}
+
+.fm-deal-strip__remove:hover {
+  color: var(--accent);
 }
 
 .fm-deal-strip__row b {

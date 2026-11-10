@@ -100,7 +100,7 @@ backend/
 | `POST` | `/api/deals/reinitiate` | 取消後重新發起協議；需買家 |
 | `GET` | `/api/deals` | 目前使用者的交易紀錄 |
 | `POST` | `/api/reviews/submit` | 成交後評價對方；需參與者 |
-| `GET` | `/api/reviews?user_id=&role=&sort=&rating=&offset=&limit=` | 公開角色別評價、摘要、分布與商品照片（角色／分頁已完成；排序／篩選／分布 ⬜） |
+| `GET` | `/api/reviews?user_id=&role=&sort=&rating=&offset=&limit=` | 公開角色別評價、摘要、分布與商品照片；支援最新／最高／最低與星等篩選 |
 | `GET` | `/api/market/codes` | 公開官方代碼字典；`q` 可查名稱、別名或代碼 |
 | `GET` | `/api/market/quote` | 公開整合行情；一次完成名稱→代碼→價格 |
 | `GET` | `/api/market/prices` | 公開行情；每次請求重抓上游，支援 `code`、`region`、`date`、`include=history`、`days` |

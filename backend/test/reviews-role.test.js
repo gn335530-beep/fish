@@ -84,7 +84,9 @@ test("評價者只回名字、頭像與 id，不含電話或地址", async funct
   const text = JSON.stringify(result.body.data);
   assert.doesNotMatch(text, /username|password|address_line|display_address|0911111111|0922222222/);
   assert.deepEqual(Object.keys(result.body.data.reviews[0]).sort(), [
-    "comment", "created_at", "id", "rating", "reviewer_avatar_url",
-    "reviewer_id", "reviewer_name", "reviewer_role", "tags"
+    "comment", "created_at", "id", "product_count", "products", "rating",
+    "reviewer_avatar_url", "reviewer_id", "reviewer_name", "reviewer_role", "tags"
   ]);
+  assert.deepEqual(result.body.data.reviews[0].products, []);
+  assert.equal(result.body.data.reviews[0].product_count, 0);
 });

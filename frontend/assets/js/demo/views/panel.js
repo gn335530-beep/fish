@@ -36,8 +36,9 @@ api = {
     if (bodyRenderer) bodyRenderer.setBody(html, options);
   },
   setFooter: function (visible) { refs.form.hidden = !visible; },
-  setHeader: function (title, subHtml, asideHtml) {
-    refs.title.textContent = title;
+  setHeader: function (title, subHtml, asideHtml, titleHtml) {
+    if (titleHtml) refs.title.innerHTML = titleHtml;
+    else refs.title.textContent = title;
     refs.sub.innerHTML = subHtml || "";
     refs.sub.hidden = !subHtml;
     refs.aside.innerHTML = asideHtml || "";
@@ -141,6 +142,11 @@ export function mountPanel(options) {
     const unit = event.target.closest("[data-market-unit]");
     if (unit) {
       handleMarketUnitChange(unit);
+      return;
+    }
+    const quantity = event.target.closest("[data-item-qty]");
+    if (quantity && handlers.onItemQty) {
+      handlers.onItemQty(quantity.dataset.itemQty, quantity.value);
       return;
     }
     const review = event.target.closest("[data-review-deal]");

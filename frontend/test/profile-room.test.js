@@ -45,12 +45,31 @@ test("純聊天房只顯示訊息流，不顯示浮動購物車", function () {
 test("有草稿訂單時仍顯示浮動購物車", function () {
   update({
     user: { id: 2 },
-    room: room({ order: { id: "deal_1", status: "DRAFT", item_count: 0, total_quantity: 0, final_price: 0 } }),
+    room: room({
+      has_products: true,
+      order: { id: "deal_1", status: "DRAFT", item_count: 0, total_quantity: 0, final_price: 0 }
+    }),
     deal: { id: "deal_1", deal_status: "DRAFT", items: [] },
     messages: []
   });
 
   assert.match(renderDealRoom(), /fm-deal-strip/);
+});
+
+test("空草稿且對方已沒有商品時，不顯示浮動購物車", function () {
+  update({
+    user: { id: 2 },
+    room: room({
+      has_products: false,
+      order: { id: "deal_1", status: "DRAFT", item_count: 0, total_quantity: 0, final_price: 0 }
+    }),
+    deal: { id: "deal_1", deal_status: "DRAFT", items: [], has_products: false },
+    messages: [{ seq: 1, sender_id: "system", type: "system", text: "已進入交易洽談。", created_at: "2026-11-10T10:00:00.000Z" }]
+  });
+
+  const html = renderDealRoom();
+  assert.match(html, /已進入交易洽談/);
+  assert.doesNotMatch(html, /fm-deal-strip|尚未加入商品|選購|發送交易/);
 });
 
 test("收件匣純聊天房不顯示洽談中，仍可刪除", function () {

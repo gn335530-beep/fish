@@ -76,6 +76,7 @@ async function boot() {
 
     el("profile-products").addEventListener("click", products.handleClick);
     el("profile-reviews").addEventListener("click", reviews.handleClick);
+    el("profile-reviews").addEventListener("change", reviews.handleChange);
     bindStartRoom();
 
     products.load();

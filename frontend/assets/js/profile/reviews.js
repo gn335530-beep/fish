@@ -1,13 +1,16 @@
-/* 個人資訊評價區：角色 tabs、摘要、卡片與載入更多（分布／排序留給 ticket 07）。 */
+/* 個人資訊評價區：角色 tabs、摘要、分布、排序、卡片與載入更多。 */
 
 import { renderStars } from "../demo/views/stars.js";
 import { escapeHtml } from "./settings-form.js";
-import { mediaSrc } from "./media.js";
+import { reviewCardHTML } from "./review-card.js";
 
 export const ROLE_LABELS = {
   seller: "買家給的評價",
   buyer: "釣客給的評價"
 };
+
+const STARS = [5, 4, 3, 2, 1];
+const SORTS = [["newest", "最新"], ["highest", "最高"], ["lowest", "最低"]];
 
 export function roleCounts(rating) {
   const value = rating || {};
@@ -42,45 +45,38 @@ export function reviewSummaryHTML(summary) {
     '<span>' + Number(value.count || 0) + " 則</span></div>";
 }
 
-export function relativeTime(iso, now) {
-  const date = new Date(iso);
-  if (isNaN(date.getTime())) return "";
-  const current = now instanceof Date ? now : new Date(now || Date.now());
-  const diff = current.getTime() - date.getTime();
-  if (diff < 60000) return "剛剛";
-  const minutes = Math.floor(diff / 60000);
-  if (minutes < 60) return minutes + " 分鐘前";
-  const hours = Math.floor(diff / 3600000);
-  if (hours < 24) return hours + " 小時前";
-  const days = Math.floor(diff / 86400000);
-  if (days < 30) return days + " 天前";
-  return date.getFullYear() + "/" + String(date.getMonth() + 1).padStart(2, "0") + "/" +
-    String(date.getDate()).padStart(2, "0");
+/* 分布只在 3 則以上顯示；點同一顆星可再點一次清除篩選。 */
+export function reviewDistributionHTML(summary, activeRating) {
+  const value = summary || {};
+  const count = Number(value.count || 0);
+  if (count < 3) return "";
+  const distribution = value.distribution || {};
+  const active = Number(activeRating) || 0;
+  return '<div class="profile-review__distribution" role="group" aria-label="依星等篩選">' +
+    STARS.map(function (star) {
+      const amount = Number(distribution[String(star)] || 0);
+      const percent = count ? Math.round(amount / count * 100) : 0;
+      return '<button type="button" class="profile-review__bar' +
+        (active === star ? " is-on" : "") + '" data-review-rating="' + star +
+        '" aria-pressed="' + (active === star) + '">' +
+        '<span class="profile-review__bar-label">' + star + ' 星</span>' +
+        '<span class="profile-review__bar-track"><span style="width:' + percent + '%"></span></span>' +
+        '<span class="profile-review__bar-count">' + amount + "</span></button>";
+    }).join("") + "</div>";
 }
 
-function avatarOf(review) {
-  const name = review.reviewer_name || "會員";
-  const url = mediaSrc(review.reviewer_avatar_url);
-  const inner = url
-    ? '<img src="' + escapeHtml(url) + '" alt="' + escapeHtml(name) + '">'
-    : "<span>" + escapeHtml(name.slice(0, 1)) + "</span>";
-  return '<a class="avatar profile-review__avatar' + (url ? " avatar--img" : "") +
-    '" href="profile.html?id=' + encodeURIComponent(review.reviewer_id) + '">' + inner + "</a>";
+export function reviewSortHTML(active) {
+  const current = active === "highest" || active === "lowest" ? active : "newest";
+  return '<label class="profile-review__sort"><span>排序</span><select data-review-sort>' +
+    SORTS.map(function (option) {
+      return '<option value="' + option[0] + '"' +
+        (option[0] === current ? " selected" : "") + ">" + option[1] + "</option>";
+    }).join("") + "</select></label>";
 }
 
-export function reviewCardHTML(review, now) {
-  const name = review.reviewer_name || "會員";
-  const tags = (review.tags || []).map(function (tag) {
-    return "<span>" + escapeHtml(tag) + "</span>";
-  }).join("");
-  return '<article class="profile-review__card">' +
-    '<div class="profile-review__who">' + avatarOf(review) +
-    '<div class="profile-review__person"><a href="profile.html?id=' + encodeURIComponent(review.reviewer_id) + '">' +
-    escapeHtml(name) + "</a><span>" + escapeHtml(relativeTime(review.created_at, now)) + "</span></div></div>" +
-    '<div class="profile-review__rating">' + renderStars(review.rating, { label: review.rating + " 星" }) + "</div>" +
-    (tags ? '<div class="profile-review__tags">' + tags + "</div>" : "") +
-    (review.comment ? '<p class="profile-review__comment">' + escapeHtml(review.comment) + "</p>" : "") +
-    "</article>";
+function listHTML(reviews, now) {
+  return '<div class="profile-review__list">' +
+    reviews.map(function (review) { return reviewCardHTML(review, now); }).join("") + "</div>";
 }
 
 export function reviewSectionHTML(state, now) {
@@ -89,17 +85,32 @@ export function reviewSectionHTML(state, now) {
   const tabs = reviewTabsHTML(value.role, counts);
   if (!value.role) return tabs + '<p class="profile-empty">尚無評價</p>';
 
+  const reviews = value.reviews || [];
+  const count = Number((value.summary || {}).count || 0);
+  const summary = count > 0 ? reviewSummaryHTML(value.summary) : "";
+  const distribution = count > 0
+    ? reviewDistributionHTML(value.summary, value.rating)
+    : "";
+  const toolbar = count > 0
+    ? '<div class="profile-review__toolbar">' + reviewSortHTML(value.sort) + "</div>"
+    : "";
+
   let body = "";
   if (value.error) {
     body = '<p class="state-msg state-msg--error">' + escapeHtml(value.error) + "</p>" +
       '<button class="btn btn--ghost btn--sm" type="button" data-review-retry>重新載入</button>';
-  } else if (value.loading && !(value.reviews || []).length) {
+    if (reviews.length) body += listHTML(reviews, now);
+  } else if (value.loading && !reviews.length) {
     body = '<p class="state-msg">載入評價中…</p>';
-  } else if (!(value.reviews || []).length) {
-    body = '<p class="profile-empty">尚無評價</p>';
+  } else if (!reviews.length) {
+    if (value.rating) {
+      body = '<p class="profile-empty">沒有 ' + Number(value.rating) + " 星的評價</p>" +
+        '<button class="btn btn--ghost btn--sm" type="button" data-review-clear-rating>清除星等篩選</button>';
+    } else {
+      body = '<p class="profile-empty">尚無評價</p>';
+    }
   } else {
-    body = '<div class="profile-review__list">' +
-      value.reviews.map(function (review) { return reviewCardHTML(review, now); }).join("") + "</div>";
+    body = listHTML(reviews, now);
     if (value.hasMore) {
       body += '<div class="profile-review__more"><button class="btn btn--ghost btn--sm" type="button" ' +
         'data-review-more' + (value.loading ? " disabled" : "") + ">" +
@@ -107,8 +118,5 @@ export function reviewSectionHTML(state, now) {
     }
   }
 
-  const summary = value.summary && Number(value.summary.count) > 0
-    ? reviewSummaryHTML(value.summary)
-    : "";
-  return tabs + summary + body;
+  return tabs + summary + distribution + toolbar + body;
 }

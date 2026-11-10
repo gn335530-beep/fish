@@ -62,6 +62,14 @@ function decorateProducts(products) {
   return products.map(function (product) { return decorateProduct(product, deals); });
 }
 
+/* 這位釣客目前是否有任何公開可購買的商品。 */
+function hasPublicProducts(sellerId) {
+  const rows = all("products").filter(function (product) {
+    return String(product.seller_id) === String(sellerId);
+  });
+  return decorateProducts(rows).some(isPublicProduct);
+}
+
 /* 單一商品目前的可售尾數；商品不存在時回 null。 */
 function productAvailability(productId) {
   const product = findById("products", productId);
@@ -75,5 +83,6 @@ module.exports = {
   isPublicProduct: isPublicProduct,
   decorateProduct: decorateProduct,
   decorateProducts: decorateProducts,
+  hasPublicProducts: hasPublicProducts,
   productAvailability: productAvailability
 };

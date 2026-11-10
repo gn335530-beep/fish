@@ -1,0 +1,51 @@
+/* 個人資訊評價卡：訂單商品快照照片與 +N。 */
+
+.profile-review__products {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: auto;
+}
+
+.profile-review__product {
+  display: grid;
+  gap: 4px;
+  width: 72px;
+  margin: 0;
+}
+
+.profile-review__photo {
+  display: block;
+  width: 72px;
+  height: 72px;
+  border: 1px solid var(--rule-2);
+  background: var(--surface);
+  object-fit: cover;
+}
+
+.profile-review__photo--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  color: var(--muted-2);
+  font-size: .6rem;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.profile-review__product figcaption {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: .62rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-review__product-more {
+  align-self: center;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: .76rem;
+}

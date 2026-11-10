@@ -92,6 +92,11 @@ export function updateDealItem(dealId, itemId, quantity) {
   });
 }
 
+export function deleteDealItem(dealId, itemId) {
+  return call("/api/deals/items/" + encodeURIComponent(itemId) +
+    "?deal_id=" + encodeURIComponent(dealId), { method: "DELETE" });
+}
+
 export function proposeDeal(dealId, terms) {
   return call("/api/deals/propose", {
     method: "POST",
