@@ -35,7 +35,7 @@ export function createProduct(payload) {
   return request("/api/products/create", { method: "POST", body: payload });
 }
 
-/* 商品照片可能存成 /uploads/...（後端）、images/...（種子資料）或完整網址。 */
+/* 商品照片存成 /uploads/...（後端）或完整網址；images/... 只保留舊資料相容。 */
 const corePhotoUrl = typeof window !== "undefined" && window.HaisenAPI
   ? window.HaisenAPI.photoUrl
   : null;

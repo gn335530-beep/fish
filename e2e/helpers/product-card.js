@@ -11,6 +11,17 @@ async function waitForProductCards(page, selector) {
     );
     return images.length > 0 && images.every(function (img) { return img.complete; });
   }, selector);
+
+  const broken = await page.evaluate(function (sel) {
+    return Array.prototype.slice.call(
+      document.querySelectorAll(sel + " .catch-card img")
+    ).filter(function (img) {
+      return img.complete && img.naturalWidth === 0;
+    }).map(function (img) {
+      return img.getAttribute("src");
+    });
+  }, selector);
+  expect(broken, "所有商品照片都要載入成功").toEqual([]);
 }
 
 async function markCardWithLoadedPhoto(page, selector) {

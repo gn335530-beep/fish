@@ -81,7 +81,7 @@
       address: user.display_address || ""
     };
   }
-  /* [對應] 圖片路徑：/uploads 走 API base，種子 images/ 走前端 assets。 */
+  /* [對應] 圖片路徑：/uploads 走 API base；images/ 只保留舊資料相容。 */
   function photoUrl(path) {
     if (!path) return "";
     if (/^https?:\/\//i.test(path)) return path;

@@ -71,7 +71,7 @@ test("自己的商品可從個人資訊下架並重新上架，卡片留在原�
         quantity: 2,
         condition: "活體",
         price: 100,
-        photo_url: "images/amberjack.png"
+        photo_url: "/uploads/amberjack.png"
       }
     });
     return response.data.id;

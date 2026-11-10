@@ -60,7 +60,8 @@ frontend/                 前端（網站根目錄）
 backend/                  本機開發用模擬 API
   lib/                    共用邏輯
   routes/                 端點實作
-  uploads/                上傳圖片（不進版控）
+  seed-assets/            種子示範圖片（進版控，掛在 /uploads 下）
+  uploads/                使用者上傳圖片（不進版控）
   db.seed.json           可提交的種子資料
   db.json                執行時資料（不進版控，首次啟動從種子建立）
 e2e/                      Playwright 瀏覽器案例與固定 fixture

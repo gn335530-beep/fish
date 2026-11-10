@@ -41,9 +41,9 @@ backend/
   scripts/        market-fetch.js（行情 CLI）
   test/           node:test 整合測試（使用暫存資料庫）
   db.seed.json    可提交的種子資料
-  seed-assets/    種子示範頭像（掛在 /uploads 下，不進執行時上傳目錄）
+  seed-assets/    種子示範圖片（頭像、商品與訂單照片；進版控，掛在 /uploads 下）
   db.json         執行時資料（不進版控，首次啟動從種子建立）
-  uploads/        上傳圖片（不進版控）
+  uploads/        使用者上傳圖片（不進版控）
 ```
 
 ## 模擬資料表

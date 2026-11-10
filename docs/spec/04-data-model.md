@@ -1,6 +1,6 @@
 # 04 資料模型
 
-資料存在 `backend/db.json`（json-server 的 lowdb 執行時檔，不進版控）。可提交的示範資料在 `backend/db.seed.json`，第一次啟動時複製成執行時檔。沒有資料庫、沒有遷移工具；改 schema 就是改 JSON。
+資料存在 `backend/db.json`（json-server 的 lowdb 執行時檔，不進版控）。可提交的示範資料在 `backend/db.seed.json`，第一次啟動時複製成執行時檔。種子圖片放在 `backend/seed-assets/`（進版控），掛在 `/uploads` 下提供；只有使用者執行時上傳的圖片寫入不進版控的 `backend/uploads/`。沒有資料庫、沒有遷移工具；改 schema 就是改 JSON。
 
 ## 1. 集合總覽
 
@@ -78,7 +78,7 @@
 | `quantity` | number | 總尾數 |
 | `sold_quantity` | number | 已成交尾數，系統維護 |
 | `condition` | string | 自由文字，最多 20 字 |
-| `photo_url` | string | `/uploads/xxx.jpg` |
+| `photo_url` | string | `/uploads/xxx.jpg`；種子圖來自 `backend/seed-assets/`，使用者上傳來自 `backend/uploads/` |
 | `price` | number | **上架整批售價（元）**；必填，使用者明確輸入時原樣保留（可含小數），訂單／協議使用 |
 | `price_per_taijin` | number \| null | 上架每台斤售價（元）；可空 |
 | `price_auto` | boolean | legacy；新商品一律 `false`，舊資料可能為 `true`，畫面不顯示 |
@@ -363,7 +363,8 @@
 | AI 對話、已取消交易房 | 可刪除 | 助手房任何時候；交易房須無 `CONFIRMED` 歷史且目前訂單 `CANCELLED`；刪除交易房一併刪該房所有訂單與項目 |
 | 行情 | 90 天 | 目標；只快取被查詢過的魚種與日期 |
 | 行情原始檔 | 7 天 | 目標 |
-| 上傳圖片 | 永久 | `backend/uploads/`，不進版控 |
+| 種子圖片 | 永久 | `backend/seed-assets/`，進版控；掛在 `/uploads` 下供 seed 資料使用 |
+| 上傳圖片 | 永久 | `backend/uploads/`，不進版控；只存在該台機器 |
 | Token | 記憶體 | 重啟即失效 |
 
 `backend/db.seed.json` 是可提交的示範種子；執行時使用不進版控的 `backend/db.json`（或 `FISHMATCH_DB` 指定的路徑），**沒有任何備份機制**。要重置示範資料，刪除執行時檔再重新啟動即可。

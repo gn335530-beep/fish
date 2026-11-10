@@ -26,7 +26,7 @@ export function definitionRow(label, value, options) {
 
 export const NO_ASSISTANT_TEXT = "目前沒有 AI 對話。按「新增 AI 對話」開始。";
 
-/* 上傳圖片由後端提供；種子圖片則位於前端 assets。 */
+/* 上傳與種子圖片都由後端 /uploads 提供；images/ 只保留舊資料相容。 */
 export function resolveImage(url) {
   if (!url) return "../assets/images/catch-still.jpg";
   if (/^(https?:|data:)/.test(url)) return url;

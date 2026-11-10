@@ -11,7 +11,7 @@
 - **刪除不可逆**：硬刪 `products` 資料列，不新增 `deleted_at`。`SOLD_OUT` 可直接刪除；`DELISTED` 可刪除；`ACTIVE`／`PARTIALLY_RESERVED` 必須先下架。
 - **商品 ID 不重用**：每日商品流水號另存 `counters`，`nextProductCode()` 取 `max(當日現有最大流水號, counter) + 1` 並寫回。硬刪後 counter 仍保留。
 - **既有訂單使用快照**：`CONFIRMED`／`CANCELLED` 訂單保留商品名稱、照片、金額與尾數快照；刪除商品不影響歷史訂單與評價。
-- **照片保留**：刪除商品不刪 `backend/uploads/` 的照片檔，舊訂單快照與舊對話卡片仍可能顯示。
+- **照片保留**：刪除商品不刪 `backend/uploads/` 或 `backend/seed-assets/` 的照片檔，舊訂單快照與舊對話卡片仍可能顯示。
 - **進行中訂單的處理**：下架或刪除時，`DRAFT` 移除該商品並重算金額；`NEGOTIATING` 自動取消（`cancel_reason = OTHER`、`cancel_note` 為「商品已下架／已刪除」）；`PENDING_REVIEW` 照走，買家仍可確認成交。
 - **退回邊界**：商品已下架或已刪除時，買家在 `PENDING_REVIEW` 按退回（legacy API）會直接取消，不進入 `NEGOTIATING`。
 - **公開列表**：`GET /api/products` 只回 `ACTIVE` 與 `PARTIALLY_RESERVED`；`GET /api/products/mine` 回登入釣客所有未刪除商品。
