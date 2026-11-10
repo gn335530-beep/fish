@@ -115,7 +115,7 @@
 | R-3 | 修訊息權限漏洞 | `backend/routes/chat-messages.js` | ✅ 2026-10-25 已修正：一律驗參與者（不再因 `sender_type:"ai"` 跳過）；`context` 僅限助手房且必須是物件 |
 | R-4 | 移除購物車 | `pages/cart.html`、`assets/js/pages/cart.js`、`assets/js/app/02-cart-account.js`（`haisen_cart_v1`）、各頁導覽列入口、`PUT /api/fish/data/:id` | 交易改走交易房 |
 | R-5 | 移除手動上架表單 | `pages/seller.html`、`assets/js/pages/seller-*.js`、`assets/css/seller.css` | 唯一入口是對話上架 |
-| R-6 | 移除舊「聊聊」入口與死分頁 | `assets/js/app/02-cart-account.js`（nav）、`07-drawer-panels.js`、`05-listings.js`、`assets/css/features.css` 的 `.chat`、`chat-auth.css` | ✅ 2026-10-25：個人抽屜改為「個人資訊」＋「交易紀錄」。⬜ 2026-11-10 重新以個人資訊頁「聊聊」按鈕提供交易房入口，不再是舊分頁 |
+| R-6 | 移除舊「聊聊」入口與死分頁 | `assets/js/app/02-cart-account.js`（nav）、`07-drawer-panels.js`、`05-listings.js`、`assets/css/features.css` 的 `.chat`、`chat-auth.css` | ✅ 2026-10-25：個人抽屜改為「個人資訊」＋「交易紀錄」。✅ 2026-11-10：改以個人資訊頁「聊聊」按鈕提供交易房入口，不再是舊分頁 |
 | R-7 | 移除或封存 `report.html` | `pages/report.html` | 內容與現況不符；若要留，移到 `docs/` |
 | R-8 | 移除未使用的 API 函式與狀態 | `api/fish.js`（`createFish`、`deleteFish`）、`api/auth.js`（`updateProfile` 未接 UI）、`demo/store.js`（`busy`、`resetRoom`）、`demo/views/panel.js`（`setTitle`、`clearInput`、`focusInput`） | |
 | R-9 | 魚種單一來源 | `backend/lib/market/catalog-*.js`、前端 `species-catalog.js` | ✅ 固定魚種清單已移除，改由官方代碼字典提供 |

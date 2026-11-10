@@ -519,7 +519,7 @@
 ] }
 ```
 
-一次加入／累加多個項目，只留一則系統訊息。驗證同賣家、每項可售量與草稿狀態；同一商品重複出現時先合併數量再檢查。錯誤：400 `MISSING_ITEMS`（空陣列）、400 `WRONG_SELLER`、404 `PRODUCT_NOT_FOUND`、409 `INVALID_DEAL_STATUS`、409 `INSUFFICIENT_QUANTITY`。
+一次加入／累加多個項目，只留一則系統訊息。驗證同釣客、每項可售量與草稿狀態；同一商品重複出現時先合併數量再檢查。錯誤：400 `MISSING_ITEMS`（空陣列）、400 `WRONG_SELLER`、404 `PRODUCT_NOT_FOUND`、409 `INVALID_DEAL_STATUS`、409 `INSUFFICIENT_QUANTITY`。
 
 `PATCH /api/deals/items/:itemId`
 
