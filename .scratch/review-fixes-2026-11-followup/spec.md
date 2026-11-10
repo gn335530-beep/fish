@@ -81,9 +81,9 @@
 
 ### 快取版本
 
-- 本次修改的四個樣式模組（layout、components、deal-bot、deal-cards）在首頁、商品列表與登入頁統一提版。
+- 本次修改的樣式模組（layout、product-card-photo、components、deal-bot、deal-cards）在首頁、商品列表與登入頁統一提版；layout 與 product-card-photo 已在 ticket 03 提版，其餘由 ticket 07 處理。
 - 版本字串只遞增，不改檔名；三個頁面必須使用相同版本。
-- 不要為所有靜態資產建立版本清單；只鎖定本次四個模組，避免未來每次升版都要改測試。
+- 不要為所有靜態資產建立版本清單；只鎖定本次五個模組，避免未來每次升版都要改測試。
 
 ### 文件
 

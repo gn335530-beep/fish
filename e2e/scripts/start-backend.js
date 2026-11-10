@@ -11,6 +11,6 @@ fs.mkdirSync(path.dirname(DB_FILE), { recursive: true });
 fs.copyFileSync(SEED_FILE, DB_FILE);
 
 process.env.FISHMATCH_DB = DB_FILE;
-process.env.PORT = process.env.PORT || "3001";
+process.env.PORT = process.env.PORT || "3101";
 
 require("../../backend/server.js");

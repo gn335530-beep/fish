@@ -3,12 +3,10 @@
 const { test, expect } = require("@playwright/test");
 const { loginAsBuyer } = require("../helpers/auth");
 const { expectNoHorizontalOverflow } = require("../helpers/layout");
-const { installMarketFixture } = require("../helpers/market-fixture");
-const { useTestApi } = require("../helpers/test-api");
+const { preparePage } = require("../helpers/prepare-page");
 
 test.beforeEach(async function ({ page }) {
-  await useTestApi(page);
-  await installMarketFixture(page);
+  await preparePage(page);
 });
 
 test("seed 買家登入後可開啟助手面板", async function ({ page }) {

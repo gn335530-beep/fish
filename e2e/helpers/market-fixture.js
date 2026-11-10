@@ -9,6 +9,17 @@ function envelope(data, message) {
   return JSON.stringify({ success: true, message: message || "ok", data: data });
 }
 
+function quoteFor(url) {
+  const days = new URL(url).searchParams.get("days");
+  const data = Object.assign({}, QUOTE);
+  if (days === "30") {
+    data.history = QUOTE.history_30;
+    data.high = QUOTE.high_30;
+    data.low = QUOTE.low_30;
+  }
+  return data;
+}
+
 async function installMarketFixture(page) {
   await page.route(UPSTREAM_PATTERN, function (route) {
     return route.abort();
@@ -27,7 +38,7 @@ async function installMarketFixture(page) {
       return route.fulfill({
         status: 200,
         contentType: "application/json",
-        body: envelope(QUOTE, "取得行情成功")
+        body: envelope(quoteFor(url), "取得行情成功")
       });
     }
     return route.fulfill({

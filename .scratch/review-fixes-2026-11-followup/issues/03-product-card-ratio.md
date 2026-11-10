@@ -15,5 +15,5 @@
 
 ## Comments
 
-- 2026-11-10：`layout.css` 移除只被 catch-card 使用的 `.card__media` 4/5、position、background、overflow 與通用 img 規則；`product-card-photo.css` 補上 `overflow: hidden`，照片框比例只剩 catch-card 的 `3/2`。新增 Playwright 幾何斷言（首頁與商品列表、桌機與手機）量到 `3:2`、照片 `object-fit: contain` 且不超出框線；照片框截圖 baseline 在改 CSS 前建立，改動後比對通過。
+- 2026-11-10：`layout.css` 移除只被 catch-card 使用的 `.card__media` 4/5、position、background、overflow 與通用 img 規則；`product-card-photo.css` 補上 `overflow: hidden`，照片框比例只剩 catch-card 的 `3/2`。新增 Playwright 幾何斷言（首頁與商品列表、桌機與手機）量到 `3:2`、照片 `object-fit: contain` 且不超出框線；照片框截圖 baseline 在改 CSS 前建立，改動後比對通過。同步把 layout 提到 `v9`、product-card-photo 提到 `v13`，避免混合快取失去裁切。
 

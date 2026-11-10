@@ -15,5 +15,5 @@
 
 ## Comments
 
-- 2026-11-10：新增 `playwright.config.js` 與 `e2e/`。`npm run test:e2e` 啟動測試後端（3101，每次從 seed 重建 `e2e/.data/db.json`）與靜態前台（8090），只跑 chromium 的桌面 1280×800 與手機 390×844。測試在瀏覽器層改寫 `config.js` 的 API base，不碰開發中的 3001；行情 API 由 `e2e/fixtures/market.js` 固定資料攔截。已建立 seed 買家／釣客登入 helper、水平溢出斷言、面板 baseline 與 `e2e/README.md` 的 baseline 規則；商品卡 baseline 是在改 CSS 前回到固定點截圖。
+- 2026-11-10：新增 `playwright.config.js` 與 `e2e/`。`npm run test:e2e` 啟動測試後端（3101，每次從 seed 重建 `e2e/.data/db.json`）與靜態前台（8090），只跑 chromium 的桌面 1280×800 與手機 390×844。測試在瀏覽器層改寫 `config.js` 的 API base，不碰開發中的 3001；行情 API 由 `e2e/fixtures/market.js` 固定資料攔截，魚種字典使用 `species_code`，7／30 日各自回對應 history。已建立 seed 買家／釣客登入 helper、水平溢出斷言、面板 baseline 與 `e2e/README.md` 的 baseline 規則；商品卡 baseline 是在改 CSS 前回到固定點截圖。截圖 baseline 目前以 win32 建立，其他平台預設只跑幾何斷言，可用 `E2E_VISUALS=1` 重建。
 
