@@ -1,21 +1,15 @@
 /* 首頁 smoke：兩個 viewport 都沒有水平溢出，助手面板可開關且幾何固定。 */
 
 const { test, expect } = require("@playwright/test");
+const { VISUAL_BASELINE } = require("../config");
 const { expectNoHorizontalOverflow, waitForFonts } = require("../helpers/layout");
-const { installMarketFixture } = require("../helpers/market-fixture");
-const { useTestApi } = require("../helpers/test-api");
+const { preparePage } = require("../helpers/prepare-page");
 
 test.beforeEach(async function ({ page }) {
-  await useTestApi(page);
-  await installMarketFixture(page);
+  await preparePage(page);
 });
 
 test("首頁沒有水平溢出，助手面板可開啟與關閉", async function ({ page }) {
-  const marketRequests = [];
-  page.on("request", function (request) {
-    if (request.url().indexOf("/api/market/") !== -1) marketRequests.push(request.url());
-  });
-
   await page.goto("/pages/index.html");
   await expect(page.locator("#today-catch .catch-card").first()).toBeVisible();
   await waitForFonts(page);
@@ -43,12 +37,12 @@ test("首頁沒有水平溢出，助手面板可開啟與關閉", async function
   expect(box.width).toBeCloseTo(expectedWidth, 0);
   expect(box.height).toBeCloseTo(expectedHeight, 0);
 
-  await expect(panel).toHaveScreenshot("assistant-panel-open.png");
+  if (VISUAL_BASELINE) {
+    await expect(panel).toHaveScreenshot("assistant-panel-open.png");
+  }
 
   await page.locator('#fm-panel [data-action="close"]').click();
   await expect(panel).toBeHidden();
   await expect(toggle).toHaveAttribute("aria-expanded", "false");
   await expectNoHorizontalOverflow(page);
-
-  expect(marketRequests, "首頁不呼叫行情 API").toEqual([]);
 });

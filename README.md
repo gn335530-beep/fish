@@ -63,6 +63,7 @@ backend/                  本機開發用模擬 API
   uploads/                上傳圖片（不進版控）
   db.seed.json           可提交的種子資料
   db.json                執行時資料（不進版控，首次啟動從種子建立）
+e2e/                      Playwright 視覺案例與固定 fixture
 docs/api/                 API 規格文件
 ```
 

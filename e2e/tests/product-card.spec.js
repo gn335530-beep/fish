@@ -1,9 +1,9 @@
 /* 商品卡照片框：首頁與商品列表都必須是 3:2，且照片完整顯示。 */
 
 const { test, expect } = require("@playwright/test");
-const { expectNoHorizontalOverflow } = require("../helpers/layout");
-const { installMarketFixture } = require("../helpers/market-fixture");
-const { useTestApi } = require("../helpers/test-api");
+const { VISUAL_BASELINE } = require("../config");
+const { expectNoHorizontalOverflow, waitForFonts } = require("../helpers/layout");
+const { preparePage } = require("../helpers/prepare-page");
 const {
   waitForProductCards,
   markCardWithLoadedPhoto,
@@ -11,13 +11,22 @@ const {
 } = require("../helpers/product-card");
 
 const PAGES = [
-  { name: "首頁", path: "/pages/index.html", selector: "#today-catch" },
-  { name: "商品列表", path: "/pages/products.html", selector: "#catch-grid" }
+  {
+    name: "首頁",
+    path: "/pages/index.html",
+    selector: "#today-catch",
+    snapshot: "product-card-frame-home.png"
+  },
+  {
+    name: "商品列表",
+    path: "/pages/products.html",
+    selector: "#catch-grid",
+    snapshot: "product-card-frame-products.png"
+  }
 ];
 
 test.beforeEach(async function ({ page }) {
-  await useTestApi(page);
-  await installMarketFixture(page);
+  await preparePage(page);
 });
 
 PAGES.forEach(function (target) {
@@ -27,10 +36,11 @@ PAGES.forEach(function (target) {
     await expectNoHorizontalOverflow(page);
     await expectPhotoFrameRatio(page, target.selector);
 
-    const card = await markCardWithLoadedPhoto(page, target.selector);
-    await expect(card).toHaveCount(1);
-    await expect(card.locator(".card__media")).toHaveScreenshot(
-      "product-card-frame-" + (target.name === "首頁" ? "home" : "products") + ".png"
-    );
+    if (VISUAL_BASELINE) {
+      await waitForFonts(page);
+      const card = await markCardWithLoadedPhoto(page, target.selector);
+      await expect(card).toHaveCount(1);
+      await expect(card.locator(".card__media")).toHaveScreenshot(target.snapshot);
+    }
   });
 });

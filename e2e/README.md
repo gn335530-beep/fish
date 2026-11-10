@@ -29,16 +29,19 @@ npm run test:e2e
 - 只有穩定狀態才用截圖（例如面板開啟、單張商品卡）；動態列表、輪詢或載入中狀態改用文字、bounding box 與 computed style 斷言。
 - 幾何與 computed style 已能表達的規則（例如照片框 `3:2`、面板寬高）優先使用斷言，截圖只補足整體外觀。
 - 若字型或平台造成 baseline 不穩，先縮小截圖範圍或改用幾何斷言，不要放寬 diff threshold 到失去意義。
+- 目前 baseline 以 win32 建立。其他平台預設只跑幾何斷言；要建立該平台 baseline 時，先執行 `E2E_VISUALS=1 npx playwright test --update-snapshots`。
 
 ## 檔案
 
 ```text
+playwright.config.js       Playwright 專案與 webServer 設定
 e2e/
   config.js                測試前後端位址與資料庫路徑
   fixtures/market.js       行情卡與魚種字典固定資料
   helpers/auth.js          seed 買家／釣客登入
   helpers/layout.js        水平溢出與字型等待
   helpers/market-fixture.js 行情 API 攔截
+  helpers/prepare-page.js  每個 spec 共用的頁面前置
   helpers/product-card.js  商品卡照片框量測
   helpers/test-api.js      把前台 API base 指到測試後端
   scripts/start-backend.js 重建測試資料庫並啟動後端

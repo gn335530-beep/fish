@@ -8,8 +8,8 @@ async function waitForFonts(page) {
   });
 }
 
-async function horizontalOverflow(page) {
-  return page.evaluate(function () {
+async function expectNoHorizontalOverflow(page) {
+  const overflow = await page.evaluate(function () {
     const doc = document.documentElement;
     const body = document.body;
     return {
@@ -17,16 +17,11 @@ async function horizontalOverflow(page) {
       body: body ? body.scrollWidth - body.clientWidth : 0
     };
   });
-}
-
-async function expectNoHorizontalOverflow(page) {
-  const overflow = await horizontalOverflow(page);
   expect(overflow.document, "文件寬度不得超出版面").toBeLessThanOrEqual(1);
   expect(overflow.body, "body 寬度不得超出版面").toBeLessThanOrEqual(1);
 }
 
 module.exports = {
   waitForFonts: waitForFonts,
-  horizontalOverflow: horizontalOverflow,
   expectNoHorizontalOverflow: expectNoHorizontalOverflow
 };
