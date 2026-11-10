@@ -64,7 +64,8 @@
   font-variant-numeric: tabular-nums;
   line-height: 48px;
   text-align: right;
-  transform: scaleX(var(--price-scale, 1)) scaleY(.9);
+  /* 舊快取的 JS 沒有 --price-scale-y 時，fallback 與 PRICE_GEOMETRY.verticalScale 相同。 */
+  transform: scaleX(var(--price-scale, 1)) scaleY(var(--price-scale-y, 0.9));
   transform-origin: right bottom;
 }
 

@@ -1,13 +1,6 @@
 /* 聊天室內容：訊息氣泡、空狀態與收件匣。 */
 
-/* ---------- 訊息區 ---------- */
-.fm-panel__body {
-  padding: 16px;
-  background: var(--paper-2);
-  scrollbar-width: thin;
-  scrollbar-color: rgba(26, 29, 27, .3) transparent;
-}
-
+/* ---------- 訊息氣泡 ---------- */
 .fm-chat {
   display: flex;
   flex-direction: column;

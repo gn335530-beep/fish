@@ -16,7 +16,8 @@ const PRICE_GEOMETRY = Object.freeze({
   digit: 26.7,
   dot: 8.4,
   availableWidth: 89,
-  minScale: .5
+  minHorizontalScale: .5,
+  verticalScale: .9
 });
 
 function priceScale(text) {
@@ -25,7 +26,7 @@ function priceScale(text) {
     width += ch === "." ? PRICE_GEOMETRY.dot : PRICE_GEOMETRY.digit;
   });
   return width > PRICE_GEOMETRY.availableWidth
-    ? Math.max(PRICE_GEOMETRY.minScale, PRICE_GEOMETRY.availableWidth / width)
+    ? Math.max(PRICE_GEOMETRY.minHorizontalScale, PRICE_GEOMETRY.availableWidth / width)
     : 1;
 }
 
@@ -53,7 +54,8 @@ export function renderMarketCard(card, messageId) {
     escapeHtml(card.price_per_taijin) + '">' +
     '<b class="fm-market__head">行情卡</b>' +
     '<b class="fm-market__species">' + escapeHtml(card.species_name || "魚種未提供") + '</b>' +
-    '<b class="fm-market__price" style="--price-scale:' + priceScale(price) + '">' + price + '</b>' +
+    '<b class="fm-market__price" style="--price-scale:' + priceScale(price) +
+    ';--price-scale-y:' + PRICE_GEOMETRY.verticalScale + '">' + price + '</b>' +
     '<span class="fm-market__price-unit">元/台斤</span>' +
     '<p class="fm-market__meta">' + (scope ? "(" + escapeHtml(scope) + ")" : "") + '</p>' +
     '<div class="fm-market__days">' + dayButton(messageId, 7, days === 7) + dayButton(messageId, 30, days === 30) + '</div>' +

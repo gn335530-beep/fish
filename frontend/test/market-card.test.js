@@ -161,7 +161,12 @@ test("三位數價格水平壓縮，避免撞到單位", function () {
   const long = renderCard(card({ price_per_taijin: 285.5 }), "msg_1");
   const scale = Number(long.match(/--price-scale:([0-9.]+)/)[1]);
   assert.ok(scale < 1);
-  assert.match(renderCard(card(), "msg_1"), /--price-scale:1"/);
+  assert.match(renderCard(card(), "msg_1"), /--price-scale:1;--price-scale-y:0\.9"/);
+});
+
+test("垂直縮放由渲染輸出的自訂屬性控制", function () {
+  const html = renderCard(card({ price_per_taijin: 285.5 }), "msg_1");
+  assert.match(html, /--price-scale-y:0\.9"/);
 });
 
 test("切換 7／30 日不會重置重量", function () {
