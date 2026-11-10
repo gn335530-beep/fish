@@ -61,6 +61,12 @@ function cardWith(overrides, options) {
     ", " + JSON.stringify(options || {}) + ")", ctx);
 }
 
+function place(html) {
+  const match = html.match(/<p class="catch-card__place">([\s\S]*?)<\/p>/);
+  assert.ok(match, "商品卡應有地區行");
+  return match[1];
+}
+
 test("商品卡顯示魚種、處理方式、尾數、雙價與地區", function () {
   const html = card();
   assert.match(html, /土魠/);
@@ -69,7 +75,16 @@ test("商品卡顯示魚種、處理方式、尾數、雙價與地區", function
   assert.match(html, /每台斤售價：NT\$200/);
   assert.match(html, /NT\$1,000/);
   assert.match(html, /整批售價/);
-  assert.match(html, /高雄市.*高雄市鼓山區/);
+  assert.match(html, /高雄市鼓山區/);
+});
+
+test("商品卡地區只顯示一次縣市，缺縣市時才補上", function () {
+  assert.equal(place(card()), "高雄市鼓山區");
+  assert.equal(place(card({ location: "鼓山區" })), "高雄市　鼓山區");
+  assert.equal(place(card({ location: "高雄市" })), "高雄市");
+  assert.equal(place(card({ region: "臺北市", location: "台北市信義區" })), "台北市信義區");
+  assert.equal(place(card({ location: " 高雄市鼓山區 " })), "高雄市鼓山區");
+  assert.equal(place(card({ location: "鼓山區・高雄市" })), "高雄市　鼓山區・高雄市");
 });
 
 test("商品卡不再顯示重量、每尾均價、日期、查看詳情或自動計算", function () {
@@ -109,8 +124,9 @@ test("沒有可售量時保留釣客資訊連結並顯示洽談中或已售出",
 });
 
 test("缺漏地區或地點時顯示地區未提供", function () {
-  assert.match(card({ location: "" }), /地區未提供/);
-  assert.match(card({ region: "" }), /地區未提供/);
+  assert.equal(place(card({ location: "" })), "地區未提供");
+  assert.equal(place(card({ region: "" })), "地區未提供");
+  assert.equal(place(card({ location: "   " })), "地區未提供");
 });
 
 test("處理方式字數多時加上縮字與膠囊樣式", function () {

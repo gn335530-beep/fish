@@ -19,10 +19,12 @@ function productErrorText(error, label) {
     : label + "載入失敗：" + error.message;
 }
 
+/* location 是完整地址，正常以縣市開頭；避免再串一次 region 造成重複縣市。 */
 function placeOf(p) {
-  var region = normalizeCityName(p.region);
-  var location = normalizeCityName(p.location);
+  var region = normalizeCityName(p.region).trim();
+  var location = normalizeCityName(p.location).trim();
   if (!region || !location) return "地區未提供";
+  if (location.indexOf(region) === 0) return location;
   return region + "　" + location;
 }
 

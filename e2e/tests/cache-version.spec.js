@@ -13,6 +13,8 @@ const ALL_PAGES = ["首頁", "商品列表", "登入頁"];
 const CACHE_LOCKED_FILES = [
   { file: "layout.css", minVersion: 9, pages: ALL_PAGES },
   { file: "product-card-photo.css", minVersion: 13, pages: ["首頁", "商品列表"] },
+  /* 個人資訊與設定頁也需要同版本，但快取檢查需登入，這裡只鎖定公開頁。 */
+  { file: "05-product-view.js", minVersion: 14, pages: ["首頁", "商品列表"] },
   { file: "chat-frame.css", minVersion: 3, pages: ALL_PAGES },
   { file: "chat-frame-content.css", minVersion: 1, pages: ALL_PAGES },
   { file: "chat-bubbles.css", minVersion: 4, pages: ALL_PAGES },
