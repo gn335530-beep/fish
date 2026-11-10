@@ -19,7 +19,7 @@ function productErrorText(error, label) {
     : label + "載入失敗：" + error.message;
 }
 
-/* location 是完整地址，正常以縣市開頭；避免再串一次 region 造成重複縣市。 */
+/* location 是完整地址，正常以 region 開頭；避免再串一次 region 造成重複縣市。 */
 function placeOf(p) {
   var region = normalizeCityName(p.region).trim();
   var location = normalizeCityName(p.location).trim();
