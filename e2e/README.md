@@ -1,6 +1,6 @@
 # E2E 視覺 seam
 
-Playwright 只驗證使用者在真實瀏覽器看到的外在行為。`npm test` 仍只跑 Node 測試，不需要瀏覽器；瀏覽器案例一律用 `npm run test:e2e`。
+Playwright 以真實瀏覽器驗證使用者看到的外在行為，以及部署契約（HTML entry 的 `?v=` 與跨頁版本一致）；不把 CSS 檔內容、selector 位置或檔案行數當契約。`npm test` 仍只跑 Node 測試，不需要瀏覽器；瀏覽器案例一律用 `npm run test:e2e`。
 
 ## 啟動方式
 
