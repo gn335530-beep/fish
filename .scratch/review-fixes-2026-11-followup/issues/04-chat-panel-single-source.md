@@ -15,5 +15,5 @@
 
 ## Comments
 
-- 2026-11-10：`chat-frame.css` 成為面板與標題列唯一來源；內文區與頁尾因檔案超過 200 行拆到 `chat-frame-input.css`，仍只由 chat-frame 模組家族定義。`deal-bot.css` 只留 `.fm-bot`、`.fm-toggle`、badge 與手機定位；`chat-bubbles.css` 只留訊息氣泡、空狀態與收件匣。新增 `chat-frame.spec.js` 比對三個頁面的面板、標題列、內文區、頁尾 computed style，並驗證交易房展開送交易面板後取代商品條。`deal-bot`、`chat-frame`、`chat-frame-input`、`chat-bubbles` 已提版。
+- 2026-11-10：`chat-frame.css` 成為面板與標題列唯一來源；內文區與頁尾因檔案超過 200 行拆到 `chat-frame-content.css`，仍只由 chat-frame 模組家族定義。`deal-bot.css` 只留 `.fm-bot`、`.fm-toggle`、badge 與手機定位；`chat-bubbles.css` 只留訊息氣泡、空狀態與收件匣。新增 `chat-frame.spec.js` 比對三個頁面與交易房的面板、標題列、內文區、頁尾 computed style，並驗證加購與發送交易面板展開後取代商品條。`deal-bot`、`chat-frame`、`chat-frame-content`、`chat-bubbles` 已提版。
 

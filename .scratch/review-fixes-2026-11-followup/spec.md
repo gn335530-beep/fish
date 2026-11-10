@@ -75,13 +75,13 @@
 
 - 價格幾何常數集中為一個凍結常數，包含字寬、可用寬度、最小水平縮放與垂直縮放；垂直縮放就是目前的 `.9`。
 - 行情卡渲染時，價格元素同時輸出水平與垂直縮放的自訂屬性。
-- CSS 只讀這兩個自訂屬性；不再出現 `.9` 字面值，也不把垂直縮放散落到其他 selector。
+- CSS 的 transform 只讀這兩個自訂屬性；`.9` 只保留為舊 markup 的 fallback，不散落到其他 selector。
 - 不改 48px 字級、可用寬度、價格文字、卡片座標或 7／30 日切換行為。
 - 若沒有 inline style 的舊 markup 仍可能存在，CSS 的預設值要與常數一致，並由測試鎖定；不要讓預設值成為第二個來源。
 
 ### 快取版本
 
-- 本批修改的樣式模組（layout、product-card-photo、chat-frame、chat-frame-input、chat-bubbles、deal-bot、market-card）在首頁、商品列表與登入頁統一提版；layout 與 product-card-photo 已於 ticket 03 提版，chat-frame、chat-frame-input、chat-bubbles、deal-bot 與 market-card 已於 ticket 04／05 提版。components、deal-cards 與最終驗證由 ticket 07 處理。
+- 本批修改的樣式模組（layout、product-card-photo、chat-frame、chat-frame-content、chat-bubbles、deal-bot、market-card）在首頁、商品列表與登入頁統一提版；layout 與 product-card-photo 已於 ticket 03 提版，chat-frame、chat-frame-content、chat-bubbles、deal-bot 與 market-card 已於 ticket 04／05 提版。components、deal-cards 與最終驗證由 ticket 07 處理。
 - 版本字串只遞增，不改檔名；三個頁面必須使用相同版本。
 - 不要為所有靜態資產建立版本清單；只鎖定本批修改的模組，避免未來每次升版都要改測試。
 
