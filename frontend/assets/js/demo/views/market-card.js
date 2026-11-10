@@ -10,17 +10,23 @@ import {
 
 const SOURCE_TEXT = "資料來源：農業部 漁業署";
 
-/* 價格靠右對齊單位；位數較多時只壓縮水平寬度，避免撞到「元/台斤」。 */
-const PRICE_DIGIT = 26.7;
-const PRICE_DOT = 8.4;
-const PRICE_FIT = 89;
+/* 價格字級 48px；在 295px 卡片上，右緣要留給「元/台斤」。
+   以下為 48px Noto Sans 的近似字寬與可用寬度，集中放在一處避免魔數散落。 */
+const PRICE_GEOMETRY = Object.freeze({
+  digit: 26.7,
+  dot: 8.4,
+  availableWidth: 89,
+  minScale: .5
+});
 
 function priceScale(text) {
   let width = 0;
   String(text).split("").forEach(function (ch) {
-    width += ch === "." ? PRICE_DOT : PRICE_DIGIT;
+    width += ch === "." ? PRICE_GEOMETRY.dot : PRICE_GEOMETRY.digit;
   });
-  return width > PRICE_FIT ? Math.max(.5, PRICE_FIT / width) : 1;
+  return width > PRICE_GEOMETRY.availableWidth
+    ? Math.max(PRICE_GEOMETRY.minScale, PRICE_GEOMETRY.availableWidth / width)
+    : 1;
 }
 
 function dayButton(messageId, days, active) {
@@ -83,7 +89,7 @@ export function handleMarketWeightInput(input) {
   refreshReference(input.closest(".fm-card--market"), messageId);
 }
 
-/* 單位控制沿用原本的 change 契約：radio 與舊 select 都提供 value 與 data-market-unit。 */
+/* 單位控制沿用 change 契約：radio 提供 value 與 data-market-unit。 */
 export function handleMarketUnitChange(control) {
   const messageId = control.getAttribute("data-market-unit");
   const card = control.closest(".fm-card--market");

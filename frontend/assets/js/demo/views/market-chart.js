@@ -62,7 +62,7 @@ export function chartMarkup(card, days) {
   }
 
   const line = points
-    ? '<polyline points="' + points + '" fill="none" stroke="#3561C0" stroke-width="2" ' +
+    ? '<polyline class="fm-market__line" points="' + points + '" fill="none" stroke-width="2" ' +
       'stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"></polyline>'
     : "";
   const none = points ? "" : '<span class="fm-market__none">暫無走勢</span>';
