@@ -56,12 +56,6 @@ function renderAuthNav(){
   const inner = document.getElementById("nav-menu-inner");
   if(!inner) return;
   const u = getUser();
-  const links = `
-    <div class="nav-menu__sec nav-menu__links">
-      <div class="nav-menu__label">瀏覽</div>
-      <a class="nav-menu__item" href="index.html">首頁</a>
-      <a class="nav-menu__item" href="products.html">今日漁獲</a>
-    </div>`;
   if(u && u.nick){
     inner.innerHTML = `
       <div class="nav-menu__who">
@@ -75,15 +69,13 @@ function renderAuthNav(){
         <button class="nav-menu__item" type="button" data-open-history>交易紀錄</button>
         <button class="nav-menu__item" type="button" data-open-listings>上架紀錄</button>
         <button class="nav-menu__item nav-menu__item--out" type="button" id="nav-menu-logout">登出</button>
-      </div>
-      ${links}`;
+      </div>`;
   } else {
     inner.innerHTML = `
       <div class="nav-menu__sec">
         <div class="nav-menu__label">會員</div>
         <a class="nav-menu__item" href="login.html">登入 / 註冊</a>
-      </div>
-      ${links}`;
+      </div>`;
   }
   bindNavMenu();
   refreshNavAvatar();
