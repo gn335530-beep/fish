@@ -23,3 +23,4 @@
 ## Comments
 
 - 2026-11-01：新增 `views/deal-strip.js`、`deal-propose.js`，商品條與其下展開面板放在同一個 `position: sticky` 容器。訂單項目快照補 `fish_species` 與 `price_per_taijin`，協議卡 payload 同步帶出。單品送出前若數量有變，先 PATCH 項目再送協議；收起面板保留 `state.proposal`。舊的 `deal-order.js`／`deal-terms.js` 已刪除。
+- 2026-11-10：面板展開後取代商品條，不再讓容器長高；收起後回到商品條。上方 checklist 保留當初完成時的內容，以本留言與 `docs/spec/06-ui.md` 為目前規格。

@@ -62,7 +62,7 @@ export function sellerConsent() {
 export function initiateChannel(productId, quantity) {
   return call("/api/deals/initiate-channel", {
     method: "POST",
-    body: { product_id: productId, quantity: Number(quantity) || 1, replace_items: true }
+    body: { product_id: productId, quantity: Number(quantity) || 1 }
   });
 }
 

@@ -4,9 +4,13 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] 再次「洽談購買」會加入或累加草稿，不會清空其他商品。
-- [ ] 前端不再送出取代旗標；後端沒有未使用的取代分支。
-- [ ] API／UI 規格與原始交易房 spec 的「加入或累加」一致。
-- [ ] 前後端測試涵蓋累加與多商品草稿，`npm test` 通過，所有程式碼檔案不超過 200 行。
+- [x] 再次「洽談購買」會加入或累加草稿，不會清空其他商品。
+- [x] 前端不再送出取代旗標；後端沒有未使用的取代分支。
+- [x] API／UI 規格與原始交易房 spec 的「加入或累加」一致。
+- [x] 前後端測試涵蓋累加與多商品草稿，`npm test` 通過，所有程式碼檔案不超過 200 行。
+
+## Comments
+
+- 2026-11-10：`demo/api.js` 不再送 `replace_items`；`backend/routes/deals.js` 移除取代分支，一律以既有草稿累計可售量。舊客戶端若仍帶 `replace_items` 會被忽略，不清空草稿。更新 API、UI 與流程規格為「加入或累加」，並補上舊旗標相容測試。

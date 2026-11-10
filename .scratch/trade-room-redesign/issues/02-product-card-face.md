@@ -17,3 +17,4 @@
 ## Comments
 
 - 2026-11-01：`05-product-view.js` 改寫為直式大卡，首頁與今日漁獲共用 `renderProductCards`。`賣家資訊` 只保留 `data-action="seller-info"`，沒有註冊任何處理器；`洽談購買` 由 `09-deal-buy.js` 固定以數量 1 開啟交易。已刪除 `pages/product-detail.html` 與 `pages/product-detail.js`，並更新相關測試。
+- 2026-11-10：照片比例契約改為 `3/2`（`object-fit: contain`，留白以同一張照片模糊填滿）。上方 checklist 保留當初完成時的內容，以本留言與 `docs/spec/06-ui.md` 為目前規格。
