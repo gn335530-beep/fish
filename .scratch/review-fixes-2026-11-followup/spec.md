@@ -11,7 +11,7 @@
 - 商品卡照片比例同時存在 `4/5` 與 `3/2` 兩條規則；`4/5` 已被覆蓋，仍是 dead CSS。維護者改比例時必須先猜哪一條生效。
 - 聊天面板的外框、標題列與頁尾同時由兩個樣式模組定義；載入順序是行為的一部分，改一邊可能被另一邊蓋掉。
 - 行情卡價格的垂直縮放值 `.9` 還留在 CSS，沒有跟水平縮放常數放在一起；改字級或卡片可用寬度時容易漏改。
-- 四個已修改的樣式模組仍使用舊的 `?v=` 版本。部署後若前面有 CDN 或長快取，回訪買家可能拿到舊樣式，看不到修正後的卡片與面板。
+- 多個已修改的樣式模組仍使用舊的 `?v=` 版本。部署後若前面有 CDN 或長快取，回訪買家可能拿到舊樣式，看不到修正後的卡片與面板。
 - UI 規格寫「近 N 交易日」，實際畫面是「近7個交易日」；交易房 spec 的商品條、發送交易與加購章節沒有同步「處理方式（若有）」。實作者與 agent 會得到互相矛盾的指示。
 
 這些不是新功能，而是維護性、文件與部署快取的問題。使用者要的結果是：畫面與行為不變，但下一次改動只需要改一個地方。
@@ -23,7 +23,7 @@
 - 商品卡照片比例只留 `3:2` 一個來源；移除被覆蓋的 `4/5`。
 - 聊天面板外殼只由一個樣式模組負責；另一個模組只留浮動開啟鈕與自身職責。
 - 行情卡的水平與垂直縮放常數集中到同一個地方；CSS 只消費自訂屬性，不寫死 `.9`。
-- 四個已修改的樣式模組更新 `?v=`，三個頁面同步。
+- 本批修改的樣式模組更新 `?v=`，共享模組的三個頁面同步。
 - UI 規格與交易房 spec 對齊實際文案與共用商品摘要：魚種、處理方式（若有）、`剩 N 尾`、每台斤或整批價格。
 - 保留 `AGENTS.md` 的文件同步章節，明確認可這是刻意的治理變更，不是漏掉的 scope。
 - 以 Playwright 視覺 seam 驗證三個頁面、行情卡 7／30 日與交易房面板的幾何與關鍵狀態；既有 Node 測試維持回歸保護。
@@ -81,7 +81,7 @@
 
 ### 快取版本
 
-- 本批修改的樣式模組（layout、product-card-photo、chat-frame、chat-frame-content、chat-bubbles、deal-bot、market-card、components、deal-cards）都已在首頁、商品列表與登入頁統一提版；layout 與 product-card-photo 於 ticket 03 提版，chat-frame、chat-frame-content、chat-bubbles、deal-bot 與 market-card 於 ticket 04／05 提版，components 與 deal-cards 於 ticket 07 提版。
+- 本批修改的樣式模組（layout、chat-frame、chat-frame-content、chat-bubbles、deal-bot、market-card、components、deal-cards）都在首頁、商品列表與登入頁統一提版；product-card-photo 只在首頁與商品列表載入，於該兩頁提版。layout 與 product-card-photo 於 ticket 03 提版，chat-frame、chat-frame-content、chat-bubbles、deal-bot 與 market-card 於 ticket 04／05 提版，components 與 deal-cards 於 ticket 07 提版。
 - 版本字串只遞增，不改檔名；三個頁面必須使用相同版本。
 - 不要為所有靜態資產建立版本清單；只鎖定本批修改的模組，避免未來每次升版都要改測試。
 
