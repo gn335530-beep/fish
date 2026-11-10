@@ -67,7 +67,7 @@ function place(html) {
   return match[1];
 }
 
-test("商品卡顯示魚種、處理方式、尾數、雙價與地區", function () {
+test("商品卡顯示魚種、處理方式、尾數與雙價", function () {
   const html = card();
   assert.match(html, /土魠/);
   assert.match(html, /放血冰鎮/);
@@ -75,7 +75,6 @@ test("商品卡顯示魚種、處理方式、尾數、雙價與地區", function
   assert.match(html, /每台斤售價：NT\$200/);
   assert.match(html, /NT\$1,000/);
   assert.match(html, /整批售價/);
-  assert.match(html, /高雄市鼓山區/);
 });
 
 test("商品卡地區只顯示一次縣市，缺縣市時才補上", function () {
@@ -83,6 +82,7 @@ test("商品卡地區只顯示一次縣市，缺縣市時才補上", function ()
   assert.equal(place(card({ location: "鼓山區" })), "高雄市　鼓山區");
   assert.equal(place(card({ location: "高雄市" })), "高雄市");
   assert.equal(place(card({ region: "臺北市", location: "台北市信義區" })), "台北市信義區");
+  assert.equal(place(card({ region: " 高雄市 " })), "高雄市鼓山區");
   assert.equal(place(card({ location: " 高雄市鼓山區 " })), "高雄市鼓山區");
   assert.equal(place(card({ location: "鼓山區・高雄市" })), "高雄市　鼓山區・高雄市");
 });

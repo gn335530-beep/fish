@@ -100,7 +100,7 @@
   3. `共 N 尾`（使用商品 `quantity`）
   4. `每台斤售價：NT$X`（`price_per_taijin` 有值才顯示）
   5. `整批售價：NT$X`（`price`）
-  6. 地區＋地點（`region`＋`location`；`location` 以縣市開頭時只顯示一次，避免重複；缺漏顯示「地區未提供」）
+  6. 地區＋地點（`region`＋`location`；`location` 以 `region` 開頭時只顯示一次，避免重複；缺漏顯示「地區未提供」）
   7. 按鈕列：`釣客資訊`、`洽談購買` 兩個按鈕並排；`洽談購買` 為主要按鈕，`釣客資訊` 為次要按鈕
 - **移除**：重量、`每尾均價`、釣獲／上架日期、`查看詳情`、數量下拉、`自動計算`標記。
 - 可售狀態：
@@ -364,7 +364,7 @@
   - 新增 `deal_cancelled` 卡片訊息。
 - `POST /api/deals/items/batch`（新增）：
   - Body：`{ deal_id, items: [{ product_id, quantity }] }`。
-  - 驗證同賣家、可售量、草稿狀態。
+  - 驗證同釣客、可售量、草稿狀態。
   - 一次加入／累加多個項目。
   - 只留一則系統訊息。
 - `POST /api/deals/reinitiate`（新增）：
