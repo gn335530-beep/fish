@@ -33,6 +33,7 @@ vm.runInContext(read("../assets/js/app/05-product-view.js"), ctx);
 
 const PRODUCT = {
   id: "prd_1",
+  seller_id: 1,
   fish_species: "土魠",
   weight_kg: 3,
   quantity: 2,
@@ -74,27 +75,29 @@ test("商品卡不再顯示重量、每尾均價、日期、查看詳情或自�
   assert.doesNotMatch(html, /自動計算/);
 });
 
-test("有可售量時並排顯示賣家資訊與洽談購買，且沒有數量下拉", function () {
+test("有可售量時並排顯示釣客資訊連結與洽談購買，且沒有數量下拉", function () {
   const html = card();
-  assert.match(html, /data-action="seller-info"/);
+  assert.match(html, /href="profile\.html\?id=1"/);
+  assert.match(html, /釣客資訊/);
+  assert.doesNotMatch(html, /data-action="seller-info"/);
   assert.match(html, /data-deal-product="prd_1"/);
   assert.match(html, /洽談購買/);
   assert.doesNotMatch(html, /data-deal-qty|<select/);
 });
 
-test("沒有可售量時保留賣家資訊並顯示洽談中或已售出", function () {
+test("沒有可售量時保留釣客資訊連結並顯示洽談中或已售出", function () {
   const reserved = card({ available: 0, reserved_quantity: 1 });
-  assert.match(reserved, /data-action="seller-info"/);
+  assert.match(reserved, /href="profile\.html\?id=1"/);
   assert.match(reserved, /洽談中，暫無法購買/);
   assert.doesNotMatch(reserved, /data-deal-product/);
 
   const sold = card({ available: 0, reserved_quantity: 0 });
-  assert.match(sold, /data-action="seller-info"/);
+  assert.match(sold, /href="profile\.html\?id=1"/);
   assert.match(sold, /已售出/);
   assert.doesNotMatch(sold, /data-deal-product/);
 
   const delisted = card({ available: 0, status: "DELISTED" });
-  assert.match(delisted, /data-action="seller-info"/);
+  assert.match(delisted, /href="profile\.html\?id=1"/);
   assert.match(delisted, /已下架/);
   assert.doesNotMatch(delisted, /data-deal-product/);
 });

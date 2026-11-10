@@ -156,6 +156,7 @@
 .catch-card__btn {
   cursor: pointer;
   white-space: nowrap;
+  text-decoration: none;
   transition: background-color .2s ease, border-color .2s ease, color .2s ease;
 }
 

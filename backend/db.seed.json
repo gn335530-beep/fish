@@ -9,14 +9,15 @@
       "city": "新北市",
       "district": "瑞芳區",
       "address_line": "鼻頭路 1 號",
-      "rating_score": 4.9,
-      "review_count": 18,
-      "completed_deals": 18,
+      "rating_score": 4.3,
+      "review_count": 7,
+      "completed_deals": 7,
       "no_show_count": 0,
       "is_blacklisted": false,
       "bank_code": "",
       "bank_account": "",
-      "bank_account_name": ""
+      "bank_account_name": "",
+      "avatar_url": "/uploads/avatar-chen.svg"
     },
     {
       "id": 2,
@@ -27,14 +28,15 @@
       "city": "台北市",
       "district": "中正區",
       "address_line": "忠孝西路一段 1 號",
-      "rating_score": 4.6,
-      "review_count": 2,
-      "completed_deals": 2,
+      "rating_score": 4.7,
+      "review_count": 3,
+      "completed_deals": 7,
       "no_show_count": 0,
       "is_blacklisted": false,
       "bank_code": "",
       "bank_account": "",
-      "bank_account_name": ""
+      "bank_account_name": "",
+      "avatar_url": "/uploads/avatar-buyer.svg"
     },
     {
       "id": 3,
@@ -52,7 +54,8 @@
       "is_blacklisted": false,
       "bank_code": "",
       "bank_account": "",
-      "bank_account_name": ""
+      "bank_account_name": "",
+      "avatar_url": ""
     },
     {
       "id": 4,
@@ -70,7 +73,8 @@
       "is_blacklisted": false,
       "bank_code": "",
       "bank_account": "",
-      "bank_account_name": ""
+      "bank_account_name": "",
+      "avatar_url": ""
     }
   ],
   "products": [
@@ -299,6 +303,44 @@
       "created_at": "2026-10-24T13:26:39.054Z",
       "last_message_at": "2026-10-24T22:57:43.595Z",
       "cleared_before_seq": 188
+    },
+    {
+      "id": "conv_20261101_001",
+      "type": "deal",
+      "user_ids": [
+        2,
+        1
+      ],
+      "buyer_id": 2,
+      "seller_id": 1,
+      "mode": "HUMAN",
+      "context": null,
+      "archived": false,
+      "read_at": {
+        "1": "2026-11-07T09:10:00.000Z",
+        "2": "2026-11-07T09:10:00.000Z"
+      },
+      "created_at": "2026-11-01T10:00:00.000Z",
+      "last_message_at": "2026-11-07T09:00:00.000Z"
+    },
+    {
+      "id": "conv_20261107_001",
+      "type": "deal",
+      "user_ids": [
+        1,
+        2
+      ],
+      "buyer_id": 1,
+      "seller_id": 2,
+      "mode": "HUMAN",
+      "context": null,
+      "archived": false,
+      "read_at": {
+        "1": "2026-11-08T10:10:00.000Z",
+        "2": "2026-11-08T10:10:00.000Z"
+      },
+      "created_at": "2026-11-07T10:00:00.000Z",
+      "last_message_at": "2026-11-08T10:00:00.000Z"
     }
   ],
   "messages": [
@@ -2963,6 +3005,454 @@
       "created_at": "2026-10-24T22:57:43.595Z"
     }
   ],
-  "deals": [],
-  "reviews": []
+  "deals": [
+    {
+      "id": "deal_20261101_001",
+      "conversation_id": "conv_20261101_001",
+      "buyer_id": 2,
+      "seller_id": 1,
+      "initiator_id": 2,
+      "items": [
+        {
+          "item_id": "itm_01",
+          "product_id": "prd_20261028_101",
+          "title": "紅魽（1尾 / 放血冰鎮）",
+          "fish_species": "紅魽",
+          "condition": "放血冰鎮",
+          "photo_url": "images/amberjack.png",
+          "unit_price": 1200,
+          "price": 1200,
+          "price_per_taijin": 400,
+          "weight_kg": null,
+          "quantity": 1
+        }
+      ],
+      "items_total": 1200,
+      "deal_terms": {
+        "final_price": 1200,
+        "meetup_location": "基隆火車站南站 7-11 門口",
+        "meetup_time": "2026-11-01T12:00:00.000Z"
+      },
+      "deal_status": "CONFIRMED",
+      "buyer_confirmed": true,
+      "seller_confirmed": true,
+      "rejected_by": null,
+      "lock_expires_at": null,
+      "hold_expires_at": null,
+      "review_status": {
+        "buyer_reviewed": true,
+        "seller_reviewed": true
+      },
+      "cancelled_by": null,
+      "cancel_reason": null,
+      "cancel_note": null,
+      "created_at": "2026-11-01T12:00:00.000Z",
+      "updated_at": "2026-11-01T12:00:00.000Z",
+      "confirmed_at": "2026-11-01T12:00:00.000Z"
+    },
+    {
+      "id": "deal_20261102_001",
+      "conversation_id": "conv_20261101_001",
+      "buyer_id": 2,
+      "seller_id": 1,
+      "initiator_id": 2,
+      "items": [
+        {
+          "item_id": "itm_01",
+          "product_id": "prd_20261028_102",
+          "title": "嘉鱲（1尾 / 放血冰鎮）",
+          "fish_species": "嘉鱲",
+          "condition": "放血冰鎮",
+          "photo_url": "images/seabream.png",
+          "unit_price": 900,
+          "price": 900,
+          "price_per_taijin": 300,
+          "weight_kg": null,
+          "quantity": 1
+        }
+      ],
+      "items_total": 900,
+      "deal_terms": {
+        "final_price": 900,
+        "meetup_location": "基隆火車站南站 7-11 門口",
+        "meetup_time": "2026-11-02T12:00:00.000Z"
+      },
+      "deal_status": "CONFIRMED",
+      "buyer_confirmed": true,
+      "seller_confirmed": true,
+      "rejected_by": null,
+      "lock_expires_at": null,
+      "hold_expires_at": null,
+      "review_status": {
+        "buyer_reviewed": true,
+        "seller_reviewed": true
+      },
+      "cancelled_by": null,
+      "cancel_reason": null,
+      "cancel_note": null,
+      "created_at": "2026-11-02T12:00:00.000Z",
+      "updated_at": "2026-11-02T12:00:00.000Z",
+      "confirmed_at": "2026-11-02T12:00:00.000Z"
+    },
+    {
+      "id": "deal_20261103_001",
+      "conversation_id": "conv_20261101_001",
+      "buyer_id": 2,
+      "seller_id": 1,
+      "initiator_id": 2,
+      "items": [
+        {
+          "item_id": "itm_01",
+          "product_id": "prd_20261028_103",
+          "title": "玳瑁石斑（1尾 / 活體）",
+          "fish_species": "玳瑁石斑",
+          "condition": "活體",
+          "photo_url": "images/grouper.jpg",
+          "unit_price": 1500,
+          "price": 1500,
+          "price_per_taijin": 500,
+          "weight_kg": null,
+          "quantity": 1
+        }
+      ],
+      "items_total": 1500,
+      "deal_terms": {
+        "final_price": 1500,
+        "meetup_location": "基隆火車站南站 7-11 門口",
+        "meetup_time": "2026-11-03T12:00:00.000Z"
+      },
+      "deal_status": "CONFIRMED",
+      "buyer_confirmed": true,
+      "seller_confirmed": true,
+      "rejected_by": null,
+      "lock_expires_at": null,
+      "hold_expires_at": null,
+      "review_status": {
+        "buyer_reviewed": true,
+        "seller_reviewed": false
+      },
+      "cancelled_by": null,
+      "cancel_reason": null,
+      "cancel_note": null,
+      "created_at": "2026-11-03T12:00:00.000Z",
+      "updated_at": "2026-11-03T12:00:00.000Z",
+      "confirmed_at": "2026-11-03T12:00:00.000Z"
+    },
+    {
+      "id": "deal_20261104_001",
+      "conversation_id": "conv_20261101_001",
+      "buyer_id": 2,
+      "seller_id": 1,
+      "initiator_id": 2,
+      "items": [
+        {
+          "item_id": "itm_01",
+          "product_id": "prd_20261028_104",
+          "title": "花枝（1尾 / 活體）",
+          "fish_species": "花枝",
+          "condition": "活體",
+          "photo_url": "images/squid.jpg",
+          "unit_price": 600,
+          "price": 600,
+          "price_per_taijin": 200,
+          "weight_kg": null,
+          "quantity": 1
+        }
+      ],
+      "items_total": 600,
+      "deal_terms": {
+        "final_price": 600,
+        "meetup_location": "基隆火車站南站 7-11 門口",
+        "meetup_time": "2026-11-04T12:00:00.000Z"
+      },
+      "deal_status": "CONFIRMED",
+      "buyer_confirmed": true,
+      "seller_confirmed": true,
+      "rejected_by": null,
+      "lock_expires_at": null,
+      "hold_expires_at": null,
+      "review_status": {
+        "buyer_reviewed": true,
+        "seller_reviewed": false
+      },
+      "cancelled_by": null,
+      "cancel_reason": null,
+      "cancel_note": null,
+      "created_at": "2026-11-04T12:00:00.000Z",
+      "updated_at": "2026-11-04T12:00:00.000Z",
+      "confirmed_at": "2026-11-04T12:00:00.000Z"
+    },
+    {
+      "id": "deal_20261105_001",
+      "conversation_id": "conv_20261101_001",
+      "buyer_id": 2,
+      "seller_id": 1,
+      "initiator_id": 2,
+      "items": [
+        {
+          "item_id": "itm_01",
+          "product_id": "prd_20261028_105",
+          "title": "鱸魚（1尾 / 放血冰鎮）",
+          "fish_species": "鱸魚",
+          "condition": "放血冰鎮",
+          "photo_url": "images/seabass.png",
+          "unit_price": 800,
+          "price": 800,
+          "price_per_taijin": 260,
+          "weight_kg": null,
+          "quantity": 1
+        }
+      ],
+      "items_total": 800,
+      "deal_terms": {
+        "final_price": 800,
+        "meetup_location": "基隆火車站南站 7-11 門口",
+        "meetup_time": "2026-11-05T12:00:00.000Z"
+      },
+      "deal_status": "CONFIRMED",
+      "buyer_confirmed": true,
+      "seller_confirmed": true,
+      "rejected_by": null,
+      "lock_expires_at": null,
+      "hold_expires_at": null,
+      "review_status": {
+        "buyer_reviewed": true,
+        "seller_reviewed": false
+      },
+      "cancelled_by": null,
+      "cancel_reason": null,
+      "cancel_note": null,
+      "created_at": "2026-11-05T12:00:00.000Z",
+      "updated_at": "2026-11-05T12:00:00.000Z",
+      "confirmed_at": "2026-11-05T12:00:00.000Z"
+    },
+    {
+      "id": "deal_20261106_001",
+      "conversation_id": "conv_20261101_001",
+      "buyer_id": 2,
+      "seller_id": 1,
+      "initiator_id": 2,
+      "items": [
+        {
+          "item_id": "itm_01",
+          "product_id": "prd_20261028_106",
+          "title": "鯖魚（1尾 / 冷凍）",
+          "fish_species": "鯖魚",
+          "condition": "冷凍",
+          "photo_url": "images/mackerel.jpg",
+          "unit_price": 500,
+          "price": 500,
+          "price_per_taijin": 160,
+          "weight_kg": null,
+          "quantity": 1
+        }
+      ],
+      "items_total": 500,
+      "deal_terms": {
+        "final_price": 500,
+        "meetup_location": "基隆火車站南站 7-11 門口",
+        "meetup_time": "2026-11-06T12:00:00.000Z"
+      },
+      "deal_status": "CONFIRMED",
+      "buyer_confirmed": true,
+      "seller_confirmed": true,
+      "rejected_by": null,
+      "lock_expires_at": null,
+      "hold_expires_at": null,
+      "review_status": {
+        "buyer_reviewed": true,
+        "seller_reviewed": false
+      },
+      "cancelled_by": null,
+      "cancel_reason": null,
+      "cancel_note": null,
+      "created_at": "2026-11-06T12:00:00.000Z",
+      "updated_at": "2026-11-06T12:00:00.000Z",
+      "confirmed_at": "2026-11-06T12:00:00.000Z"
+    },
+    {
+      "id": "deal_20261107_001",
+      "conversation_id": "conv_20261107_001",
+      "buyer_id": 1,
+      "seller_id": 2,
+      "initiator_id": 1,
+      "items": [
+        {
+          "item_id": "itm_01",
+          "product_id": "prd_20261028_107",
+          "title": "鮪魚（1尾 / 放血冰鎮）",
+          "fish_species": "鮪魚",
+          "condition": "放血冰鎮",
+          "photo_url": "images/tuna.jpg",
+          "unit_price": 1800,
+          "price": 1800,
+          "price_per_taijin": 600,
+          "weight_kg": null,
+          "quantity": 1
+        }
+      ],
+      "items_total": 1800,
+      "deal_terms": {
+        "final_price": 1800,
+        "meetup_location": "基隆火車站南站 7-11 門口",
+        "meetup_time": "2026-11-07T12:00:00.000Z"
+      },
+      "deal_status": "CONFIRMED",
+      "buyer_confirmed": true,
+      "seller_confirmed": true,
+      "rejected_by": null,
+      "lock_expires_at": null,
+      "hold_expires_at": null,
+      "review_status": {
+        "buyer_reviewed": true,
+        "seller_reviewed": true
+      },
+      "cancelled_by": null,
+      "cancel_reason": null,
+      "cancel_note": null,
+      "created_at": "2026-11-07T12:00:00.000Z",
+      "updated_at": "2026-11-07T12:00:00.000Z",
+      "confirmed_at": "2026-11-07T12:00:00.000Z"
+    }
+  ],
+  "reviews": [
+    {
+      "id": "rev_20261102_001",
+      "deal_id": "deal_20261101_001",
+      "reviewer_id": 2,
+      "target_user_id": 1,
+      "reviewer_role": "buyer",
+      "rating": 5,
+      "tags": [
+        "魚貨新鮮",
+        "準時守約"
+      ],
+      "comment": "魚很新鮮，面交準時，處理得很乾淨。",
+      "created_at": "2026-11-02T09:00:00.000Z"
+    },
+    {
+      "id": "rev_20261102_002",
+      "deal_id": "deal_20261101_001",
+      "reviewer_id": 1,
+      "target_user_id": 2,
+      "reviewer_role": "seller",
+      "rating": 5,
+      "tags": [
+        "準時守約",
+        "溝通良好"
+      ],
+      "comment": "買家準時到場，溝通清楚，交易順利。",
+      "created_at": "2026-11-02T09:30:00.000Z"
+    },
+    {
+      "id": "rev_20261103_001",
+      "deal_id": "deal_20261102_001",
+      "reviewer_id": 2,
+      "target_user_id": 1,
+      "reviewer_role": "buyer",
+      "rating": 4,
+      "tags": [
+        "魚貨新鮮",
+        "溝通良好"
+      ],
+      "comment": "魚貨品質不錯，下次還會再買。",
+      "created_at": "2026-11-03T09:00:00.000Z"
+    },
+    {
+      "id": "rev_20261103_002",
+      "deal_id": "deal_20261102_001",
+      "reviewer_id": 1,
+      "target_user_id": 2,
+      "reviewer_role": "seller",
+      "rating": 4,
+      "tags": [
+        "準時守約"
+      ],
+      "comment": "相約面交很準時，過程順利。",
+      "created_at": "2026-11-03T09:30:00.000Z"
+    },
+    {
+      "id": "rev_20261104_001",
+      "deal_id": "deal_20261103_001",
+      "reviewer_id": 2,
+      "target_user_id": 1,
+      "reviewer_role": "buyer",
+      "rating": 5,
+      "tags": [
+        "魚貨新鮮"
+      ],
+      "comment": "包裝妥當，魚的狀態很好。",
+      "created_at": "2026-11-04T09:00:00.000Z"
+    },
+    {
+      "id": "rev_20261105_001",
+      "deal_id": "deal_20261104_001",
+      "reviewer_id": 2,
+      "target_user_id": 1,
+      "reviewer_role": "buyer",
+      "rating": 3,
+      "tags": [
+        "溝通良好"
+      ],
+      "comment": "整體還可以，面交時間稍微改了一次。",
+      "created_at": "2026-11-05T09:00:00.000Z"
+    },
+    {
+      "id": "rev_20261106_001",
+      "deal_id": "deal_20261105_001",
+      "reviewer_id": 2,
+      "target_user_id": 1,
+      "reviewer_role": "buyer",
+      "rating": 4,
+      "tags": [
+        "魚貨新鮮",
+        "準時守約"
+      ],
+      "comment": "魚貨新鮮，說明清楚。",
+      "created_at": "2026-11-06T09:00:00.000Z"
+    },
+    {
+      "id": "rev_20261107_001",
+      "deal_id": "deal_20261106_001",
+      "reviewer_id": 2,
+      "target_user_id": 1,
+      "reviewer_role": "buyer",
+      "rating": 5,
+      "tags": [
+        "魚貨新鮮",
+        "準時守約",
+        "溝通良好"
+      ],
+      "comment": "第二次回購，一樣滿意。",
+      "created_at": "2026-11-07T09:00:00.000Z"
+    },
+    {
+      "id": "rev_20261108_001",
+      "deal_id": "deal_20261107_001",
+      "reviewer_id": 2,
+      "target_user_id": 1,
+      "reviewer_role": "seller",
+      "rating": 4,
+      "tags": [
+        "準時守約",
+        "溝通良好"
+      ],
+      "comment": "買家回覆即時，準時面交。",
+      "created_at": "2026-11-08T09:00:00.000Z"
+    },
+    {
+      "id": "rev_20261108_002",
+      "deal_id": "deal_20261107_001",
+      "reviewer_id": 1,
+      "target_user_id": 2,
+      "reviewer_role": "buyer",
+      "rating": 5,
+      "tags": [
+        "魚貨新鮮",
+        "準時守約"
+      ],
+      "comment": "雖然臨時調整時間，但事先有說，交易順利。",
+      "created_at": "2026-11-08T09:30:00.000Z"
+    }
+  ]
 }

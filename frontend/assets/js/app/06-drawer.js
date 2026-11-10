@@ -9,10 +9,10 @@ function ensureDrawer(){
     <div class="drawer__scrim" data-close></div>
     <aside class="drawer__panel" role="dialog" aria-label="個人選單">
       <div class="drawer__head">
-        <div class="drawer__who">
+        <a class="drawer__who" id="dr-who" href="profile.html">
           <span class="drawer__av avatar" id="dr-av">會</span>
           <div><b id="dr-nick">會員</b><span id="dr-phone">—</span></div>
-        </div>
+        </a>
         <button class="drawer__close" type="button" data-close aria-label="關閉">✕</button>
       </div>
       <div class="drawer__body" id="dr-body"></div>
@@ -51,7 +51,7 @@ function setDrawerView(view){
 
 function drawerLoginHTML(){
   return '<div class="drawer__sec"><h4>請先登入</h4>' +
-    '<p class="drawer__note">登入後才能查看個人資訊、交易紀錄與上架紀錄。</p>' +
+    '<p class="drawer__note">登入後才能查看交易紀錄與上架紀錄。</p>' +
     '<a class="btn btn--primary btn--sm" href="login.html" style="margin-top:14px">前往登入</a></div>';
 }
 
@@ -61,6 +61,7 @@ function renderDrawer(){
   const logout = document.getElementById("dr-logout");
   if(logout) logout.hidden = !u;
   if(!u){
+    document.getElementById("dr-who").setAttribute("href", "login.html");
     document.getElementById("dr-av").className = "drawer__av avatar";
     document.getElementById("dr-av").textContent = "會";
     document.getElementById("dr-nick").textContent = "會員";
@@ -69,6 +70,8 @@ function renderDrawer(){
     bindDrawerBody();
     return;
   }
+  document.getElementById("dr-who").setAttribute("href",
+    "profile.html?id=" + encodeURIComponent(u.id || ""));
   const avEl = document.getElementById("dr-av");
   const avSrc = getUserAvatar();
   avEl.className = "drawer__av avatar" + (avSrc ? " avatar--img" : "");

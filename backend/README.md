@@ -14,7 +14,7 @@ npm run backend
 預設位址為 `http://localhost:3001`，可用 `PORT` 環境變數更換連接埠。
 前端頁面會將 API base 設為「目前主機的 HTTP 3001 埠」；若使用其他主機，需調整 `frontend/assets/js/config.js`。
 
-執行時資料庫預設為 `backend/db.json`（不進版控）；第一次啟動時會從 `backend/db.seed.json` 複製建立，之後保留開發資料。可用 `FISHMATCH_DB` 指定其他路徑。要重置示範資料，刪除 `backend/db.json` 再重新啟動即可。
+執行時資料庫預設為 `backend/db.json`（不進版控）；第一次啟動時會從 `backend/db.seed.json` 複製建立，之後保留開發資料。**`db.json` 是執行時資料，修改種子後必須刪除 `backend/db.json` 再重新啟動**，否則會沿用舊的會員、訂單、評價與商品。可用 `FISHMATCH_DB` 指定其他路徑。
 
 行情按需抓取（查詢 API 每次重抓，CLI 使用快取）可手動執行：
 
@@ -37,10 +37,11 @@ backend/
   server.js       啟動
   app.js          middleware、靜態目錄、路由掛載
   lib/            auth / store / db-file / messages / units / product-stock / product-pricing / timeouts / cards / quantities / deals / deal-items / deal-cancel / deal-transitions / deal-statuses / reviews / conversations / regions / market/ / http
-  routes/         auth / products / chat / chat-messages / conversation-delete / deals / deal-items / deal-proposal / deal-response / reviews / market / market-catalog / uploads
+  routes/         auth / users / products / chat / chat-messages / conversation-delete / deals / deal-items / deal-proposal / deal-response / reviews / market / market-catalog / uploads
   scripts/        market-fetch.js（行情 CLI）
   test/           node:test 整合測試（使用暫存資料庫）
   db.seed.json    可提交的種子資料
+  seed-assets/    種子示範頭像（掛在 /uploads 下，不進執行時上傳目錄）
   db.json         執行時資料（不進版控，首次啟動從種子建立）
   uploads/        上傳圖片（不進版控）
 ```
@@ -49,12 +50,12 @@ backend/
 
 | 資料表 | 用途 |
 | --- | --- |
-| `users` | 會員、地址、信用評分 |
+| `users` | 會員、頭像、地址、信用評分 |
 | `products` | 上架商品（唯一真實來源） |
 | `conversations` | 助手房與交易房 |
 | `messages` | 對話訊息與卡片 |
 | `deals` | 訂單（`DRAFT`、`PENDING_REVIEW`、`CONFIRMED`、`CANCELLED`；`NEGOTIATING` 只保留舊資料） |
-| `reviews` | 成交後的雙向評價 |
+| `reviews` | 成交後的雙向評價；依 `reviewer_role` 分買家給的／釣客給的 |
 | `market_prices` | 按需抓取的批發行情（平均價、交易量、養殖旗標）；以 `species_code` 為鍵 |
 | `market_species_catalog` | 執行時同步的官方新鮮代碼字典 |
 | `market_catalog_state` | 官方代碼字典的同步狀態與 24 小時快取 |
@@ -68,7 +69,8 @@ backend/
 | `POST` | `/api/auth/register` | 建立會員並回傳登入 Token |
 | `POST` | `/api/auth/login`、`/api/auth/signin` | 登入 |
 | `GET` | `/api/auth/me` | 取得目前會員；需登入 |
-| `PUT` | `/api/users/profile` | 更新暱稱、地址與銀行資料；需登入 |
+| `GET` | `/api/users/{id}` | 公開個人資訊與角色評分；不回電話、地址 |
+| `PUT` | `/api/users/profile` | 更新暱稱、電話、頭像、地址與銀行資料；需登入；電話需唯一 |
 | `POST` | `/api/users/seller-consent` | 記錄第一次販賣確認，重複呼叫不覆寫時間；需登入 |
 | `GET` | `/api/products` | 商品清單，只回傳可購買的上架中／洽談中商品；支援 `region`、`species`、`seller_id`、`status`、`limit` |
 | `GET` | `/api/products/mine` | 目前登入釣客所有未刪除商品（含已下架與已售出），依 `listed_at` 由新到舊；需登入 |
@@ -86,7 +88,8 @@ backend/
 | `POST` | `/api/conversations/{id}/read` | 標記已讀；需參與者 |
 | `POST` | `/api/conversations/{id}/clear` | 清除助手房舊訊息；需參與者 |
 | `POST` | `/api/deals/initiate-channel` | 由商品開啟或沿用交易房與草稿訂單；需登入 |
-| `GET` | `/api/deals/{id}` | 訂單明細（項目附可售尾數）；需參與者 |
+| `POST` | `/api/deals/initiate-room` | ⬜ 由個人資訊開啟或沿用交易房；無商品時純聊天；需登入 |
+| `GET` | `/api/deals/{id}` | 訂單明細（項目附可售尾數與角色評分 peer）；需參與者 |
 | `POST` | `/api/deals/items` | 加購同一釣客的商品；需買家 |
 | `POST` | `/api/deals/items/batch` | 批次加購多個商品；需買家 |
 | `PATCH` | `/api/deals/items/{itemId}` | 改尾數；需買家 |
@@ -97,12 +100,12 @@ backend/
 | `POST` | `/api/deals/reinitiate` | 取消後重新發起協議；需買家 |
 | `GET` | `/api/deals` | 目前使用者的交易紀錄 |
 | `POST` | `/api/reviews/submit` | 成交後評價對方；需參與者 |
-| `GET` | `/api/reviews?user_id=` | 公開評價與平均星等 |
+| `GET` | `/api/reviews?user_id=&role=&sort=&rating=&offset=&limit=` | 公開角色別評價、摘要、分布與商品照片（角色／分頁 ⬜） |
 | `GET` | `/api/market/codes` | 公開官方代碼字典；`q` 可查名稱、別名或代碼 |
 | `GET` | `/api/market/quote` | 公開整合行情；一次完成名稱→代碼→價格 |
 | `GET` | `/api/market/prices` | 公開行情；每次請求重抓上游，支援 `code`、`region`、`date`、`include=history`、`days` |
 | `GET` | `/api/market/markets` | 公開市場對照 |
-| `POST` | `/api/uploads` | 上傳圖片（base64 data URL）；需登入 |
+| `POST` | `/api/uploads` | 上傳圖片（base64 data URL；商品照片與頭像共用）；需登入 |
 
 錯誤回應採用 `{ "success": false, "code": "代碼", "message": "錯誤說明" }`。
 

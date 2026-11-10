@@ -34,7 +34,9 @@
 | 登入 | 需要有效 Token，否則 401 `UNAUTHORIZED` |
 | 參與者 | 除了登入，還必須是該房間的參與者，否則 403 `FORBIDDEN` |
 
-## 2. 端點總表（現況）
+## 2. 端點總表
+
+> ✅ 為現況；🟡 為部分實作；⬜ 為尚未實作的目標端點。
 
 | # | 方法 | 路徑 | 權限 | 狀態 |
 | --- | --- | --- | --- | --- |
@@ -42,7 +44,8 @@
 | 2 | POST | `/api/auth/login` | 公開 | ✅ |
 | 3 | POST | `/api/auth/signin` | 公開 | ✅（登入別名） |
 | 4 | GET | `/api/auth/me` | 登入 | ✅ |
-| 5 | PUT | `/api/users/profile` | 登入 | ✅ |
+| 5 | PUT | `/api/users/profile` | 登入 | ✅（電話、頭像欄位） |
+| 5a | GET | `/api/users/:id` | 公開 | ✅ 公開個人資訊 |
 | 6 | GET | `/api/products` | 公開 | ✅ |
 | 7 | GET | `/api/products/:id` | 公開 | ✅ |
 | 8 | POST | `/api/products/create` | 登入 | ✅ |
@@ -57,19 +60,20 @@
 | 17 | POST | `/api/uploads` | 登入 | ✅ |
 | 18 | GET | `/uploads/*` | 公開 | ✅ 靜態檔 |
 | 19 | POST | `/api/deals/initiate-channel` | 登入 | ✅ 開啟／沿用交易房 |
+| 19a | POST | `/api/deals/initiate-room` | 登入 | ⬜ 由個人資訊開啟交易房／純聊天 |
 | 20 | GET | `/api/deals/:id` | 參與者 | ✅ 訂單明細（含商品快照與可售） |
 | 21 | POST | `/api/deals/items` | 登入（買家） | ✅ 加購同一釣客的商品 |
 | 22 | POST | `/api/deals/items/batch` | 登入（買家） | ✅ 批次加購 |
 | 23 | PATCH | `/api/deals/items/:itemId` | 登入（買家） | ✅ 改尾數 |
-| 24 | DELETE | `/api/deals/items/:itemId` | 登入（買家） | ✅ 刪除項目（舊介面） |
-| 25 | DELETE | `/api/deals/items` | 登入（買家） | ✅ 清空訂單（舊介面） |
+| 24 | DELETE | `/api/deals/items/:itemId` | 登入（買家） | ✅ 逐項移除（購物車使用，不留系統訊息） |
+| 25 | DELETE | `/api/deals/items` | 登入（買家） | ✅ 清空訂單（舊介面；UI 不提供） |
 | 26 | POST | `/api/deals/propose` | 參與者 | ✅ 送出協議 |
 | 27 | POST | `/api/deals/respond` | 參與者（非發起方） | ✅ 確認；退回為 legacy |
 | 28 | POST | `/api/deals/cancel` | 參與者 | ✅ 取消並釋放（自由文字 note） |
 | 29 | POST | `/api/deals/reinitiate` | 登入（買家） | ✅ 取消後重新發起 |
 | 30 | GET | `/api/deals` | 登入 | ✅ 交易紀錄列表 |
 | 31 | POST | `/api/reviews/submit` | 登入（參與者） | ✅ 送出評價 |
-| 32 | GET | `/api/reviews?user_id=` | 公開 | ✅ 使用者的評價與平均 |
+| 32 | GET | `/api/reviews?user_id=&role=&sort=&rating=&offset=&limit=` | 公開 | 🟡 使用者評價；⬜ 角色／排序／篩選／分頁 |
 | 33 | GET | `/api/market/quote` | 公開 | ✅ 名稱→代碼→價格整合查詢 |
 | 34 | GET | `/api/market/markets` | 公開 | ✅ 市場對照 |
 | 35 | GET | `/api/market/prices` | 公開 | ✅ 代碼查價（含 `include=history`） |
@@ -86,6 +90,9 @@
 | --- | --- | --- | --- |
 | POST | `/api/auth/register` | 公開 | 變更：新增 `city`（必填） |
 | POST | `/api/users/seller-consent` | 登入 | 新增：記錄第一次販賣確認 |
+| GET | `/api/users/:id` | 公開 | 新增：公開個人資訊與角色評分 |
+| PUT | `/api/users/profile` | 登入 | 變更：接受 `phone`、`avatar_url`；電話唯一 |
+| POST | `/api/deals/initiate-room` | 登入 | 新增：由個人資訊開交易房；無商品時純聊天 |
 | POST | `/api/products/create` | 登入 | 變更：整批售價必填、每台斤選填、重量選填、不再自動計算；ID 使用 `nextProductCode()`、寫入 `listed_at` |
 | GET | `/api/products` | 公開 | 變更：只回 `ACTIVE`／`PARTIALLY_RESERVED`，依 `listed_at` 排序 |
 | GET | `/api/products/mine` | 登入 | 新增：目前釣客所有未刪除商品 |
@@ -95,7 +102,8 @@
 | POST | `/api/deals/items/batch` | 登入（買家） | 新增：一次加入多個商品，只留一則系統訊息 |
 | POST | `/api/deals/reinitiate` | 登入（買家） | 新增：取消後複製最後一筆訂單為新草稿 |
 | POST | `/api/deals/cancel` | 參與者 | 變更：接受自由文字 `note` |
-| DELETE | `/api/conversations/:id` | 參與者 | 新增：刪除助手房或已取消交易房 |
+| DELETE | `/api/conversations/:id` | 參與者 | 新增：刪除助手房、純聊天房或已取消交易房 |
+| GET | `/api/reviews` | 公開 | 變更：支援 `role`、`sort`、`rating`、`offset`、`limit`；回角色摘要、分布與商品照片 |
 | GET | `/api/market/codes` | 公開 | 新增：官方代碼字典與候選查詢 |
 | GET | `/api/market/quote` | 公開 | 新增：名稱→代碼→價格整合查詢 |
 | GET | `/api/market/prices` | 公開 | 變更：只接受 `code`，支援 `include=history` |
@@ -129,12 +137,32 @@
 ### `PUT /api/users/profile`
 
 ```json
-{ "display_name": "阿海", "city": "新北市", "district": "瑞芳區",
-  "address_line": "鼻頭路 1 號", "bank_code": "", "bank_account": "", "bank_account_name": "" }
+{ "display_name": "阿海", "phone": "0912345678", "avatar_url": "/uploads/a.jpg",
+  "city": "新北市", "district": "瑞芳區", "address_line": "鼻頭路 1 號",
+  "bank_code": "", "bank_account": "", "bank_account_name": "" }
 ```
 
 可接受 `nickname` 作為 `display_name` 的別名。暱稱 2–20 字；`city`/`district` ≤ 20、`address_line` ≤ 100、銀行欄位有各自上限。`city` 若有值必須在縣市清單內，「臺」正規化為「台」。
-錯誤：400 `INVALID_NICKNAME`、400 `INVALID_REGION`、400 `FIELD_TOO_LONG`、400 `NO_CHANGES`。
+`phone` 對應 `username`；格式 `^09\d{8}$`，全站唯一。修改電話**不要求目前密碼**，也不重新簽 token；token 仍綁 user id，下一次登入使用新電話。`avatar_url` 只接受 `/uploads/...` 或空字串；空字串代表移除頭像。
+錯誤：400 `INVALID_NICKNAME`、400 `INVALID_REGION`、400 `FIELD_TOO_LONG`、400 `NO_CHANGES`、400 `INVALID_PHONE`、409 `PHONE_TAKEN`、400 `INVALID_AVATAR`。
+
+### `GET /api/users/:id`
+
+公開個人資訊，不需登入。回 200：
+
+```json
+{ "id": 1, "display_name": "陳阿海", "avatar_url": "/uploads/a.jpg",
+  "region": "新北市", "is_verified": true, "completed_deals": 18,
+  "rating": {
+    "overall": { "score": 4.8, "count": 20 },
+    "as_seller": { "score": 4.9, "count": 18 },
+    "as_buyer": { "score": 4.5, "count": 2 }
+  } }
+```
+
+- 只回公開欄位；不可直接重用含電話與地址的 `publicUser`。
+- `as_seller` 用 `reviewer_role = buyer` 的評價計算；`as_buyer` 用 `reviewer_role = seller` 的評價計算；`overall` 用全部評價。
+- 找不到回 404 `USER_NOT_FOUND`。
 
 ### `POST /api/users/seller-consent`
 
@@ -313,9 +341,11 @@
 
 `order` 只在交易房有進行中訂單時才有值：`{ id, status, cancel_reason, item_count, total_quantity, final_price, review_status, updated_at }`；`cancel_reason` 讓前端區分逾時與主動取消。`last_order` 是最新一筆訂單的摘要，不限狀態；`orders` 是這間房所有訂單摘要（新到舊），供評價卡等歷史卡片更新。沒有訂單的助手房三者皆為 `null` 或空陣列。`updated_at` 在每次加購、改量、刪除、清空、提案、回應、取消、逾時或評價時更新，前端用來判斷何時重抓明細；`last_order` 的 `id`、`status` 或 `updated_at` 改變時，前端會重取 `GET /api/deals/:id`。
 
-交易房的 `peer` 使用 `publicUser`，因此含 `id`、`display_name`、`username`（完整電話）、`rating_score`、`review_count` 等公開欄位；前端用 `rating_score`／`review_count` 顯示標題列星星，用 `username` 顯示 `tel:` 電話。助手房的 `peer` 固定是 `{ id: "ai", display_name: "小幫手", username: "" }`。
+交易房的 `peer` 使用 `publicUser`，因此含 `id`、`display_name`、`username`（完整電話）、`rating_score`、`review_count` 等公開欄位；前端用 `rating_score`／`review_count` 顯示標題列星星，用 `username` 顯示 `tel:` 電話。交易房開啟後，`GET /api/deals/:id` 的 `peer` 會依目前使用者的交易角色提供角色評分；對話摘要的 `peer` 仍是整體評分。助手房的 `peer` 固定是 `{ id: "ai", display_name: "小幫手", username: "" }`。
 
-未讀數不含自己送出的訊息。助手房的系統訊息不算未讀；交易房的系統訊息（開房、加購通知）算未讀。`deletable` 表示這間房目前是否可刪（助手房恆為 true；交易房需全部訂單皆已取消）。
+交易房方向固定：`buyer_id` 是按「聊聊」或「洽談購買」的人，`seller_id` 是被看／商品擁有者；反向交易是另一間房。由個人資訊開啟且對方沒有商品時，房間沒有任何 `deals`，是純聊天房；`order`、`last_order`、`orders` 皆為 `null` 或空陣列。
+
+未讀數不含自己送出的訊息。助手房的系統訊息不算未讀；交易房的系統訊息（開房、加購通知）算未讀。`deletable` 表示這間房目前是否可刪（助手房恆為 true；沒有任何訂單的純聊天房為 true；有訂單的交易房需全部訂單皆已取消）。
 
 **副作用**：會先做一次逾時掃描（`sweepExpired`），所以讀取清單可能讓過期的協議轉為 `CANCELLED` 並留下系統訊息。
 
@@ -400,6 +430,7 @@
 - 只接受 `image/jpeg`、`image/png`、`image/webp`。
 - 解碼後上限 5MB。
 - 存成 `backend/uploads/{uuid}.{ext}`。
+- 商品照片與個人頭像共用這個端點；上傳後把 URL 寫入商品或 `users.avatar_url`。
 - 回 200：`{ "url": "/uploads/ab12cd34.jpg" }`（在 `data` 裡）。
 
 錯誤：400 `MISSING_IMAGE`、`INVALID_IMAGE`、`UNSUPPORTED_TYPE`、`EMPTY_IMAGE`、413 `IMAGE_TOO_LARGE`。
@@ -422,12 +453,13 @@
 | 方法 | 路徑 | 權限 | 說明 |
 | --- | --- | --- | --- |
 | POST | `/api/deals/initiate-channel` | 登入 | ✅ 由商品建立／沿用交易房與草稿，加入項目 |
+| POST | `/api/deals/initiate-room` | 登入 | ⬜ 由個人資訊建立／沿用交易房；無商品時純聊天 |
 | GET | `/api/deals/:id` | 參與者 | ✅ 訂單明細，項目附目前可售尾數 |
 | POST | `/api/deals/items` | 登入（買家） | ✅ 加購同一釣客的其他商品 |
 | POST | `/api/deals/items/batch` | 登入（買家） | ✅ 批次加購 |
-| PATCH | `/api/deals/items/:itemId` | 登入（買家） | ✅ 改尾數 |
-| DELETE | `/api/deals/items/:itemId` | 登入（買家） | ✅ 移除項目（舊介面） |
-| DELETE | `/api/deals/items` | 登入（買家） | ✅ 清空項目（舊介面） |
+| PATCH | `/api/deals/items/:itemId` | 登入（買家） | ✅ 改尾數；購物車使用 |
+| DELETE | `/api/deals/items/:itemId` | 登入（買家） | ✅ 逐項移除；購物車使用，不留系統訊息 |
+| DELETE | `/api/deals/items` | 登入（買家） | ✅ 清空項目（舊介面；UI 不提供） |
 | POST | `/api/deals/propose` | 參與者 | ✅ 送協議，逐項檢查可售 |
 | POST | `/api/deals/respond` | 參與者（非發起方） | ✅ 確認；退回為 legacy |
 | POST | `/api/deals/cancel` | 參與者 | ✅ 取消並釋放（自由文字 note） |
@@ -446,9 +478,23 @@
 
 錯誤：404 `PRODUCT_NOT_FOUND`、400 `INVALID_QUANTITY`、400 `OWN_PRODUCT`（自己的商品）、409 `INSUFFICIENT_QUANTITY`（附 `product_id`、`available`、`in_draft`）。
 
+`POST /api/deals/initiate-room`
+
+```json
+{ "seller_id": 1 }
+```
+
+回 200：`{ conversation, deal, has_products }`。目前使用者是買家，`seller_id` 是釣客；不能對自己開房（400 `OWN_PROFILE`）。
+
+- 對方有公開商品：找或建立草稿，`deal` 為草稿、`has_products: true`；購物車為空。
+- 對方沒有公開商品：不建立 `deal`，`deal: null`、`has_products: false`；純聊天房。
+- 已有同方向房間時沿用；已有進行中訂單時回傳該訂單，不建立新草稿。
+- 新房間系統訊息：有商品「已進入交易洽談」；無商品「已開啟對話」。
+- `conversation.peer` 含電話與整體評價；交易房開啟後以 `GET /api/deals/:id` 的角色評分為準。
+
 `GET /api/deals/:id`
 
-回 200 `data` 是訂單：`items[]` 每項附 `available`（目前可售尾數），`items_total` 由 `unit_price × quantity` 重算；另附 `cancel_reason`、`cancelled_by`（取消原因與操作者，未取消為 `null`）、`peer`（對方 `{ id, display_name }`）、`role`（`buyer`／`seller`）、`my_reviewed` 與 `peer_reviewed`。非參與者 403 `FORBIDDEN`，不存在 404 `DEAL_NOT_FOUND`。
+回 200 `data` 是訂單：`items[]` 每項附 `available`（目前可售尾數），`items_total` 由 `unit_price × quantity` 重算；另附 `cancel_reason`、`cancelled_by`（取消原因與操作者，未取消為 `null`）、`peer`（對方的公開資料；依目前使用者的交易角色附角色評分 `rating_score`／`review_count`）、`role`（`buyer`／`seller`）、`my_reviewed` 與 `peer_reviewed`。非參與者 403 `FORBIDDEN`，不存在 404 `DEAL_NOT_FOUND`。
 
 **副作用**：讀取前會先做逾期掃描，可能讓這筆訂單轉為 `CANCELLED` 並留下系統訊息。
 
@@ -485,7 +531,7 @@
 
 `DELETE /api/deals/items/:itemId?deal_id=deal_...` 與 `DELETE /api/deals/items?deal_id=deal_...`
 
-刪除單項或清空。項目存在是刪除單項的前提（404 `ITEM_NOT_FOUND`）；清空允許草稿變成 0 項。兩者都只允許買家在 `DRAFT` 時呼叫。
+刪除單項或清空。項目存在是刪除單項的前提（404 `ITEM_NOT_FOUND`）；清空允許草稿變成 0 項。兩者都只允許買家在 `DRAFT` 時呼叫。逐項移除不留系統訊息；清空端點保留給舊資料／內部使用，UI 不提供「清空全部」。
 
 `POST /api/deals/propose`
 
@@ -539,7 +585,7 @@
 | 方法 | 路徑 | 權限 |
 | --- | --- | --- |
 | POST | `/api/reviews/submit` | 登入（且為該訂單參與者） |
-| GET | `/api/reviews?user_id=&limit=` | 公開 |
+| GET | `/api/reviews?user_id=&role=&sort=&rating=&offset=&limit=` | 公開 |
 
 ```json
 { "deal_id": "deal_...", "rating": 5, "tags": ["準時守約"], "comment": "…" }
@@ -553,15 +599,29 @@
 - 回 201 `{ review, target }`。`target` 是評價對象更新後的公開資料。伺服器用該對象的全部評價重算 `rating_score`、`review_count`；含「臨時放鳥」的評價會讓 `no_show_count` +1，達 3 次時 `is_blacklisted = true`。未到次數只累加，不會因重算而減少。
 - 最新的評價卡會同步雙方的 `buyer_reviewed`／`seller_reviewed`。
 
-`GET /api/reviews?user_id=1&limit=6`（公開）回：
+`GET /api/reviews?user_id=1&role=seller&sort=newest&offset=0&limit=6`（公開）回：
 
 ```jsonc
-{ "user_id": 1, "rating_score": 4.8, "review_count": 18,
-  "reviews": [{ "id": "rev_...", "rating": 5, "tags": ["準時守約"],
-    "comment": "…", "created_at": "...", "reviewer_name": "買家乙" }] }
+{ "user_id": 1, "role": "seller",
+  "summary": { "score": 4.9, "count": 18,
+    "distribution": { "5": 15, "4": 2, "3": 1, "2": 0, "1": 0 } },
+  "total": 18,
+  "reviews": [{ "id": "rev_...", "rating": 5, "tags": ["魚貨新鮮"],
+    "comment": "…", "created_at": "...", "reviewer_id": 2,
+    "reviewer_name": "小魚買家", "reviewer_avatar_url": "/uploads/b.jpg",
+    "reviewer_role": "buyer",
+    "products": [{ "title": "紅魽（3尾 / 放血冰鎮）",
+      "fish_species": "紅魽", "photo_url": "/uploads/a.jpg" }] }],
+  "has_more": true }
 ```
 
-`rating_score` 與 `review_count` 由 `reviews` 實際資料計算，不採信會員表上的舊數字；`reviews` 只回最近 `limit` 筆。只回傳評價者的顯示名稱，不回傳電話或其他會員欄位。找不到使用者回 404 `USER_NOT_FOUND`。
+- `role=seller`：該使用者作為釣客的評價，篩 `reviewer_role = buyer`；`role=buyer`：作為買家的評價，篩 `reviewer_role = seller`。省略 `role` 回整體評價，保留舊行為。
+- `sort`：`newest`（預設）／`highest`／`lowest`；同分時以 `created_at` 新到舊。`rating`：1–5，只影響列表，不影響 `summary`。
+- `offset` 預設 0；`limit` 預設 20、最大 50；個人資訊頁傳 6。
+- `summary` 是該 role 的全部評價；`total` 是 role＋rating 篩選後的筆數；`has_more = offset + reviews.length < total`。
+- `products` 從 `reviews.deal_id` 對到 `deals.items` 快照，最多 3 筆；超過時另回 `product_count`。
+- 評價者只回 `reviewer_name` 與 `reviewer_avatar_url`，不回電話、地址或其他會員欄位。找不到使用者回 404 `USER_NOT_FOUND`。
+- 省略 `role` 時，回應可同時保留舊的 `rating_score`／`review_count` 別名，避免舊呼叫端壞掉。
 
 ### 8.3 行情
 
@@ -625,6 +685,9 @@
 | `MISSING_REGION` | 400 | 註冊（缺縣市） |
 | `INVALID_REGION` | 400 | 註冊、個人檔案、行情（縣市不在清單） |
 | `DUPLICATE_PHONE` | 409 | 註冊 |
+| `PHONE_TAKEN` | 409 | 個人檔案（電話已被使用） |
+| `INVALID_PHONE` | 400 | 個人檔案（電話格式錯誤） |
+| `INVALID_AVATAR` | 400 | 個人檔案（頭像網址格式錯誤） |
 | `INVALID_CREDENTIALS` | 401 | 登入 |
 | `INVALID_NICKNAME` | 400 | 個人檔案 |
 | `FIELD_TOO_LONG` | 400 | 個人檔案、上架（處理方式） |
@@ -637,6 +700,7 @@
 | `MISSING_PRICE` | 400 | 上架（整批與每台斤都沒填） |
 | `INVALID_PRICE` | 400 | 上架（售價 ≤ 0） |
 | `OWN_PRODUCT` | 400 | 開啟交易房（自己的商品） |
+| `OWN_PROFILE` | 400 | 由個人資訊開交易房（自己） |
 | `MISSING_PHOTO` | 400 | 上架 |
 | `MISSING_CONVERSATION` | 400 | 訊息 |
 | `EMPTY_MESSAGE` | 400 | 訊息 |
@@ -664,7 +728,7 @@
 | `COMMENT_TOO_LONG` | 400 | 評價（評語超過 100 字） |
 | `DEAL_NOT_CONFIRMED` | 409 | 評價（訂單未成交） |
 | `ALREADY_REVIEWED` | 409 | 評價（重複送出） |
-| `USER_NOT_FOUND` | 404 | 公開評價列表 |
+| `USER_NOT_FOUND` | 404 | 公開評價列表、公開個人資訊 |
 | `INVALID_SPECIES` | 400 | 行情（缺少代碼或代碼不是數字） |
 | `SPECIES_NOT_FOUND` | 404 | 行情（字典查無名稱或代碼） |
 | `AMBIGUOUS_SPECIES` | 409 | 行情（名稱對到多個代碼） |
@@ -687,7 +751,7 @@
 | `GET /api/products` 會順便釋放逾時訂單 | 不要假設它是純讀取 |
 | `/api/fish/data` 已移除 | 瀏覽頁一律用 `/api/products` |
 | `sender_type: "ai"` 不是身分證明 | 只有房間參與者能寫訊息；跨房寫入一律 403 |
-| 交易房的 `peer.username` 是完整電話 | 交易房標題列直接顯示，加 `tel:` 連結；`peer` 另含 `rating_score`、`review_count` 供星星使用 |
+| 交易房的 `peer.username` 是完整電話 | 交易房標題列直接顯示，加 `tel:` 連結；有訂單時 `peer` 用角色評分，純聊天房用對話摘要的整體評分 |
 | 交易房訊息只走真人訊息 | 前端不得再呼叫規則引擎；後端也會擋 `sender_type: "ai"` |
 | `item_id` 只在同一筆訂單內唯一 | 改尾數／刪項目要同時帶 `deal_id` |
 | 草稿不保留庫存 | `available` 仍包含草稿中的尾數；同一草稿的累計不得超過 `available` |
@@ -708,6 +772,12 @@
 | 法規告知卡按「取消」不記錄同意 | 取消後回 idle；下次賣魚再顯示 |
 | 同意只由 `POST /api/users/seller-consent` 寫入 | `chat/message` 的 `legal_consent` 卡只是 UI，不是同意紀錄 |
 | `weight_kg` 是選填／legacy | 不要因缺少重量而拒絕上架；商品卡、推薦卡、交易房都不顯示重量 |
+| 公開個人資訊不可重用 `publicUser` | 只回公開白名單；電話、地址、銀行、`username` 一律不出現 |
+| `GET /api/reviews?role=seller` 是「作為釣客的評價」 | 實際篩 `reviewer_role = buyer`；`role=buyer` 才是 `reviewer_role = seller` |
+| 評價商品照片不是新欄位 | 從 `deals.items` 快照帶出，最多 3 筆；不要另外上傳評價照片 |
+| 電話修改不改 token | 不要強制登出；更新本機會員資料與 nav 的電話即可 |
+| `initiate-room` 的 `seller_id` 是個人資訊頁的擁有者 | 目前使用者是買家；不能傳自己 |
+| 純聊天房沒有 `deal` | `deal: null`、`has_products: false`；不要顯示浮動購物車或 `發送交易` |
 | 取消原因改成自由文字 `note` | 不要再傳 `reason`；後端固定寫 `cancel_reason: "OTHER"` 與 `cancel_note` |
 | 批次加購只留一則系統訊息 | 用 `POST /api/deals/items/batch`，不要逐項呼叫 `POST /api/deals/items` |
 | 重新發起只限 `CANCELLED` 且 `cancel_reason = OTHER` | 逾時取消不能重新發起；已有草稿回 409 `DRAFT_EXISTS` |

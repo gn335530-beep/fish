@@ -18,7 +18,8 @@
 | `POST` | `/api/auth/login` | 公開 | 登入 |
 | `POST` | `/api/auth/signin` | 公開 | 登入別名 |
 | `GET` | `/api/auth/me` | 登入 | 目前會員 |
-| `PUT` | `/api/users/profile` | 登入 | 更新暱稱、地址、銀行資料（後端端點；目前前端沒有 UI 呼叫） |
+| `GET` | `/api/users/{id}` | 公開 | 公開個人資訊與角色評分；不回電話、地址 |
+| `PUT` | `/api/users/profile` | 登入 | 更新暱稱、電話、頭像、地址、銀行資料 |
 | `POST` | `/api/users/seller-consent` | 登入 | 記錄第一次販賣確認，重複呼叫不覆寫時間 |
 | `GET` | `/api/products` | 公開 | 商品清單，只回傳上架中／洽談中；支援 `region`、`species`、`seller_id`、`status`、`limit` |
 | `GET` | `/api/products/mine` | 登入 | 目前釣客所有未刪除商品（含已下架、已售出），依 `listed_at` 由新到舊 |
@@ -36,18 +37,20 @@
 | `POST` | `/api/conversations/{id}/read` | 參與者 | 標記已讀 |
 | `POST` | `/api/conversations/{id}/clear` | 參與者（助手房） | 清除舊訊息 |
 | `POST` | `/api/deals/initiate-channel` | 登入 | 由商品開啟或沿用交易房與草稿訂單 |
-| `GET` | `/api/deals/{id}` | 參與者 | 訂單明細，項目附可售尾數 |
+| `POST` | `/api/deals/initiate-room` | 登入 | 由個人資訊開啟或沿用交易房；無商品時純聊天 |
+| `GET` | `/api/deals/{id}` | 參與者 | 訂單明細，項目附可售尾數與角色評分 peer |
 | `POST` | `/api/deals/items` | 買家 | 加購同一釣客的商品 |
 | `POST` | `/api/deals/items/batch` | 買家 | 批次加購多個商品，只留一則系統訊息 |
-| `PATCH` | `/api/deals/items/{itemId}` | 買家 | 改尾數（需帶 `deal_id`） |
-| `DELETE` | `/api/deals/items/{itemId}`、`/api/deals/items` | 買家 | 刪除項目／清空（舊介面） |
+| `PATCH` | `/api/deals/items/{itemId}` | 買家 | 改尾數（需帶 `deal_id`）；購物車使用 |
+| `DELETE` | `/api/deals/items/{itemId}` | 買家 | 逐項移除；購物車使用，不留系統訊息 |
+| `DELETE` | `/api/deals/items` | 買家 | 清空（舊介面；UI 不提供） |
 | `POST` | `/api/deals/propose` | 參與者 | 送出協議，鎖定 30 分鐘 |
 | `POST` | `/api/deals/respond` | 參與者（非發起方） | 確認協議；退回為 legacy |
 | `POST` | `/api/deals/cancel` | 參與者 | 取消並帶自由文字 `note` |
 | `POST` | `/api/deals/reinitiate` | 買家 | 取消後重新發起協議 |
 | `GET` | `/api/deals` | 登入 | 交易紀錄列表 |
 | `POST` | `/api/reviews/submit` | 參與者 | 成交後評價對方 |
-| `GET` | `/api/reviews?user_id=` | 公開 | 評價與平均星等 |
+| `GET` | `/api/reviews?user_id=&role=&sort=&rating=&offset=&limit=` | 公開 | 角色別評價、摘要、分布與商品照片 |
 | `GET` | `/api/market/codes` | 公開 | 官方代碼字典；帶 `q` 查名稱／別名／代碼，省略回完整字典 |
 | `GET` | `/api/market/quote` | 公開 | 名稱→代碼→價格整合查詢；支援 `q`、`region`、`date`、`include=history`、`days` |
 | `GET` | `/api/market/prices` | 公開 | 代碼查價；每次請求重抓，支援 `code`、`region`、`date`、`include=history`、`days` |
@@ -60,7 +63,7 @@
 
 `GET /api/market/codes` 回傳官方代碼、官方名稱、別名、分類、養殖旗標與最後出現日期。字典在執行時同步最近 30 天官方資料，成功後快取 24 小時；同步失敗時沿用舊字典。查無名稱回 `404 SPECIES_NOT_FOUND`，字典不可用回 `503 CATALOG_UNAVAILABLE`。
 
-交易房由 `POST /api/deals/initiate-channel` 開啟，房間唯一鍵是 `buyer_id + seller_id`；同一釣客的多個商品會進同一筆草稿訂單。交易房的系統訊息會計入未讀。助手房每次 `POST /api/conversations/assistant` 都是獨立一間，有自己的 `context` 與草稿；`GET /api/conversations` 會回 `deletable` 供收件匣決定是否顯示刪除。
+交易房由 `POST /api/deals/initiate-channel`（商品）或 `POST /api/deals/initiate-room`（個人資訊）開啟，房間唯一鍵是 `buyer_id + seller_id`，方向固定；同一釣客的多個商品會進同一筆草稿訂單。由個人資訊開啟且對方沒有商品時，房間沒有任何 `deals`，是純聊天房，購物車不顯示。交易房的系統訊息會計入未讀。助手房每次 `POST /api/conversations/assistant` 都是獨立一間，有自己的 `context` 與草稿；`GET /api/conversations` 會回 `deletable` 供收件匣決定是否顯示刪除，純聊天房恆為可刪。
 
 ### 對話摘要欄位
 
@@ -105,6 +108,9 @@
 | `register({ phone, password, nick, city })` | 註冊並保存登入狀態 |
 | `login({ phone, password })` | 登入並保存登入狀態 |
 | `me()` | 以 Token 取得並同步會員資料 |
+| `getPublicUser(id)` | 取得公開個人資訊與角色評分 |
+| `listReviews(userId, params)` | 取得角色別評價、摘要、分布與商品照片 |
+| `updateProfile(payload)` | 更新暱稱、電話、頭像與地址 |
 | `logout()` | 清除本機 Token、會員資料與頭像 |
 | `listProducts()` | 取得公開商品清單（上架中／洽談中） |
 | `listMyProducts()` | 取得目前釣客所有未刪除商品（上架紀錄） |
@@ -114,13 +120,16 @@
 | `getProduct(id)` | 取得單一商品 |
 | `photoUrl(path)` | 將 `/uploads/...`、`images/...` 轉成可顯示網址 |
 
-`createFish()`、`deleteFish()`、`updateFish()`、`listFish()`、`rowToCatch()`、`rowsToCatch()`、`updateProfile()` 都已移除。
+`createFish()`、`deleteFish()`、`updateFish()`、`listFish()`、`rowToCatch()`、`rowsToCatch()` 都已移除。`getPublicUser()` 與 `updateProfile()` 已實作；`listReviews()` 會在評價角色化 ticket 實作。
 
 ## 5. 頁面初始化
 
 - `frontend/assets/js/app/08-api-init.js` 只負責導覽、個人選單與 `syncSessionFromApi()`。
 - `syncSessionFromApi()` 在有 Token 時呼叫 `me()`；401／403 會清除本機登入狀態，只有會員資料而沒有 Token 時也會清除。
 - 頁面資料由各頁自己的 API 呼叫載入：首頁與列表用 `listProducts()`；助手魚種查詢用 `/api/market/codes` 與 `/api/market/quote`；上架紀錄用 `listMyProducts()`。商品詳情頁已移除，`getProduct(id)` 只供對話與內部使用。
+- 個人資訊頁（ticket 03 已完成公開標題列與入口）：公開頁用 `getPublicUser(id)`；商品與評價區塊待後續 ticket 接上 `listReviews(id, { role, sort, rating, offset, limit })` 與 `listProducts({ seller_id })`；自己的頁面商品改用 `listMyProducts()`。
+- 設定頁：用 `me()` 載入，`updateProfile()` 儲存；頭像先上傳 `/api/uploads`，再把 URL 寫入 `avatar_url`。
+- 個人資訊頁的「聊聊」由交易引擎呼叫 `POST /api/deals/initiate-room`；不要直接開空房。
 
 ## 6. 錯誤處理
 
