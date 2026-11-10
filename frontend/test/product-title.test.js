@@ -33,8 +33,10 @@ test("推薦小卡顯示魚種、處理方式、尾數、雙價與地區", funct
   assert.match(html, /石斑/);
   assert.match(html, /活體/);
   assert.match(html, /共 1 尾/);
-  assert.match(html, /每台斤售價：NT\$200/);
-  assert.match(html, /整批售價：NT\$1,000/);
+  assert.match(html, /每台斤售價：/);
+  assert.match(html, /NT\$200/);
+  assert.match(html, /整批售價：/);
+  assert.match(html, /NT\$1,000/);
   assert.match(html, /高雄市/);
 });
 

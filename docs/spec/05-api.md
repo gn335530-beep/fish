@@ -439,10 +439,10 @@
 `POST /api/deals/initiate-channel`
 
 ```json
-{ "product_id": "prd_...", "quantity": 2 }
+{ "product_id": "prd_...", "quantity": 2, "replace_items": true }
 ```
 
-回 200：`{ conversation, deal, product }`。行為：以 `product.seller_id` 找或建立交易房（唯一鍵 `buyer_id + seller_id`）→ 找或建立草稿訂單 → 加入或累加項目 → 房間轉 `HUMAN` → 插入系統訊息（第一次開房時另有「已進入交易洽談」）。`conversation` 是對話摘要（含 `peer.username` 完整電話與 `order`），`deal` 是草稿訂單，項目為商品快照。
+回 200：`{ conversation, deal, product }`。行為：以 `product.seller_id` 找或建立交易房（唯一鍵 `buyer_id + seller_id`）→ 找或建立草稿訂單 → 加入或累加項目 → 房間轉 `HUMAN` → 插入系統訊息（第一次開房時另有「已進入交易洽談」）。`replace_items: true` 時會先清空草稿舊項目，只保留本次商品；未帶時維持加入或累加。`conversation` 是對話摘要（含 `peer.username` 完整電話與 `order`），`deal` 是草稿訂單，項目為商品快照。
 
 錯誤：404 `PRODUCT_NOT_FOUND`、400 `INVALID_QUANTITY`、400 `OWN_PRODUCT`（自己的商品）、409 `INSUFFICIENT_QUANTITY`（附 `product_id`、`available`、`in_draft`）。
 
@@ -601,7 +601,7 @@
 - `found:false` 只回 `found`、`reason`、`species_code`、`official_name`、`is_aquaculture`，不得帶 `price_per_kg`／`price_per_taijin` 或任何價格數字。
 - `scope = "national"` 時保留請求的 `region`，前端顯示「全國平均」。
 - `include=history` 只回該次查詢的 `scope`（縣市或全國）每日平均價；`days` 是最近 N 個交易日（7 或 30），回傳最多 N 筆有交易的日期；抓取時需涵蓋足夠日曆日。未帶 `include=history` 時省略 `history` 欄位。
-- `is_aquaculture: true` 時，助手文字回覆標「養殖價格」；行情卡不顯示此標記。
+- `is_aquaculture: true` 時，助手行情查詢成功一律回行情卡；卡片不顯示「養殖價格」標記。
 - `summary` 端點已移除；走勢改用 `include=history`。
 
 ## 9. 錯誤碼總表
@@ -699,7 +699,7 @@
 | `price_auto: true` 只會出現在舊資料 | 新商品一律 `false`；畫面不顯示「自動計算」 |
 | 行情查詢回的是平均價數字，不是 low／avg／high 物件 | `data.price_per_kg`、`data.price_per_taijin` 直接是 number |
 | 行情卡走勢要帶 `include=history`；沒有 `summary` 端點 | 用 `days=7` 或 `days=30`（最近 7／30 個交易日） |
-| `is_aquaculture: true` | 助手文字回覆標「養殖價格」；行情卡不顯示此標記 |
+| `is_aquaculture: true` | 行情查詢成功時回行情卡；卡片不顯示「養殖價格」標記 |
 | 助手房可以有多間 | 每間有自己的 `context` 與草稿；不要假設只有一間 |
 | 交易房只有 `CANCELLED` 能刪 | 房內必須沒有 `CONFIRMED` 歷史；刪除會一併移除該房所有訂單與項目 |
 | 商品不保存行情 | 商品卡與推薦卡不顯示行情；上架行情卡才是行情顯示處 |

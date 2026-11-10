@@ -36,10 +36,12 @@ api = {
     if (bodyRenderer) bodyRenderer.setBody(html, options);
   },
   setFooter: function (visible) { refs.form.hidden = !visible; },
-  setHeader: function (title, subHtml) {
+  setHeader: function (title, subHtml, asideHtml) {
     refs.title.textContent = title;
     refs.sub.innerHTML = subHtml || "";
     refs.sub.hidden = !subHtml;
+    refs.aside.innerHTML = asideHtml || "";
+    refs.aside.hidden = !asideHtml;
   },
   setBadge: function (count) {
     const value = Number(count) || 0;
@@ -89,6 +91,7 @@ export function mountPanel(options) {
     badge: document.getElementById("fm-badge"),
     title: document.getElementById("fm-title"),
     sub: document.getElementById("fm-sub"),
+    aside: document.getElementById("fm-aside"),
     voice: document.getElementById("fm-voice")
   };
 

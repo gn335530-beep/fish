@@ -1,9 +1,9 @@
 /* 行情問答：名稱先查官方代碼字典，再用代碼查價格；多候選時回問。 */
 
 import { getMarketQuote, getMarketQuoteByCode } from "../../api/market.js";
-import "../../shared/format.js";
 import { findRegion, normalizeCityName } from "../../shared/regions.js";
 import { ensureCatalog, findSpeciesMention } from "./species-catalog.js";
+import { buildMarketQuoteCard } from "./market-quote-card.js";
 import { INTENT, detectIntent } from "./rules.js";
 
 function profileRegion(user) {
@@ -23,44 +23,19 @@ function withoutRegion(text) {
 }
 
 function marketMeta(text, user) {
-  const explicit = findRegion(text);
-  const profile = profileRegion(user);
   return {
-    explicit: !!explicit,
-    profile: profile,
-    requestedRegion: explicit || profile
+    requestedRegion: findRegion(text) || profileRegion(user)
   };
-}
-
-function scopeText(data, requestedRegion) {
-  return window.HaisenFormat.marketScopeText({
-    scope: data.scope,
-    region: data.region || requestedRegion,
-    price_per_taijin: data.price_per_taijin
-  });
-}
-
-function prefixText(data, meta) {
-  if (data.scope === "national" && meta.requestedRegion) {
-    return meta.requestedRegion + "暫無行情，改以全國平均：";
-  }
-  if (!meta.explicit && meta.profile) return "依你的地區（" + meta.profile + "），";
-  if (!meta.explicit && !meta.profile) return "你的個人檔案還沒填縣市，以全國平均查詢：";
-  return "";
 }
 
 function replyWith(ctx, replies) {
   return { context: Object.assign({}, ctx, { market_pending: null }), replies: replies };
 }
 
-function priceReply(data, ctx, meta) {
-  const place = scopeText(data, meta.requestedRegion);
-  const quality = data.is_aquaculture ? "養殖價格，" : "";
-  const detail = "（代碼 " + data.species_code + "，" + quality + data.trade_date +
-    "，" + place + "，" + data.source + "）";
-  const prefix = prefixText(data, meta);
-  return replyWith(ctx, [{ text: prefix + data.official_name + " 的平均價是 " +
-    window.HaisenFormat.marketPriceText(data) + detail + "。" }]);
+function priceReply(data, ctx) {
+  return replyWith(ctx, [{
+    card: buildMarketQuoteCard(data, { speciesName: data.official_name })
+  }]);
 }
 
 function candidateReply(ctx, name, candidates, meta) {
@@ -72,9 +47,7 @@ function candidateReply(ctx, name, candidates, meta) {
       market_pending: {
         query: name,
         candidates: candidates,
-        region: meta.requestedRegion || null,
-        explicit: meta.explicit,
-        profile: meta.profile
+        region: meta.requestedRegion || null
       }
     }),
     replies: [{ text: "搜尋到多種" + name + "，請問是哪一種" + name + "？請選擇：" + labels }]
@@ -85,8 +58,8 @@ async function quoteFor(name, byCode, ctx, meta) {
   let data;
   try {
     data = byCode
-      ? await getMarketQuoteByCode(name, meta.requestedRegion || null)
-      : await getMarketQuote(name, meta.requestedRegion || null);
+      ? await getMarketQuoteByCode(name, meta.requestedRegion || null, 30)
+      : await getMarketQuote(name, meta.requestedRegion || null, 30);
   } catch (error) {
     const body = error && error.data ? error.data : {};
     if (body.code === "AMBIGUOUS_SPECIES") {
@@ -101,7 +74,7 @@ async function quoteFor(name, byCode, ctx, meta) {
     return replyWith(ctx, [{ text: "暫無行情" }]);
   }
   if (!data || !data.found) return replyWith(ctx, [{ text: "暫無行情" }]);
-  return priceReply(data, ctx, meta);
+  return priceReply(data, ctx);
 }
 
 function namesOf(row) {
@@ -131,12 +104,7 @@ export async function marketReply(text, user, context) {
     const pending = ctx.market_pending;
     const picked = matchCandidate(source, pending.candidates || []);
     if (picked) {
-      const meta = {
-        explicit: pending.explicit,
-        profile: pending.profile,
-        requestedRegion: pending.region
-      };
-      return quoteFor(String(picked.species_code), true, ctx, meta);
+      return quoteFor(String(picked.species_code), true, ctx, { requestedRegion: pending.region });
     }
     ctx = Object.assign({}, ctx, { market_pending: null });
     if (detectIntent(source) !== INTENT.MARKET) return { handled: false, context: ctx };

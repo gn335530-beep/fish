@@ -1,0 +1,57 @@
+/* 行情卡：走勢圖、上下參考線與最高／最低標註。 */
+
+.fm-market__chart {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 345px;
+  pointer-events: none;
+}
+
+.fm-market__none {
+  position: absolute;
+  top: 176px;
+  left: 50%;
+  color: #6B7280;
+  transform: translateX(-50%);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.fm-market__high,
+.fm-market__low {
+  position: absolute;
+  color: #6B7280;
+  transform: translateX(-50%);
+  font-size: 11.5px;
+  line-height: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.fm-market__high { top: 142.5px; }
+.fm-market__low { top: 202.5px; }
+.fm-card--market .fm-market__high b,
+.fm-card--market .fm-market__low b {
+  color: #111827;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.fm-market__date {
+  position: absolute;
+  top: 215.4px;
+  left: 6.52%;
+  color: #6B7280;
+  font-size: 11px;
+  line-height: 12px;
+}
+
+.fm-market__label {
+  position: absolute;
+  top: 217px;
+  right: 7.13%;
+  color: #6B7280;
+  font-size: 9px;
+  line-height: 12px;
+}

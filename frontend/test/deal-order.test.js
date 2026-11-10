@@ -83,7 +83,7 @@ test("加購面板列出同釣客商品、已在訂單者與可再加購上限",
   update({
     addonOpen: true,
     addons: [
-      { id: "prd_a", fish_species: "石斑", available: 5, price_per_taijin: 800, price: 2800 },
+      { id: "prd_a", fish_species: "石斑", condition: "活體", available: 5, price_per_taijin: 800, price: 2800 },
       { id: "prd_c", fish_species: "花枝", available: 3, price_per_taijin: null, price: 500 }
     ],
     addonQty: { prd_c: "2" }
@@ -96,6 +96,41 @@ test("加購面板列出同釣客商品、已在訂單者與可再加購上限",
   assert.match(html, /整批 NT\$500/);
   assert.match(html, /data-action="addon-cancel">取消/);
   assert.match(html, /data-action="addon-submit">確認/);
+});
+
+test("商品條與發送交易摘要都含魚種、處理方式、剩餘尾數與價格", async function () {
+  reset(draft(), 2);
+  const strip = renderDealStrip();
+  assert.match(strip, /<b>石斑<\/b>/);
+  assert.match(strip, /活體/);
+  assert.match(strip, /剩 2 尾/);
+  assert.match(strip, /NT\$800 元\/台斤/);
+
+  await dealActions.handleDealAction("toggle-propose", {});
+  const proposal = renderDealStrip();
+  assert.match(proposal, /<b>石斑<\/b>/);
+  assert.match(proposal, /活體/);
+  assert.match(proposal, /剩 2 尾/);
+  assert.match(proposal, /NT\$800 元\/台斤/);
+  assert.match(proposal, /<b>嘉鱲<\/b>/);
+  assert.match(proposal, /剩 2 尾/);
+  assert.match(proposal, /NT\$900 元\/台斤/);
+});
+
+test("加購列使用剩 N 尾，且不顯示 legacy 重量", function () {
+  reset(draft(), 2);
+  update({
+    addonOpen: true,
+    addons: [{
+      id: "prd_a", fish_species: "石斑", condition: "活體", weight_kg: 3,
+      available: 5, price_per_taijin: 800, price: 2800
+    }]
+  });
+  const html = renderDealStrip();
+  assert.match(html, /活體/);
+  assert.match(html, /剩 5 尾 · NT\$800 元\/台斤/);
+  assert.doesNotMatch(html, /售 5 尾/);
+  assert.doesNotMatch(html, /3(?:\.0)? ?kg|公斤|重量/);
 });
 
 test("可再加購為 0 時停用輸入", function () {

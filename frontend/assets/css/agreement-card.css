@@ -1,0 +1,164 @@
+/* 協議卡：沿用聊天室的紙張、白底、圓角與深海藍綠主要動作。 */
+
+/* 協議卡、確認取消卡與取消訊息卡共用外殼。 */
+.fm-card--deal,
+.fm-card--cancel-confirm,
+.fm-card--cancelled {
+  container-type: inline-size;
+  display: block;
+  width: 329px;
+  max-width: 100%;
+  margin-inline: auto;
+  padding: 14px 12px 12px;
+  border: 1px solid var(--rule-2);
+  border-radius: 16px;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  line-height: normal;
+  box-shadow: 0 4px 14px rgba(26, 29, 27, .08);
+}
+
+/* 卡片標題 */
+.fm-card--deal .fm-card__deal-kicker {
+  display: block;
+  color: var(--muted);
+  font-size: 5.2cqw;
+  font-weight: 600;
+  letter-spacing: .18em;
+  text-indent: .18em;
+  text-align: center;
+}
+
+/* 魚種與圓形狀態徽章 */
+.fm-card--deal .fm-card__deal-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 3cqw;
+  padding-top: 2.4cqw;
+}
+
+.fm-card--deal .fm-card__deal-species {
+  display: grid;
+  gap: 1.2cqw;
+  min-width: 0;
+  padding-top: 1.4cqw;
+}
+
+.fm-card--deal .fm-card__deal-species b {
+  color: var(--ink);
+  font-size: 9.2cqw;
+  font-weight: 700;
+  line-height: 1.18;
+  letter-spacing: .01em;
+  overflow-wrap: anywhere;
+}
+
+.fm-card--deal .fm-card__pill {
+  display: grid;
+  place-content: center;
+  width: 17.6cqw;
+  aspect-ratio: 1;
+  padding: 2.2cqw;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--coral);
+  font-size: 4.1cqw;
+  font-weight: 600;
+  line-height: 1.3;
+  text-align: center;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+
+.fm-card--deal .fm-card__pill--confirmed { color: var(--accent); }
+.fm-card--deal .fm-card__pill--muted { background: var(--paper-2); color: var(--muted); }
+
+/* 交易條件 */
+.fm-card--deal .fm-card__deal-terms {
+  display: grid;
+  gap: 1.8cqw;
+  margin: 4.3cqw 0 0;
+  padding: 2.8cqw 3.2cqw;
+  border: 0;
+  border-radius: 10px;
+  background: var(--paper);
+}
+
+.fm-card--deal .fm-card__deal-terms div {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 3cqw;
+  font-size: 4.3cqw;
+  line-height: 1.45;
+}
+
+.fm-card--deal .fm-card__deal-terms dt {
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.fm-card--deal .fm-card__deal-terms dd {
+  margin: 0;
+  color: var(--ink);
+  font-weight: 500;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.fm-card--deal .fm-card__deal-price dd b {
+  font-size: 5.6cqw;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 動作按鈕：次要取消、主要確認 */
+.fm-card--deal .fm-card__acts,
+.fm-card--cancel-confirm .fm-card__acts {
+  display: flex;
+  gap: 2.6cqw;
+  margin-top: 4.3cqw;
+}
+
+.fm-card--deal .fm-card__acts button,
+.fm-card--cancel-confirm .fm-card__acts button {
+  flex: 1;
+  min-height: 9.6cqw;
+  padding: 1cqw 3cqw;
+  border: 1px solid var(--rule-2);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 4.6cqw;
+  font-weight: 500;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: background-color .2s ease, border-color .2s ease, color .2s ease;
+}
+
+.fm-card--deal .fm-card__acts button:hover,
+.fm-card--cancel-confirm .fm-card__acts button:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.fm-card--deal .fm-card__acts .fm-card__primary,
+.fm-card--cancel-confirm .fm-card__acts .fm-card__primary {
+  border-color: var(--accent) !important;
+  background: var(--accent) !important;
+  color: #FFF !important;
+}
+
+.fm-card--deal .fm-card__acts .fm-card__primary:hover,
+.fm-card--cancel-confirm .fm-card__acts .fm-card__primary:hover {
+  border-color: var(--accent-2) !important;
+  background: var(--accent-2) !important;
+  color: #FFF !important;
+}
+
+/* 確認取消卡與取消訊息卡的專屬樣式見 agreement-cancel-card.css。 */

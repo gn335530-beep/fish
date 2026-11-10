@@ -1,0 +1,193 @@
+/* 交易房：發送交易與加購面板排版。 */
+
+.fm-deal-sheet {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 10px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: 0 4px 14px rgba(26, 29, 27, .08);
+}
+
+.fm-deal-sheet__field {
+  display: grid;
+  gap: 3px;
+  color: var(--muted);
+  font-size: .64rem;
+}
+
+.fm-deal-sheet__field input {
+  width: 100%;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: .74rem;
+}
+
+.fm-deal-sheet__field input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.fm-deal-sheet__readonly { padding: 6px 0; color: var(--ink); font-size: .74rem; }
+.fm-deal-sheet__acts { display: flex; justify-content: flex-end; gap: 6px; }
+
+/* ---------- 發送交易：商品摘要 + 兩欄欄位 + 右側確認 ---------- */
+.fm-deal-sheet--propose {
+  display: grid;
+  gap: 10px;
+  margin-top: 0;
+  padding: 10px;
+}
+
+.fm-deal-propose__product {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: var(--paper);
+}
+
+.fm-deal-propose__product-list { display: grid; gap: 2px; min-width: 0; }
+
+.fm-deal-propose__product-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2px 8px;
+}
+
+.fm-deal-propose__product-row b { font-size: .86rem; }
+.fm-deal-propose__product-row span { color: var(--muted); font-size: .66rem; }
+
+.fm-deal-propose__close {
+  align-self: flex-start;
+  padding: 2px 8px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: .62rem;
+  cursor: pointer;
+}
+
+.fm-deal-propose__close:hover { background: var(--accent-soft); color: var(--accent); }
+
+.fm-deal-propose__fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.fm-deal-propose__fields .fm-deal-sheet__field,
+.fm-deal-propose__times .fm-deal-sheet__field {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: .66rem;
+}
+
+.fm-deal-propose__fields input,
+.fm-deal-propose__times input {
+  width: 100%;
+  min-width: 0;
+  padding: 5px 7px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: .68rem;
+}
+
+.fm-deal-propose__fields input:focus,
+.fm-deal-propose__times input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.fm-deal-propose__bottom {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.fm-deal-propose__times { display: grid; gap: 6px; min-width: 0; }
+.fm-deal-propose__bottom .fm-deal-sheet__acts { margin: 0; }
+.fm-deal-propose__bottom .fm-deal-sheet__primary { padding: 8px 16px; }
+
+/* ---------- 加購：整張面板列出商品，右側填數量 ---------- */
+.fm-deal-sheet--addon {
+  display: grid;
+  gap: 8px;
+  margin-top: 0;
+  padding: 10px;
+}
+
+.fm-addon__list {
+  display: grid;
+  gap: 6px;
+  max-height: 292px;
+  padding-right: 2px;
+  overflow-y: auto;
+}
+
+.fm-addon__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: var(--paper);
+}
+
+.fm-addon__info { display: grid; gap: 2px; min-width: 0; }
+
+.fm-addon__title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 4px;
+  min-width: 0;
+}
+
+.fm-addon__title b { font-size: .8rem; }
+.fm-addon__detail { color: var(--muted); font-size: .62rem; }
+.fm-addon__price { color: var(--muted); font-size: .66rem; }
+
+.fm-addon__qty {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--muted);
+  font-size: .62rem;
+  white-space: nowrap;
+}
+
+.fm-addon__qty input {
+  width: 44px;
+  padding: 4px 6px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: .72rem;
+  text-align: center;
+}
+
+.fm-addon__qty input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.fm-addon__qty input:disabled { opacity: .4; }
+.fm-addon__empty { margin: 0; color: var(--muted); font-size: .7rem; }

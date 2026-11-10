@@ -1,0 +1,124 @@
+/* 行情卡：幾何以行情卡.svg 的 295×345 畫布為基準。 */
+
+.fm-card--market {
+  --market-btn: #3561C0;
+  --market-btn-soft: #F3F4F6;
+  position: relative;
+  display: block;
+  width: 295px;
+  max-width: 100%;
+  height: 345px;
+  padding: 0;
+  border: 0;
+  border-radius: 16px;
+  background: #FFFFFF url("../images/market-card-lines.svg?v=v12") 0 0 / 100% 100% no-repeat;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .1);
+  color: #111827;
+  font-family: var(--font-sans);
+  line-height: normal;
+}
+
+.fm-card--market b:not(.fm-market__head) { font-weight: inherit; }
+
+.fm-market__head {
+  position: absolute;
+  top: 18.5px;
+  left: 3.05%;
+  right: 3.73%;
+  font-size: 25.5px;
+  font-weight: 700;
+  line-height: 30px;
+  text-align: center;
+}
+
+.fm-market__species {
+  position: absolute;
+  top: 74.5px;
+  left: 8.07%;
+  max-width: 38.5%;
+  overflow: hidden;
+  font-size: 34px;
+  font-weight: 500;
+  line-height: 38px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transform: scale(.945, .95);
+  transform-origin: left center;
+}
+
+.fm-market__price {
+  position: absolute;
+  top: 65px;
+  right: 22.18%;
+  font-size: 48px;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  line-height: 48px;
+  text-align: right;
+  transform: scaleX(var(--price-scale, 1)) scaleY(.9);
+  transform-origin: right bottom;
+}
+
+.fm-market__price-unit {
+  position: absolute;
+  top: 95px;
+  left: 77.53%;
+  color: #6B7280;
+  font-size: 13.5px;
+  line-height: 16px;
+}
+
+.fm-market__meta {
+  position: absolute;
+  top: 114px;
+  left: 8.07%;
+  right: 7%;
+  overflow: hidden;
+  margin: 0;
+  color: #6B7280;
+  font-size: 11.5px;
+  line-height: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fm-market__days {
+  position: absolute;
+  top: 126.98px;
+  right: 7.32%;
+  display: flex;
+  gap: 7.5px;
+}
+
+.fm-market__days button {
+  display: grid;
+  place-items: center;
+  width: 34.75px;
+  height: 24.95px;
+  padding: 0;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  background: #FFFFFF;
+  color: #4B5563;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  transition: background-color .2s ease, border-color .2s ease, color .2s ease;
+}
+
+.fm-market__days button[aria-pressed="false"]:hover {
+  border-color: #D1D5DB;
+  background: var(--market-btn-soft);
+  color: #111827;
+}
+
+.fm-market__days button[aria-pressed="true"] {
+  border-color: var(--market-btn);
+  background: var(--market-btn);
+  color: #FFFFFF;
+}
+
+.fm-market__days button[aria-pressed="true"]:hover {
+  background: #2B4FA3;
+}

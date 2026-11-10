@@ -111,7 +111,7 @@
   min-height: 0;
   overflow-y: auto;
   padding: 16px;
-  background: #fff;
+  background: var(--paper-2);
 }
 
 .fm-panel__foot {

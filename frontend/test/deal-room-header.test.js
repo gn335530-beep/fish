@@ -17,8 +17,9 @@ test("標題列顯示對方名稱、半星評價與電話", function () {
   assert.equal(header.title, "陳阿海");
   assert.match(header.sub, /aria-label="評價 4\.5 分，2 則"/);
   assert.match(header.sub, /fm-star--half/);
-  assert.match(header.sub, /href="tel:0912345678"/);
-  assert.match(header.sub, /撥打電話 0912345678/);
+  assert.match(header.aside, /href="tel:0912345678"/);
+  assert.match(header.aside, /撥打電話/);
+  assert.match(header.aside, /0912345678/);
   assert.doesNotMatch(header.sub, /button|data-action/);
 });
 
@@ -47,6 +48,6 @@ test("評價數為 0 時即使有舊分數也顯示空心星", function () {
 
 test("沒有電話時顯示電話未提供且不可點", function () {
   const header = dealRoomHeader({ display_name: "陳阿海", rating_score: 4, review_count: 1, username: "" });
-  assert.match(header.sub, /電話未提供/);
-  assert.doesNotMatch(header.sub, /href="tel:/);
+  assert.match(header.aside, /電話未提供/);
+  assert.doesNotMatch(header.aside, /href="tel:/);
 });

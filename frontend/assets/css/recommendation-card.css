@@ -1,0 +1,164 @@
+/* 推薦小卡：外觀取自 推薦卡.svg 的 329×198 畫布。 */
+
+.fm-card--product {
+  container-type: inline-size;
+  display: block;
+  width: 329px;
+  max-width: 100%;
+  margin-inline: auto;
+  padding: 14px 12px 12px;
+  border: 1px solid #E5E7EB;
+  border-radius: 16px;
+  background: #fff;
+  color: #111827;
+  font-family: var(--font-sans);
+  line-height: normal;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .1);
+}
+
+.fm-card--product .fm-card__top {
+  display: grid;
+  grid-template-columns: 51% minmax(0, 1fr);
+  gap: 2.6cqw;
+}
+
+.fm-card--product .fm-card__media {
+  aspect-ratio: 155 / 90;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #F2F2ED;
+}
+
+.fm-card--product .fm-card__media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.fm-card--product .fm-card__info {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 2.6cqw;
+  padding-top: 5.9cqw;
+}
+
+.fm-card--product .fm-card__info > b {
+  padding-left: 1.6cqw;
+  font-size: 9.2cqw;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: .01em;
+  overflow-wrap: anywhere;
+}
+
+.fm-card--product .fm-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2cqw 2.6cqw;
+  padding-left: 1.6cqw;
+}
+
+.fm-card--product .fm-card__qty {
+  color: #6B7280;
+  font-size: 4.6cqw;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.fm-card--product .fm-card__condition {
+  max-width: 64%;
+  padding: 1cqw 2.6cqw;
+  border-radius: 6px;
+  background: #F3F4F6;
+  color: #4B5563;
+  font-size: 4cqw;
+  line-height: 1.35;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.fm-card--product .fm-card__divider {
+  height: 1px;
+  margin-top: 2cqw;
+  background: #F3F4F6;
+  opacity: .6;
+}
+
+.fm-card--product .fm-card__bottom {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 2.6cqw;
+  padding-top: 4.3cqw;
+}
+
+.fm-card--product .fm-card__prices {
+  min-width: 0;
+  color: #6B7280;
+  font-size: 4.3cqw;
+  line-height: 1.5;
+}
+
+.fm-card--product .fm-card__prices p {
+  display: flex;
+  align-items: baseline;
+  gap: 1.3cqw;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.fm-card--product .fm-card__prices b {
+  color: #111827;
+  font-size: 5.3cqw;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.fm-card--product .fm-card__place {
+  display: block;
+  margin-top: 1.6cqw;
+  font-size: 4.3cqw;
+  line-height: 1.4;
+  white-space: normal;
+}
+
+.fm-card--product .fm-card__acts {
+  display: flex;
+}
+
+.fm-card--product .fm-card__buy {
+  flex: none;
+  min-width: 26.4cqw;
+  min-height: 9.6cqw;
+  padding: 1cqw 4cqw;
+  border: 0;
+  border-radius: 8px;
+  background: #3561C0;
+  color: #fff;
+  font-family: var(--font-sans);
+  font-size: 4.6cqw;
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color .2s ease;
+}
+
+.fm-card--product .fm-card__buy:hover {
+  background: #2B4FA3;
+  color: #fff;
+}
+
+.fm-card--product .fm-card__sold {
+  align-self: end;
+  color: #6B7280;
+  font-size: 4cqw;
+  line-height: 1.4;
+  text-align: right;
+  white-space: nowrap;
+}

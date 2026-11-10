@@ -11,7 +11,7 @@ function actionOf(card) {
     const note = Number(card.reserved_quantity) > 0 ? "洽談中，暫無法購買" : "已售出";
     return '<span class="fm-card__sold">' + note + "</span>";
   }
-  return '<button type="button" class="fm-card__primary" data-action="start-deal" data-product="' +
+  return '<button type="button" class="fm-card__buy" data-action="start-deal" data-product="' +
     escapeHtml(card.product_id) + '">洽談購買</button>';
 }
 
@@ -21,14 +21,23 @@ export function renderProductCard(card) {
   const condition = escapeHtml(card.condition || "處理方式未提供");
   const region = escapeHtml(normalizeCityName(card.region) || "地區未提供");
   return '<div class="fm-card fm-card--product">' +
-    '<img src="' + image + '" alt="' + species + '">' +
-    '<div class="fm-card__body">' +
+    '<div class="fm-card__top">' +
+    '<div class="fm-card__media"><img src="' + image + '" alt="' + species + '"></div>' +
+    '<div class="fm-card__info">' +
     '<b>' + species + '</b>' +
-    '<span>' + condition + '</span>' +
-    '<span>共 ' + Number(card.quantity || 0) + ' 尾</span>' +
-    (card.price_per_taijin != null ? '<span>每台斤售價：' + money(card.price_per_taijin) + '</span>' : '') +
-    '<span>整批售價：' + money(card.price) + '</span>' +
-    '<span>' + region + '</span>' +
+    '<div class="fm-card__meta">' +
+    '<span class="fm-card__qty">共 ' + Number(card.quantity || 0) + ' 尾</span>' +
+    '<span class="fm-card__condition">' + condition + '</span>' +
+    '</div>' +
+    '</div>' +
+    '</div>' +
+    '<div class="fm-card__divider"></div>' +
+    '<div class="fm-card__bottom">' +
+    '<div class="fm-card__prices">' +
+    '<p><span>整批售價：</span><b>' + money(card.price) + '</b></p>' +
+    (card.price_per_taijin != null ? '<p><span>每台斤售價：</span><b>' + money(card.price_per_taijin) + '</b></p>' : '') +
+    '<p class="fm-card__place">' + region + '</p>' +
+    '</div>' +
     '<div class="fm-card__acts">' + actionOf(card) + '</div>' +
     '</div>' +
     '</div>';

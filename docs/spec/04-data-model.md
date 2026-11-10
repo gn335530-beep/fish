@@ -214,7 +214,7 @@
   "initiator_id": 2,
   "items": [
     { "item_id": "itm_01", "product_id": "prd_...",
-      "title": "石斑（1尾 / 放血冰鎮）", "fish_species": "石斑",
+      "title": "石斑（1尾 / 放血冰鎮）", "fish_species": "石斑", "condition": "放血冰鎮",
       "photo_url": "/uploads/a.jpg",
       "unit_price": 2800, "price": 2800, "price_per_taijin": 373.3,
       "weight_kg": null, "quantity": 1 }
@@ -241,7 +241,7 @@
 }
 ```
 
-- `items[]` 是商品快照，不隨商品變動；快照含 `fish_species`、`price_per_taijin`（可為 `null`）與 `title`。`GET /api/deals/:id` 讀取時會為每項附上 `available`（不落庫）。
+- `items[]` 是商品快照，不隨商品變動；快照含 `fish_species`、`condition`、`price_per_taijin`（可為 `null`）與 `title`。`GET /api/deals/:id` 讀取時會為每項附上 `available`（不落庫）。舊訂單若沒有 `condition`，前端只省略處理方式，不從長標題解析處理方式。
 - `updated_at` 會在項目變動、提案、回應、取消或逾時時更新，供前端判斷是否重抓明細。
 - `rejected_by` 是舊 `NEGOTIATING` 流程的欄位；新介面不再提供退回。
 - `deal_terms` 在 `DRAFT` 可以為 `null`。

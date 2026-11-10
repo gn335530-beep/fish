@@ -1,0 +1,94 @@
+/* 交易房：置頂容器、浮動商品條與動作。 */
+
+.fm-deal-panel {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  margin: -16px -16px 12px;
+  padding: 10px 16px 0;
+  background: var(--paper-2);
+}
+
+.fm-deal-strip {
+  display: grid;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: 0 4px 14px rgba(26, 29, 27, .1);
+}
+
+.fm-deal-strip__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: start;
+}
+
+.fm-deal-strip__list { display: grid; gap: 6px; min-width: 0; }
+
+.fm-deal-strip__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: baseline;
+  gap: 2px;
+  min-width: 0;
+  font-size: .7rem;
+}
+
+.fm-deal-strip__row b {
+  font-size: .86rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fm-deal-strip__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 8px;
+  color: var(--muted);
+  font-size: .68rem;
+}
+
+.fm-deal-strip__meta span { font-size: .66rem; }
+.fm-deal-strip__meta span:last-child { font-family: var(--font-mono); }
+
+.fm-deal-strip__empty { margin: 0; padding: 2px 0; color: var(--muted); font-size: .7rem; }
+
+.fm-deal-strip__acts {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: flex-end;
+  padding-top: 2px;
+}
+
+.fm-deal-strip__acts button,
+.fm-deal-sheet__acts button {
+  padding: 5px 10px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: .7rem;
+  cursor: pointer;
+}
+
+.fm-deal-strip__acts button:hover,
+.fm-deal-sheet__acts button:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.fm-deal-strip__primary,
+.fm-deal-sheet__primary {
+  border-radius: 999px;
+  background: var(--accent) !important;
+  border-color: var(--accent) !important;
+  color: #fff !important;
+}
+
+.fm-deal-strip__acts button:disabled,
+.fm-deal-sheet__acts button:disabled { opacity: .35; cursor: not-allowed; }

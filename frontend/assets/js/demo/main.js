@@ -82,7 +82,7 @@ function render() {
   const header = state.view === "deal" && state.room && state.room.type === "deal"
     ? dealRoomHeader(state.room.peer)
     : { title: "AI 聊天小幫手", sub: "" };
-  panel.setHeader(header.title, header.sub);
+  panel.setHeader(header.title, header.sub, header.aside);
   panel.setBadge(state.user ? totalUnread() : 0);
   panel.setFooter(state.view !== "inbox" && !!state.user && !!state.room);
 

@@ -50,6 +50,7 @@ test("買家可一次加購多個同賣家商品，只留一則系統訊息", as
   assert.equal(a.quantity, 2);
   assert.equal(b.quantity, 2);
   assert.equal(a.fish_species, "石斑");
+  assert.equal(a.condition, "活體");
   assert.equal(b.fish_species, "黑鯛");
   assert.ok(Object.prototype.hasOwnProperty.call(a, "price_per_taijin"));
 
