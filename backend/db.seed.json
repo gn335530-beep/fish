@@ -221,6 +221,90 @@
       "catch_time": "2026-10-24T22:54:38.464Z",
       "created_at": "2026-10-24T22:54:38.464Z",
       "species_code": null
+    },
+    {
+      "id": "prd_20261027_001",
+      "seller_id": 4,
+      "title": "土魠魚（5kg / 3尾 / 活體）",
+      "fish_species": "土魠魚",
+      "weight_kg": 5,
+      "quantity": 3,
+      "sold_quantity": 0,
+      "condition": "活體",
+      "photo_url": "/uploads/0c168089-cc7c-486e-8b8e-ad034b3e2f0c.jpg",
+      "price": 10000,
+      "price_per_taijin": null,
+      "price_auto": false,
+      "region": "台南市",
+      "location": "台南市",
+      "catch_time": "2026-10-27T12:48:25.558Z",
+      "created_at": "2026-10-27T12:48:25.558Z",
+      "species_code": null,
+      "listed_at": "2026-10-27T12:48:25.558Z",
+      "delisted_at": null
+    },
+    {
+      "id": "prd_20261027_002",
+      "seller_id": 4,
+      "title": "吳郭魚（6kg / 10尾 / 活體）",
+      "fish_species": "吳郭魚",
+      "weight_kg": 6,
+      "quantity": 10,
+      "sold_quantity": 1,
+      "condition": "活體",
+      "photo_url": "/uploads/55d29087-7c65-4d87-b1b3-5c16fb1a5f09.jpg",
+      "price": 345678,
+      "price_per_taijin": null,
+      "price_auto": false,
+      "region": "台南市",
+      "location": "台南市",
+      "catch_time": "2026-10-27T12:50:49.636Z",
+      "created_at": "2026-10-27T12:50:49.636Z",
+      "species_code": null,
+      "listed_at": "2026-11-10T08:27:00.487Z",
+      "delisted_at": "2026-11-10T12:05:01.565Z"
+    },
+    {
+      "id": "prd_20261110_001",
+      "seller_id": 4,
+      "title": "土魠魚（3尾 / 活體）",
+      "fish_species": "土魠魚",
+      "species_code": 2141,
+      "weight_kg": null,
+      "quantity": 3,
+      "sold_quantity": 0,
+      "condition": "活體",
+      "photo_url": "/uploads/ddc59a6d-16cf-4c23-9966-a5734cea43de.jpg",
+      "price": 2740,
+      "price_per_taijin": 290,
+      "price_auto": false,
+      "region": "台南市",
+      "location": "台南市",
+      "catch_time": "2026-11-10T04:16:09.124Z",
+      "created_at": "2026-11-10T04:16:09.124Z",
+      "listed_at": "2026-11-10T04:16:09.124Z",
+      "delisted_at": null
+    },
+    {
+      "id": "prd_20261110_002",
+      "seller_id": 4,
+      "title": "土魠魚（3尾 / 活體）",
+      "fish_species": "土魠魚",
+      "species_code": 2141,
+      "weight_kg": null,
+      "quantity": 3,
+      "sold_quantity": 0,
+      "condition": "活體",
+      "photo_url": "/uploads/ddc59a6d-16cf-4c23-9966-a5734cea43de.jpg",
+      "price": 2740,
+      "price_per_taijin": 290,
+      "price_auto": false,
+      "region": "台南市",
+      "location": "台南市",
+      "catch_time": "2026-11-10T04:16:22.599Z",
+      "created_at": "2026-11-10T04:16:22.599Z",
+      "listed_at": "2026-11-10T04:16:22.599Z",
+      "delisted_at": null
     }
   ],
   "conversations": [
@@ -3453,6 +3537,12 @@
       ],
       "comment": "雖然臨時調整時間，但事先有說，交易順利。",
       "created_at": "2026-11-08T09:30:00.000Z"
+    }
+  ],
+  "counters": [
+    {
+      "id": "products_20261110",
+      "value": 2
     }
   ]
 }
