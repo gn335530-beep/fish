@@ -66,6 +66,14 @@ export function initiateChannel(productId, quantity) {
   });
 }
 
+/* 由個人資訊開啟或沿用交易房；對方無商品時回傳純聊天房。 */
+export function initiateRoom(sellerId) {
+  return call("/api/deals/initiate-room", {
+    method: "POST",
+    body: { seller_id: Number(sellerId) }
+  });
+}
+
 export function getDeal(dealId) {
   return call("/api/deals/" + encodeURIComponent(dealId));
 }

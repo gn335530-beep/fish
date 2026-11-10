@@ -81,6 +81,24 @@ router.post("/api/reviews/submit", requireUser, function (req, res) {
   created(res, { review: review, target: publicUser(target) }, "評價已送出");
 });
 
+/* 角色篩選：role=seller 是該使用者作為釣客（買家給的評價），role=buyer 則相反。 */
+const ROLE_REVIEWER = { seller: "buyer", buyer: "seller" };
+
+function reviewRow(review) {
+  const reviewer = findById("users", review.reviewer_id);
+  return {
+    id: review.id,
+    rating: Number(review.rating || 0),
+    tags: review.tags || [],
+    comment: review.comment || "",
+    created_at: review.created_at,
+    reviewer_id: Number(review.reviewer_id),
+    reviewer_name: (reviewer && reviewer.display_name) || "會員",
+    reviewer_avatar_url: (reviewer && reviewer.avatar_url) || "",
+    reviewer_role: review.reviewer_role
+  };
+}
+
 router.get("/api/reviews", function (req, res) {
   const user = findById("users", Number(req.query.user_id));
   if (!user) {
@@ -88,29 +106,34 @@ router.get("/api/reviews", function (req, res) {
     return;
   }
 
-  const rows = reviewsFor(user.id);
-  const average = averageRating(rows);
-  const limit = Math.min(Number(req.query.limit) || 20, 50);
-  const reviews = rows
-    .sort(function (a, b) { return new Date(b.created_at) - new Date(a.created_at); })
-    .slice(0, limit)
-    .map(function (review) {
-      const reviewer = publicUser(findById("users", review.reviewer_id));
-      return {
-        id: review.id,
-        rating: Number(review.rating || 0),
-        tags: review.tags || [],
-        comment: review.comment || "",
-        created_at: review.created_at,
-        reviewer_name: (reviewer && reviewer.display_name) || "會員"
-      };
+  const role = req.query.role === "seller" || req.query.role === "buyer"
+    ? req.query.role
+    : null;
+  const reviewerRole = ROLE_REVIEWER[role];
+  let rows = reviewsFor(user.id);
+  if (reviewerRole) {
+    rows = rows.filter(function (review) {
+      return review.reviewer_role === reviewerRole;
     });
+  }
+
+  const summary = averageRating(rows);
+  const offset = Math.max(Number(req.query.offset) || 0, 0);
+  const limit = Math.min(Math.max(Number(req.query.limit) || 20, 1), 50);
+  const sorted = rows.slice().sort(function (a, b) {
+    return new Date(b.created_at) - new Date(a.created_at);
+  });
+  const reviews = sorted.slice(offset, offset + limit).map(reviewRow);
 
   ok(res, {
     user_id: user.id,
-    rating_score: average.score,
-    review_count: average.count,
-    reviews: reviews
+    role: role,
+    summary: summary,
+    total: sorted.length,
+    reviews: reviews,
+    has_more: offset + reviews.length < sorted.length,
+    rating_score: summary.score,
+    review_count: summary.count
   }, "取得評價成功");
 });
 

@@ -7,7 +7,9 @@ import { escapeHtml, timeOf, initials, NO_ASSISTANT_TEXT } from "./html.js";
 
 function orderLine(room) {
   if (room.type === "assistant") return "AI 對話";
-  return orderSummaryText(preferredOrder(room)) || "洽談中";
+  const order = preferredOrder(room);
+  if (order) return orderSummaryText(order);
+  return "純聊天";
 }
 
 function deleteButton(room) {

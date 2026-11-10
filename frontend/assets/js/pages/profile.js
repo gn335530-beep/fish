@@ -1,18 +1,27 @@
-/* 個人資訊頁：公開讀取指定使用者，自己的頁面顯示設定入口。 */
+/* 個人資訊頁：標題列、商品管理與角色評價列表。 */
 
 import { profileHeaderHTML } from "../profile/header.js";
+import { createProductsController } from "../profile/products-controller.js";
+import { createReviewsController } from "../profile/reviews-controller.js";
 
 const API = window.HaisenAPI;
 
+let profile = null;
+let isSelf = false;
+
 function userId() {
   return new URLSearchParams(window.location.search).get("id") || "";
+}
+
+function el(id) {
+  return document.getElementById(id);
 }
 
 function showError(message) {
   const node = document.createElement("p");
   node.className = "state-msg state-msg--error";
   node.textContent = message;
-  document.getElementById("profile-head").replaceChildren(node);
+  el("profile-head").replaceChildren(node);
 }
 
 async function currentUser() {
@@ -24,6 +33,22 @@ async function currentUser() {
   }
 }
 
+function bindStartRoom() {
+  el("profile-head").addEventListener("click", function (event) {
+    const button = event.target.closest("[data-start-room]");
+    if (!button) return;
+    if (!API || !API.getToken()) {
+      window.location.href = "login.html";
+      return;
+    }
+    if (window.FishMatchBot && window.FishMatchBot.startRoom) {
+      window.FishMatchBot.startRoom(button.dataset.startRoom);
+    } else if (window.toast) {
+      window.toast("助手尚未載入，請重新整理頁面");
+    }
+  });
+}
+
 async function boot() {
   const id = userId();
   if (!id) {
@@ -33,11 +58,28 @@ async function boot() {
 
   const viewer = await currentUser();
   try {
-    const profile = await API.getPublicUser(id);
-    const isSelf = !!viewer && String(viewer.id) === String(profile.id);
-    document.getElementById("profile-head").innerHTML =
-      profileHeaderHTML(profile, { isSelf: isSelf });
+    profile = await API.getPublicUser(id);
+    isSelf = !!viewer && String(viewer.id) === String(profile.id);
+    el("profile-head").innerHTML = profileHeaderHTML(profile, { isSelf: isSelf });
     document.title = profile.display_name + " — 一支釣";
+
+    const products = createProductsController({
+      section: el("profile-products"),
+      userId: profile.id,
+      isSelf: isSelf
+    });
+    const reviews = createReviewsController({
+      section: el("profile-reviews"),
+      profile: profile,
+      pageSize: 6
+    });
+
+    el("profile-products").addEventListener("click", products.handleClick);
+    el("profile-reviews").addEventListener("click", reviews.handleClick);
+    bindStartRoom();
+
+    products.load();
+    reviews.start();
   } catch (error) {
     showError(error.status === 404 ? "找不到這個使用者" : (error.message || "個人資訊載入失敗"));
   }

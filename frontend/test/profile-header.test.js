@@ -56,12 +56,14 @@ test("標題列顯示地區、成交筆數與驗證標章，空地區不顯示",
   assert.doesNotMatch(emptyRegion, /已驗證/);
 });
 
-test("自己的頁面連到設定，別人的頁面先不顯示聊聊", function () {
+test("自己的頁面連到設定，別人的頁面顯示聊聊", function () {
   const own = profileHeaderHTML(USER, { isSelf: true });
   assert.match(own, /href="settings\.html"/);
   assert.match(own, /編輯個人資訊/);
+  assert.doesNotMatch(own, /聊聊/);
 
   const other = profileHeaderHTML(USER, { isSelf: false });
-  assert.doesNotMatch(other, /聊聊/);
+  assert.match(other, /data-start-room="1"/);
+  assert.match(other, /聊聊/);
   assert.doesNotMatch(other, /編輯個人資訊/);
 });

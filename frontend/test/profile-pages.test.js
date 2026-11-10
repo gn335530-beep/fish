@@ -15,6 +15,8 @@ const drawer = read("../assets/js/app/06-drawer.js");
 const drawerPanels = read("../assets/js/app/07-drawer-panels.js");
 const settingsScript = read("../assets/js/pages/settings.js");
 const profileScript = read("../assets/js/pages/profile.js");
+const productsController = read("../assets/js/profile/products-controller.js");
+const reviewsController = read("../assets/js/profile/reviews-controller.js");
 
 test("新頁面有 header／footer placeholder、共用 CSS 與正確模組", function () {
   [profilePage, settingsPage].forEach(function (html) {
@@ -30,6 +32,7 @@ test("新頁面有 header／footer placeholder、共用 CSS 與正確模組", fu
     assert.doesNotMatch(html, /product-detail/);
   });
   assert.match(profilePage, /type="module" src="\.\.\/assets\/js\/pages\/profile\.js/);
+  assert.match(profilePage, /assets\/css\/profile-content\.css/);
   assert.match(settingsPage, /type="module" src="\.\.\/assets\/js\/pages\/settings\.js/);
 });
 
@@ -71,4 +74,9 @@ test("設定頁未登入導到登入頁，儲存後同步本機會員與導覽�
   assert.match(settingsScript, /renderAuthNav\(\)/);
   assert.match(profileScript, /getPublicUser/);
   assert.match(profileScript, /isSelf/);
+  assert.match(profileScript, /startRoom/);
+  assert.match(productsController, /productSectionHTML/);
+  assert.match(productsController, /data-profile-manage/);
+  assert.match(reviewsController, /reviewSectionHTML/);
+  assert.match(reviewsController, /data-review-role/);
 });

@@ -109,7 +109,7 @@
 | `login({ phone, password })` | 登入並保存登入狀態 |
 | `me()` | 以 Token 取得並同步會員資料 |
 | `getPublicUser(id)` | 取得公開個人資訊與角色評分 |
-| `listReviews(userId, params)` | 取得角色別評價、摘要、分布與商品照片 |
+| `listReviews(userId, params)` | 取得角色別評價與分頁；分布與商品照片待 07 |
 | `updateProfile(payload)` | 更新暱稱、電話、頭像與地址 |
 | `logout()` | 清除本機 Token、會員資料與頭像 |
 | `listProducts()` | 取得公開商品清單（上架中／洽談中） |
@@ -120,14 +120,14 @@
 | `getProduct(id)` | 取得單一商品 |
 | `photoUrl(path)` | 將 `/uploads/...`、`images/...` 轉成可顯示網址 |
 
-`createFish()`、`deleteFish()`、`updateFish()`、`listFish()`、`rowToCatch()`、`rowsToCatch()` 都已移除。`getPublicUser()` 與 `updateProfile()` 已實作；`listReviews()` 會在評價角色化 ticket 實作。
+`createFish()`、`deleteFish()`、`updateFish()`、`listFish()`、`rowToCatch()`、`rowsToCatch()` 都已移除。`getPublicUser()`、`listReviews()` 與 `updateProfile()` 已實作。
 
 ## 5. 頁面初始化
 
 - `frontend/assets/js/app/08-api-init.js` 只負責導覽、個人選單與 `syncSessionFromApi()`。
 - `syncSessionFromApi()` 在有 Token 時呼叫 `me()`；401／403 會清除本機登入狀態，只有會員資料而沒有 Token 時也會清除。
 - 頁面資料由各頁自己的 API 呼叫載入：首頁與列表用 `listProducts()`；助手魚種查詢用 `/api/market/codes` 與 `/api/market/quote`；上架紀錄用 `listMyProducts()`。商品詳情頁已移除，`getProduct(id)` 只供對話與內部使用。
-- 個人資訊頁（ticket 03 已完成公開標題列與入口）：公開頁用 `getPublicUser(id)`；商品與評價區塊待後續 ticket 接上 `listReviews(id, { role, sort, rating, offset, limit })` 與 `listProducts({ seller_id })`；自己的頁面商品改用 `listMyProducts()`。
+- 個人資訊頁：公開頁用 `getPublicUser(id)`、`listReviews(id, { role, offset, limit })` 與 `listProducts({ seller_id })`；自己的頁面商品改用 `listMyProducts()`，商品管理沿用下架／重新上架／刪除端點。
 - 設定頁：用 `me()` 載入，`updateProfile()` 儲存；頭像先上傳 `/api/uploads`，再把 URL 寫入 `avatar_url`。
 - 個人資訊頁的「聊聊」由交易引擎呼叫 `POST /api/deals/initiate-room`；不要直接開空房。
 

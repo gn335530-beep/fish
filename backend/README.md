@@ -88,7 +88,7 @@ backend/
 | `POST` | `/api/conversations/{id}/read` | 標記已讀；需參與者 |
 | `POST` | `/api/conversations/{id}/clear` | 清除助手房舊訊息；需參與者 |
 | `POST` | `/api/deals/initiate-channel` | 由商品開啟或沿用交易房與草稿訂單；需登入 |
-| `POST` | `/api/deals/initiate-room` | ⬜ 由個人資訊開啟或沿用交易房；無商品時純聊天；需登入 |
+| `POST` | `/api/deals/initiate-room` | 由個人資訊開啟或沿用交易房；無商品時純聊天；需登入 |
 | `GET` | `/api/deals/{id}` | 訂單明細（項目附可售尾數與角色評分 peer）；需參與者 |
 | `POST` | `/api/deals/items` | 加購同一釣客的商品；需買家 |
 | `POST` | `/api/deals/items/batch` | 批次加購多個商品；需買家 |
@@ -100,7 +100,7 @@ backend/
 | `POST` | `/api/deals/reinitiate` | 取消後重新發起協議；需買家 |
 | `GET` | `/api/deals` | 目前使用者的交易紀錄 |
 | `POST` | `/api/reviews/submit` | 成交後評價對方；需參與者 |
-| `GET` | `/api/reviews?user_id=&role=&sort=&rating=&offset=&limit=` | 公開角色別評價、摘要、分布與商品照片（角色／分頁 ⬜） |
+| `GET` | `/api/reviews?user_id=&role=&sort=&rating=&offset=&limit=` | 公開角色別評價、摘要、分布與商品照片（角色／分頁已完成；排序／篩選／分布 ⬜） |
 | `GET` | `/api/market/codes` | 公開官方代碼字典；`q` 可查名稱、別名或代碼 |
 | `GET` | `/api/market/quote` | 公開整合行情；一次完成名稱→代碼→價格 |
 | `GET` | `/api/market/prices` | 公開行情；每次請求重抓上游，支援 `code`、`region`、`date`、`include=history`、`days` |

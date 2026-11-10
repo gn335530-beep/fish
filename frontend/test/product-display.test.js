@@ -45,6 +45,7 @@ const PRODUCT = {
   unit_price: 500,
   available: 2,
   reserved_quantity: 0,
+  status: "ACTIVE",
   region: "高雄市",
   location: "高雄市鼓山區",
   catch_time: "2026-10-25T05:00:00+08:00",
@@ -53,6 +54,11 @@ const PRODUCT = {
 
 function card(overrides) {
   return vm.runInContext("productCardHTML(" + JSON.stringify(Object.assign({}, PRODUCT, overrides)) + ")", ctx);
+}
+
+function cardWith(overrides, options) {
+  return vm.runInContext("productCardHTML(" + JSON.stringify(Object.assign({}, PRODUCT, overrides)) +
+    ", " + JSON.stringify(options || {}) + ")", ctx);
 }
 
 test("商品卡顯示魚種、處理方式、尾數、雙價與地區", function () {
@@ -111,6 +117,40 @@ test("處理方式字數多時加上縮字與膠囊樣式", function () {
   assert.match(card({ condition: "去鱗去內臟" }), /catch-card__condition--long/);
   assert.match(card({ condition: "去鱗去內臟真空包裝" }), /catch-card__condition--xlong/);
   assert.doesNotMatch(card({ condition: "活體" }), /catch-card__condition--/);
+});
+
+test("個人資訊頁隱藏釣客資訊；自己的商品不顯示洽談購買", function () {
+  const other = cardWith({}, { hideSeller: true });
+  assert.doesNotMatch(other, /釣客資訊|profile\.html\?id=/);
+  assert.match(other, /data-deal-product="prd_1"/);
+
+  const own = cardWith({}, { hideSeller: true, own: true });
+  assert.doesNotMatch(own, /data-deal-product|洽談購買|釣客資訊/);
+  assert.match(own, /listing__badge--active/);
+  assert.match(own, /上架中/);
+});
+
+test("管理模式依狀態顯示下架、重新上架或刪除", function () {
+  const active = cardWith({ status: "ACTIVE" }, { hideSeller: true, manage: true });
+  assert.match(active, /data-profile-action="delist"/);
+  assert.doesNotMatch(active, /data-profile-action="delete"|data-profile-action="relist"/);
+
+  const partial = cardWith({ status: "PARTIALLY_RESERVED" }, { hideSeller: true, manage: true });
+  assert.match(partial, /data-profile-action="delist"/);
+  assert.match(partial, /洽談中/);
+
+  const delisted = cardWith({ status: "DELISTED", quantity: 2, sold_quantity: 0 }, { hideSeller: true, manage: true });
+  assert.match(delisted, /data-profile-action="relist"/);
+  assert.match(delisted, /data-profile-action="delete"/);
+  assert.match(delisted, /已下架/);
+
+  const delistedNoStock = cardWith({ status: "DELISTED", quantity: 2, sold_quantity: 2 }, { hideSeller: true, manage: true });
+  assert.doesNotMatch(delistedNoStock, /data-profile-action="relist"/);
+  assert.match(delistedNoStock, /data-profile-action="delete"/);
+
+  const sold = cardWith({ status: "SOLD_OUT" }, { hideSeller: true, manage: true });
+  assert.doesNotMatch(sold, /data-profile-action="delist"|data-profile-action="relist"/);
+  assert.match(sold, /data-profile-action="delete"/);
 });
 
 test("商品詳情頁與腳本已刪除，全站沒有指向它的連結", function () {
