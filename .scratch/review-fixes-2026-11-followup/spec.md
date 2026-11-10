@@ -81,7 +81,7 @@
 
 ### 快取版本
 
-- 本批修改的樣式模組（layout、product-card-photo、chat-frame、chat-frame-content、chat-bubbles、deal-bot、market-card）在首頁、商品列表與登入頁統一提版；layout 與 product-card-photo 已於 ticket 03 提版，chat-frame、chat-frame-content、chat-bubbles、deal-bot 與 market-card 已於 ticket 04／05 提版。components、deal-cards 與最終驗證由 ticket 07 處理。
+- 本批修改的樣式模組（layout、product-card-photo、chat-frame、chat-frame-content、chat-bubbles、deal-bot、market-card、components、deal-cards）都已在首頁、商品列表與登入頁統一提版；layout 與 product-card-photo 於 ticket 03 提版，chat-frame、chat-frame-content、chat-bubbles、deal-bot 與 market-card 於 ticket 04／05 提版，components 與 deal-cards 於 ticket 07 提版。
 - 版本字串只遞增，不改檔名；三個頁面必須使用相同版本。
 - 不要為所有靜態資產建立版本清單；只鎖定本批修改的模組，避免未來每次升版都要改測試。
 
@@ -131,7 +131,7 @@
 1. **三個頁面（首頁、商品列表、登入）**：桌機與手機都沒有水平溢出；聊天面板開啟後的尺寸、圓角、背景與關閉狀態一致；商品卡照片框比例為 `3:2`，照片完整顯示。
 2. **行情卡**：7 日與 30 日、短價格與長價格；價格 bounding box 不與「元/台斤」重疊、不超出卡片；交易日期與來源在原本區域；重量試算與參考價仍可互動。
 3. **交易房**：浮動商品條每列有魚種、處理方式（若有）、`剩 N 尾`、每台斤或整批價格；展開發送交易或加購面板後取代商品條；摘要與商品條一致；加購列沒有重量。
-4. **快取版本**：三個頁面的本地 CSS／JS 請求都有 `?v=`；本次四個樣式模組不再使用舊的 `v8`，且三個頁面版本一致。
+4. **快取版本**：三個頁面的本地 CSS／JS entry 都有 `?v=`；本批樣式模組不再使用舊版本，且三個頁面版本一致。
 5. **文件**：不由 Playwright 測；以 review checklist 確認 UI 規格與交易房 spec 的章節用語一致。
 
 ### 指令與 CI
