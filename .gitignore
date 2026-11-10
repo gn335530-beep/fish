@@ -1,5 +1,8 @@
 node_modules/
 .env
+e2e/.data/
+test-results/
+playwright-report/
 backend/uploads/*
 !backend/uploads/.gitkeep
 backend/db.json

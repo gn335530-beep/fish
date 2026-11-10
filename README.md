@@ -36,6 +36,15 @@ npm test
 
 使用 Node 內建 `node:test`；後端測試使用各自的暫存資料庫，不會動到開發資料。
 
+瀏覽器視覺案例另用 Playwright；第一次執行先安裝 chromium：
+
+```bash
+npx playwright install chromium
+npm run test:e2e
+```
+
+E2E 會啟動測試後端與靜態前台，使用固定行情資料，不會呼叫真實批發行情。設定與 baseline 規則見 [`e2e/README.md`](./e2e/README.md)。
+
 ## 專案結構
 
 ```text

@@ -6,9 +6,11 @@
     "backend": "node backend/server.js",
     "web": "node tools/serve-frontend.js",
     "market:fetch": "node backend/scripts/market-fetch.js",
-    "test": "node --test \"backend/test/*.test.js\" \"frontend/test/*.test.js\""
+    "test": "node --test \"backend/test/*.test.js\" \"frontend/test/*.test.js\"",
+    "test:e2e": "playwright test"
   },
   "devDependencies": {
+    "@playwright/test": "^1.65.0",
     "json-server": "0.17.4"
   }
 }
