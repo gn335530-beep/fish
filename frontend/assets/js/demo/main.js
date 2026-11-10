@@ -11,7 +11,7 @@ import { escapeHtml } from "./views/html.js";
 import { startPolling, pollNow } from "./poll.js";
 import { initFlow, ensureRoom, submitText, submitPhoto } from "./flow.js";
 import { initListingActions } from "./listing-actions.js";
-import { initActions, handleAction, startDeal } from "./actions.js";
+import { initActions, handleAction, startDeal, startProfileRoom } from "./actions.js";
 import { handleFieldInput, handleAddonSelect } from "./deal-actions.js";
 import { handleCancelNote } from "./deal-cancel-actions.js";
 import { handleReviewField, handleReviewTag, handleReviewComment } from "./deal-reviews.js";
@@ -172,6 +172,7 @@ window.FishMatchBot = {
   toggle: function () { panel.toggle(); },
   refresh: function () { return pollNow(); },
   startDeal: startDeal,
+  startRoom: startProfileRoom,
   logout: function () { clearSession(panel); }
 };
 

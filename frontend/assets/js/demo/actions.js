@@ -38,6 +38,27 @@ export async function startDeal(productId, quantity) {
   panel.open();
 }
 
+/* 從個人資訊按「聊聊」：目前使用者是買家、被看的人是釣客。 */
+export async function startProfileRoom(sellerId) {
+  if (!api.isLoggedIn()) {
+    window.location.href = "login.html";
+    return;
+  }
+  try {
+    const result = await api.initiateRoom(sellerId);
+    await refreshRooms();
+    const room = (state.conversations || []).find(function (item) {
+      return item.id === result.conversation.id;
+    }) || result.conversation;
+    await openRoom(room);
+    update({ view: viewOf(room) });
+    panel.open();
+    render();
+  } catch (error) {
+    notify(error);
+  }
+}
+
 async function switchRoom(roomId) {
   const room = (state.conversations || []).find(function (item) { return item.id === roomId; });
   if (!room) return;

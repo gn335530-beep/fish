@@ -33,9 +33,50 @@ function conditionClass(condition) {
   return "";
 }
 
-/* 兩個按鈕並排；釣客資訊連到公開個人資訊，不再只是沒有行為的按鈕。 */
-function dealControls(p) {
-  var seller = '<a class="catch-card__btn catch-card__btn--seller" href="profile.html?id=' +
+var PRODUCT_STATUS = {
+  ACTIVE: { label: "上架中", className: "active" },
+  PARTIALLY_RESERVED: { label: "洽談中", className: "partial" },
+  SOLD_OUT: { label: "已售出", className: "sold" },
+  DELISTED: { label: "已下架", className: "delisted" }
+};
+
+function productStatusBadge(p) {
+  var status = PRODUCT_STATUS[p.status] || { label: p.status || "未知狀態", className: "unknown" };
+  return '<span class="listing__badge listing__badge--' + status.className + '">' +
+    productEscape(status.label) + '</span>';
+}
+
+function profileAction(action, p, label) {
+  return '<button class="listing__btn listing__btn--' + action + '" type="button" data-profile-action="' +
+    action + '" data-product-id="' + productEscape(p.id) + '">' + label + '</button>';
+}
+
+function manageControls(p) {
+  var buttons = [];
+  if (p.status === "DELISTED") {
+    if (Number(p.quantity || 0) - Number(p.sold_quantity || 0) > 0) {
+      buttons.push(profileAction("relist", p, "重新上架"));
+    }
+    buttons.push(profileAction("delete", p, "刪除"));
+  } else if (p.status === "SOLD_OUT") {
+    buttons.push(profileAction("delete", p, "刪除"));
+  } else {
+    buttons.push(profileAction("delist", p, "下架"));
+  }
+  return '<div class="catch-card__acts catch-card__acts--profile">' + productStatusBadge(p) +
+    '<div class="listing__acts">' + buttons.join("") + '</div></div>';
+}
+
+/* 兩個按鈕並排；釣客資訊連到公開個人資訊，不再只是沒有行為的按鈕。
+   個人資訊頁傳 hideSeller；自己的頁面傳 own 或 manage。 */
+function dealControls(p, options) {
+  var opts = options || {};
+  if (opts.manage) return manageControls(p);
+  if (opts.own) {
+    return '<div class="catch-card__acts catch-card__acts--profile">' + productStatusBadge(p) + '</div>';
+  }
+  var seller = opts.hideSeller ? "" :
+    '<a class="catch-card__btn catch-card__btn--seller" href="profile.html?id=' +
     encodeURIComponent(p.seller_id == null ? "" : p.seller_id) + '">釣客資訊</a>';
   if (p.status === "DELISTED") {
     return '<div class="catch-card__acts">' + seller +
@@ -51,7 +92,7 @@ function dealControls(p) {
     productEscape(p.id) + '">洽談購買</button></div>';
 }
 
-function productCardHTML(p) {
+function productCardHTML(p, options) {
   var photo = window.HaisenAPI.photoUrl(p.photo_url);
   var species = p.fish_species || "商品資訊未提供";
   var condition = p.condition || "未提供";
@@ -76,7 +117,7 @@ function productCardHTML(p) {
     '<p>整批售價：' + productMoney(p.price) + '</p>' +
     '</div>' +
     '<p class="catch-card__place">' + productEscape(placeOf(p)) + '</p>' +
-    dealControls(p) +
+    dealControls(p, options) +
     '</div></article>';
 }
 

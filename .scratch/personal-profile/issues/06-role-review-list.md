@@ -4,15 +4,19 @@
 
 **Blocked by:** 03
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] `GET /api/reviews` 支援 `user_id`、`role`、`offset`、`limit`；`limit` 預設 20、最大 50；個人資訊頁傳 6
-- [ ] `role=seller` 只回「買家給的評價」（`reviewer_role = buyer`）；`role=buyer` 只回「釣客給的評價」（`reviewer_role = seller`）；省略 `role` 維持整體評價
-- [ ] 回應含 `summary.score`、`summary.count`、`total`、`has_more` 與評價陣列；`total` 是目前角色篩選後的筆數
-- [ ] 每筆評價含評價者 id、名字、頭像、`reviewer_role`、日期、星等、標籤與評語；不含電話與地址
-- [ ] 個人資訊頁的角色 tabs 只在兩種評價都存在時出現；只有一種時直接顯示該種；預設「買家給的評價」，沒有才切到「釣客給的評價」；兩者都沒有顯示「尚無評價」
-- [ ] 評價卡顯示評價者頭像（沒有時顯示名字首字）、名字（連個人資訊）、日期、星等、標籤與評語；30 天內顯示相對時間，超過顯示 `YYYY/MM/DD`
-- [ ] 每頁 6 則；「載入更多」以 offset 累加；沒有更多時不顯示按鈕
-- [ ] 載入失敗顯示錯誤與重試；沒有評價顯示「尚無評價」，不是載入失敗
-- [ ] 標題列 chips 與 tabs 使用同一組完整文案「買家給的評價」／「釣客給的評價」，不使用單獨的「買家評價」或「釣客評價」
-- [ ] 後端測試涵蓋角色篩選、offset／limit、summary／total／has_more 與隱私欄位；前端測試涵蓋 tabs、預設 tab、空狀態、卡片與載入更多
+- [x] `GET /api/reviews` 支援 `user_id`、`role`、`offset`、`limit`；`limit` 預設 20、最大 50；個人資訊頁傳 6
+- [x] `role=seller` 只回「買家給的評價」（`reviewer_role = buyer`）；`role=buyer` 只回「釣客給的評價」（`reviewer_role = seller`）；省略 `role` 維持整體評價
+- [x] 回應含 `summary.score`、`summary.count`、`total`、`has_more` 與評價陣列；`total` 是目前角色篩選後的筆數
+- [x] 每筆評價含評價者 id、名字、頭像、`reviewer_role`、日期、星等、標籤與評語；不含電話與地址
+- [x] 個人資訊頁的角色 tabs 只在兩種評價都存在時出現；只有一種時直接顯示該種；預設「買家給的評價」，沒有才切到「釣客給的評價」；兩者都沒有顯示「尚無評價」
+- [x] 評價卡顯示評價者頭像（沒有時顯示名字首字）、名字（連個人資訊）、日期、星等、標籤與評語；30 天內顯示相對時間，超過顯示 `YYYY/MM/DD`
+- [x] 每頁 6 則；「載入更多」以 offset 累加；沒有更多時不顯示按鈕
+- [x] 載入失敗顯示錯誤與重試；沒有評價顯示「尚無評價」，不是載入失敗
+- [x] 標題列 chips 與 tabs 使用同一組完整文案「買家給的評價」／「釣客給的評價」，不使用單獨的「買家評價」或「釣客評價」
+- [x] 後端測試涵蓋角色篩選、offset／limit、summary／total／has_more 與隱私欄位；前端測試涵蓋 tabs、預設 tab、空狀態、卡片與載入更多
+
+## Comments
+
+- 2026-11-10：`GET /api/reviews` 支援 `role`、`offset`、`limit`，回傳角色摘要、`total` 與 `has_more`；評價者只回 id、名字與頭像。個人資訊頁新增角色 tabs、預設角色、每頁 6 則的載入更多、錯誤重試與相對時間卡片。商品照片與分布留給 07。

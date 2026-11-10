@@ -14,6 +14,9 @@ const LISTING_ACTIONS = {
   }
 };
 
+/* 個人資訊頁重用同一組確認文案與成功訊息。 */
+window.HaisenListingActions = LISTING_ACTIONS;
+
 async function listingAction(action, productId) {
   const config = LISTING_ACTIONS[action];
   if (config.confirm && window.confirm && !window.confirm(config.confirm)) return;

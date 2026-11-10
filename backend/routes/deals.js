@@ -9,6 +9,7 @@ const { sweepExpired } = require("../lib/timeouts");
 const { summary } = require("../lib/conversations");
 const deals = require("../lib/deals");
 const dealItems = require("../lib/deal-items");
+const { initiateProfileRoom } = require("../lib/profile-room");
 const { CANCELLED_STATUS } = require("../lib/deal-statuses");
 const { ok, fail } = require("../lib/http");
 
@@ -103,6 +104,21 @@ router.post("/api/deals/initiate-channel", requireUser, function (req, res) {
     deal: deals.decorateDeal(deal),
     product: stock.decorated
   }, "已開啟交易房");
+});
+
+router.post("/api/deals/initiate-room", requireUser, function (req, res) {
+  sweepExpired();
+  const body = req.body || {};
+  const result = initiateProfileRoom(req.user, body.seller_id, new Date().toISOString());
+  if (result.error === "USER_NOT_FOUND") {
+    fail(res, 404, "USER_NOT_FOUND", "找不到這個使用者");
+    return;
+  }
+  if (result.error === "OWN_PROFILE") {
+    fail(res, 400, "OWN_PROFILE", "不能對自己開啟交易房");
+    return;
+  }
+  ok(res, result, "已開啟對話");
 });
 
 router.get("/api/deals", requireUser, function (req, res) {

@@ -60,7 +60,7 @@
 | 17 | POST | `/api/uploads` | 登入 | ✅ |
 | 18 | GET | `/uploads/*` | 公開 | ✅ 靜態檔 |
 | 19 | POST | `/api/deals/initiate-channel` | 登入 | ✅ 開啟／沿用交易房 |
-| 19a | POST | `/api/deals/initiate-room` | 登入 | ⬜ 由個人資訊開啟交易房／純聊天 |
+| 19a | POST | `/api/deals/initiate-room` | 登入 | ✅ 由個人資訊開啟交易房／純聊天 |
 | 20 | GET | `/api/deals/:id` | 參與者 | ✅ 訂單明細（含商品快照與可售） |
 | 21 | POST | `/api/deals/items` | 登入（買家） | ✅ 加購同一釣客的商品 |
 | 22 | POST | `/api/deals/items/batch` | 登入（買家） | ✅ 批次加購 |
@@ -73,7 +73,7 @@
 | 29 | POST | `/api/deals/reinitiate` | 登入（買家） | ✅ 取消後重新發起 |
 | 30 | GET | `/api/deals` | 登入 | ✅ 交易紀錄列表 |
 | 31 | POST | `/api/reviews/submit` | 登入（參與者） | ✅ 送出評價 |
-| 32 | GET | `/api/reviews?user_id=&role=&sort=&rating=&offset=&limit=` | 公開 | 🟡 使用者評價；⬜ 角色／排序／篩選／分頁 |
+| 32 | GET | `/api/reviews?user_id=&role=&sort=&rating=&offset=&limit=` | 公開 | 🟡 角色／分頁已完成；⬜ 排序／篩選／分布 |
 | 33 | GET | `/api/market/quote` | 公開 | ✅ 名稱→代碼→價格整合查詢 |
 | 34 | GET | `/api/market/markets` | 公開 | ✅ 市場對照 |
 | 35 | GET | `/api/market/prices` | 公開 | ✅ 代碼查價（含 `include=history`） |

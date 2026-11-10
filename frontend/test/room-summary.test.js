@@ -75,9 +75,9 @@ test("最新訂單逾時取消時，兩處都顯示已逾時", function () {
   assert.doesNotMatch(panel, /<button/);
 });
 
-test("兩者都沒有時，收件匣顯示洽談中、商品條顯示尚未加入商品", function () {
+test("兩者都沒有時，收件匣顯示純聊天、商品條顯示尚未加入商品", function () {
   update({ conversations: [room()], room: null });
-  assert.match(renderInbox(), /洽談中/);
+  assert.match(renderInbox(), /純聊天/);
 
   update({ room: room(), deal: null });
   assert.match(renderDealStrip(), /尚未加入商品/);

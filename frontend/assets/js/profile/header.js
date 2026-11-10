@@ -42,7 +42,8 @@ export function profileHeaderHTML(user, options) {
     : "";
   const action = settings.isSelf
     ? '<a class="btn btn--primary" href="settings.html">編輯個人資訊</a>'
-    : "";
+    : '<button class="btn btn--primary" type="button" data-start-room="' +
+      Number(person.id || 0) + '">聊聊</button>';
 
   return '<header class="profile-head">' +
     '<div class="profile-head__main">' +
