@@ -39,7 +39,7 @@ test("新頁面有 header／footer placeholder、共用 CSS 與正確模組", fu
 test("導覽列「我的」順序為個人資訊、設定、交易紀錄、上架紀錄、登出", function () {
   const start = account.indexOf('<div class="nav-menu__label">我的</div>');
   assert.ok(start >= 0);
-  const end = account.indexOf("${links}", start);
+  const end = account.indexOf("</div>`;", start);
   assert.ok(end > start);
   const nav = account.slice(start, end);
   const order = ["個人資訊", "設定", "交易紀錄", "上架紀錄", "登出"].map(function (label) {
