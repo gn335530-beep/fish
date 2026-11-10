@@ -3,8 +3,8 @@
 import { update } from "../assets/js/demo/store.js";
 
 export const ITEMS = [
-  { item_id: "itm_01", product_id: "prd_a", title: "石斑（2尾 / 活體）", fish_species: "石斑", unit_price: 1400, price_per_taijin: 800, quantity: 2, available: 2 },
-  { item_id: "itm_02", product_id: "prd_b", title: "嘉鱲（2尾 / 活體）", fish_species: "嘉鱲", unit_price: 1530, price_per_taijin: 900, quantity: 1, available: 2 }
+  { item_id: "itm_01", product_id: "prd_a", title: "石斑（2尾 / 活體）", fish_species: "石斑", condition: "活體", unit_price: 1400, price_per_taijin: 800, quantity: 2, available: 2 },
+  { item_id: "itm_02", product_id: "prd_b", title: "嘉鱲（2尾 / 活體）", fish_species: "嘉鱲", condition: "活體", unit_price: 1530, price_per_taijin: 900, quantity: 1, available: 2 }
 ];
 
 export function draft() {

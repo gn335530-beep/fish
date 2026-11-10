@@ -13,10 +13,12 @@ export function dealRoomHeader(peer) {
   const stars = renderStars(displayScore, { count: count }) +
     (empty ? '<span class="fm-deal__nostar">尚無評價</span>' : "");
   const phoneHtml = phone
-    ? '<a class="fm-deal__phone" href="tel:' + escapeHtml(phone) + '">撥打電話 ' + escapeHtml(phone) + '</a>'
+    ? '<a class="fm-deal__phone" href="tel:' + escapeHtml(phone) + '" aria-label="撥打電話 ' +
+      escapeHtml(phone) + '"><span>撥打電話</span><b>' + escapeHtml(phone) + '</b></a>'
     : '<span class="fm-deal__phone fm-deal__phone--none">電話未提供</span>';
   return {
     title: person.display_name || "對方",
-    sub: '<div class="fm-deal__stars">' + stars + '</div>' + phoneHtml
+    sub: '<div class="fm-deal__stars">' + stars + '</div>',
+    aside: phoneHtml
   };
 }

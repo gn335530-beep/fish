@@ -1,0 +1,66 @@
+/* 確認取消卡與取消訊息卡：沿用協議卡的白底、圓角與陰影。 */
+
+/* 確認取消卡 */
+.fm-card--cancel-confirm .fm-card__cancel-title,
+.fm-card--cancelled .fm-card__cancel-title {
+  display: block;
+  color: var(--ink);
+  font-size: 6.8cqw;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: .04em;
+  text-align: center;
+}
+
+.fm-card--cancel-confirm .fm-cancel__hint {
+  margin: 3cqw 0 2.6cqw;
+  color: var(--muted);
+  font-size: 4.3cqw;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.fm-card--cancel-confirm textarea {
+  width: 100%;
+  min-height: 24cqw;
+  padding: 2.6cqw 3.2cqw;
+  border: 1px solid var(--rule-2);
+  border-radius: 10px;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 4.3cqw;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.fm-card--cancel-confirm textarea:focus {
+  border-color: var(--accent);
+  background: var(--surface);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+/* 取消訊息卡 */
+.fm-card--cancelled .fm-card__cancel-reason {
+  display: grid;
+  gap: 1.6cqw;
+  min-height: 15cqw;
+  margin-top: 4.3cqw;
+  padding: 3.2cqw;
+  border-radius: 10px;
+  background: var(--paper);
+}
+
+.fm-card--cancelled .fm-card__cancel-reason span {
+  color: var(--muted);
+  font-size: 4cqw;
+}
+
+.fm-card--cancelled .fm-card__cancel-reason p {
+  margin: 0;
+  color: var(--ink);
+  font-size: 4.4cqw;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}

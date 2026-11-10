@@ -32,22 +32,9 @@ export function taijinOf(value, unit) {
   return unit === "kg" ? number / format.KG_PER_TAIJIN : number;
 }
 
-export function convertWeight(value, from, to) {
-  if (!(Number(value) > 0)) return "";
-  const taijin = taijinOf(value, from);
-  const next = to === "kg" ? taijin * format.KG_PER_TAIJIN : taijin;
-  return next.toFixed(1);
-}
-
+/* 切換單位只改變重量數字的解讀方式；重量數字本身不換算。 */
 export function setMarketUnit(messageId, unit) {
-  const key = keyOf(messageId);
-  const from = unitOf(messageId);
-  const to = unit === "kg" ? "kg" : "taijin";
-  if (to !== from) {
-    entries().weights[key] = convertWeight(weightOf(messageId), from, to);
-  }
-  entries().units[key] = to;
-  return weightOf(messageId);
+  entries().units[keyOf(messageId)] = unit === "kg" ? "kg" : "taijin";
 }
 
 export function referencePrice(card, messageId) {

@@ -1,55 +1,7 @@
-/* 交易房：協議卡與取消控制。 */
-
-/* 協議卡 */
-.fm-card--deal { padding: 10px; }
+/* 交易房：評價卡。協議卡與取消卡片見 agreement-card.css、agreement-cancel-card.css。 */
 
 .fm-card__deal-head { display: flex; align-items: center; justify-content: space-between; }
 .fm-card__deal-head b { font-size: .78rem; }
-
-.fm-card__pill {
-  padding: 2px 7px;
-  border: 1px solid var(--coral);
-  color: var(--coral);
-  font-size: .62rem;
-  font-weight: 600;
-}
-
-.fm-card__pill--confirmed { border-color: var(--accent); color: var(--accent); }
-.fm-card__pill--muted { border-color: var(--rule); color: var(--muted); }
-
-.fm-card__deal-items { display: grid; gap: 3px; list-style: none; margin: 0; padding: 0; }
-.fm-card__deal-items li { display: flex; justify-content: space-between; gap: 8px; font-size: .7rem; }
-.fm-card__deal-items li span:last-child { font-family: var(--font-mono); color: var(--muted); }
-
-.fm-card__deal-terms {
-  display: grid;
-  gap: 3px;
-  margin: 0;
-  padding-top: 6px;
-  border-top: 1px solid var(--rule-2);
-}
-
-.fm-card__deal-terms div { display: flex; justify-content: space-between; gap: 8px; font-size: .68rem; }
-.fm-card__deal-terms dt { color: var(--muted); }
-.fm-card__deal-terms dd { margin: 0; }
-
-/* 確認取消卡與取消訊息卡 */
-.fm-card--cancel-confirm,
-.fm-card--cancelled { padding: 10px; }
-
-.fm-cancel__hint { margin: 6px 0 0; color: var(--muted); font-size: .7rem; }
-
-.fm-card--cancel-confirm textarea {
-  width: 100%;
-  padding: 6px 8px;
-  border: 1px solid var(--rule);
-  background: var(--paper);
-  color: var(--ink);
-  font-size: .72rem;
-  resize: vertical;
-}
-
-.fm-card--cancel-confirm textarea:focus { border-color: var(--accent); outline: none; }
 
 /* 評價卡 */
 .fm-card--review { padding: 10px; }

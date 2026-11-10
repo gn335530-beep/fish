@@ -19,11 +19,26 @@
 .fm-deal__nostar { color: var(--muted-2); font-size: .64rem; }
 
 .fm-deal__phone {
-  display: block;
-  margin-top: 2px;
+  display: grid;
+  min-width: 86px;
+  padding: 3px 8px;
+  border-radius: 10px;
+  background: var(--accent-soft);
   color: var(--accent);
-  font-size: .68rem;
+  font-size: .56rem;
+  line-height: 1.25;
+  text-align: center;
   text-decoration: none;
+  white-space: nowrap;
 }
 
-.fm-deal__phone--none { color: var(--muted-2); }
+.fm-deal__phone span {
+  display: block;
+  color: var(--muted);
+  font-size: .52rem;
+}
+
+.fm-deal__phone b { display: block; font-size: .63rem; font-weight: 600; }
+.fm-deal__phone:hover { background: var(--paper-2); }
+.fm-deal__phone--none { background: var(--paper-2); color: var(--muted-2); }
+.fm-deal__phone--none span { color: var(--muted-2); }

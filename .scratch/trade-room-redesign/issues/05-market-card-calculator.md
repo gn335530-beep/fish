@@ -17,3 +17,4 @@
 ## Comments
 
 - 2026-11-01：新增 `demo/market-state.js`，以 `state.marketWeights`／`state.marketUnits` 依訊息保存重量與單位；`views/market-card.js` 改為重量輸入＋台斤／公斤切換＋即時參考價格。輸入時直接更新參考價格 DOM，不打 API，也不因輪詢重畫而重置。底部固定顯示官方來源，移除行情價參考、養殖價格、官方名稱與參考整批。
+- 2026-11-09：依需求改為切換單位不換算重量數字，只以新單位重新計算參考價格（例如 2 台斤 NT$400 ↔ 2 公斤 NT$667）；同步更新 `docs/spec/02-domain.md`、`docs/spec/06-ui.md` 與測試。

@@ -104,6 +104,12 @@ test("缺漏地區或地點時顯示地區未提供", function () {
   assert.match(card({ region: "" }), /地區未提供/);
 });
 
+test("處理方式字數多時加上縮字與膠囊樣式", function () {
+  assert.match(card({ condition: "去鱗去內臟" }), /catch-card__condition--long/);
+  assert.match(card({ condition: "去鱗去內臟真空包裝" }), /catch-card__condition--xlong/);
+  assert.doesNotMatch(card({ condition: "活體" }), /catch-card__condition--/);
+});
+
 test("商品詳情頁與腳本已刪除，全站沒有指向它的連結", function () {
   assert.equal(fs.existsSync(new URL("../pages/product-detail.html", import.meta.url)), false);
   assert.equal(fs.existsSync(new URL("../assets/js/pages/product-detail.js", import.meta.url)), false);

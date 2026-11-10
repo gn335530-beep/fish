@@ -1,0 +1,139 @@
+/* 行情卡：重量試算、單位切換與參考價格。 */
+
+.fm-market__weight-label {
+  position: absolute;
+  top: 242.5px;
+  left: 12.2%;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 24px;
+}
+
+.fm-market__weight {
+  position: absolute;
+  top: 246.05px;
+  left: 33.58%;
+  width: 33.65%;
+  height: 23.92px;
+  padding: 0 7px;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  outline: none;
+  background: #fff;
+  color: #111827;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 21.92px;
+  text-align: right;
+}
+
+.fm-market__weight { appearance: textfield; -moz-appearance: textfield; }
+.fm-market__weight::-webkit-inner-spin-button,
+.fm-market__weight::-webkit-outer-spin-button { margin: 0; -webkit-appearance: none; }
+.fm-market__weight:focus {
+  border-color: var(--market-btn);
+  outline: none;
+  box-shadow: none;
+}
+
+.fm-market__units {
+  position: absolute;
+  top: 244.55px;
+  right: 7.22%;
+  display: flex;
+  gap: 1.84px;
+}
+
+.fm-market__unit-btn {
+  position: relative;
+  width: 34.92px;
+  height: 25.08px;
+  cursor: pointer;
+}
+
+.fm-market__unit-btn input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.fm-market__unit-btn span {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  background: #fff;
+  color: #4B5563;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1;
+  transition: background-color .2s ease, border-color .2s ease, color .2s ease;
+}
+
+.fm-market__unit-btn input:not(:checked):hover + span {
+  border-color: #D1D5DB;
+  background: var(--market-btn-soft);
+  color: #111827;
+}
+
+.fm-market__unit-btn input:checked + span {
+  border-color: var(--market-btn);
+  background: var(--market-btn);
+  color: #fff;
+}
+
+.fm-market__unit-btn input:checked:hover + span {
+  background: #2B4FA3;
+}
+
+.fm-market__unit-btn input:focus-visible + span {
+  outline: 2px solid var(--market-btn);
+  outline-offset: 2px;
+}
+
+.fm-market__ref-label {
+  position: absolute;
+  top: 276.8px;
+  left: 6.01%;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 24px;
+}
+
+.fm-market__ref {
+  position: absolute;
+  top: 278.5px;
+  right: 13.97%;
+  font-size: 22px;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  line-height: 24px;
+  transform: scaleX(.99);
+  transform-origin: 100% 50%;
+}
+
+.fm-market__ref-note {
+  position: absolute;
+  top: 303.2px;
+  left: 4.3%;
+  color: #6B7280;
+  font-size: 9px;
+  letter-spacing: -1px;
+  line-height: 10px;
+}
+
+.fm-market__source {
+  position: absolute;
+  top: 318.5px;
+  right: 11.5%;
+  color: #6B7280;
+  font-size: 9px;
+  letter-spacing: -.2px;
+  line-height: 11px;
+  white-space: nowrap;
+}

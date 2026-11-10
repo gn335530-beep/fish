@@ -29,22 +29,35 @@ function dealCardActions(card, messageId) {
     dealId + '">確認</button></div>';
 }
 
+function speciesList(items) {
+  const names = items.map(itemSpecies).filter(Boolean);
+  if (!names.length) return "<b>交易品項</b>";
+  return names.map(function (name) {
+    return "<b>" + escapeHtml(name) + "</b>";
+  }).join("");
+}
+
+function priceRow(card) {
+  return '<div class="fm-card__deal-price"><dt>最終價格</dt><dd><b>' +
+    escapeHtml(money(card.final_price)) + "</b></dd></div>";
+}
+
 export function renderDealCard(card, messageId) {
   if (state.cancelOpen === String(card.deal_id) && canRespond(card, messageId)) {
     return renderCancelConfirmCard(card);
   }
   const items = card.items || [];
   const status = displayStatusOf(card, messageId);
-  const tails = totalQuantity(items);
   return '<div class="fm-card fm-card--deal">' +
-    '<div class="fm-card__deal-head"><b>協議</b><span class="fm-card__pill' + statusClass(status) + '">' +
-    escapeHtml(cardStatusLabel(status, "協議")) + '</span></div>' +
-    '<ul class="fm-card__deal-items">' + items.map(function (item) {
-      return "<li><span>" + escapeHtml(itemSpecies(item)) + "</span></li>";
-    }).join("") + "</ul>" +
+    '<span class="fm-card__deal-kicker">協議</span>' +
+    '<div class="fm-card__deal-top">' +
+    '<div class="fm-card__deal-species">' + speciesList(items) + "</div>" +
+    '<span class="fm-card__pill' + statusClass(status) + '">' +
+    escapeHtml(cardStatusLabel(status, "協議")) + "</span>" +
+    "</div>" +
     '<dl class="fm-card__deal-terms">' +
-    definitionRow("販售數量", tails + " 尾") +
-    definitionRow("最終價格", money(card.final_price)) +
+    definitionRow("販售數量", totalQuantity(items) + " 尾") +
+    priceRow(card) +
     definitionRow("面交時間", dateTimeOf(card.meetup_time)) +
     definitionRow("面交地點", card.meetup_location) +
     "</dl>" +

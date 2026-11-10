@@ -35,6 +35,7 @@ function snapshot(product, quantity, itemId) {
     product_id: product.id,
     title: product.title,
     fish_species: product.fish_species || null,
+    condition: product.condition || null,
     photo_url: product.photo_url,
     unit_price: unitPrice,
     price: product.price == null ? null : Number(product.price),

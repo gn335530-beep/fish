@@ -6,7 +6,7 @@ import { escapeHtml } from "./html.js";
 export function renderCancelConfirmCard(card) {
   const dealId = escapeHtml(card.deal_id);
   return '<div class="fm-card fm-card--cancel-confirm">' +
-    '<div class="fm-card__deal-head"><b>確認取消</b></div>' +
+    '<span class="fm-card__cancel-title">確認取消</span>' +
     '<p class="fm-cancel__hint">請填寫取消原因</p>' +
     '<textarea data-cancel-note maxlength="200" rows="3" aria-label="取消原因" placeholder="請填寫取消原因">' +
     escapeHtml(state.cancelNote || "") + '</textarea>' +

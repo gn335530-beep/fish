@@ -1,0 +1,47 @@
+/* 商品卡照片框：主圖完整顯示，留白用同一張照片模糊填滿。 */
+
+.catch-card .card__media {
+  position: relative;
+  aspect-ratio: 3 / 2;
+  border: 0;
+  border-radius: 6.8cqw;
+  background: #EFEBE3;
+  box-shadow: 0 14px 28px -22px rgba(30, 30, 30, .6);
+}
+
+.catch-card .card__media img.catch-card__backdrop {
+  position: absolute;
+  top: -10%;
+  left: -10%;
+  width: 120%;
+  height: 120%;
+  max-width: none;
+  object-fit: cover;
+  filter: blur(16px) saturate(.9);
+  opacity: .45;
+  transform: scale(1.04);
+  pointer-events: none;
+}
+
+.catch-card .card__media img.catch-card__photo {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: none;
+}
+
+.catch-card:hover .card__media img.catch-card__photo {
+  transform: none;
+}
+
+.catch-card:hover .card__media img.catch-card__backdrop {
+  transform: scale(1.04);
+}
+
+.catch-card .media-empty {
+  background: #EFEBE3;
+  color: #636A64;
+  font-size: 6.5cqw;
+}

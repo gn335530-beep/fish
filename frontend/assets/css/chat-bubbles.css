@@ -1,0 +1,146 @@
+/* 聊天室內容：訊息氣泡、空狀態與收件匣。 */
+
+/* ---------- 訊息區 ---------- */
+.fm-panel__body {
+  padding: 16px;
+  background: var(--paper-2);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(26, 29, 27, .3) transparent;
+}
+
+.fm-chat {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fm-msg {
+  display: flex;
+  flex-direction: column;
+  max-width: 86%;
+}
+
+.fm-msg--me { align-self: flex-end; align-items: flex-end; }
+.fm-msg--other { align-self: flex-start; align-items: flex-start; }
+
+.fm-msg__meta {
+  margin-bottom: 4px;
+  color: var(--muted-2);
+  font-size: .64rem;
+  letter-spacing: .04em;
+}
+
+.fm-msg__bubble {
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgba(26, 29, 27, .06);
+  font-size: .82rem;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.fm-msg--me .fm-msg__bubble {
+  border-radius: 18px;
+  background: var(--accent);
+  color: #fff;
+}
+
+.fm-msg--system {
+  align-self: center;
+  max-width: 86%;
+  color: var(--muted);
+  font-size: .7rem;
+}
+
+.fm-msg__image {
+  display: block;
+  max-width: 100%;
+  border-radius: 12px;
+}
+
+/* 卡片訊息不套氣泡外框：行情、推薦、協議卡共用同一份重設規則。
+   寬度沿用一般訊息的上限，只讓卡片填滿訊息寬度。 */
+.fm-msg--market,
+.fm-msg--product,
+.fm-msg--deal {
+  width: 100%;
+}
+
+.fm-msg--market .fm-msg__bubble,
+.fm-msg--product .fm-msg__bubble,
+.fm-msg--deal .fm-msg__bubble,
+.fm-msg__bubble--bare {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  font-size: inherit;
+  line-height: normal;
+  overflow-wrap: normal;
+  box-shadow: none;
+}
+
+/* ---------- 空狀態與提示 ---------- */
+.fm-chip,
+.fm-link {
+  padding: 6px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: .72rem;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+}
+
+.fm-chip:hover,
+.fm-link:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.fm-btn {
+  border: 0;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+/* ---------- 收件匣 ---------- */
+.fm-inbox__head { margin-bottom: 14px; font-size: .86rem; }
+.fm-inbox__acts { gap: 6px; }
+.fm-inbox { gap: 8px; }
+
+.fm-inbox__item {
+  border: 0;
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgba(26, 29, 27, .06);
+  transition: background .15s;
+}
+
+.fm-inbox__item:hover,
+.fm-inbox__item.on { background: var(--accent-soft); }
+
+.fm-inbox__open { padding: 9px 10px; }
+
+.fm-inbox__avatar {
+  border: 0;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+.fm-inbox__del {
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--muted-2);
+}
+
+.fm-inbox__del:hover { background: var(--coral); color: #fff; }
+
+.fm-inbox__dot { border: 0; }

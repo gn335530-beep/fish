@@ -2,6 +2,7 @@
 
 import { escapeHtml, priceText } from "./html.js";
 import { marketScope } from "./market.js";
+import { chartMarkup } from "./market-chart.js";
 import { state } from "../store.js";
 import {
   weightOf, unitOf, setMarketWeight, setMarketUnit, referenceText
@@ -9,76 +10,61 @@ import {
 
 const SOURCE_TEXT = "資料來源：農業部 漁業署";
 
-function historyFor(card, days) {
-  if (days === 30) return card.history_30 || card.history || [];
-  return card.history || (card.history_30 || []).slice(-7);
-}
+/* 價格靠右對齊單位；位數較多時只壓縮水平寬度，避免撞到「元/台斤」。 */
+const PRICE_DIGIT = 26.7;
+const PRICE_DOT = 8.4;
+const PRICE_FIT = 89;
 
-function statsFor(card, days) {
-  if (days === 30) return { high: card.high_30, low: card.low_30 };
-  return { high: card.high, low: card.low };
-}
-
-function chartSvg(history) {
-  const prices = history.map(function (point) { return Number(point.price_per_taijin); });
-  if (prices.length < 2) return '<p class="fm-market__none">暫無走勢</p>';
-  const high = Math.max.apply(null, prices);
-  const low = Math.min.apply(null, prices);
-  const span = high - low || 1;
-  const points = prices.map(function (price, index) {
-    const x = (index / (prices.length - 1)) * 100;
-    const y = 30 - ((price - low) / span) * 28;
-    return x.toFixed(1) + "," + y.toFixed(1);
-  }).join(" ");
-  return '<svg class="fm-market__chart" viewBox="0 0 100 32" preserveAspectRatio="none" role="img" aria-label="行情走勢">' +
-    '<polyline points="' + points + '" fill="none" stroke="currentColor" stroke-width="1.6" vector-effect="non-scaling-stroke"></polyline>' +
-    '</svg>';
+function priceScale(text) {
+  let width = 0;
+  String(text).split("").forEach(function (ch) {
+    width += ch === "." ? PRICE_DOT : PRICE_DIGIT;
+  });
+  return width > PRICE_FIT ? Math.max(.5, PRICE_FIT / width) : 1;
 }
 
 function dayButton(messageId, days, active) {
   return '<button type="button" data-action="market-days" data-days="' + days +
     '" data-message="' + escapeHtml(messageId || "") + '" aria-pressed="' + (active ? "true" : "false") + '">' +
-    days + ' 日</button>';
+    days + '日</button>';
 }
 
-function calcBlock(card, messageId) {
-  const unit = unitOf(messageId);
+function unitButton(messageId, value, label, checked) {
   const id = escapeHtml(messageId || "");
-  return '<div class="fm-market__calc">' +
-    '<label class="fm-market__weight"><span>重量</span>' +
-    '<input type="number" min="0" step="0.1" inputmode="decimal" data-market-weight="' +
-    id + '" value="' + escapeHtml(weightOf(messageId)) + '" aria-label="重量">' +
-    '</label>' +
-    '<select class="fm-market__unit" data-market-unit="' + id + '" aria-label="重量單位">' +
-    '<option value="taijin"' + (unit === "taijin" ? " selected" : "") + '>台斤</option>' +
-    '<option value="kg"' + (unit === "kg" ? " selected" : "") + '>公斤</option>' +
-    '</select>' +
-    '<div class="fm-market__ref"><span>參考價格</span>' +
-    '<b data-market-ref="' + id + '">' + escapeHtml(referenceText(card, messageId)) + '</b>' +
-    '<small>（依重量計算整批價格）</small></div>' +
-    '</div>';
+  return '<label class="fm-market__unit-btn">' +
+    '<input type="radio" name="market-unit-' + id + '" value="' + value +
+    '" data-market-unit="' + id + '"' + (checked ? " checked" : "") + '>' +
+    '<span>' + label + '</span></label>';
 }
 
 export function renderMarketCard(card, messageId) {
   const days = Number((state.marketDays || {})[messageId]) === 30 ? 30 : 7;
-  const history = historyFor(card, days);
-  const stats = statsFor(card, days);
+  const unit = unitOf(messageId);
+  const id = escapeHtml(messageId || "");
+  const price = priceText(card.price_per_taijin);
+  const scope = marketScope(card);
   return '<div class="fm-card fm-card--market" data-price-per-taijin="' +
     escapeHtml(card.price_per_taijin) + '">' +
-    '<div class="fm-market__head"><b>行情卡</b></div>' +
-    '<div class="fm-market__species">' + escapeHtml(card.species_name || "魚種未提供") + '</div>' +
-    '<div class="fm-market__price"><b>' + priceText(card.price_per_taijin) + '</b> <span>元／台斤</span></div>' +
-    '<div class="fm-market__meta">' + escapeHtml(marketScope(card)) + ' · ' +
-    escapeHtml(card.trade_date || "") + '</div>' +
+    '<b class="fm-market__head">行情卡</b>' +
+    '<b class="fm-market__species">' + escapeHtml(card.species_name || "魚種未提供") + '</b>' +
+    '<b class="fm-market__price" style="--price-scale:' + priceScale(price) + '">' + price + '</b>' +
+    '<span class="fm-market__price-unit">元/台斤</span>' +
+    '<p class="fm-market__meta">' + (scope ? "(" + escapeHtml(scope) + ")" : "") + '</p>' +
     '<div class="fm-market__days">' + dayButton(messageId, 7, days === 7) + dayButton(messageId, 30, days === 30) + '</div>' +
-    '<div class="fm-market__label">近 ' + days + ' 交易日</div>' +
-    chartSvg(history) +
-    '<div class="fm-market__range">' +
-    '<span>最高 ' + escapeHtml(stats.high == null ? "—" : priceText(stats.high)) + '</span>' +
-    '<span>最低 ' + escapeHtml(stats.low == null ? "—" : priceText(stats.low)) + '</span>' +
+    chartMarkup(card, days) +
+    '<span class="fm-market__date">' + escapeHtml(card.trade_date || "") + '</span>' +
+    '<span class="fm-market__label">近' + days + '個交易日</span>' +
+    '<span class="fm-market__weight-label">重量</span>' +
+    '<input class="fm-market__weight" type="number" min="0" step="0.1" inputmode="decimal" data-market-weight="' +
+    id + '" value="' + escapeHtml(weightOf(messageId)) + '" aria-label="重量">' +
+    '<div class="fm-market__units" role="group" aria-label="重量單位">' +
+    unitButton(messageId, "taijin", "台斤", unit === "taijin") +
+    unitButton(messageId, "kg", "公斤", unit === "kg") +
     '</div>' +
-    calcBlock(card, messageId) +
-    '<div class="fm-market__source">' + SOURCE_TEXT + '</div>' +
+    '<span class="fm-market__ref-label">參考價格</span>' +
+    '<b class="fm-market__ref" data-market-ref="' + id + '">' + escapeHtml(referenceText(card, messageId)) + '</b>' +
+    '<small class="fm-market__ref-note">（依重量計算整批價格）</small>' +
+    '<span class="fm-market__source">' + SOURCE_TEXT + '</span>' +
     '</div>';
 }
 
@@ -97,11 +83,13 @@ export function handleMarketWeightInput(input) {
   refreshReference(input.closest(".fm-card--market"), messageId);
 }
 
-export function handleMarketUnitChange(select) {
-  const messageId = select.getAttribute("data-market-unit");
-  const value = setMarketUnit(messageId, select.value);
-  const card = select.closest(".fm-card--market");
+/* 單位控制沿用原本的 change 契約：radio 與舊 select 都提供 value 與 data-market-unit。 */
+export function handleMarketUnitChange(control) {
+  const messageId = control.getAttribute("data-market-unit");
+  const card = control.closest(".fm-card--market");
   const input = card && card.querySelector("[data-market-weight]");
-  if (input) input.value = value;
+  /* 以輸入框目前的值為準；切換單位只重算參考價格，不改重量數字。 */
+  if (input) setMarketWeight(messageId, input.value);
+  setMarketUnit(messageId, control.value);
   refreshReference(card, messageId);
 }

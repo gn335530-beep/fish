@@ -1,4 +1,4 @@
-/* 對話式交易引擎：商品卡與上架草稿卡。 */
+/* 對話式交易引擎：卡片共用樣式與上架草稿卡。 */
 
 .fm-card {
   display: grid;
@@ -12,10 +12,6 @@
 .fm-card__body span { color: var(--muted); font-size: .7rem; }
 .fm-card--plain { padding: 10px; font-size: .78rem; }
 .fm-card__thumb { width: 100%; max-height: 140px; object-fit: cover; }
-
-.fm-card--product { grid-template-columns: 72px minmax(0, 1fr); }
-.fm-card--product img { width: 72px; height: 72px; object-fit: cover; }
-.fm-card--product .fm-card__acts { grid-column: 1 / -1; }
 
 .fm-card--draft { padding: 12px; }
 .fm-card--draft > b { font-size: .82rem; }
@@ -61,65 +57,6 @@
   border-color: var(--accent) !important;
   color: #fff !important;
 }
-
-/* 行情卡 */
-.fm-card--market { padding: 12px; gap: 5px; }
-.fm-market__head b { font-size: .82rem; }
-.fm-market__species { font-family: var(--font-display); font-size: .9rem; color: var(--ink); }
-.fm-market__price { display: flex; align-items: baseline; gap: 5px; }
-.fm-market__price b { font-family: var(--font-mono); font-size: 1.25rem; color: var(--ink); }
-.fm-market__price span { color: var(--muted); font-size: .68rem; }
-.fm-market__meta { color: var(--muted); font-size: .66rem; line-height: 1.6; }
-.fm-market__days { display: flex; gap: 4px; }
-.fm-market__days button {
-  padding: 2px 8px;
-  border: 1px solid var(--rule-2);
-  background: transparent;
-  color: var(--muted);
-  font-size: .64rem;
-  cursor: pointer;
-}
-.fm-market__days button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
-.fm-market__label { color: var(--muted-2); font-size: .64rem; }
-.fm-market__chart { width: 100%; height: 48px; color: var(--accent); }
-.fm-market__none { margin: 0; color: var(--muted-2); font-size: .66rem; }
-.fm-market__range { display: flex; justify-content: space-between; color: var(--muted); font-size: .64rem; }
-.fm-market__calc {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 6px;
-  padding-top: 7px;
-  border-top: 1px solid var(--rule-2);
-}
-.fm-market__weight { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: .68rem; }
-.fm-market__weight input {
-  min-width: 0;
-  width: 100%;
-  padding: 6px 8px;
-  border: 1px solid var(--rule);
-  background: var(--paper);
-  color: var(--ink);
-  font-size: .74rem;
-}
-.fm-market__unit {
-  padding: 6px 4px;
-  border: 1px solid var(--rule);
-  background: var(--surface);
-  color: var(--ink);
-  font-size: .68rem;
-}
-.fm-market__ref {
-  grid-column: 1 / -1;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 6px;
-  color: var(--muted);
-  font-size: .68rem;
-}
-.fm-market__ref b { color: var(--ink); font-family: var(--font-mono); font-size: .9rem; }
-.fm-market__ref small { flex-basis: 100%; color: var(--muted-2); font-size: .6rem; }
-.fm-market__source { margin-top: 2px; color: var(--muted-2); font-size: .6rem; }
 
 /* 法規告知卡與取消上架確認 */
 .fm-card--legal { padding: 12px; gap: 6px; }

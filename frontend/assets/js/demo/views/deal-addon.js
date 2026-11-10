@@ -2,7 +2,7 @@
 
 import { state } from "../store.js";
 import { escapeHtml } from "./html.js";
-import { itemSpecies, itemPriceText } from "./deal-item-text.js";
+import { itemSummary } from "./deal-item-text.js";
 
 function inDraftOf(productId) {
   return ((state.deal && state.deal.items) || []).reduce(function (sum, item) {
@@ -11,15 +11,21 @@ function inDraftOf(productId) {
 }
 
 function addonRow(product) {
-  const available = Number(product.available) || 0;
-  const max = Math.max(0, available - inDraftOf(product.id));
+  const summary = itemSummary(product);
+  const max = Math.max(0, summary.remaining - inDraftOf(product.id));
   const value = (state.addonQty || {})[product.id];
   return '<div class="fm-addon__row">' +
-    '<div class="fm-addon__name"><b>' + escapeHtml(itemSpecies(product)) + '</b>' +
-    '<span>剩 ' + available + ' 尾 · ' + itemPriceText(product) + '</span></div>' +
+    '<div class="fm-addon__info">' +
+    '<div class="fm-addon__title"><b>' + escapeHtml(summary.species) + '</b>' +
+    (summary.condition ? '<span class="fm-addon__detail">' + escapeHtml(summary.condition) + '</span>' : '') +
+    '</div>' +
+    '<span class="fm-addon__price">' + escapeHtml(summary.summaryText) + '</span>' +
+    '</div>' +
+    '<label class="fm-addon__qty">加購數量' +
     '<input type="number" min="0" max="' + max + '" step="1" data-addon-qty="' +
     escapeHtml(product.id) + '" value="' + escapeHtml(value == null ? "" : value) + '"' +
     (max > 0 ? "" : " disabled") + ' aria-label="加購數量">' +
+    '<span>尾</span></label>' +
     '</div>';
 }
 

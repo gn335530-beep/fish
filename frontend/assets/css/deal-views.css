@@ -1,4 +1,4 @@
-/* 對話式交易引擎：訊息、卡片、空狀態與收件匣。 */
+/* 對話式交易引擎：提示、空狀態與收件匣。 */
 
 .fm-btn {
   display: inline-block;
@@ -18,50 +18,6 @@
   font-size: .72rem;
 }
 
-.fm-chat {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.fm-msg { display: flex; flex-direction: column; max-width: 86%; }
-.fm-msg--me { align-self: flex-end; align-items: flex-end; }
-.fm-msg--other { align-self: flex-start; align-items: flex-start; }
-
-.fm-msg__meta {
-  margin-bottom: 4px;
-  color: var(--muted-2);
-  font-size: .64rem;
-  letter-spacing: .04em;
-}
-
-.fm-msg__bubble {
-  padding: 10px 12px;
-  border: 1px solid var(--rule-2);
-  background: var(--surface);
-  font-size: .82rem;
-  line-height: 1.7;
-  overflow-wrap: anywhere;
-}
-
-.fm-msg--me .fm-msg__bubble {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
-}
-
-.fm-msg--system {
-  align-self: center;
-  max-width: 100%;
-  color: var(--muted);
-  font-size: .7rem;
-}
-
-.fm-msg__image {
-  display: block;
-  max-width: 100%;
-}
-
 .fm-empty {
   display: grid;
   justify-items: center;
@@ -75,17 +31,6 @@
 
 .fm-empty__note { color: var(--muted-2); font-size: .74rem; }
 
-.fm-chip {
-  padding: 6px 12px;
-  border: 1px solid var(--rule);
-  background: var(--surface);
-  color: var(--ink);
-  font-size: .74rem;
-  cursor: pointer;
-}
-
-.fm-chip:hover { border-color: var(--accent); color: var(--accent); }
-
 .fm-inbox__head {
   display: flex;
   align-items: center;
@@ -96,15 +41,6 @@
 }
 
 .fm-inbox__acts { display: flex; gap: 4px; }
-
-.fm-link {
-  padding: 4px 8px;
-  background: transparent;
-  border: 1px solid var(--rule);
-  color: var(--muted);
-  font-size: .7rem;
-  cursor: pointer;
-}
 
 .fm-inbox__note {
   margin: 0 0 10px;
