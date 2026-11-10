@@ -48,3 +48,9 @@ test("每個種子圖片都有對應的 seed-assets 檔案", function () {
     assert.equal(fs.existsSync(file), true, image.where + " 找不到檔案：" + relative);
   }
 });
+
+test("每筆種子商品都有照片", function () {
+  for (const product of SEED.products) {
+    assert.ok(product.photo_url, product.id + " 缺少照片");
+  }
+});
