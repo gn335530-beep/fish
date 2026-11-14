@@ -4,6 +4,10 @@ const quote = require("../../market/quote-service");
 const { regionOf } = require("./region");
 
 const HISTORY_KEYS = ["trade_date", "price_per_kg", "price_per_taijin"];
+const MODEL_KEYS = [
+  "found", "species_code", "official_name", "region", "trade_date",
+  "price_per_kg", "price_per_taijin", "is_aquaculture"
+];
 
 function historyOf(rows) {
   return (rows || []).map(function (row) {
@@ -11,6 +15,22 @@ function historyOf(rows) {
     HISTORY_KEYS.forEach(function (key) { point[key] = row[key]; });
     return point;
   });
+}
+
+/* 模型視圖：只留回答行情所需欄位，完整歷史與品質資料只給前端組卡。 */
+function modelView(data) {
+  if (!data || data.found !== true) {
+    return {
+      found: false,
+      species_code: (data && data.species_code) || null,
+      official_name: (data && data.official_name) || null
+    };
+  }
+  const view = {};
+  MODEL_KEYS.forEach(function (key) {
+    if (data[key] !== undefined) view[key] = data[key];
+  });
+  return view;
 }
 
 function clean(data) {
@@ -79,4 +99,4 @@ async function run(args, ctx) {
   }
 }
 
-module.exports = { run: run };
+module.exports = { run: run, modelView: modelView };

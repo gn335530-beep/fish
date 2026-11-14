@@ -3,7 +3,7 @@
 const { llmConfig } = require("./config");
 const { SYSTEM_PROMPT } = require("./prompt");
 const { historyFor, contextSummary } = require("./history");
-const { parseOutput, normalizeOutput } = require("./validate");
+const { parseOutput, normalizeOutput, finalIntent } = require("./validate");
 const tools = require("./tools");
 const toolLoop = require("./tool-loop");
 const { logReply } = require("./log");
@@ -62,9 +62,9 @@ async function reply(options) {
     }, report);
 
     const parsed = parseOutput(loop.raw.text);
-    intent = parsed.intent;
+    intent = finalIntent(parsed.intent, loop.webResults);
     const scope = loop.productRegion || "全省";
-    const output = normalizeOutput(parsed, {
+    const output = normalizeOutput(Object.assign({}, parsed, { intent: intent }), {
       userText: options.message.text,
       toolResults: loop.toolResults,
       toolNames: report.toolRuns.filter(function (run) { return !run.error_code; })
@@ -78,9 +78,11 @@ async function reply(options) {
       (!Array.isArray(loop.toolResults.products) || !loop.toolResults.products.length)) {
       throw llmError("LLM_GUARD_REJECTED");
     }
-    if (loop.toolResults.market && loop.toolResults.market.found === false &&
-      /\d/.test(output.reply_text || "")) {
-      throw llmError("LLM_GUARD_REJECTED");
+    if (loop.toolResults.market && loop.toolResults.market.found === false) {
+      const text = output.reply_text || "";
+      if (text && (/\d/.test(text) || text.indexOf("暫無行情") === -1)) {
+        throw llmError("LLM_GUARD_REJECTED");
+      }
     }
     if (intent === "WEB" && !loop.webResults.length) throw llmError("LLM_GUARD_REJECTED");
 

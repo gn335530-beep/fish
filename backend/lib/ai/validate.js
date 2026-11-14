@@ -18,6 +18,13 @@ function invalidOutput() {
   return llmError("LLM_INVALID_OUTPUT");
 }
 
+/* WEB 的定義是「這一輪成功用了網路資料」；平台意圖不升級。 */
+function finalIntent(intent, webResults) {
+  const webUsed = Array.isArray(webResults) && webResults.length > 0;
+  if (webUsed && PLATFORM_INTENTS.indexOf(intent) === -1) return "WEB";
+  return intent;
+}
+
 function parseOutput(raw) {
   let text = String(raw == null ? "" : raw).trim();
   if (!text) throw invalidOutput();
@@ -144,5 +151,6 @@ function normalizeOutput(parsed, options) {
 
 module.exports = {
   parseOutput: parseOutput,
-  normalizeOutput: normalizeOutput
+  normalizeOutput: normalizeOutput,
+  finalIntent: finalIntent
 };

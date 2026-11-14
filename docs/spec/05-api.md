@@ -420,8 +420,9 @@
 - 平台意圖（`SELL`、`BUY`、`MARKET`、`CANCEL`、`EDIT`）不產生 `reply_text`，前端交由既有規則完成；`CHAT`／`WEB`／`PRODUCT_RECOMMEND` 才寫入文字。
 - 唯讀工具：`get_market_price`（官方行情）、`search_products`（公開商品，最多 5 筆）、`web_search`（Tavily basic search）。每輪最多 2 次工具呼叫；模型不能使用寫入工具。工具結果視為不可信資料，平台數字只能來自使用者訊息或後端工具結果。
 - 每次回覆只有一個請求期限：一般 8 秒（`LLM_TIMEOUT_MS`）；該輪執行 `web_search` 後延長為 15 秒（`LLM_SEARCH_TIMEOUT_MS`）。期限同時套用模型呼叫、每個工具與行情上游；工具開始前剩餘時間已用盡就不再呼叫下游，逾時回 `LLM_TIMEOUT` 靜默 fallback。
-- `tool_results` 可含 `market`（既有行情卡資料）與 `products`（公開商品陣列）；`PRODUCT_RECOMMEND` 的文字與商品卡只由工具結果產生，模型不能自行改寫。回覆未提到查詢範圍時，後端在最終文字後補上「（查詢範圍：縣市）」；加入後會超過 500 字就省略後綴，回覆仍成功。
-- `sources` 只在 `WEB` 出現，由後端從 `web_search` 結果產生，最多 3 個合法 URL；平台答案與 `CHAT` 不顯示來源。
+- `tool_results` 可含 `market`（給前端行情卡的完整官方資料，含 7／30 交易日歷史、品質旗標、抓取時間與來源 URL）與 `products`（公開商品陣列）；`PRODUCT_RECOMMEND` 的文字與商品卡只由工具結果產生，模型不能自行改寫。回覆未提到查詢範圍時，後端在最終文字後補上「（查詢範圍：縣市）」；加入後會超過 500 字就省略後綴，回覆仍成功。
+- 模型看到的 `get_market_price` 結果只有是否查到、官方代碼、官方名稱、地區、交易日期、每公斤與每台斤平均價與養殖標記；歷史、品質、抓取時間與來源 URL 不進模型，也不進數字防護證據池。
+- `sources` 只在 `WEB` 出現，由後端從 `web_search` 結果產生，最多 3 個合法 URL；模型自稱 `CHAT` 但成功使用 `web_search` 時，最終 intent 升級為 `WEB` 並附來源。`CHAT` 永遠不帶來源；平台答案也不顯示來源。
 - 平台數字（價格、尾數、行情、庫存）必須出現在使用者訊息或工具結果中，否則整則回覆丟棄，回 `handled:false` + `LLM_GUARD_REJECTED`。
 - 失敗一律 HTTP 200：`LLM_DISABLED`、`LLM_NOT_CONFIGURED`、`LLM_TIMEOUT`、`LLM_UPSTREAM_ERROR`、`LLM_INVALID_OUTPUT`、`LLM_GUARD_REJECTED` 為靜默 fallback；`LLM_RATE_LIMITED`、`SEARCH_RATE_LIMITED`、`SEARCH_QUOTA_EXHAUSTED` 為 `retryable:true`，前端先跑規則，規則無法處理時才顯示提示與重試按鈕。
 - 端點不寫入訊息、不改 `context`；AI 訊息仍由前端呼叫 `POST /api/chat/message` 寫入。

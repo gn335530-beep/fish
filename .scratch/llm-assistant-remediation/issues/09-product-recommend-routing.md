@@ -4,11 +4,11 @@
 
 **Blocked by:** 02（前端信任後端 slots 與共用常數）
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] 規則引擎判為 `BUY`、後端回 `PRODUCT_RECOMMEND` 時，前端寫入模型文字並產生工具結果中的商品卡。
-- [ ] 移除 `PRODUCT_HINT` 關鍵字判斷；不再用前端自製規則否決後端 intent。
-- [ ] `SELL`、`MARKET`、`CANCEL`、`EDIT` 與上架流程進行中仍由規則引擎優先，不寫入模型文字。
-- [ ] 商品卡只由 `tool_results.products` 產生；context 進入 shopping 模式並更新 `last_cards`。
-- [ ] 前端測試涵蓋「BUY＋PRODUCT_RECOMMEND」與「平台動作仍規則優先」兩類情境。
-- [ ] 文件同步 intent 路由與前端行為。
+- [x] 規則引擎判為 `BUY`、後端回 `PRODUCT_RECOMMEND` 時，前端寫入模型文字並產生工具結果中的商品卡。
+- [x] 移除 `PRODUCT_HINT` 關鍵字判斷；不再用前端自製規則否決後端 intent。
+- [x] `SELL`、`MARKET`、`CANCEL`、`EDIT` 與上架流程進行中仍由規則引擎優先，不寫入模型文字。
+- [x] 商品卡只由 `tool_results.products` 產生；context 進入 shopping 模式並更新 `last_cards`。
+- [x] 前端測試涵蓋「BUY＋PRODUCT_RECOMMEND」與「平台動作仍規則優先」兩類情境。
+- [x] 文件同步 intent 路由與前端行為。

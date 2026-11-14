@@ -60,11 +60,22 @@ test("行情工具使用官方平均價，回傳行情資料並附在 CHAT", asy
   assert.equal(data.tool_results.market.trade_date, "2026-10-22");
   assert.equal(data.tool_results.market.source, "農業部漁產品交易行情");
   assert.equal(data.sources.length, 0);
+  assert.ok(data.tool_results.market.history.length >= 1);
+  assert.equal(data.tool_results.market.quality, "official");
+  assert.match(data.tool_results.market.fetched_at, /^\d{4}-\d{2}-\d{2}T/);
+  assert.match(data.tool_results.market.source_url, /^https:/);
 
   assert.deepEqual(h.calls[0].tools.map(function (tool) { return tool.name; }),
     ["get_market_price", "search_products"]);
-  assert.equal(h.calls[1].tool_turns[0].name, "get_market_price");
-  assert.equal(h.calls[1].tool_turns[0].result.price_per_taijin, 60);
+  const modelMarket = h.calls[1].tool_turns[0].result;
+  assert.equal(modelMarket.price_per_taijin, 60);
+  assert.equal(modelMarket.trade_date, "2026-10-22");
+  assert.equal(modelMarket.region, "高雄市");
+  assert.equal(modelMarket.history, undefined);
+  assert.equal(modelMarket.quality, undefined);
+  assert.equal(modelMarket.fetched_at, undefined);
+  assert.equal(modelMarket.source_url, undefined);
+  assert.equal(modelMarket.scope, undefined);
 });
 
 test("查無行情時模型只說暫無行情，不得出現價格數字", async function () {
@@ -88,6 +99,14 @@ test("查無行情時模型只說暫無行情，不得出現價格數字", async
   const second = await h.reply(run.room.id, run.message.id);
   assert.equal(second.body.data.handled, false);
   assert.equal(second.body.data.error_code, "LLM_GUARD_REJECTED");
+
+  h.useSequence([
+    { tool_calls: [marketCall()] },
+    finalChat("目前沒有行情資料。")
+  ]);
+  const third = await h.reply(run.room.id, run.message.id);
+  assert.equal(third.body.data.handled, false);
+  assert.equal(third.body.data.error_code, "LLM_GUARD_REJECTED");
 });
 
 test("模型自行產生不存在的行情數字時被 guard 拒絕", async function () {

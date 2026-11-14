@@ -7,7 +7,7 @@ const { llmError } = require("../error");
 
 const MARKET_TOOL = {
   name: "get_market_price",
-  description: "查官方批發行情。只回官方平均價、交易日期與來源，查無資料回 found:false。",
+  description: "查官方批發行情。只回平均價、交易日期與必要識別欄位，不回歷史、品質或來源；查無資料回 found:false。",
   parameters: {
     type: "OBJECT",
     properties: {
@@ -61,4 +61,9 @@ async function execute(name, args, ctx) {
   throw llmError("LLM_INVALID_OUTPUT", { message: "unknown tool: " + name });
 }
 
-module.exports = { definitions: definitions, execute: execute };
+function modelResult(name, result) {
+  if (name === "get_market_price") return market.modelView(result);
+  return result;
+}
+
+module.exports = { definitions: definitions, execute: execute, modelResult: modelResult };

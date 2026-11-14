@@ -32,7 +32,7 @@ export function llmBatch(llm) {
   const replies = [];
   if (llm.reply_text) replies.push({ text: llm.reply_text });
 
-  if (llm.intent === INTENT.CHAT) {
+  if (llm.intent === INTENT.CHAT || llm.intent === INTENT.WEB) {
     const market = marketCard(llm.tool_results && llm.tool_results.market);
     if (market) replies.push({ card: market });
   }

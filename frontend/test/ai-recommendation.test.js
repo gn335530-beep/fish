@@ -81,6 +81,31 @@ test("PRODUCT_RECOMMEND 寫入文字與商品卡，context 進入 shopping", asy
   assert.doesNotMatch(JSON.stringify(store.state.messages), /"location"|"phone"|"address"/);
 });
 
+test("規則判為 BUY 時仍採用後端 PRODUCT_RECOMMEND 與工具商品卡", async function () {
+  aiReply = {
+    handled: true,
+    intent: "PRODUCT_RECOMMEND",
+    reply_text: "找到澎湖的現流石斑。",
+    slots: {},
+    sources: [],
+    tool_results: { products: [product("prd_1", "石斑")] }
+  };
+
+  await flow.submitText("有沒有澎湖的魚");
+
+  const cards = store.state.messages.filter(function (message) {
+    return message.card && message.card.type === "product";
+  });
+  assert.equal(cards.length, 1);
+  assert.equal(cards[0].card.product_id, "prd_1");
+  assert.equal(store.state.room.context.mode, "shopping");
+  assert.deepEqual(store.state.room.context.last_cards, ["prd_1"]);
+  const text = store.state.messages.filter(function (message) {
+    return message.sender_id === "ai";
+  }).map(function (message) { return message.text; }).join("\n");
+  assert.match(text, /找到澎湖的現流石斑/);
+});
+
 test("推薦後說「第 2 個」會接續上一批商品卡", async function () {
   aiReply = {
     handled: true,

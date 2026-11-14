@@ -102,6 +102,21 @@ test("找魚由既有規則完成，不寫入重複 AI 文字", async function (
   assert.equal(cards[0].card.product_id, "prd_a");
 });
 
+test("規則判為 BUY 但後端回 CHAT 時仍採用模型文字", async function () {
+  aiReply = {
+    handled: true,
+    intent: "CHAT",
+    slots: {},
+    reply_text: "今天多雲短暫雨。",
+    sources: [],
+    tool_results: {}
+  };
+
+  await flow.submitText("有沒有下雨");
+
+  assert.match(latestAssistantText(), /今天多雲短暫雨/);
+});
+
 test("取消上架與修改草稿由既有規則完成", async function () {
   aiReply = {
     handled: true,

@@ -82,13 +82,19 @@ async function run(input, options, report) {
       if (remainingMs <= 0) throw llmError("LLM_TIMEOUT");
       const ctx = Object.assign({}, options.toolCtx, { timeoutMs: remainingMs });
       const result = await runTool(call, ctx, report);
-      toolTurns.push({ name: call.name, args: call.args || {}, result: result });
+      toolTurns.push({
+        name: call.name,
+        args: call.args || {},
+        result: tools.modelResult(call.name, result)
+      });
       if (call.name === "get_market_price") toolResults.market = result;
       if (call.name === "search_products") {
         toolResults.products = result.products || [];
         productRegion = result.region || null;
       }
-      if (call.name === "web_search") webResults = result.results || [];
+      if (call.name === "web_search") {
+        webResults = webResults.concat(result.results || []);
+      }
     }
     if (calls.length > remaining) throw llmError("LLM_GUARD_REJECTED");
   }

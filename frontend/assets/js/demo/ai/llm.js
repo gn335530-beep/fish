@@ -1,6 +1,6 @@
 /* LLM 結果路由：平台意圖交給既有規則，只有 CHAT／WEB／推薦才寫 LLM 文字。 */
 
-import { INTENT, PLATFORM_INTENTS, REPLY_INTENTS, RULE_INTENTS } from "./intents.js";
+import { INTENT, PLATFORM_INTENTS, REPLY_INTENTS, RULE_PRIORITY_INTENTS } from "./intents.js";
 import { detectIntent, isCancelListing } from "./rules.js";
 import { normalize, advance, withDraft, resetContext, requestCancel } from "./listing.js";
 import { mergeDraft } from "./draft.js";
@@ -14,8 +14,7 @@ import { handleText } from "./service.js";
 const DRAFT_SLOTS = [
   "fish_species", "species_code", "quantity", "condition", "price", "price_per_taijin", "region"
 ];
-const PRODUCT_HINT = /(適合|推薦|以內|預算|乾煎|清蒸|煮湯|刺少|白肉|口感|料理|想找|想要)/;
-const RECOMMEND_BLOCKERS = [INTENT.SELL, INTENT.MARKET, INTENT.CANCEL];
+const RECOMMEND_BLOCKERS = [INTENT.SELL, INTENT.MARKET, INTENT.CANCEL, INTENT.EDIT];
 const FALLBACK = /你是想賣魚，還是想找魚/;
 const RESET_TEXT = "好，已經重來。想賣魚或找魚都可以直接說。";
 
@@ -141,16 +140,14 @@ export async function handleMessage(context, text, user, llm) {
   }
 
   const productRecommendation = llm && llm.handled && llmIntent === INTENT.PRODUCT_RECOMMEND &&
-    llm.reply_text &&
-    RECOMMEND_BLOCKERS.indexOf(ruleIntent) === -1 &&
-    (ruleIntent !== INTENT.BUY || PRODUCT_HINT.test(userText));
+    llm.reply_text && RECOMMEND_BLOCKERS.indexOf(ruleIntent) === -1;
   if (productRecommendation) return { origin: "llm", llm: llm };
 
-  if (RULE_INTENTS.indexOf(ruleIntent) !== -1) {
+  if (RULE_PRIORITY_INTENTS.indexOf(ruleIntent) !== -1) {
     if (ruleIntent === INTENT.SELL) {
       return { origin: "rules", result: await sellReply(ctx, userText, user, llm) };
     }
-    if (ruleIntent === INTENT.BUY || ruleIntent === INTENT.MARKET) {
+    if (ruleIntent === INTENT.MARKET) {
       return {
         origin: "rules",
         result: await buyOrMarketReply(ctx, userText, user, ruleIntent, slotHints(llm))
