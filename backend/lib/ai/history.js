@@ -1,7 +1,7 @@
 /* 對話歷史與 context 摘要：只把模型需要的欄位送出，卡片不送完整 JSON。 */
 
 const { all, findById } = require("../store");
-const { redactText } = require("./redact");
+const { redactText, redactFields } = require("./redact");
 
 const DRAFT_KEYS = [
   "fish_species", "species_code", "quantity", "condition", "price", "price_per_taijin"
@@ -67,7 +67,7 @@ function draftSummary(draft) {
   const out = {};
   DRAFT_KEYS.forEach(function (key) {
     if (draft[key] === undefined || draft[key] === null || draft[key] === "") return;
-    out[key] = typeof draft[key] === "string" ? redactText(draft[key]) : draft[key];
+    out[key] = draft[key];
   });
   return out;
 }
@@ -77,10 +77,10 @@ function productBrief(id) {
   if (!product) return { id: String(id) };
   return {
     id: String(id),
-    fish_species: redactText(product.fish_species || ""),
-    condition: redactText(product.condition || ""),
+    fish_species: product.fish_species || "",
+    condition: product.condition || "",
     price: Number(product.price) || 0,
-    region: redactText(product.region || "")
+    region: product.region || ""
   };
 }
 
@@ -96,7 +96,8 @@ function contextSummary(context) {
   }
   if (source.selected_product_id) out.selected_product_id = String(source.selected_product_id);
   if (source.editing && source.editing.slot) out.editing = { slot: String(source.editing.slot) };
-  return out;
+  /* 白名單欄位裡的每個字串都套用同一套遮蔽規則，含草稿與商品摘要。 */
+  return redactFields(out);
 }
 
 module.exports = {

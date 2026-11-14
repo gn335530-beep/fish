@@ -1,7 +1,7 @@
 /* web_search：Tavily basic search；只送遮蔽後的查詢，不送對話歷史。 */
 
 const { redactText } = require("../redact");
-const { ToolError } = require("./tool-error");
+const { llmError } = require("../error");
 
 const TAVILY_URL = "https://api.tavily.com/search";
 const MAX_RESULTS = 5;
@@ -39,9 +39,9 @@ function cleanResults(results) {
 
 async function run(args, ctx) {
   const key = ctx.tavilyApiKey || process.env.TAVILY_API_KEY || "";
-  if (!key) throw ToolError("LLM_NOT_CONFIGURED", false);
+  if (!key) throw llmError("LLM_NOT_CONFIGURED");
   const query = redactText(String(args.query || "").trim());
-  if (!query) throw ToolError("LLM_INVALID_OUTPUT", false);
+  if (!query) throw llmError("LLM_INVALID_OUTPUT");
 
   const controller = new AbortController();
   const timer = setTimeout(function () { controller.abort(); }, ctx.timeoutMs || 15000);
@@ -60,16 +60,16 @@ async function run(args, ctx) {
       signal: controller.signal
     });
 
-    if (response.status === 429) throw ToolError("SEARCH_RATE_LIMITED", true);
+    if (response.status === 429) throw llmError("SEARCH_RATE_LIMITED", { retryable: true });
     if (response.status === 432 || response.status === 433) {
-      throw ToolError("SEARCH_QUOTA_EXHAUSTED", true);
+      throw llmError("SEARCH_QUOTA_EXHAUSTED", { retryable: true });
     }
-    if (!response.ok) throw ToolError("LLM_UPSTREAM_ERROR", false);
+    if (!response.ok) throw llmError("LLM_UPSTREAM_ERROR");
 
     const payload = await response.json();
     return { query: query, results: cleanResults(payload && payload.results) };
   } catch (error) {
-    if (error && error.name === "AbortError") throw ToolError("LLM_TIMEOUT", false);
+    if (error && error.name === "AbortError") throw llmError("LLM_TIMEOUT");
     throw error;
   } finally {
     clearTimeout(timer);

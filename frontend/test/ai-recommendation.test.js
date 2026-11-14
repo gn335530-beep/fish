@@ -2,24 +2,12 @@
 
 import test from "node:test";
 import assert from "node:assert/strict";
+import { USER_CITY, IDLE, createMessageFactory, installApi } from "./ai-fixtures.js";
 
-let seq = 0;
 let requests = [];
 let aiReply = null;
 
-function messageOf(body) {
-  seq += 1;
-  return {
-    id: "msg_" + seq,
-    seq: seq,
-    conversation_id: body.conversation_id,
-    sender_id: body.sender_type === "ai" ? "ai" : 2,
-    type: body.card ? "card" : "text",
-    text: body.text || "",
-    card: body.card || null,
-    created_at: "2026-11-14T00:00:00.000Z"
-  };
-}
+const messageOf = createMessageFactory();
 
 function product(id, name) {
   return {
@@ -37,19 +25,17 @@ function product(id, name) {
   };
 }
 
-globalThis.window = {
-  HaisenAPI: {
-    getToken: function () { return "token"; },
-    BASE: "http://api.test",
-    request: async function (path, options) {
-      requests.push({ path: path, body: options && options.body });
-      if (path === "/api/chat/message") return { data: messageOf((options && options.body) || {}) };
-      if (path === "/api/ai/reply") return { data: aiReply };
-      if (path === "/api/products/prd_2") return { data: product("prd_2", "黑鯛") };
-      throw new Error("unexpected path: " + path);
-    }
+installApi({
+  messageOf: messageOf,
+  onRequest: function (path, body) {
+    requests.push({ path: path, body: body });
+  },
+  handle: async function (path) {
+    if (path === "/api/ai/reply") return { data: aiReply };
+    if (path === "/api/products/prd_2") return { data: product("prd_2", "黑鯛") };
+    throw new Error("unexpected path: " + path);
   }
-};
+});
 
 const store = await import("../assets/js/demo/store.js");
 const flow = await import("../assets/js/demo/flow.js");
@@ -62,12 +48,12 @@ flow.initFlow({
 });
 
 test.beforeEach(function () {
-  seq = 0;
+  messageOf.reset();
   requests = [];
   aiReply = { handled: false };
   store.update({
-    user: { id: 2, city: "高雄市", seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" },
-    room: { id: "conv_1", type: "assistant", context: { mode: "idle", draft: null, last_cards: [] } },
+    user: USER_CITY,
+    room: { id: "conv_1", type: "assistant", context: IDLE },
     messages: [],
     lastSeq: 0,
     aiPending: 0

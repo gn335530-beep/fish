@@ -1,6 +1,7 @@
 /* 草稿逐欄修改：一次只重問一個欄位，取消時回復修改前的草稿。 */
 
-import { INTENT, detectIntent, isCancelListing } from "./rules.js";
+import { INTENT } from "./intents.js";
+import { detectIntent, isCancelListing } from "./rules.js";
 import { extractSlots } from "./slots.js";
 import { mergeDraft } from "./draft.js";
 import { EDIT_PROMPTS } from "./prompts.js";

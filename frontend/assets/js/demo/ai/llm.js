@@ -1,6 +1,7 @@
 /* LLM 結果路由：平台意圖交給既有規則，只有 CHAT／WEB／推薦才寫 LLM 文字。 */
 
-import { INTENT, detectIntent, isCancelListing } from "./rules.js";
+import { INTENT, PLATFORM_INTENTS, REPLY_INTENTS, RULE_INTENTS } from "./intents.js";
+import { detectIntent, isCancelListing } from "./rules.js";
 import { normalize, advance, withDraft, resetContext, requestCancel } from "./listing.js";
 import { mergeDraft } from "./draft.js";
 import { extractSlots } from "./slots.js";
@@ -10,11 +11,12 @@ import { marketReply } from "./market.js";
 import { shoppingReply } from "./shopping.js";
 import { handleText } from "./service.js";
 
-const PLATFORM_INTENTS = ["SELL", "BUY", "MARKET", "CANCEL", "EDIT"];
-const RULE_PLATFORM = [INTENT.SELL, INTENT.BUY, INTENT.MARKET, INTENT.CANCEL];
-const LLM_TEXT_INTENTS = ["CHAT", "WEB", "PRODUCT_RECOMMEND"];
-const FALLBACK = /你是想賣魚，還是想找魚/;
+const DRAFT_SLOTS = [
+  "fish_species", "species_code", "quantity", "condition", "price", "price_per_taijin", "region"
+];
 const PRODUCT_HINT = /(適合|推薦|以內|預算|乾煎|清蒸|煮湯|刺少|白肉|口感|料理|想找|想要)/;
+const RECOMMEND_BLOCKERS = [INTENT.SELL, INTENT.MARKET, INTENT.CANCEL];
+const FALLBACK = /你是想賣魚，還是想找魚/;
 const RESET_TEXT = "好，已經重來。想賣魚或找魚都可以直接說。";
 
 /* 規則是否只回了通用的「賣魚或找魚」引導；配額提示會取代這句話。 */
@@ -23,38 +25,22 @@ export function isFallbackReply(result) {
   return replies.length === 1 && FALLBACK.test(replies[0].text || "");
 }
 
-function numericInSource(value, source) {
-  const text = String(source || "").replace(/,/g, "");
-  const number = String(value);
-  if (text.indexOf(number) === -1) return false;
-  const pattern = new RegExp("(^|[^\\d.])" + number.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "([^\\d.]|$)");
-  return pattern.test(text);
+/* 後端已驗證 slots；前端只挑草稿欄位使用，不再檢查型別或數字來源。 */
+function llmSlots(llm) {
+  return (llm && llm.slots && typeof llm.slots === "object") ? llm.slots : {};
 }
 
-function sanitizeSlots(llm, source) {
-  const raw = llm && llm.slots && typeof llm.slots === "object" ? llm.slots : {};
-  const out = {};
-  if (typeof raw.fish_species === "string" && raw.fish_species.trim()) {
-    out.fish_species = raw.fish_species.trim().slice(0, 30);
-  }
-  if (Number.isInteger(raw.species_code) && raw.species_code > 0) out.species_code = raw.species_code;
-  if (Number.isInteger(raw.quantity) && raw.quantity > 0 && numericInSource(raw.quantity, source)) {
-    out.quantity = raw.quantity;
-  }
-  if (typeof raw.condition === "string" && raw.condition.trim()) {
-    out.condition = raw.condition.trim().slice(0, 20);
-  }
-  ["price", "price_per_taijin"].forEach(function (key) {
-    if (Number.isFinite(raw[key]) && raw[key] > 0 && numericInSource(raw[key], source)) {
-      out[key] = raw[key];
-    }
+function draftSlots(llm) {
+  const raw = llmSlots(llm);
+  const found = {};
+  DRAFT_SLOTS.forEach(function (key) {
+    if (raw[key] !== undefined) found[key] = raw[key];
   });
-  if (typeof raw.region === "string" && raw.region.trim()) out.region = raw.region.trim().slice(0, 20);
-  return out;
+  return found;
 }
 
-function mergeListingSlots(ctx, source, llm) {
-  const found = sanitizeSlots(llm, source);
+function mergeListingSlots(ctx, llm) {
+  const found = draftSlots(llm);
   if (!Object.keys(found).length) return ctx;
   const changes = {};
   if (found.fish_species && found.fish_species !== (ctx.draft && ctx.draft.fish_species)) {
@@ -63,8 +49,8 @@ function mergeListingSlots(ctx, source, llm) {
   return withDraft(ctx, mergeDraft(ctx.draft, found), changes);
 }
 
-function slotHints(llm, source) {
-  const slots = sanitizeSlots(llm, source);
+function slotHints(llm) {
+  const slots = llmSlots(llm);
   return {
     fish_species: slots.fish_species,
     species_code: slots.species_code,
@@ -73,16 +59,16 @@ function slotHints(llm, source) {
 }
 
 function applyLlmEdit(ctx, llm) {
-  const raw = llm && llm.slots && typeof llm.slots === "object" ? llm.slots : {};
+  const raw = llmSlots(llm);
   if (!raw.edit_field || raw.edit_value === undefined || raw.edit_value === null) return null;
   const started = beginEdit(ctx, raw.edit_field);
   if (!started) return null;
   return applyEditValue(started.context, String(raw.edit_value)) || started;
 }
 
-async function sellReply(ctx, source, user, llm) {
-  if (needsConsent(user)) return requestConsent(ctx, source);
-  const found = Object.assign({}, extractSlots(source, null), sanitizeSlots(llm, source));
+async function sellReply(ctx, userText, user, llm) {
+  if (needsConsent(user)) return requestConsent(ctx, userText);
+  const found = Object.assign({}, extractSlots(userText, null), draftSlots(llm));
   const draft = mergeDraft(null, found);
   const next = withDraft(ctx, draft, {
     last_cards: [],
@@ -99,76 +85,92 @@ function resetReply(ctx) {
   return { context: resetContext(), replies: [{ text: RESET_TEXT }] };
 }
 
-async function buyOrMarketReply(ctx, source, user, intent, hints) {
-  if (intent === "BUY") return shoppingReply(source, user, hints);
-  const result = await marketReply(source, user, ctx, hints);
+async function buyOrMarketReply(ctx, userText, user, intent, hints) {
+  if (intent === INTENT.BUY) return shoppingReply(userText, user, hints);
+  const result = await marketReply(userText, user, ctx, hints);
   return { context: result.context || ctx, replies: result.replies || [] };
 }
 
-async function platformReply(ctx, source, user, llm) {
-  const hints = slotHints(llm, source);
-  if (llm.intent === "SELL") return sellReply(ctx, source, user, llm);
-  if (llm.intent === "BUY" || llm.intent === "MARKET") {
-    return buyOrMarketReply(ctx, source, user, llm.intent, hints);
-  }
-  if (llm.intent === "CANCEL") return resetReply(ctx);
-  if (llm.intent === "EDIT") {
-    const edited = applyLlmEdit(ctx, llm);
-    if (edited) return edited;
-    if (!ctx.draft) {
-      return { context: ctx, replies: [{ text: "目前沒有可修改的草稿。" }] };
-    }
-  }
-  return handleText(ctx, source, user);
+async function buyReply(ctx, userText, user, llm) {
+  return buyOrMarketReply(ctx, userText, user, INTENT.BUY, slotHints(llm));
 }
 
-/* 回傳 { source:"rules", result } 或 { source:"llm", llm }；flow 依 source 決定寫入什麼。 */
+async function marketOnlyReply(ctx, userText, user, llm) {
+  return buyOrMarketReply(ctx, userText, user, INTENT.MARKET, slotHints(llm));
+}
+
+async function editReply(ctx, userText, user, llm) {
+  const edited = applyLlmEdit(ctx, llm);
+  if (edited) return edited;
+  if (!ctx.draft) return { context: ctx, replies: [{ text: "目前沒有可修改的草稿。" }] };
+  return handleText(ctx, userText, user);
+}
+
+const PLATFORM_REPLIES = {
+  [INTENT.SELL]: sellReply,
+  [INTENT.BUY]: buyReply,
+  [INTENT.MARKET]: marketOnlyReply,
+  [INTENT.CANCEL]: resetReply,
+  [INTENT.EDIT]: editReply
+};
+
+async function platformReply(ctx, userText, user, llm) {
+  const handler = PLATFORM_REPLIES[llm.intent];
+  if (handler) return handler(ctx, userText, user, llm);
+  return handleText(ctx, userText, user);
+}
+
+/* 回傳 { origin:"rules", result } 或 { origin:"llm", llm }；flow 依 origin 決定寫入什麼。 */
 export async function handleMessage(context, text, user, llm) {
   const ctx = normalize(context);
-  const source = String(text || "").trim();
-  const ruleIntent = detectIntent(source);
+  const userText = String(text || "").trim();
+  const ruleIntent = detectIntent(userText);
   const llmIntent = llm && llm.handled ? llm.intent : null;
 
   if (ctx.mode === "listing" && ctx.draft) {
-    if (llmIntent === "CANCEL" && !ctx.editing && !ctx.choosing_edit && !isCancelListing(source)) {
-      return { source: "rules", result: requestCancel(ctx) };
+    if (llmIntent === INTENT.CANCEL && !ctx.editing && !ctx.choosing_edit &&
+      !isCancelListing(userText)) {
+      return { origin: "rules", result: requestCancel(ctx) };
     }
-    if (llmIntent === "EDIT") {
+    if (llmIntent === INTENT.EDIT) {
       const edited = applyLlmEdit(ctx, llm);
-      if (edited) return { source: "rules", result: edited };
+      if (edited) return { origin: "rules", result: edited };
     }
-    const merged = mergeListingSlots(ctx, source, llm);
-    return { source: "rules", result: await handleText(merged, source, user) };
+    const merged = mergeListingSlots(ctx, llm);
+    return { origin: "rules", result: await handleText(merged, userText, user) };
   }
 
-  const productRecommendation = llm && llm.handled && llmIntent === "PRODUCT_RECOMMEND" &&
+  const productRecommendation = llm && llm.handled && llmIntent === INTENT.PRODUCT_RECOMMEND &&
     llm.reply_text &&
-    [INTENT.SELL, INTENT.MARKET, INTENT.CANCEL].indexOf(ruleIntent) === -1 &&
-    (ruleIntent !== INTENT.BUY || PRODUCT_HINT.test(source));
-  if (productRecommendation) return { source: "llm", llm: llm };
+    RECOMMEND_BLOCKERS.indexOf(ruleIntent) === -1 &&
+    (ruleIntent !== INTENT.BUY || PRODUCT_HINT.test(userText));
+  if (productRecommendation) return { origin: "llm", llm: llm };
 
-  if (RULE_PLATFORM.indexOf(ruleIntent) !== -1) {
+  if (RULE_INTENTS.indexOf(ruleIntent) !== -1) {
     if (ruleIntent === INTENT.SELL) {
-      return { source: "rules", result: await sellReply(ctx, source, user, llm) };
+      return { origin: "rules", result: await sellReply(ctx, userText, user, llm) };
     }
-    const hints = slotHints(llm, source);
     if (ruleIntent === INTENT.BUY || ruleIntent === INTENT.MARKET) {
-      return { source: "rules", result: await buyOrMarketReply(ctx, source, user, ruleIntent, hints) };
+      return {
+        origin: "rules",
+        result: await buyOrMarketReply(ctx, userText, user, ruleIntent, slotHints(llm))
+      };
     }
-    return { source: "rules", result: await handleText(ctx, source, user) };
+    return { origin: "rules", result: await handleText(ctx, userText, user) };
   }
 
   if (PLATFORM_INTENTS.indexOf(llmIntent) !== -1) {
-    return { source: "rules", result: await platformReply(ctx, source, user, llm) };
+    return { origin: "rules", result: await platformReply(ctx, userText, user, llm) };
   }
 
-  if (llm && llm.handled && LLM_TEXT_INTENTS.indexOf(llmIntent) !== -1 && llm.reply_text) {
-    return { source: "llm", llm: llm };
+  if (llm && llm.handled && REPLY_INTENTS.indexOf(llmIntent) !== -1 && llm.reply_text) {
+    return { origin: "llm", llm: llm };
   }
 
-  const result = await handleText(ctx, source, user);
-  if (llm && llm.handled && llmIntent === "UNKNOWN" && llm.reply_text && isFallbackReply(result)) {
-    return { source: "llm", llm: llm };
+  const result = await handleText(ctx, userText, user);
+  if (llm && llm.handled && llmIntent === INTENT.UNKNOWN && llm.reply_text &&
+    isFallbackReply(result)) {
+    return { origin: "llm", llm: llm };
   }
-  return { source: "rules", result: result };
+  return { origin: "rules", result: result };
 }

@@ -19,14 +19,6 @@ function failure(code, retryable) {
   };
 }
 
-function guardError() {
-  return Object.assign(new Error("LLM_GUARD_REJECTED"), { code: "LLM_GUARD_REJECTED" });
-}
-
-function upstreamError() {
-  return Object.assign(new Error("LLM_UPSTREAM_ERROR"), { code: "LLM_UPSTREAM_ERROR" });
-}
-
 function mapError(error) {
   if (error && error.status === 429) return { code: "LLM_RATE_LIMITED", retryable: true };
   const code = error && error.code;
@@ -45,8 +37,6 @@ function sourcesOf(results) {
 
 module.exports = {
   failure: failure,
-  guardError: guardError,
-  upstreamError: upstreamError,
   mapError: mapError,
   sourcesOf: sourcesOf
 };

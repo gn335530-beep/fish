@@ -2,51 +2,35 @@
 
 import test from "node:test";
 import assert from "node:assert/strict";
+import { USER, IDLE, createMessageFactory, installApi } from "./ai-fixtures.js";
 
-let seq = 0;
 let requests = [];
 let aiReply = null;
 let aiDelay = 0;
 let notifyError = null;
 
-function messageOf(body) {
-  seq += 1;
-  return {
-    id: "msg_" + seq,
-    seq: seq,
-    conversation_id: body.conversation_id,
-    sender_id: body.sender_type === "ai" ? "ai" : 2,
-    type: body.card ? "card" : "text",
-    text: body.text || "",
-    image_url: null,
-    card: body.card || null,
-    created_at: "2026-11-14T00:00:00.000Z"
-  };
-}
+const messageOf = createMessageFactory();
 
-globalThis.window = {
-  HaisenAPI: {
-    getToken: function () { return "token"; },
-    BASE: "http://api.test",
-    request: async function (path, options) {
-      const body = options && options.body;
-      requests.push({ path: path, body: body });
-      if (path === "/api/chat/message") return { data: messageOf(body || {}) };
-      if (path === "/api/ai/reply") {
-        if (aiDelay) await new Promise(function (resolve) { setTimeout(resolve, aiDelay); });
-        if (aiReply instanceof Error) throw aiReply;
-        return { data: aiReply };
-      }
-      throw new Error("unexpected path: " + path);
+installApi({
+  messageOf: messageOf,
+  onRequest: function (path, body) {
+    requests.push({ path: path, body: body });
+  },
+  handle: async function (path) {
+    if (path === "/api/ai/reply") {
+      if (aiDelay) await new Promise(function (resolve) { setTimeout(resolve, aiDelay); });
+      if (aiReply instanceof Error) throw aiReply;
+      return { data: aiReply };
     }
+    throw new Error("unexpected path: " + path);
   }
-};
+});
 
 const store = await import("../assets/js/demo/store.js");
 const flow = await import("../assets/js/demo/flow.js");
 const assistantView = await import("../assets/js/demo/views/assistant.js");
 
-const CONTEXT = { mode: "idle", draft: null, last_cards: [] };
+const CONTEXT = IDLE;
 
 flow.initFlow({
   render: function () {},
@@ -66,13 +50,13 @@ function assistantTexts() {
 }
 
 test.beforeEach(function () {
-  seq = 0;
+  messageOf.reset();
   requests = [];
   aiReply = { handled: false };
   aiDelay = 0;
   notifyError = null;
   store.update({
-    user: { id: 2, seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" },
+    user: USER,
     room: { id: "conv_1", type: "assistant", context: CONTEXT },
     messages: [],
     lastSeq: 0,

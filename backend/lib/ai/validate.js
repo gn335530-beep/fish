@@ -3,6 +3,7 @@
 const { isPlainObject } = require("./json");
 const guard = require("./guard");
 const evidence = require("./evidence");
+const { llmError } = require("./error");
 
 const INTENTS = [
   "SELL", "BUY", "MARKET", "CANCEL", "EDIT", "CHAT", "WEB", "PRODUCT_RECOMMEND", "UNKNOWN"
@@ -13,14 +14,8 @@ const SOURCE_INTENTS = ["WEB"];
 const EDIT_FIELDS = ["fish_species", "quantity", "condition", "photo_url", "price"];
 const MAX_REPLY = 500;
 
-function outputError(code) {
-  const error = new Error(code);
-  error.code = code;
-  return error;
-}
-
 function invalidOutput() {
-  return outputError("LLM_INVALID_OUTPUT");
+  return llmError("LLM_INVALID_OUTPUT");
 }
 
 function parseOutput(raw) {

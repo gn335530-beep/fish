@@ -47,7 +47,7 @@ python -m http.server 8000 --directory frontend
 | `LLM_SEARCH_TIMEOUT_MS` | `15000` | 啟用網路搜尋的回合逾時 |
 
 - `POST /api/ai/reply` 只接受助手房與該房參與者；不寫入訊息、不修改 `context`。
-- 後端只送最近對話與白名單 context；電話、Email、身分證與地址會先換成 `[已遮蔽]`，不送頭像或個人檔案。
+- 後端只送最近對話與白名單 context；電話（含 `+886` 與括號區碼）、Email、身分證與含行政區的地址會先換成 `[已遮蔽]`，一般文字中的「路」「弄」不觸發遮蔽，不送頭像或個人檔案。
 - 模型失敗、格式錯誤或平台數字無依據時，端點回 HTTP 200 + `handled:false`；前端安靜回到規則引擎。
 - 配額或 429 回 `retryable:true`；前端先跑規則，平台意圖能處理就照常完成，規則無法處理才顯示提示與重試。重試沿用同一個 `message_id`，不重寫使用者訊息；不自動重試、不排隊、不快取搜尋結果。
 - 平台意圖（賣魚、找魚、行情、取消、修改）只回 slots；AI 文字用於 `CHAT`／`WEB`，`PRODUCT_RECOMMEND` 另附商品卡。

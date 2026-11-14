@@ -3,7 +3,8 @@
 import { extractSlots } from "./slots.js";
 import { mergeDraft, nextMissingSlot, missingNonPriceSlots } from "./draft.js";
 import { QUESTIONS, ASK_AGAIN, batchFollowupPrompt } from "./prompts.js";
-import { INTENT, detectIntent } from "./rules.js";
+import { INTENT } from "./intents.js";
+import { detectIntent } from "./rules.js";
 import { quoteForDraft, hasPrice } from "./listing-market.js";
 import { resolveCandidates, candidateReply } from "./listing-species.js";
 

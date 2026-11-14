@@ -93,6 +93,40 @@ test("訊息與 context 的電話、Email、身分證與地址先遮蔽再送 pr
   assert.doesNotMatch(serialized, /secret\.jpg|avatar_url|username/);
 });
 
+test("一般文字保持原樣，+886 手機、括號區碼市話與里鄰地址先遮蔽", async function () {
+  const room = await h.createRoom();
+  await h.sendUser(
+    room.id,
+    "網路上的天氣如何？我要弄一桌好菜。我在台北市迷路了，新北市的路況如何？" +
+    "電話 +886912345678、(02)12345678，地址台北市大安區龍門里忠孝東路四段 1 號、" +
+    "台北市大安區忠孝東路四段 1 之 2 號 3 樓，Email me@example.com，身分證 A123456789"
+  );
+  await h.sendAi(room.id, { text: "我住新北市瑞芳區鼻頭里鼻頭路 2 號" });
+  const current = await h.sendUser(room.id, "吳郭魚口感如何");
+
+  const result = await h.reply(room.id, current.id, tokens.buyer, {
+    mode: "listing",
+    draft: {
+      fish_species: "花枝",
+      quantity: 2,
+      condition: "網路上的天氣，電話 +886912345678",
+      price: 1000
+    },
+    last_cards: []
+  });
+  assert.equal(result.body.data.handled, true);
+
+  const serialized = JSON.stringify(h.calls[0]);
+  assert.match(serialized, /網路上的天氣如何？我要弄一桌好菜。/);
+  assert.match(serialized, /我在台北市迷路了，新北市的路況如何？/);
+  assert.match(serialized, /網路上的天氣，電話 \[已遮蔽\]/);
+  assert.doesNotMatch(
+    serialized,
+    /\+886912345678|\(02\)12345678|龍門里|忠孝東路|1 之 2 號|鼻頭里|鼻頭路|me@example\.com|A123456789/
+  );
+  assert.match(serialized, /\[已遮蔽\]/);
+});
+
 test("context 必須是純物件且有大小上限", async function () {
   const room = await h.createRoom();
   const message = await h.sendUser(room.id, "吳郭魚口感如何");

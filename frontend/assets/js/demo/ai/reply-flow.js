@@ -5,12 +5,13 @@ import { requestReply, llmBatch } from "./reply.js";
 import { isFallbackReply } from "./llm.js";
 import { retryNotice } from "./retry.js";
 
-function pending(delta) {
+/* aiPending 是「等待中的 AI 回覆數」，不是使用者訊息數。 */
+function adjustAiPendingReplies(delta) {
   update({ aiPending: Math.max(0, Number(state.aiPending || 0) + delta) });
 }
 
 async function deliver(routed, room, runReplies) {
-  if (routed.source === "llm") await runReplies(llmBatch(routed.llmResult), room.id);
+  if (routed.origin === "llm") await runReplies(llmBatch(routed.llmResult), room.id);
   else await runReplies(routed.result, room.id);
 }
 
@@ -25,19 +26,19 @@ function offerRetry(room, exchange, notice) {
     aiRetry: {
       roomId: room.id,
       messageId: exchange.messageId,
-      text: exchange.text,
+      userText: exchange.userText,
       notice: notice
     }
   });
 }
 
 /* 使用者送出訊息後呼叫；可重試錯誤由這裡決定是否顯示提示。 */
-export async function sendAiReply(room, message, value, user, runReplies) {
-  const exchange = { messageId: message.id, text: value };
+export async function sendAiReply(room, message, userText, user, runReplies) {
+  const exchange = { messageId: message.id, userText: userText };
   update({ aiRetry: null });
-  pending(1);
+  adjustAiPendingReplies(1);
   try {
-    const routed = await requestReply(room, { id: exchange.messageId }, exchange.text, user);
+    const routed = await requestReply(room, { id: exchange.messageId }, exchange.userText, user);
     const notice = retryableNotice(routed);
     if (notice) {
       offerRetry(room, exchange, notice);
@@ -45,7 +46,7 @@ export async function sendAiReply(room, message, value, user, runReplies) {
     }
     await deliver(routed, room, runReplies);
   } finally {
-    pending(-1);
+    adjustAiPendingReplies(-1);
   }
 }
 
@@ -54,9 +55,9 @@ export async function retryAiReply(runReplies) {
   const retry = state.aiRetry;
   const room = state.room;
   if (!retry || !room || retry.roomId !== room.id || state.aiPending > 0) return;
-  pending(1);
+  adjustAiPendingReplies(1);
   try {
-    const routed = await requestReply(room, { id: retry.messageId }, retry.text, state.user);
+    const routed = await requestReply(room, { id: retry.messageId }, retry.userText, state.user);
     const notice = retryableNotice(routed);
     if (notice) {
       offerRetry(room, retry, notice);
@@ -65,6 +66,6 @@ export async function retryAiReply(runReplies) {
     update({ aiRetry: null });
     await deliver(routed, room, runReplies);
   } finally {
-    pending(-1);
+    adjustAiPendingReplies(-1);
   }
 }

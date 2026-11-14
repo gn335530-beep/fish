@@ -4,7 +4,8 @@ import { getMarketQuote, getMarketQuoteByCode } from "../../api/market.js";
 import { findRegion, normalizeCityName } from "../../shared/regions.js";
 import { ensureCatalog, findSpeciesMention } from "./species-catalog.js";
 import { buildMarketQuoteCard } from "./market-quote-card.js";
-import { INTENT, detectIntent } from "./rules.js";
+import { INTENT } from "./intents.js";
+import { detectIntent } from "./rules.js";
 
 /* 先把縣市從句子拿掉，避免把「澎湖縣」當魚名。 */
 function withoutRegion(text) {

@@ -84,7 +84,12 @@ test("Tavily 只收到該次查詢，個資先遮蔽且不含完整歷史", asyn
   h.reset({ LLM_WEB_SEARCH: "true", TAVILY_API_KEY: "tvly-test" });
   const tavily = fakeTavily(RESULTS);
   h.useSequence([
-    { tool_calls: [webCall("今天天氣 0912345678，我家在新北市瑞芳區鼻頭路 1 號")] },
+    {
+      tool_calls: [webCall(
+        "今天天氣 +886912345678、(02)12345678，" +
+        "我家在台北市大安區龍門里忠孝東路四段 1 號"
+      )]
+    },
     finalOutput()
   ]);
   const run = await askRoom("今天天氣如何");
@@ -92,12 +97,12 @@ test("Tavily 只收到該次查詢，個資先遮蔽且不含完整歷史", asyn
   await h.reply(run.room.id, run.message.id);
   const body = tavily.bodies[0];
   assert.match(body.query, /\[已遮蔽\]/);
-  assert.doesNotMatch(body.query, /0912345678|鼻頭路/);
+  assert.doesNotMatch(body.query, /\+886912345678|\(02\)12345678|龍門里|忠孝東路/);
   assert.equal(body.query.indexOf("吳郭魚"), -1);
   assert.equal(body.max_results <= 5, true);
 });
 
-test("LLM_WEB_SEARCH=false 時不提供也不呼叫 Tavily", async function () {
+test("LLM_WEB_SEARCH=false 時不提供也不呼叫 Tavily；模型硬要呼叫時回不合格輸出", async function () {
   h.reset({ LLM_WEB_SEARCH: null, TAVILY_API_KEY: "tvly-test" });
   const tavily = fakeTavily(RESULTS);
   h.useSequence([finalOutput({ intent: "CHAT", reply_text: "今天多雲。" })]);
@@ -107,6 +112,13 @@ test("LLM_WEB_SEARCH=false 時不提供也不呼叫 Tavily", async function () {
   assert.equal(data.handled, true);
   assert.equal(tavily.calls.length, 0);
   assert.equal(h.calls[0].tools.some(function (tool) { return tool.name === "web_search"; }), false);
+
+  h.useSequence([{ tool_calls: [webCall()] }]);
+  const rejected = (await h.reply(run.room.id, run.message.id)).body.data;
+  assert.equal(rejected.handled, false);
+  assert.equal(rejected.error_code, "LLM_INVALID_OUTPUT");
+  assert.equal(rejected.retryable, false);
+  assert.equal(tavily.calls.length, 0);
 });
 
 test("一般知識維持 CHAT，不消耗 Tavily credits", async function () {

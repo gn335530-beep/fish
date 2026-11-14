@@ -1,13 +1,21 @@
-/* AI 回覆流程：開關、歷史摘要、工具迴圈、輸出驗證、錯誤映射與 metadata log。 */
+/* AI 回覆流程：開關、設定、歷史、輸出驗證、log 與錯誤映射；工具迴圈見 tool-loop。 */
 
 const { llmConfig } = require("./config");
-const provider = require("./provider");
 const { SYSTEM_PROMPT } = require("./prompt");
 const { historyFor, contextSummary } = require("./history");
 const { parseOutput, normalizeOutput } = require("./validate");
 const tools = require("./tools");
+const toolLoop = require("./tool-loop");
 const { logReply } = require("./log");
-const { failure, guardError, upstreamError, mapError, sourcesOf } = require("./result");
+const { failure, mapError, sourcesOf } = require("./result");
+const { llmError } = require("./error");
+
+function replySuffix(intent, replyText, scope) {
+  return intent === "PRODUCT_RECOMMEND" && replyText &&
+    String(replyText).indexOf(scope) === -1
+    ? "（查詢範圍：" + scope + "）"
+    : "";
+}
 
 async function reply(options) {
   const started = Date.now();
@@ -17,7 +25,8 @@ async function reply(options) {
     user_id: options.user && options.user.id,
     conversation_id: options.conversation.id
   };
-  const toolRuns = [];
+  const report = { toolRuns: [], usage: { input: 0, output: 0, total: 0 } };
+  let intent = null;
 
   if (!config.enabled) {
     logReply(Object.assign({}, baseLog, { duration_ms: Date.now() - started, error_code: "LLM_DISABLED" }));
@@ -31,13 +40,6 @@ async function reply(options) {
   }
 
   const webEnabled = config.webSearch && Boolean(config.tavilyApiKey);
-  const toolDefs = tools.definitions({ webEnabled: webEnabled });
-  const toolCtx = {
-    user: options.user,
-    webEnabled: webEnabled,
-    tavilyApiKey: config.tavilyApiKey,
-    timeoutMs: config.searchTimeoutMs
-  };
   const input = {
     model: config.model,
     timeoutMs: config.timeoutMs,
@@ -46,117 +48,58 @@ async function reply(options) {
     messages: historyFor(options.conversation.id, config.historyLimit)
   };
 
-  const toolTurns = [];
-  const toolResults = {};
-  let webResults = [];
-  let webUsed = false;
-  let productRegion = null;
-  let intent = null;
-  const usage = { input: 0, output: 0, total: 0 };
-  const startedAt = Date.now();
-  let deadline = startedAt + config.timeoutMs;
-
   try {
-    let finalRaw = null;
-    for (let round = 0; round <= config.maxToolCalls; round++) {
-      const raw = await provider.generate(Object.assign({}, input, {
-        timeoutMs: Math.max(1, deadline - Date.now()),
-        tools: toolDefs,
-        tool_turns: toolTurns
-      }));
-      const stepUsage = provider.tokenCounts(raw && raw.usage);
-      usage.input += stepUsage.input;
-      usage.output += stepUsage.output;
-      usage.total += stepUsage.total;
-      const calls = raw && raw.tool_calls ? raw.tool_calls : [];
-      if (!Array.isArray(calls)) throw guardError();
-      if (!calls.length) {
-        finalRaw = raw;
-        break;
+    const loop = await toolLoop.run(input, {
+      timeoutMs: config.timeoutMs,
+      searchTimeoutMs: config.searchTimeoutMs,
+      maxToolCalls: config.maxToolCalls,
+      toolDefs: tools.definitions({ webEnabled: webEnabled }),
+      toolCtx: {
+        user: options.user,
+        webEnabled: webEnabled,
+        tavilyApiKey: config.tavilyApiKey
       }
+    }, report);
 
-      const remaining = config.maxToolCalls - toolRuns.length;
-      if (remaining <= 0) throw guardError();
-      const batch = calls.slice(0, remaining);
-      for (const call of batch) {
-        const runStarted = Date.now();
-        if (call.name === "web_search") {
-          deadline = Math.max(deadline, startedAt + config.searchTimeoutMs);
-        }
-        toolCtx.timeoutMs = Math.max(1, deadline - runStarted);
-        try {
-          const result = await tools.execute(call.name, call.args, toolCtx);
-          if (call.name === "get_market_price" && result && result.found === false &&
-            result.reason === "UPSTREAM_UNAVAILABLE") {
-            throw upstreamError();
-          }
-          toolRuns.push({ name: call.name, duration_ms: Date.now() - runStarted, error_code: null });
-          toolTurns.push({ name: call.name, args: call.args || {}, result: result });
-          if (call.name === "get_market_price") toolResults.market = result;
-          if (call.name === "search_products") {
-            toolResults.products = result.products || [];
-            productRegion = result.region || null;
-          }
-          if (call.name === "web_search") {
-            webResults = result.results || [];
-            webUsed = true;
-          }
-        } catch (error) {
-          toolRuns.push({
-            name: call.name,
-            duration_ms: Date.now() - runStarted,
-            error_code: mapError(error).code
-          });
-          throw error;
-        }
-      }
-      if (calls.length > remaining) throw guardError();
-    }
-    if (!finalRaw) throw guardError();
-
-    const parsed = parseOutput(finalRaw.text);
+    const parsed = parseOutput(loop.raw.text);
     intent = parsed.intent;
-    const scope = productRegion || "全省";
-    const suffix = intent === "PRODUCT_RECOMMEND" && parsed.reply_text &&
-      String(parsed.reply_text).indexOf(scope) === -1
-      ? "（查詢範圍：" + scope + "）"
-      : "";
+    const scope = loop.productRegion || "全省";
     const output = normalizeOutput(parsed, {
       userText: options.message.text,
-      toolResults: toolResults,
-      toolNames: toolRuns.filter(function (run) { return !run.error_code; })
+      toolResults: loop.toolResults,
+      toolNames: report.toolRuns.filter(function (run) { return !run.error_code; })
         .map(function (run) { return run.name; }),
-      webResults: webResults,
-      sources: webResults.length ? sourcesOf(webResults) : [],
-      replySuffix: suffix
+      webResults: loop.webResults,
+      sources: loop.webResults.length ? sourcesOf(loop.webResults) : [],
+      replySuffix: replySuffix(intent, parsed.reply_text, scope)
     });
 
     if (intent === "PRODUCT_RECOMMEND" &&
-      (!Array.isArray(toolResults.products) || !toolResults.products.length)) {
-      throw guardError();
+      (!Array.isArray(loop.toolResults.products) || !loop.toolResults.products.length)) {
+      throw llmError("LLM_GUARD_REJECTED");
     }
-    if (toolResults.market && toolResults.market.found === false &&
+    if (loop.toolResults.market && loop.toolResults.market.found === false &&
       /\d/.test(output.reply_text || "")) {
-      throw guardError();
+      throw llmError("LLM_GUARD_REJECTED");
     }
-    if (intent === "WEB" && !webResults.length) throw guardError();
+    if (intent === "WEB" && !loop.webResults.length) throw llmError("LLM_GUARD_REJECTED");
 
     logReply(Object.assign({}, baseLog, {
       intent: output.intent,
-      tokens: usage,
+      tokens: report.usage,
       duration_ms: Date.now() - started,
       error_code: null,
-      tools: toolRuns
+      tools: report.toolRuns
     }));
     return Object.assign({ handled: true }, output, { error_code: null, retryable: false });
   } catch (error) {
     const mapped = mapError(error);
     logReply(Object.assign({}, baseLog, {
       intent: intent,
-      tokens: usage,
+      tokens: report.usage,
       duration_ms: Date.now() - started,
       error_code: mapped.code,
-      tools: toolRuns
+      tools: report.toolRuns
     }));
     return failure(mapped.code, mapped.retryable);
   }

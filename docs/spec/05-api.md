@@ -406,7 +406,7 @@
 - `context` 必須是純物件，序列化後上限 16 KB，否則 400 `INVALID_CONTEXT`。
 - 後端以 `message_id` 從資料庫讀取使用者文字，不信任前端傳來的訊息內容；`context` 不寫回資料庫。
 - 歷史只取最近 10 則使用者與助手文字／卡片訊息；系統訊息、圖片與完整卡片 JSON 不送入模型，卡片以一行摘要取代。
-- 送出前遮蔽電話、Email、身分證字號與地址；不送頭像、個人檔案電話或地址。
+- 送出前遮蔽電話（含 `+886` 國際碼與括號區碼）、Email、身分證字號與含行政區的地址；一般文字中的「路」「弄」不觸發遮蔽。不送頭像、個人檔案電話或地址。
 - 成功回 HTTP 200，`data`：
 
 ```jsonc
@@ -783,8 +783,8 @@
 | `LLM_NOT_CONFIGURED` | 200 | AI 回覆（缺少 `GEMINI_API_KEY`） |
 | `LLM_TIMEOUT` | 200 | AI 回覆（模型逾時，靜默 fallback） |
 | `LLM_UPSTREAM_ERROR` | 200 | AI 回覆（模型 5xx 或連線失敗） |
-| `LLM_INVALID_OUTPUT` | 200 | AI 回覆（JSON、schema 或長度不合格） |
-| `LLM_GUARD_REJECTED` | 200 | AI 回覆（平台數字無依據） |
+| `LLM_INVALID_OUTPUT` | 200 | AI 回覆（JSON、schema、長度不合格，或模型使用未提供的工具） |
+| `LLM_GUARD_REJECTED` | 200 | AI 回覆（平台數字無依據或工具呼叫超過上限） |
 | `LLM_RATE_LIMITED` | 200 | AI 回覆（模型 429，`retryable:true`） |
 | `SEARCH_RATE_LIMITED` | 200 | AI 回覆（Tavily 429，`retryable:true`） |
 | `SEARCH_QUOTA_EXHAUSTED` | 200 | AI 回覆（Tavily 額度用完，`retryable:true`） |

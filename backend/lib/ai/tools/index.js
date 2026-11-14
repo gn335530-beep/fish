@@ -3,7 +3,7 @@
 const market = require("./market");
 const products = require("./products");
 const web = require("./web");
-const { ToolError } = require("./tool-error");
+const { llmError } = require("../error");
 
 const MARKET_TOOL = {
   name: "get_market_price",
@@ -55,10 +55,10 @@ async function execute(name, args, ctx) {
   if (name === "get_market_price") return market.run(input, ctx);
   if (name === "search_products") return products.run(input, ctx);
   if (name === "web_search") {
-    if (!ctx.webEnabled) throw ToolError("LLM_GUARD_REJECTED", false);
+    if (!ctx.webEnabled) throw llmError("LLM_INVALID_OUTPUT", { message: "web_search is disabled" });
     return web.run(input, ctx);
   }
-  throw ToolError("LLM_INVALID_OUTPUT", false);
+  throw llmError("LLM_INVALID_OUTPUT", { message: "unknown tool: " + name });
 }
 
 module.exports = { definitions: definitions, execute: execute };

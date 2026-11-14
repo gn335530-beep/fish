@@ -1,7 +1,8 @@
 /* 規則式 AI：意圖路由、上架槽位追問、導購與指涉。之後換 LLM 只需改這支。 */
 
 import { getProduct } from "../../api/products.js";
-import { INTENT, detectIntent, isCancelListing } from "./rules.js";
+import { INTENT } from "./intents.js";
+import { detectIntent, isCancelListing } from "./rules.js";
 import { mergeDraft } from "./draft.js";
 import { normalize, resetContext, advance, withDraft, startListing, continueListing, requestCancel, dismissCancel } from "./listing.js";
 import { editText, editPhoto, askDraftEdit, chooseEditField } from "./editing.js";

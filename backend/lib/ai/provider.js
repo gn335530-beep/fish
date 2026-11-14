@@ -1,16 +1,10 @@
 /* Gemini provider 與測試注入點；呼叫端只依賴 generate(input)。 */
 
 const { DEFAULT_MODEL } = require("./config");
+const { llmError } = require("./error");
 
 const API_BASE = "https://generativelanguage.googleapis.com/v1beta/models/";
 let override = null;
-
-function providerError(code, message, retryable) {
-  const error = new Error(message || code);
-  error.code = code;
-  error.retryable = retryable === true;
-  return error;
-}
 
 function tokenCounts(usage) {
   if (!usage) return { input: 0, output: 0, total: 0 };
@@ -103,16 +97,16 @@ async function callGemini(input) {
     });
 
     if (response.status === 429) {
-      throw providerError("LLM_RATE_LIMITED", "Gemini rate limited", true);
+      throw llmError("LLM_RATE_LIMITED", { message: "Gemini rate limited", retryable: true });
     }
     if (!response.ok) {
-      throw providerError("LLM_UPSTREAM_ERROR", "Gemini upstream error " + response.status, false);
+      throw llmError("LLM_UPSTREAM_ERROR", { message: "Gemini upstream error " + response.status });
     }
 
     const payload = await response.json();
     const parts = readParts(payload);
     if (!parts.text && !parts.tool_calls.length) {
-      throw providerError("LLM_INVALID_OUTPUT", "Gemini returned no text", false);
+      throw llmError("LLM_INVALID_OUTPUT", { message: "Gemini returned no text" });
     }
     return {
       text: parts.text,
@@ -121,7 +115,7 @@ async function callGemini(input) {
     };
   } catch (error) {
     if (error && error.name === "AbortError") {
-      throw providerError("LLM_TIMEOUT", "Gemini timeout", false);
+      throw llmError("LLM_TIMEOUT", { message: "Gemini timeout" });
     }
     throw error;
   } finally {

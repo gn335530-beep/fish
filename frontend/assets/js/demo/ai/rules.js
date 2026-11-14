@@ -1,12 +1,6 @@
 /* 意圖判斷：先看明確的買方用語，再看賣方用語，避免「怎麼賣」被誤判成賣魚。 */
 
-export const INTENT = {
-  SELL: "SELL",
-  BUY: "BUY",
-  MARKET: "MARKET",
-  CANCEL: "CANCEL",
-  UNKNOWN: "UNKNOWN"
-};
+import { INTENT } from "./intents.js";
 
 const CANCEL_WORDS = ["算了", "不要了", "取消", "重來", "清除", "重新開始"];
 
