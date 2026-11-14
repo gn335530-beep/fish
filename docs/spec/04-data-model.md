@@ -212,6 +212,8 @@
 
 **卡片狀態**：`deal` 卡為 `pending` / `rejected` / `confirmed` / `cancelled` / `expired`；`rejected` 只保留舊資料。`deal_cancelled` 是取消後新增的訊息卡，雙方都看得到。`review` 卡沒有狀態欄位，改用 `buyer_reviewed`／`seller_reviewed` 表示雙方是否已評價。行情卡的 `weight_kg`／`weight_taijin`／`estimated_total` 只為舊資料相容，通常為 `null`，畫面改由使用者輸入即時試算。`sources` 卡最多 3 個 `{ title, url }`，只由後端 `web_search` 工具結果產生；平台行情、商品與一般知識回答不產生此卡。
 
+**AI 配額提示不是資料**：`LLM_RATE_LIMITED`、`SEARCH_RATE_LIMITED` 與 `SEARCH_QUOTA_EXHAUSTED` 的提示與重試按鈕只存在前端 transient state，不寫入 `messages`、不新增卡片型別；重新整理或切換房間後消失。AI 回覆端點也不保存重試狀態。
+
 ## 7. `deals`
 
 `DRAFT` 由開啟交易房建立；送提案後是 `PENDING_REVIEW`，確認是 `CONFIRMED`，取消或逾時是 `CANCELLED`。`NEGOTIATING` 只保留舊資料，新流程不再產生。協議卡的 `status` 會跟著最新一張卡同步為 `pending`／`confirmed`／`cancelled`／`expired`；舊資料的 `rejected` 仍可顯示。舊卡保留當時的狀態。

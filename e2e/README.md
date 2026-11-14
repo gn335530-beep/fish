@@ -22,6 +22,7 @@ npm run test:e2e
 - `deviceScaleFactor: 1`、`zh-TW`、`Asia/Taipei`。
 - 截圖前停用動畫並等待 `document.fonts.ready`。
 - 行情 API 由 `e2e/fixtures/market.js` 的固定資料在瀏覽器層攔截；不得呼叫真實批發行情上游。
+- 測試後端以 `LLM_ENABLED=false` 啟動；助手房使用規則引擎，頁面不得呼叫 Gemini 或 Tavily。交易房不得呼叫 `/api/ai/reply`。`assistant-offline.spec.js` 覆蓋上架、找魚、行情與交易房。
 
 ## Baseline 規則
 

@@ -81,7 +81,7 @@
 | 37 | POST | `/api/products/:id/delist` | 登入（擁有者） | ✅ 下架 |
 | 38 | POST | `/api/products/:id/relist` | 登入（擁有者） | ✅ 重新上架 |
 | 39 | DELETE | `/api/products/:id` | 登入（擁有者） | ✅ 硬刪 |
-| 40 | POST | `/api/ai/reply` | 參與者（助手房） | 🟡 Beta：文字回覆、唯讀工具、平台意圖 slots 與 fallback |
+| 40 | POST | `/api/ai/reply` | 參與者（助手房） | 🟡 Beta：文字回覆、唯讀工具、平台意圖 slots、fallback 與配額重試 |
 
 ### 2.1 本版新增／變更的端點
 
@@ -394,7 +394,7 @@
 
 ### `POST /api/ai/reply`
 
-> **Beta**：LLM 預設關閉；`LLM_ENABLED=true` 且設定 `GEMINI_API_KEY` 才會呼叫外部模型。支援一般文字回覆（`CHAT`）、`WEB` 文字、平台意圖 slots 與唯讀工具（官方行情、平台商品、Tavily 網路搜尋）。配額重試 UI 屬後續 ticket。
+> **Beta**：LLM 預設關閉；`LLM_ENABLED=true` 且設定 `GEMINI_API_KEY` 才會呼叫外部模型。支援一般文字回覆（`CHAT`）、`WEB` 文字、平台意圖 slots 與唯讀工具（官方行情、平台商品、Tavily 網路搜尋）。配額錯誤會回 `retryable:true`，前端先跑規則，必要時顯示提示與重試。
 
 ```json
 { "conversation_id": "conv_...", "message_id": "msg_...",
@@ -422,8 +422,9 @@
 - `tool_results` 可含 `market`（既有行情卡資料）與 `products`（公開商品陣列）；`PRODUCT_RECOMMEND` 的文字與商品卡只由工具結果產生，模型不能自行改寫。
 - `sources` 只在 `WEB` 出現，由後端從 `web_search` 結果產生，最多 3 個合法 URL；平台答案與 `CHAT` 不顯示來源。
 - 平台數字（價格、尾數、行情、庫存）必須出現在使用者訊息或工具結果中，否則整則回覆丟棄，回 `handled:false` + `LLM_GUARD_REJECTED`。
-- 失敗一律 HTTP 200：`LLM_DISABLED`、`LLM_NOT_CONFIGURED`、`LLM_TIMEOUT`、`LLM_UPSTREAM_ERROR`、`LLM_INVALID_OUTPUT`、`LLM_GUARD_REJECTED` 為靜默 fallback；`LLM_RATE_LIMITED`、`SEARCH_RATE_LIMITED`、`SEARCH_QUOTA_EXHAUSTED` 的 `retryable:true`（提示與重試按鈕為後續 ticket）。
+- 失敗一律 HTTP 200：`LLM_DISABLED`、`LLM_NOT_CONFIGURED`、`LLM_TIMEOUT`、`LLM_UPSTREAM_ERROR`、`LLM_INVALID_OUTPUT`、`LLM_GUARD_REJECTED` 為靜默 fallback；`LLM_RATE_LIMITED`、`SEARCH_RATE_LIMITED`、`SEARCH_QUOTA_EXHAUSTED` 為 `retryable:true`，前端先跑規則，規則無法處理時才顯示提示與重試按鈕。
 - 端點不寫入訊息、不改 `context`；AI 訊息仍由前端呼叫 `POST /api/chat/message` 寫入。
+- 重試由前端按鈕觸發，沿用同一個 `message_id`；後端不保存重試狀態、不自動重試、不排隊、不快取搜尋結果。
 - 設定：`LLM_ENABLED`（預設 `false`）、`GEMINI_API_KEY`、`LLM_MODEL`（預設 `gemini-3.5-flash-lite`）、`LLM_TIMEOUT_MS`（預設 8000）、`LLM_HISTORY_LIMIT`（預設 10）、`LLM_MAX_TOOL_CALLS`（預設 2）、`LLM_WEB_SEARCH`（預設 `false`）、`TAVILY_API_KEY`、`LLM_SEARCH_TIMEOUT_MS`（預設 15000）。
 - log 只記 request id、使用者 id、intent、token 數、耗時、工具名稱／耗時／錯誤碼；不記訊息、prompt、工具結果、搜尋結果或 API key。
 

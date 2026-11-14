@@ -47,6 +47,7 @@ export async function openRoom(room) {
     room: room,
     view: viewOf(room),
     deal: deal,
+    aiRetry: null,
     addonOpen: false,
     addons: [],
     addonQty: {},

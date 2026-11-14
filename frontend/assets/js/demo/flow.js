@@ -4,7 +4,7 @@ import { state, update, replaceMessages, appendMessages } from "./store.js";
 import * as api from "./api.js";
 import { getProduct, createProduct } from "../api/products.js";
 import * as ai from "./ai/service.js";
-import { requestReply, llmBatch } from "./ai/reply.js";
+import { sendAiReply, retryAiReply } from "./ai/reply-flow.js";
 import { draftToProduct } from "./ai/draft.js";
 import { uploadImage } from "./upload.js";
 import { openRoom, ensureAssistantRoom } from "./rooms.js";
@@ -74,15 +74,8 @@ export async function runReplies(result, roomId) {
 }
 
 /* AI 回覆失敗一律回到規則；等待指示只在此期間出現。 */
-async function replyAfterMessage(room, message, value) {
-  update({ aiPending: Number(state.aiPending || 0) + 1 });
-  try {
-    const routed = await requestReply(room, message, value, state.user);
-    if (routed.source === "llm") await runReplies(llmBatch(routed.llm), room.id);
-    else await runReplies(routed.result, room.id);
-  } finally {
-    update({ aiPending: Math.max(0, Number(state.aiPending || 0) - 1) });
-  }
+export async function retryReply() {
+  return retryAiReply(runReplies);
 }
 
 export async function submitText(text) {
@@ -98,7 +91,7 @@ export async function submitText(text) {
       showMessages();
     }
     if (room.type === "deal") return;
-    await replyAfterMessage(room, message, value);
+    await sendAiReply(room, message, value, state.user, runReplies);
   } catch (error) {
     ui.notify(error);
   }

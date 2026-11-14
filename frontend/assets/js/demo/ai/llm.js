@@ -17,6 +17,12 @@ const FALLBACK = /你是想賣魚，還是想找魚/;
 const PRODUCT_HINT = /(適合|推薦|以內|預算|乾煎|清蒸|煮湯|刺少|白肉|口感|料理|想找|想要)/;
 const RESET_TEXT = "好，已經重來。想賣魚或找魚都可以直接說。";
 
+/* 規則是否只回了通用的「賣魚或找魚」引導；配額提示會取代這句話。 */
+export function isFallbackReply(result) {
+  const replies = (result && result.replies) || [];
+  return replies.length === 1 && FALLBACK.test(replies[0].text || "");
+}
+
 function numericInSource(value, source) {
   const text = String(source || "").replace(/,/g, "");
   const number = String(value);
@@ -161,8 +167,7 @@ export async function handleMessage(context, text, user, llm) {
   }
 
   const result = await handleText(ctx, source, user);
-  const fallback = (result.replies || []).length === 1 && FALLBACK.test(result.replies[0].text || "");
-  if (llm && llm.handled && llmIntent === "UNKNOWN" && llm.reply_text && fallback) {
+  if (llm && llm.handled && llmIntent === "UNKNOWN" && llm.reply_text && isFallbackReply(result)) {
     return { source: "llm", llm: llm };
   }
   return { source: "rules", result: result };

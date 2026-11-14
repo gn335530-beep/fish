@@ -52,7 +52,8 @@ module.exports = defineConfig({
       reuseExistingServer: false,
       env: envWith({
         PORT: String(API_PORT),
-        FISHMATCH_DB: E2E_DB
+        FISHMATCH_DB: E2E_DB,
+        LLM_ENABLED: "false"
       })
     },
     {

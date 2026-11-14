@@ -89,7 +89,7 @@
 - `CHAT`／`WEB`／`PRODUCT_RECOMMEND` 才寫 LLM 文字；`PRODUCT_RECOMMEND` 另附商品卡並把 context 切到 `shopping`。
 - 唯讀工具：官方行情、平台公開商品（最多 5 筆）、Tavily 網路搜尋（最多 3 個來源）。每輪最多 2 次工具呼叫，工具結果只由後端產生。
 - `WEB` 的 `sources` 由 Tavily 結果產生；平台答案與 `CHAT` 不顯示來源。
-- 逾時、5xx、格式錯誤或平台數字無依據時回 HTTP 200 + `handled:false`，前端安靜 fallback；429／額度錯誤 `retryable:true`。
+- 逾時、5xx、格式錯誤或平台數字無依據時回 HTTP 200 + `handled:false`，前端安靜 fallback；429／額度錯誤 `retryable:true`。前端先跑規則，規則無法處理才顯示提示與「重試」；重試沿用同一個 `message_id`，不重寫使用者訊息，也不自動重試或快取搜尋結果。
 - `LLM_ENABLED` 預設 `false`；另可設 `GEMINI_API_KEY`、`LLM_MODEL`、`LLM_TIMEOUT_MS`、`LLM_HISTORY_LIMIT`、`LLM_MAX_TOOL_CALLS`、`LLM_WEB_SEARCH`、`TAVILY_API_KEY`、`LLM_SEARCH_TIMEOUT_MS`。
 - 交易房不得呼叫此端點；後端也會回 409。
 

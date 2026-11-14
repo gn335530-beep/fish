@@ -49,12 +49,13 @@ python -m http.server 8000 --directory frontend
 - `POST /api/ai/reply` 只接受助手房與該房參與者；不寫入訊息、不修改 `context`。
 - 後端只送最近對話與白名單 context；電話、Email、身分證與地址會先換成 `[已遮蔽]`，不送頭像或個人檔案。
 - 模型失敗、格式錯誤或平台數字無依據時，端點回 HTTP 200 + `handled:false`；前端安靜回到規則引擎。
+- 配額或 429 回 `retryable:true`；前端先跑規則，平台意圖能處理就照常完成，規則無法處理才顯示提示與重試。重試沿用同一個 `message_id`，不重寫使用者訊息；不自動重試、不排隊、不快取搜尋結果。
 - 平台意圖（賣魚、找魚、行情、取消、修改）只回 slots；AI 文字用於 `CHAT`／`WEB`，`PRODUCT_RECOMMEND` 另附商品卡。
 - 唯讀工具：`get_market_price`（官方行情）、`search_products`（公開商品，最多 5 筆）、`web_search`（Tavily basic search）。每輪最多 2 次；模型不能寫入商品、訂單或評價。
 - `tool_results` 只由後端工具產生：`market` 是官方行情資料，`products` 是公開商品；模型自行提供的內容一律忽略。
 - `WEB` 的 `sources` 由 Tavily 結果產生，最多 3 個合法 URL；`LLM_WEB_SEARCH` 關閉時模型不提供此工具。
 - log 只記 request id、使用者 id、intent、token 數、耗時、工具名稱／耗時／錯誤碼，不記訊息或工具結果。
-- 目前是 beta 切片：配額重試 UI 與最終 ADR／beta 文件為後續 ticket；免費層內容可能被 Google 用於改善產品，Tavily 也會收到該次查詢。
+- 目前是 **soft launch beta**：不強制邀請名單、不承諾 SLA；Gemini 免費層內容可能被 Google 用於改善產品，Tavily 也會收到該次查詢，免費層每月 1,000 credits 是硬限制。取捨與遷移路徑見 `docs/adr/0011-hybrid-llm-assistant.md`。
 
 ## 目錄
 

@@ -13,7 +13,8 @@ export async function requestReply(room, message, text, user) {
   } catch (error) {
     llm = { handled: false, error_code: "LLM_UPSTREAM_ERROR", retryable: false };
   }
-  return handleMessage(room.context, text, user, llm);
+  /* 保留原始結果給 flow 判斷是否為可重試的配額錯誤。 */
+  return Object.assign({}, await handleMessage(room.context, text, user, llm), { llmResult: llm });
 }
 
 function marketCard(market) {

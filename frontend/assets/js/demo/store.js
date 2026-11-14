@@ -14,6 +14,7 @@ export function emptyState() {
     view: "assistant",
     notice: "",
     aiPending: 0,
+    aiRetry: null,
     deal: null,
     addonOpen: false,
     addons: [],

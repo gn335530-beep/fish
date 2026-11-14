@@ -2,6 +2,7 @@
 
 import { state } from "../store.js";
 import { renderMessages, renderTyping } from "./messages.js";
+import { renderAiRetry } from "./ai-retry.js";
 import { NO_ASSISTANT_TEXT } from "./html.js";
 
 export function renderAssistant() {
@@ -11,17 +12,17 @@ export function renderAssistant() {
       '<button type="button" class="fm-chip" data-action="new-assistant">新增 AI 對話</button>' +
       '</div>';
   }
-  if (state.aiPending > 0) {
-    return renderMessages() + renderTyping();
-  }
-  if (!state.messages.length) {
+  const retry = state.aiRetry && state.aiRetry.roomId === state.room.id ? state.aiRetry : null;
+  const messages = renderMessages();
+  if (state.aiPending > 0) return messages + renderTyping();
+  if (!state.messages.length && !retry) {
     return '<div class="fm-empty">' +
       '<p>可以用對話完成整筆交易。</p>' +
       '<button type="button" class="fm-chip" data-action="hint" data-value="我要賣魚">我要賣魚</button>' +
       '<button type="button" class="fm-chip" data-action="hint" data-value="今天有什麼魚">今天有什麼魚</button>' +
       '</div>';
   }
-  return renderMessages();
+  return messages + (retry ? renderAiRetry(retry.notice) : "");
 }
 
 export function renderLogin() {
