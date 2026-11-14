@@ -5,7 +5,7 @@ const tools = require("./tools");
 const { llmError } = require("./error");
 const { mapError } = require("./result");
 
-const DEFAULT_MAX_TOOL_CALLS = 2;
+const MAX_TOOL_CALLS = 2;
 
 function collectUsage(usage, raw) {
   const step = provider.tokenCounts(raw && raw.usage);
@@ -39,14 +39,8 @@ async function runTool(call, ctx, report) {
   }
 }
 
-function toolCallLimit(options) {
-  const limit = Number(options.maxToolCalls);
-  return Number.isInteger(limit) && limit > 0 ? limit : DEFAULT_MAX_TOOL_CALLS;
-}
-
 /* report 由 service 建立，成功或失敗都拿得到工具紀錄與 token 數供 log 使用。 */
 async function run(input, options, report) {
-  const maxToolCalls = toolCallLimit(options);
   const toolTurns = [];
   const toolResults = {};
   let webResults = [];
@@ -55,7 +49,7 @@ async function run(input, options, report) {
   let productRegion = null;
   let finalRaw = null;
 
-  for (let round = 0; round <= maxToolCalls; round++) {
+  for (let round = 0; round <= MAX_TOOL_CALLS; round++) {
     if (Date.now() >= deadline) throw llmError("LLM_TIMEOUT");
     const raw = await provider.generate(Object.assign({}, input, {
       timeoutMs: Math.max(1, deadline - Date.now()),
@@ -71,7 +65,7 @@ async function run(input, options, report) {
       break;
     }
 
-    const remaining = maxToolCalls - report.toolRuns.length;
+    const remaining = MAX_TOOL_CALLS - report.toolRuns.length;
     if (remaining <= 0) throw llmError("LLM_GUARD_REJECTED");
     for (const call of calls.slice(0, remaining)) {
       const runStarted = Date.now();

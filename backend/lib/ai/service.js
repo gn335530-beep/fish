@@ -45,14 +45,13 @@ async function reply(options) {
     timeoutMs: config.timeoutMs,
     system: SYSTEM_PROMPT,
     context: contextSummary(options.context),
-    messages: historyFor(options.conversation.id, config.historyLimit, options.message)
+    messages: historyFor(options.conversation.id, options.message)
   };
 
   try {
     const loop = await toolLoop.run(input, {
       timeoutMs: config.timeoutMs,
       searchTimeoutMs: config.searchTimeoutMs,
-      maxToolCalls: config.maxToolCalls,
       toolDefs: tools.definitions({ webEnabled: webEnabled }),
       toolCtx: {
         user: options.user,

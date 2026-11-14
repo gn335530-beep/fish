@@ -36,7 +36,7 @@ async function askRoom() {
 test.before(start);
 test.after(stop);
 test.beforeEach(function () {
-  h.reset();
+  h.reset({ LLM_MAX_TOOL_CALLS: 5 });
   resetMarket();
   seedGrouper();
 });
@@ -122,7 +122,7 @@ test("模型自行產生不存在的行情數字時被 guard 拒絕", async func
   assert.equal(data.error_code, "LLM_GUARD_REJECTED");
 });
 
-test("單輪超過 2 次工具呼叫時停止並 fallback", async function () {
+test("單輪超過 2 次工具呼叫時停止並 fallback，環境變數無法放寬", async function () {
   const upstreamState = useRows([raw({ "品種代碼": 2201, "魚貨名稱": "石斑魚", "市場名稱": "高雄", "平均價": 100 })]);
   h.useSequence([{ tool_calls: [marketCall(), marketCall(), marketCall()] }]);
   const run = await askRoom();

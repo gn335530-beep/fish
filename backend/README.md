@@ -40,8 +40,6 @@ python -m http.server 8000 --directory frontend
 | `GEMINI_API_KEY` | 空 | 啟用時必填；缺少時回 `LLM_NOT_CONFIGURED` |
 | `LLM_MODEL` | `gemini-3.5-flash-lite` | 可換模型，不需改程式 |
 | `LLM_TIMEOUT_MS` | `8000` | 一次回覆的總期限（含模型、工具與行情上游） |
-| `LLM_HISTORY_LIMIT` | `10` | 送入模型的使用者／助手訊息上限 |
-| `LLM_MAX_TOOL_CALLS` | `2` | 每輪唯讀工具呼叫上限 |
 | `LLM_WEB_SEARCH` | `false` | `true` 且設定 Tavily 金鑰才提供網路搜尋工具 |
 | `TAVILY_API_KEY` | 空 | Tavily 金鑰；缺少時不提供 `web_search` |
 | `LLM_SEARCH_TIMEOUT_MS` | `15000` | 該回合執行 `web_search` 後延長的總期限 |

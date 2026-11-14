@@ -16,7 +16,7 @@ const CHAT = {
 
 test.before(start);
 test.after(stop);
-test.beforeEach(function () { h.reset(); h.useJson(CHAT); });
+test.beforeEach(function () { h.reset({ LLM_HISTORY_LIMIT: 30 }); h.useJson(CHAT); });
 
 test("歷史只取最近 10 則使用者／助手訊息，卡片以一行摘要取代", async function () {
   const room = await h.createRoom();

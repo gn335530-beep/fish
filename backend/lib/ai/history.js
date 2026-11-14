@@ -7,6 +7,8 @@ const DRAFT_KEYS = [
   "fish_species", "species_code", "quantity", "condition", "price", "price_per_taijin"
 ];
 
+const HISTORY_LIMIT = 10;
+
 function oneLine(value) {
   return String(value == null ? "" : value).replace(/\s+/g, " ").trim();
 }
@@ -47,8 +49,8 @@ function isDialogMessage(message) {
   return (message.type === "text" || message.type === "card") && message.sender_id !== "system";
 }
 
-/* 依 seq 取錨定訊息（含）以前、同一間助手房的最近 limit 則使用者／助手訊息。 */
-function historyFor(conversationId, limit, anchor) {
+/* 依 seq 取錨定訊息（含）以前、同一間助手房的最近 10 則使用者／助手訊息。 */
+function historyFor(conversationId, anchor) {
   const anchorSeq = anchor ? Number(anchor.seq) : null;
   const rows = all("messages")
     .filter(function (message) {
@@ -57,14 +59,14 @@ function historyFor(conversationId, limit, anchor) {
         (anchorSeq === null || Number(message.seq) <= anchorSeq);
     })
     .sort(function (a, b) { return Number(a.seq) - Number(b.seq); });
-  let selected = rows.slice(-limit);
+  let selected = rows.slice(-HISTORY_LIMIT);
 
   /* 錨定訊息一定要是最後一則 user turn；限制或資料異常造成缺席時補回。 */
   if (anchor && isDialogMessage(anchor) &&
     String(anchor.conversation_id) === String(conversationId)) {
     const anchorId = String(anchor.id);
     const rest = selected.filter(function (message) { return String(message.id) !== anchorId; });
-    const take = Math.max(0, limit - 1);
+    const take = Math.max(0, HISTORY_LIMIT - 1);
     selected = (take > 0 ? rest.slice(-take) : []).concat(anchor);
   }
 

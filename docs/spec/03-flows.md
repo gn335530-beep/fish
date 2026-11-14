@@ -401,7 +401,7 @@
 - 平台數字（價格、尾數、行情、庫存）必須來自使用者訊息或後端工具結果；模型自行產生的數字或商品卡一律丟棄並 fallback。
 - 歷史不含系統訊息、圖片與完整卡片 JSON；卡片只送一行摘要。
 - 電話（含 `+886` 與括號區碼）、Email、身分證字號與含行政區的地址在送出前換成 `[已遮蔽]`；一般文字中的「路」「弄」不觸發遮蔽。不送頭像或個人檔案。
-- `LLM_ENABLED=false` 或缺少 `GEMINI_API_KEY` 時不呼叫外部服務；`LLM_MODEL`、`LLM_TIMEOUT_MS`（預設 8 秒）、`LLM_HISTORY_LIMIT`、`LLM_MAX_TOOL_CALLS`（預設 2）可用環境變數調整。
+- `LLM_ENABLED=false` 或缺少 `GEMINI_API_KEY` 時不呼叫外部服務；`LLM_MODEL`、`LLM_TIMEOUT_MS`、`LLM_SEARCH_TIMEOUT_MS` 可用環境變數調整。歷史固定最近 10 則、每輪最多 2 次工具呼叫，沒有環境變數可調。
 - 網路搜尋預設關閉；`LLM_WEB_SEARCH=true` 且設定 `TAVILY_API_KEY` 才提供 `web_search`。一般知識維持 `CHAT`，不消耗 Tavily credits。
 - log 只記 metadata 與工具名稱／耗時／錯誤碼，不記訊息、prompt、工具結果、搜尋結果或 API key。
 - 每次回覆只有一個總期限：一般 8 秒；該回合執行 `web_search` 後延長至 15 秒（`LLM_SEARCH_TIMEOUT_MS`）。期限同時套用模型呼叫、每個工具與行情上游；工具開始前剩餘時間已用盡就不再呼叫下游。行情上游逾時也回 `LLM_TIMEOUT`。
