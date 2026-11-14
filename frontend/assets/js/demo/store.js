@@ -13,6 +13,7 @@ export function emptyState() {
     lastSeq: 0,
     view: "assistant",
     notice: "",
+    aiPending: 0,
     deal: null,
     addonOpen: false,
     addons: [],

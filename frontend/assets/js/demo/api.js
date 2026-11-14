@@ -32,6 +32,14 @@ export function sendMessage(conversationId, payload) {
   return call("/api/chat/message", { method: "POST", body: body });
 }
 
+/* AI 回覆端點：使用剛寫入的使用者訊息 id，不重送文字內容。 */
+export function aiReply(conversationId, messageId, context) {
+  return call("/api/ai/reply", {
+    method: "POST",
+    body: { conversation_id: conversationId, message_id: messageId, context: context || {} }
+  });
+}
+
 export function updateContext(conversationId, patch) {
   return call("/api/conversations/" + encodeURIComponent(conversationId) + "/context", {
     method: "PUT",

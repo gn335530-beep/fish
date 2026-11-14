@@ -33,6 +33,7 @@
 | `DELETE` | `/api/conversations/{id}` | 參與者 | 刪除助手房或可刪的交易房 |
 | `GET` | `/api/conversations/{id}/messages` | 參與者 | 訊息，支援 `after_seq`、`limit` |
 | `POST` | `/api/chat/message` | 參與者 | 送出訊息 |
+| `POST` | `/api/ai/reply` | 參與者（助手房） | AI 回覆（beta）；需求 `conversation_id`、`message_id`、`context`；失敗回 200 + `handled:false` |
 | `PUT` | `/api/conversations/{id}/context` | 參與者（助手房） | 更新助手房 context |
 | `POST` | `/api/conversations/{id}/read` | 參與者 | 標記已讀 |
 | `POST` | `/api/conversations/{id}/clear` | 參與者（助手房） | 清除舊訊息 |
@@ -78,6 +79,17 @@
 三者皆含 `id`、`status`、`cancel_reason`、`item_count`、`total_quantity`、`final_price`、`review_status`、`updated_at`。`cancel_reason` 供前端區分逾時（`LOCK_EXPIRED`、`HOLD_EXPIRED`）與主動取消。
 
 前端每 3 秒輪詢對話清單；`last_order` 的 `id`、`status` 或 `updated_at` 改變時，會重取 `GET /api/deals/{id}`，協議卡、評價卡與房間摘要跟著目前訂單更新，不需要重開房間。已成交、已取消與已逾時的協議卡只顯示狀態，不再提供同意、退回或取消操作。
+
+### AI 助手（Beta）
+
+`POST /api/ai/reply` 只接受助手房參與者。請求帶 `conversation_id`、剛寫入的 `message_id` 與前端目前 `context`；後端從資料庫讀取訊息、取最近 10 則使用者／助手歷史、遮蔽個資後呼叫 Gemini。回應 `data` 含 `handled`、`intent`、`slots`、`reply_text`、`sources`、`tool_results`、`error_code` 與 `retryable`。
+
+- 端點**不寫訊息、不改 context**；AI 文字仍由前端用 `POST /api/chat/message` 寫入。
+- `SELL`／`BUY`／`MARKET`／`CANCEL`／`EDIT` 不產生 `reply_text`，前端只把 slots 交給既有規則。
+- `CHAT`／`WEB` 才寫 LLM 文字；`WEB` 的 Tavily 查詢與資料來源卡屬後續 ticket 06。
+- 逾時、5xx、格式錯誤或平台數字無依據時回 HTTP 200 + `handled:false`，前端安靜 fallback。
+- `LLM_ENABLED` 預設 `false`；另可設 `GEMINI_API_KEY`、`LLM_MODEL`、`LLM_TIMEOUT_MS`、`LLM_HISTORY_LIMIT`。
+- 交易房不得呼叫此端點；後端也會回 409。
 
 ## 3. 商品回應欄位
 

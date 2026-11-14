@@ -81,6 +81,7 @@
 | 37 | POST | `/api/products/:id/delist` | 登入（擁有者） | ✅ 下架 |
 | 38 | POST | `/api/products/:id/relist` | 登入（擁有者） | ✅ 重新上架 |
 | 39 | DELETE | `/api/products/:id` | 登入（擁有者） | ✅ 硬刪 |
+| 40 | POST | `/api/ai/reply` | 參與者（助手房） | 🟡 Beta：文字回覆、平台意圖 slots 與 fallback |
 
 ### 2.1 本版新增／變更的端點
 
@@ -108,6 +109,7 @@
 | GET | `/api/market/quote` | 公開 | 新增：名稱→代碼→價格整合查詢 |
 | GET | `/api/market/prices` | 公開 | 變更：只接受 `code`，支援 `include=history` |
 | GET | `/api/market/markets` | 公開 | 新增：市場對照表 |
+| POST | `/api/ai/reply` | 參與者（助手房） | 新增（beta）：回傳 intent、slots、reply_text 與 sources；失敗一律 200 + `handled:false` |
 
 ## 3. 會員
 
@@ -388,7 +390,40 @@
 
 錯誤：400 `MISSING_CONVERSATION`、404 `CONVERSATION_NOT_FOUND`、403 `FORBIDDEN`、409 `AI_NOT_ACTIVE`、409 `NOT_ASSISTANT_ROOM`、400 `INVALID_CONTEXT`、400 `EMPTY_MESSAGE`、400 `MESSAGE_TOO_LONG`。
 
-> **設計限制**：AI 回覆目前由前端規則引擎產生後回寫，伺服器無法分辨「真助手」與「使用者代寫」。伺服器保證的是**不得跨房間寫入**；使用者在自己的助手房裡代寫 AI 訊息只會騙到自己。接上伺服器端 LLM 後應改為 `POST /api/ai/reply`，由後端寫入（M6）。
+> **設計限制**：AI 回覆仍由前端規則引擎或 `POST /api/ai/reply` 取得後回寫，伺服器無法分辨「真助手」與「使用者代寫」。伺服器保證的是**不得跨房間寫入**；使用者在自己的助手房裡代寫 AI 訊息只會騙到自己。`POST /api/ai/reply` 只產生結構化結果，不寫訊息，讓 fallback 與既有訊息協議共用同一條路。
+
+### `POST /api/ai/reply`
+
+> **Beta**：LLM 預設關閉；`LLM_ENABLED=true` 且設定 `GEMINI_API_KEY` 才會呼叫外部模型。目前支援一般文字回覆（`CHAT`）、`WEB` 文字與平台意圖 slots；行情／商品／網路工具與配額重試屬後續 ticket。
+
+```json
+{ "conversation_id": "conv_...", "message_id": "msg_...",
+  "context": { "mode": "idle", "draft": null, "last_cards": [] } }
+```
+
+- 權限：登入且為該助手房參與者；未登入 401、非參與者 403、非助手房 409 `NOT_ASSISTANT_ROOM`。
+- `message_id` 必須屬於該房且由目前使用者送出，否則 404 `MESSAGE_NOT_FOUND`；非文字訊息回 400 `INVALID_MESSAGE`。
+- `context` 必須是純物件，序列化後上限 16 KB，否則 400 `INVALID_CONTEXT`。
+- 後端以 `message_id` 從資料庫讀取使用者文字，不信任前端傳來的訊息內容；`context` 不寫回資料庫。
+- 歷史只取最近 10 則使用者與助手文字／卡片訊息；系統訊息、圖片與完整卡片 JSON 不送入模型，卡片以一行摘要取代。
+- 送出前遮蔽電話、Email、身分證字號與地址；不送頭像、個人檔案電話或地址。
+- 成功回 HTTP 200，`data`：
+
+```jsonc
+{ "handled": true, "intent": "CHAT",
+  "slots": {}, "reply_text": "吳郭魚肉質細緻，適合乾煎或清蒸。",
+  "sources": [], "tool_results": {},
+  "error_code": null, "retryable": false }
+```
+
+- `intent`：`SELL`／`BUY`／`MARKET`／`CANCEL`／`EDIT`／`CHAT`／`WEB`／`PRODUCT_RECOMMEND`／`UNKNOWN`。
+- 平台意圖（`SELL`、`BUY`、`MARKET`、`CANCEL`、`EDIT`）不產生 `reply_text`，前端交由既有規則完成；`CHAT`／`WEB` 才寫入文字。`WEB` 的 Tavily 查詢與資料來源卡屬 ticket 06；`PRODUCT_RECOMMEND` 需要後端商品工具（ticket 05），目前不寫半套回覆並 fallback 規則。
+- 這一版沒有工具，`tool_results` 一律回空物件；模型自行填寫的內容不會被當成平台數字依據。
+- 平台數字（價格、尾數、行情）必須出現在使用者訊息或工具結果中，否則整則回覆丟棄，回 `handled:false` + `LLM_GUARD_REJECTED`。
+- 失敗一律 HTTP 200：`LLM_DISABLED`、`LLM_NOT_CONFIGURED`、`LLM_TIMEOUT`、`LLM_UPSTREAM_ERROR`、`LLM_INVALID_OUTPUT`、`LLM_GUARD_REJECTED` 為靜默 fallback；`LLM_RATE_LIMITED` 的 `retryable:true`（配額提示按鈕為後續 ticket）。
+- 端點不寫入訊息、不改 `context`；AI 訊息仍由前端呼叫 `POST /api/chat/message` 寫入。
+- 設定：`LLM_ENABLED`（預設 `false`）、`GEMINI_API_KEY`、`LLM_MODEL`（預設 `gemini-3.5-flash-lite`）、`LLM_TIMEOUT_MS`（預設 8000）、`LLM_HISTORY_LIMIT`（預設 10）。
+- log 只記 request id、使用者 id、intent、token 數、耗時與錯誤碼；不記訊息、prompt、搜尋結果或 API key。
 
 ### `PUT /api/conversations/:id/context`
 
@@ -705,6 +740,9 @@
 | `OWN_PROFILE` | 400 | 由個人資訊開交易房（自己） |
 | `MISSING_PHOTO` | 400 | 上架 |
 | `MISSING_CONVERSATION` | 400 | 訊息 |
+| `MISSING_MESSAGE` | 400 | AI 回覆（缺少 `message_id`） |
+| `MESSAGE_NOT_FOUND` | 404 | AI 回覆（訊息不屬於房間或目前使用者） |
+| `INVALID_MESSAGE` | 400 | AI 回覆（非文字訊息） |
 | `EMPTY_MESSAGE` | 400 | 訊息 |
 | `MESSAGE_TOO_LONG` | 400 | 訊息 |
 | `AI_NOT_ACTIVE` | 409 | 訊息 |
@@ -738,6 +776,13 @@
 | `INVALID_DATE` | 400 | 行情（日期格式錯誤） |
 | `NO_TRADE_DATA` | 200 | 行情（查無交易資料，不是錯誤） |
 | `UPSTREAM_UNAVAILABLE` | 200 | 行情（上游失敗且無快取） |
+| `LLM_DISABLED` | 200 | AI 回覆（`LLM_ENABLED` 關閉，`data.error_code`） |
+| `LLM_NOT_CONFIGURED` | 200 | AI 回覆（缺少 `GEMINI_API_KEY`） |
+| `LLM_TIMEOUT` | 200 | AI 回覆（模型逾時，靜默 fallback） |
+| `LLM_UPSTREAM_ERROR` | 200 | AI 回覆（模型 5xx 或連線失敗） |
+| `LLM_INVALID_OUTPUT` | 200 | AI 回覆（JSON、schema、sources 或長度不合格） |
+| `LLM_GUARD_REJECTED` | 200 | AI 回覆（平台數字無依據） |
+| `LLM_RATE_LIMITED` | 200 | AI 回覆（模型 429，`retryable:true`） |
 
 ## 10. 契約陷阱（前端容易踩）
 
@@ -784,3 +829,7 @@
 | 批次加購只留一則系統訊息 | 用 `POST /api/deals/items/batch`，不要逐項呼叫 `POST /api/deals/items` |
 | 重新發起只限 `CANCELLED` 且 `cancel_reason = OTHER` | 逾時取消不能重新發起；已有草稿回 409 `DRAFT_EXISTS` |
 | 商品標題格式是 `{魚種}（{尾數}尾 / {處理}）` | 商品卡、推薦卡、交易房、協議卡只顯示 `fish_species`，不要解析長標題 |
+| `POST /api/ai/reply` 不寫訊息、不改 context | 前端仍用 `POST /api/chat/message` 寫入 AI 文字；平台意圖只套用 slots 後走規則 |
+| AI 回覆失敗也是 HTTP 200 | 讀 `data.handled` 與 `data.error_code`，不要用 HTTP 狀態判斷是否 fallback |
+| AI 只在助手房 | 交易房不要呼叫 `/api/ai/reply`；後端也會擋 |
+| `LLM_ENABLED` 預設關閉 | 本機沒設金鑰時助手仍走規則，不是故障 |

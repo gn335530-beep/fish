@@ -65,7 +65,7 @@ function editPrice(context, text) {
 }
 
 /* 只套用文字裡的新值；讀不到就回 null，讓呼叫端決定要重問還是直接採用。 */
-function applyValue(context, text) {
+export function applyEditValue(context, text) {
   const slot = context.editing.slot;
   if (slot === "photo_url") return null;
   if (slot === "price") return editPrice(context, text);
@@ -96,7 +96,7 @@ export function chooseEditField(context, text) {
   const started = beginEdit(Object.assign({}, context, { choosing_edit: null }), match.slot);
   if (!started) return askText(context);
   const value = stripFieldWords(text, match);
-  const applied = value ? applyValue(started.context, value) : null;
+  const applied = value ? applyEditValue(started.context, value) : null;
   return applied || started;
 }
 
@@ -131,7 +131,7 @@ export function editText(context, text) {
     return { context: context, replies: [{ text: EDIT_PROMPTS.photo_url }] };
   }
 
-  return applyValue(context, text) || askAgain(context, editing.slot);
+  return applyEditValue(context, text) || askAgain(context, editing.slot);
 }
 
 export function editPhoto(context, photoUrl) {

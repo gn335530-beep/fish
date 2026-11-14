@@ -24,6 +24,17 @@ npm run web
 > 後端第一次啟動時會從 `backend/db.seed.json` 建立執行時資料庫 `backend/db.json`（不進版控）。
 > 要重置示範資料，刪除 `backend/db.json` 再啟動即可；也可以用 `FISHMATCH_DB` 指定其他資料庫路徑。
 
+### AI 助手（Beta）
+
+助手房預設使用規則引擎，不會呼叫外部服務。若要在本機啟用 LLM 文字回覆，請在啟動後端前設定：
+
+```bash
+LLM_ENABLED=true
+GEMINI_API_KEY=your-gemini-key
+```
+
+可選 `LLM_MODEL`（預設 `gemini-3.5-flash-lite`）、`LLM_TIMEOUT_MS`（預設 8000）與 `LLM_HISTORY_LIMIT`（預設 10）。缺少金鑰、逾時或格式錯誤時，助手會安靜回到規則引擎；交易房永遠不呼叫 LLM。目前為 beta 切片：工具、商品推薦與網路搜尋尚未實作，免費層內容可能被 Google 用於改善產品。
+
 > 若使用其他靜態伺服器，請以 `frontend/` 作為網站根目錄，例如：
 > `python -m http.server 8010 --directory frontend`。
 > 換一個連接埠也能避開瀏覽器對舊檔案的快取。

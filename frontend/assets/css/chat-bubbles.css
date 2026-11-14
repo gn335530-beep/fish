@@ -53,6 +53,13 @@
   border-radius: 12px;
 }
 
+/* ---------- 等待 AI 回覆 ---------- */
+.fm-typing .fm-msg__bubble {
+  color: var(--muted);
+  font-size: .78rem;
+  letter-spacing: .02em;
+}
+
 /* 卡片訊息不套氣泡外框：行情、推薦、協議卡共用同一份重設規則。
    寬度沿用一般訊息的上限，只讓卡片填滿訊息寬度。 */
 .fm-msg--market,

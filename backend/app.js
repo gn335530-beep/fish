@@ -39,6 +39,7 @@ app.use(require("./routes/products"));
 app.use(require("./routes/product-lifecycle"));
 app.use(require("./routes/chat"));
 app.use(require("./routes/chat-messages"));
+app.use(require("./routes/ai"));
 app.use(require("./routes/conversation-delete"));
 app.use(require("./routes/deals"));
 app.use(require("./routes/deal-items"));

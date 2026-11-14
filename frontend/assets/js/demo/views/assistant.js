@@ -1,7 +1,7 @@
 /* 助手房視圖：訊息流與登入引導。 */
 
 import { state } from "../store.js";
-import { renderMessages } from "./messages.js";
+import { renderMessages, renderTyping } from "./messages.js";
 import { NO_ASSISTANT_TEXT } from "./html.js";
 
 export function renderAssistant() {
@@ -10,6 +10,9 @@ export function renderAssistant() {
       '<p>' + NO_ASSISTANT_TEXT + '</p>' +
       '<button type="button" class="fm-chip" data-action="new-assistant">新增 AI 對話</button>' +
       '</div>';
+  }
+  if (state.aiPending > 0) {
+    return renderMessages() + renderTyping();
   }
   if (!state.messages.length) {
     return '<div class="fm-empty">' +

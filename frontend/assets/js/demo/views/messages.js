@@ -38,3 +38,12 @@ export function renderMessages() {
   if (!state.messages.length) return "";
   return '<div class="fm-chat">' + state.messages.map(bubble).join("") + '</div>';
 }
+
+/* 等待 AI 回覆的過渡氣泡；不會寫入訊息，也不會被輪詢去重。 */
+export function renderTyping() {
+  return '<div class="fm-chat fm-typing" aria-live="polite">' +
+    '<div class="fm-msg fm-msg--other">' +
+    '<div class="fm-msg__meta">小幫手</div>' +
+    '<div class="fm-msg__bubble">小幫手正在輸入…</div>' +
+    '</div></div>';
+}

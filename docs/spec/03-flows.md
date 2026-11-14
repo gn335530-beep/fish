@@ -365,3 +365,38 @@
 - 電話重複／格式錯誤顯示欄位錯誤。
 
 **狀態**：個人資訊頁標題列、商品管理、聊聊、角色評價列表、分布／排序／篩選、商品照片與交易房角色評分已完成。設定頁已完成。
+
+---
+
+## F13 助手房 AI 回覆（Beta，🟡 部分實作）
+
+**現況**：伺服器端 AI 回覆端點、`CHAT` 文字、等待指示、平台意圖 slots 合併與靜默 fallback 已完成。行情工具、商品推薦、網路搜尋、配額重試與最終 ADR／beta 文件屬後續 ticket；`LLM_ENABLED` 預設關閉時完全走既有規則。
+
+**觸發**：使用者在助手房送出文字訊息。
+
+**流程**
+
+1. 前端先以既有 `POST /api/chat/message` 寫入使用者訊息，取得 `message_id`。
+2. 交易房直接結束，不呼叫 AI；只有助手房繼續。
+3. 前端以 `conversation_id`、`message_id` 與目前房間 `context` 呼叫 `POST /api/ai/reply`，等待期間顯示「小幫手正在輸入…」。
+4. 後端驗證房間、訊息與 context，讀取最近 10 則使用者／助手訊息，遮蔽個資後呼叫模型；不回寫任何訊息或 context。
+5. 前端依 `intent` 處理：
+   - `SELL`：slots 合併進上架草稿，交給既有追問、行情卡與售價流程；不寫 LLM 文字。
+   - `BUY`／`MARKET`／`CANCEL`／`EDIT`：交給既有導購、行情、取消與修改流程；不寫 LLM 文字。
+   - `CHAT`／`WEB`：寫入 `reply_text`。`WEB` 的 Tavily 查詢與資料來源卡屬後續 ticket 06。
+   - `PRODUCT_RECOMMEND`：商品推薦需要後端商品工具與商品卡（ticket 05）；目前不寫半套回覆，直接 fallback 規則。
+   - `UNKNOWN`：先走既有規則；規則無法處理且有 `reply_text` 時才使用。
+6. `handled:false` 時只跑既有規則，不顯示技術錯誤；平台意圖優先，不與 LLM 文字重複。
+7. 上架流程進行中仍會呼叫端點，但規則優先；`CHAT`／`WEB` 文字忽略，`SELL`／`EDIT`／`CANCEL` 可協助合併或取消。
+
+**規則**
+
+- AI 只在助手房；交易房完全不呼叫 LLM。
+- 平台數字（價格、尾數、行情）必須來自使用者訊息或工具結果；無依據時整則丟棄並 fallback。
+- 歷史不含系統訊息、圖片與完整卡片 JSON；卡片只送一行摘要。
+- 電話、Email、身分證字號與地址在送出前換成 `[已遮蔽]`；不送頭像或個人檔案。
+- `LLM_ENABLED=false` 或缺少 `GEMINI_API_KEY` 時不呼叫外部服務；`LLM_MODEL`、`LLM_TIMEOUT_MS`（預設 8 秒）、`LLM_HISTORY_LIMIT` 可用環境變數調整。
+- log 只記 metadata，不記訊息、prompt、搜尋結果或 API key。
+- 一般回覆 8 秒逾時；有搜尋的回合 15 秒（搜尋工具尚未實作）。
+- 每間助手房使用自己的 context 與草稿；等待期間送出的其他訊息仍會各自寫入，不遺失。
+

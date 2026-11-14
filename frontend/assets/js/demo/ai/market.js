@@ -82,7 +82,7 @@ function matchCandidate(text, candidates) {
   return contained.length === 1 ? contained[0] : null;
 }
 
-export async function marketReply(text, user, context) {
+export async function marketReply(text, user, context, hints) {
   let ctx = context || {};
   const source = String(text || "").trim();
 
@@ -103,9 +103,23 @@ export async function marketReply(text, user, context) {
     catalogOk = await ensureCatalog();
     name = findSpeciesMention(rest);
   }
+  const hintedName = hints && hints.fish_species
+    ? (findSpeciesMention(hints.fish_species) || String(hints.fish_species).trim())
+    : "";
 
   const codeMatch = source.match(/(?:^|[^\d])(\d{2,6})(?:[^\d]|$)/);
-  if (!name && codeMatch) name = codeMatch[1];
+  const hintedCode = hints && hints.species_code ? String(hints.species_code) : null;
+  const requestedRegion = findRegion(source) ||
+    findRegion((hints && hints.region) || "") ||
+    normalizeCityName((user && user.city) || "").trim();
+
+  if (!name && hintedCode) {
+    return quoteFor(hintedCode, true, ctx, requestedRegion);
+  }
+  if (!name && codeMatch) {
+    return quoteFor(codeMatch[1], true, ctx, requestedRegion);
+  }
+  if (!name && hintedName) name = hintedName;
   if (!name) {
     if (!catalogOk) {
       return replyWith(ctx, [{ text: "目前無法取得官方魚種代碼，請稍後再試。" }]);
@@ -113,6 +127,5 @@ export async function marketReply(text, user, context) {
     return { context: ctx, replies: [{ text: "請問想查哪一種魚的行情？" }] };
   }
 
-  const requestedRegion = findRegion(source) || normalizeCityName((user && user.city) || "").trim();
   return quoteFor(name, false, ctx, requestedRegion);
 }

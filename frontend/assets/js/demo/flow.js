@@ -4,6 +4,7 @@ import { state, update, replaceMessages, appendMessages } from "./store.js";
 import * as api from "./api.js";
 import { getProduct, createProduct } from "../api/products.js";
 import * as ai from "./ai/service.js";
+import { requestReply, llmBatch } from "./ai/reply.js";
 import { draftToProduct } from "./ai/draft.js";
 import { uploadImage } from "./upload.js";
 import { openRoom, ensureAssistantRoom } from "./rooms.js";
@@ -34,7 +35,12 @@ function showBatch(created) {
   else ui.scrollEnd();
 }
 
-export async function runReplies(result) {
+function isCurrentRoom(roomId) {
+  return !!state.room && state.room.id === roomId;
+}
+
+export async function runReplies(result, roomId) {
+  const targetId = roomId || state.room.id;
   const replies = result.replies || [];
   const created = [];
 
@@ -44,27 +50,39 @@ export async function runReplies(result) {
     if (reply.text) payload.text = reply.text;
     if (reply.card) payload.card = reply.card;
     if (i === replies.length - 1 && result.context) payload.context = result.context;
-    created.push(await api.sendMessage(state.room.id, payload));
+    created.push(await api.sendMessage(targetId, payload));
   }
 
-  if (result.context) {
+  if (result.context && isCurrentRoom(targetId)) {
     update({ room: Object.assign({}, state.room, { context: result.context }) });
   }
   /* 法規確認後只留新的提問，先前的對話紀錄一併從後端清除。 */
   if (result.clear_history && created.length) {
     let clearError = null;
     try {
-      await api.clearConversation(state.room.id, created[0].seq);
+      await api.clearConversation(targetId, created[0].seq);
     } catch (error) {
       clearError = error;
     }
-    replaceMessages(created);
+    if (isCurrentRoom(targetId)) replaceMessages(created);
     showBatch(created);
     if (clearError) ui.notify(clearError);
     return;
   }
-  appendMessages(created);
+  if (isCurrentRoom(targetId)) appendMessages(created);
   showBatch(created);
+}
+
+/* AI 回覆失敗一律回到規則；等待指示只在此期間出現。 */
+async function replyAfterMessage(room, message, value) {
+  update({ aiPending: Number(state.aiPending || 0) + 1 });
+  try {
+    const routed = await requestReply(room, message, value, state.user);
+    if (routed.source === "llm") await runReplies(llmBatch(routed.llm), room.id);
+    else await runReplies(routed.result, room.id);
+  } finally {
+    update({ aiPending: Math.max(0, Number(state.aiPending || 0) - 1) });
+  }
 }
 
 export async function submitText(text) {
@@ -73,12 +91,14 @@ export async function submitText(text) {
 
   try {
     if (!state.room) return;
-    const message = await api.sendMessage(state.room.id, { text: value });
-    appendMessages([message]);
-    showMessages();
-    if (state.room.type === "deal") return;
-    const result = await ai.handleText(state.room.context, value, state.user);
-    await runReplies(result);
+    const room = state.room;
+    const message = await api.sendMessage(room.id, { text: value });
+    if (isCurrentRoom(room.id)) {
+      appendMessages([message]);
+      showMessages();
+    }
+    if (room.type === "deal") return;
+    await replyAfterMessage(room, message, value);
   } catch (error) {
     ui.notify(error);
   }

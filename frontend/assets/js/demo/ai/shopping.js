@@ -47,8 +47,8 @@ function matchesSpecies(product, name) {
   return species !== "" && (species.indexOf(name) !== -1 || name.indexOf(species) !== -1);
 }
 
-function scopeOf(text, user) {
-  const explicit = findRegion(text);
+function scopeOf(text, user, hints) {
+  const explicit = findRegion(text) || findRegion((hints && hints.region) || "");
   if (explicit) return { region: explicit, explicit: true, profile: profileRegion(user) };
   const profile = profileRegion(user);
   return { region: profile, explicit: false, profile: profile };
@@ -60,10 +60,10 @@ function scoped(scope, text) {
   return "你的個人檔案還沒填縣市，先以全省查詢，" + text;
 }
 
-export async function shoppingReply(text, user) {
-  const scope = scopeOf(text, user);
+export async function shoppingReply(text, user, hints) {
+  const scope = scopeOf(text, user, hints);
   await ensureCatalog();
-  const name = findCatalogName(text);
+  const name = findCatalogName(text) || findCatalogName((hints && hints.fish_species) || "");
   const rows = await listProducts({ limit: 100 });
 
   let matched = rows.slice();

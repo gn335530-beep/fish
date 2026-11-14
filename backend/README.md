@@ -1,6 +1,6 @@
 # 後端（json-server）
 
-此服務以 json-server 的 JSON 檔案儲存資料，並用自訂路由提供登入、會員、商品、官方魚種代碼字典、對話、交易房、評價、行情與上傳 API。不是正式後端，不能用於正式環境。
+此服務以 json-server 的 JSON 檔案儲存資料，並用自訂路由提供登入、會員、商品、官方魚種代碼字典、對話、助手 AI 回覆（beta）、交易房、評價、行情與上傳 API。不是正式後端，不能用於正式環境。
 
 ## 啟動
 
@@ -30,14 +30,34 @@ npm run market:fetch -- --status
 python -m http.server 8000 --directory frontend
 ```
 
+## AI 助手（Beta）
+
+助手房可選擇接上 Google AI Studio（Gemini Developer API）產生文字回覆。**預設關閉**；關閉或缺少金鑰時，助手完全走原本的規則引擎，不需要網路。
+
+| 環境變數 | 預設 | 說明 |
+| --- | --- | --- |
+| `LLM_ENABLED` | `false` | `true`／`1` 才呼叫模型 |
+| `GEMINI_API_KEY` | 空 | 啟用時必填；缺少時回 `LLM_NOT_CONFIGURED` |
+| `LLM_MODEL` | `gemini-3.5-flash-lite` | 可換模型，不需改程式 |
+| `LLM_TIMEOUT_MS` | `8000` | 一般回覆逾時 |
+| `LLM_HISTORY_LIMIT` | `10` | 送入模型的使用者／助手訊息上限 |
+
+- `POST /api/ai/reply` 只接受助手房與該房參與者；不寫入訊息、不修改 `context`。
+- 後端只送最近對話與白名單 context；電話、Email、身分證與地址會先換成 `[已遮蔽]`，不送頭像或個人檔案。
+- 模型失敗、格式錯誤或平台數字無依據時，端點回 HTTP 200 + `handled:false`；前端安靜回到規則引擎。
+- 平台意圖（賣魚、找魚、行情、取消、修改）只回 slots；AI 文字目前用於 `CHAT`／`WEB`。
+- 這一版沒有工具，`tool_results` 一律空；模型自行產生的商品或數字不會被前端當成平台資料。
+- log 只記 request id、使用者 id、intent、token 數、耗時與錯誤碼，不記訊息內容。
+- 目前是 beta 切片：行情／商品／網路工具、商品推薦、資料來源查詢與配額重試為後續 ticket；免費層內容可能被 Google 用於改善產品。
+
 ## 目錄
 
 ```text
 backend/
   server.js       啟動
   app.js          middleware、靜態目錄、路由掛載
-  lib/            auth / store / db-file / messages / units / product-stock / product-pricing / timeouts / cards / quantities / deals / deal-items / deal-cancel / deal-transitions / deal-statuses / profile-room / reviews / conversations / regions / market/ / http
-  routes/         auth / users / products / chat / chat-messages / conversation-delete / deals / deal-items / deal-proposal / deal-response / reviews / market / market-catalog / uploads
+  lib/            auth / store / db-file / messages / units / product-stock / product-pricing / timeouts / cards / quantities / deals / deal-items / deal-cancel / deal-transitions / deal-statuses / profile-room / reviews / conversations / regions / ai/ / market/ / http
+  routes/         auth / users / products / chat / chat-messages / ai / conversation-delete / deals / deal-items / deal-proposal / deal-response / reviews / market / market-catalog / uploads
   scripts/        market-fetch.js（行情 CLI）
   test/           node:test 整合測試（使用暫存資料庫）
   db.seed.json    可提交的種子資料
@@ -84,6 +104,7 @@ backend/
 | `DELETE` | `/api/conversations/{id}` | 刪除助手房或可刪的交易房；需參與者 |
 | `GET` | `/api/conversations/{id}/messages` | 房間訊息（`after_seq` 增量）；需參與者 |
 | `POST` | `/api/chat/message` | 送出訊息；需參與者 |
+| `POST` | `/api/ai/reply` | 助手房 AI 回覆（beta）；驗證房間與訊息，失敗回 200 + `handled:false`；需參與者 |
 | `PUT` | `/api/conversations/{id}/context` | 更新助手房 context；需參與者 |
 | `POST` | `/api/conversations/{id}/read` | 標記已讀；需參與者 |
 | `POST` | `/api/conversations/{id}/clear` | 清除助手房舊訊息；需參與者 |
