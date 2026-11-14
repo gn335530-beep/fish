@@ -28,6 +28,29 @@ function geminiContent(message) {
   };
 }
 
+function functionCallTurn(turn) {
+  return {
+    role: "model",
+    parts: [{ functionCall: { name: turn.name, args: turn.args || {} } }]
+  };
+}
+
+function functionResponseTurn(turn) {
+  return {
+    role: "user",
+    parts: [{ functionResponse: { name: turn.name, response: { result: turn.result } } }]
+  };
+}
+
+function contentsOf(input) {
+  const contents = (input.messages || []).map(geminiContent);
+  (input.tool_turns || []).forEach(function (turn) {
+    contents.push(functionCallTurn(turn));
+    contents.push(functionResponseTurn(turn));
+  });
+  return contents;
+}
+
 function systemInstruction(input) {
   const state = input.context && Object.keys(input.context).length
     ? "\n\n目前助手房狀態（JSON，僅供參考）：" + JSON.stringify(input.context)
@@ -35,11 +58,22 @@ function systemInstruction(input) {
   return { parts: [{ text: input.system + state }] };
 }
 
-function readText(payload) {
+function readParts(payload) {
   const candidate = payload && payload.candidates && payload.candidates[0];
   const parts = candidate && candidate.content && candidate.content.parts;
-  if (!Array.isArray(parts)) return "";
-  return parts.map(function (part) { return part.text || ""; }).join("\n").trim();
+  if (!Array.isArray(parts)) return { text: "", tool_calls: [] };
+  const texts = [];
+  const toolCalls = [];
+  parts.forEach(function (part) {
+    if (part.text) texts.push(part.text);
+    if (part.functionCall) {
+      toolCalls.push({
+        name: part.functionCall.name,
+        args: part.functionCall.args || {}
+      });
+    }
+  });
+  return { text: texts.join("\n").trim(), tool_calls: toolCalls };
 }
 
 async function callGemini(input) {
@@ -48,6 +82,12 @@ async function callGemini(input) {
     ":generateContent?key=" + encodeURIComponent(key);
   const controller = new AbortController();
   const timer = setTimeout(function () { controller.abort(); }, input.timeoutMs || 8000);
+  const tools = input.tools || [];
+  const generationConfig = {
+    temperature: 0.4,
+    maxOutputTokens: tools.length ? 2048 : 1024
+  };
+  if (!tools.length) generationConfig.responseMimeType = "application/json";
 
   try {
     const response = await fetch(url, {
@@ -55,12 +95,9 @@ async function callGemini(input) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         systemInstruction: systemInstruction(input),
-        contents: (input.messages || []).map(geminiContent),
-        generationConfig: {
-          temperature: 0.4,
-          maxOutputTokens: 1024,
-          responseMimeType: "application/json"
-        }
+        contents: contentsOf(input),
+        tools: tools.length ? [{ functionDeclarations: tools }] : undefined,
+        generationConfig: generationConfig
       }),
       signal: controller.signal
     });
@@ -73,9 +110,15 @@ async function callGemini(input) {
     }
 
     const payload = await response.json();
-    const text = readText(payload);
-    if (!text) throw providerError("LLM_INVALID_OUTPUT", "Gemini returned no text", false);
-    return { text: text, usage: tokenCounts(payload.usageMetadata) };
+    const parts = readParts(payload);
+    if (!parts.text && !parts.tool_calls.length) {
+      throw providerError("LLM_INVALID_OUTPUT", "Gemini returned no text", false);
+    }
+    return {
+      text: parts.text,
+      tool_calls: parts.tool_calls,
+      usage: tokenCounts(payload.usageMetadata)
+    };
   } catch (error) {
     if (error && error.name === "AbortError") {
       throw providerError("LLM_TIMEOUT", "Gemini timeout", false);

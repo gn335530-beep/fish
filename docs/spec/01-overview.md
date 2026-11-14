@@ -43,7 +43,7 @@
 - 註冊填寫縣市
 - 販賣法規告知與第一次販賣確認
 - 批發行情按需抓取、查詢與上架行情卡
-- 助手房 AI 文字回覆 beta：`CHAT`／`WEB` 回覆、平台意圖 slots 合併與靜默 fallback；可用 `LLM_ENABLED` 關閉（工具與網路搜尋為後續 ticket）
+- 助手房 AI 文字回覆 beta：`CHAT`／`WEB` 回覆、平台意圖 slots 合併、靜默 fallback 與唯讀工具（官方行情、平台商品、Tavily 網路搜尋）；可用 `LLM_ENABLED` 關閉
 
 ### 個人資訊與角色評價（✅）
 
@@ -111,6 +111,6 @@ docs/                規格、ADR、歷史計畫
 | 交易房改版 | 交易房聊天室畫面重製 | ✅ 已實作 | 商品卡面、推薦卡、行情卡、`paper-2` 聊天室、標題列星星、協議卡、取消卡、評價小卡 |
 | P7 | 收尾與移除舊路徑 | 🟡 部分實作 | 購物車與手動上架已移除；其餘見 roadmap |
 | 行情 | 官方行情整合 | ✅ 已實作 | 官方代碼字典、按需抓取、21 市場對照、代碼／整合查詢、行情卡與助手行情問答可用 |
-| AI 助手 | 助手房 LLM 回覆 | 🟡 Beta 部分實作 | `POST /api/ai/reply`、`CHAT`／`WEB`、平台意圖 slots、fallback 與等待指示；工具、商品推薦、網路搜尋與配額重試待後續 ticket |
+| AI 助手 | 助手房 LLM 回覆 | 🟡 Beta 部分實作 | `POST /api/ai/reply`、`CHAT`／`WEB`、平台意圖 slots、唯讀行情／商品／網路工具、商品推薦、資料來源卡、fallback 與等待指示；配額重試與 ADR／beta 文件待後續 ticket |
 
 詳細缺口見 `07-roadmap.md`。

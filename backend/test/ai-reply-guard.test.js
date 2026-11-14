@@ -127,34 +127,13 @@ test("EDIT 的數字字串也要有使用者訊息依據", async function () {
   assert.equal(grounded.slots.edit_value, 888);
 });
 
-test("sources 最多 3 個且 URL 必須合法", async function () {
-  const valid = await ask("今天天氣如何", output({
-    intent: "WEB",
-    reply_text: "今天多雲短暫雨。",
-    sources: [
-      { title: "中央氣象署", url: "https://www.cwa.gov.tw/a" },
-      { title: "新聞", url: "https://example.com/b" },
-      { title: "第二新聞", url: "https://example.com/c" }
-    ]
-  }));
-  assert.equal(valid.handled, true);
-  assert.equal(valid.sources.length, 3);
-
-  const tooMany = await ask("今天天氣如何", output({
-    intent: "WEB",
-    reply_text: "今天多雲。",
-    sources: [1, 2, 3, 4].map(function (i) {
-      return { title: "來源" + i, url: "https://example.com/" + i };
-    })
-  }));
-  assert.equal(tooMany.error_code, "LLM_INVALID_OUTPUT");
-
-  const badUrl = await ask("今天天氣如何", output({
-    intent: "WEB",
-    reply_text: "今天多雲。",
+test("模型自行提供的 sources 一律丟棄，來源只由工具產生", async function () {
+  const data = await ask("你好", output({
+    reply_text: "你好，需要什麼協助？",
     sources: [{ title: "惡意", url: "javascript:alert(1)" }]
   }));
-  assert.equal(badUrl.error_code, "LLM_INVALID_OUTPUT");
+  assert.equal(data.handled, true);
+  assert.deepEqual(data.sources, []);
 });
 
 test("reply_text 超過 500 字或 slots 型別錯誤都不合格", async function () {

@@ -47,12 +47,15 @@ function assertSlotsGrounded(slots, pool) {
   }
 }
 
-function assertReplyGrounded(replyText, pool, userText) {
+function assertReplyGrounded(replyText, pool, userText, options) {
   if (!replyText) return;
+  const strict = options && options.strict === true;
   const platformClaim = PLATFORM_CLAIM.test(replyText);
   numbersIn(replyText).forEach(function (number) {
     if (isGrounded(number, pool)) return;
-    if (platformClaim || (number > 3 && !hasGeneralUnit(number, replyText))) throw guardRejected();
+    if (strict || platformClaim || (number > 3 && !hasGeneralUnit(number, replyText))) {
+      throw guardRejected();
+    }
   });
   if (ungroundedChineseNumber(replyText, userText)) throw guardRejected();
 }

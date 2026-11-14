@@ -10,6 +10,11 @@ function setEnv(overrides) {
   process.env.GEMINI_API_KEY = "test-key";
   delete process.env.LLM_MODEL;
   delete process.env.LLM_TIMEOUT_MS;
+  delete process.env.LLM_SEARCH_TIMEOUT_MS;
+  delete process.env.LLM_HISTORY_LIMIT;
+  delete process.env.LLM_MAX_TOOL_CALLS;
+  delete process.env.LLM_WEB_SEARCH;
+  delete process.env.TAVILY_API_KEY;
   Object.keys(overrides || {}).forEach(function (key) {
     if (overrides[key] === null) delete process.env[key];
     else process.env[key] = String(overrides[key]);
@@ -29,6 +34,22 @@ function useJson(value) {
       text: typeof value === "string" ? value : JSON.stringify(value),
       usage: { prompt_tokens: 12, completion_tokens: 8 }
     };
+  });
+}
+
+/* 依序回傳多輪 provider 結果；最後一輪重複使用，方便測工具迴圈。 */
+function useSequence(steps) {
+  let index = 0;
+  provider.setProvider(async function (input) {
+    calls.push(input);
+    const step = steps[Math.min(index, steps.length - 1)];
+    index += 1;
+    if (typeof step === "function") return step(input);
+    if (step instanceof Error) throw step;
+    return Object.assign({
+      text: "",
+      usage: { prompt_tokens: 12, completion_tokens: 8 }
+    }, step);
   });
 }
 
@@ -82,6 +103,7 @@ module.exports = {
   calls: calls,
   reset: reset,
   useJson: useJson,
+  useSequence: useSequence,
   useError: useError,
   createRoom: createRoom,
   sendUser: sendUser,

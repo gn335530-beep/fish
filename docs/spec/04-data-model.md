@@ -206,11 +206,11 @@
 { "type": "review", "deal_id": "deal_...", "buyer_id": 2, "seller_id": 1,
   "buyer_reviewed": false, "seller_reviewed": false }
 
-{ "type": "sources", "sources": [                 // 目標：ticket 06 的資料來源卡
+{ "type": "sources", "sources": [                 // WEB 網路回答的資料來源卡
   { "title": "中央氣象署", "url": "https://www.cwa.gov.tw/..." } ] }
 ```
 
-**卡片狀態**：`deal` 卡為 `pending` / `rejected` / `confirmed` / `cancelled` / `expired`；`rejected` 只保留舊資料。`deal_cancelled` 是取消後新增的訊息卡，雙方都看得到。`review` 卡沒有狀態欄位，改用 `buyer_reviewed`／`seller_reviewed` 表示雙方是否已評價。行情卡的 `weight_kg`／`weight_taijin`／`estimated_total` 只為舊資料相容，通常為 `null`，畫面改由使用者輸入即時試算。`sources` 卡是 ticket 06 的目標型別，最多 3 個 `{ title, url }`；目前沒有 Tavily，也不會顯示模型自行提供的連結。
+**卡片狀態**：`deal` 卡為 `pending` / `rejected` / `confirmed` / `cancelled` / `expired`；`rejected` 只保留舊資料。`deal_cancelled` 是取消後新增的訊息卡，雙方都看得到。`review` 卡沒有狀態欄位，改用 `buyer_reviewed`／`seller_reviewed` 表示雙方是否已評價。行情卡的 `weight_kg`／`weight_taijin`／`estimated_total` 只為舊資料相容，通常為 `null`，畫面改由使用者輸入即時試算。`sources` 卡最多 3 個 `{ title, url }`，只由後端 `web_search` 工具結果產生；平台行情、商品與一般知識回答不產生此卡。
 
 ## 7. `deals`
 

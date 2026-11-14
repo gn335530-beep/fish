@@ -33,7 +33,7 @@ LLM_ENABLED=true
 GEMINI_API_KEY=your-gemini-key
 ```
 
-可選 `LLM_MODEL`（預設 `gemini-3.5-flash-lite`）、`LLM_TIMEOUT_MS`（預設 8000）與 `LLM_HISTORY_LIMIT`（預設 10）。缺少金鑰、逾時或格式錯誤時，助手會安靜回到規則引擎；交易房永遠不呼叫 LLM。目前為 beta 切片：工具、商品推薦與網路搜尋尚未實作，免費層內容可能被 Google 用於改善產品。
+可選 `LLM_MODEL`（預設 `gemini-3.5-flash-lite`）、`LLM_TIMEOUT_MS`（預設 8000）、`LLM_HISTORY_LIMIT`（預設 10）與 `LLM_MAX_TOOL_CALLS`（預設 2）。缺少金鑰、逾時或格式錯誤時，助手會安靜回到規則引擎；交易房永遠不呼叫 LLM。助手可使用唯讀的官方行情、平台公開商品與網路搜尋工具，價格與庫存只來自工具結果。網路搜尋預設關閉；要啟用請另設 `LLM_WEB_SEARCH=true` 與 `TAVILY_API_KEY`，並可用 `LLM_SEARCH_TIMEOUT_MS`（預設 15000）調整搜尋回合逾時。目前為 beta 切片：配額重試 UI 與 ADR 文件尚未完成，免費層內容可能被 Google 用於改善產品。
 
 > 若使用其他靜態伺服器，請以 `frontend/` 作為網站根目錄，例如：
 > `python -m http.server 8010 --directory frontend`。

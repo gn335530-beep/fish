@@ -103,6 +103,23 @@ test("一句話同時有賣魚與其他問題時只處理賣魚", async function
   assert.match(assistantText(), /商品照片/);
 });
 
+test("平台意圖優先於商品推薦", async function () {
+  aiReply = {
+    handled: true,
+    intent: "PRODUCT_RECOMMEND",
+    slots: {},
+    reply_text: "推薦這些商品。",
+    sources: [],
+    tool_results: { products: [{ id: "prd_1", fish_species: "石斑" }] }
+  };
+
+  await flow.submitText("我要賣花枝 2 尾 放血冰鎮");
+
+  assert.equal(store.state.room.context.mode, "listing");
+  assert.equal(store.state.room.context.draft.fish_species, "花枝");
+  assert.doesNotMatch(assistantText(), /推薦這些商品/);
+});
+
 test("LLM_GUARD_REJECTED 時前端 fallback，不寫入訊息", async function () {
   aiReply = {
     handled: false,

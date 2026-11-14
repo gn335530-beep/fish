@@ -12,8 +12,9 @@ import { handleText } from "./service.js";
 
 const PLATFORM_INTENTS = ["SELL", "BUY", "MARKET", "CANCEL", "EDIT"];
 const RULE_PLATFORM = [INTENT.SELL, INTENT.BUY, INTENT.MARKET, INTENT.CANCEL];
-const LLM_TEXT_INTENTS = ["CHAT", "WEB"];
+const LLM_TEXT_INTENTS = ["CHAT", "WEB", "PRODUCT_RECOMMEND"];
 const FALLBACK = /你是想賣魚，還是想找魚/;
+const PRODUCT_HINT = /(適合|推薦|以內|預算|乾煎|清蒸|煮湯|刺少|白肉|口感|料理|想找|想要)/;
 const RESET_TEXT = "好，已經重來。想賣魚或找魚都可以直接說。";
 
 function numericInSource(value, source) {
@@ -133,6 +134,12 @@ export async function handleMessage(context, text, user, llm) {
     const merged = mergeListingSlots(ctx, source, llm);
     return { source: "rules", result: await handleText(merged, source, user) };
   }
+
+  const productRecommendation = llm && llm.handled && llmIntent === "PRODUCT_RECOMMEND" &&
+    llm.reply_text &&
+    [INTENT.SELL, INTENT.MARKET, INTENT.CANCEL].indexOf(ruleIntent) === -1 &&
+    (ruleIntent !== INTENT.BUY || PRODUCT_HINT.test(source));
+  if (productRecommendation) return { source: "llm", llm: llm };
 
   if (RULE_PLATFORM.indexOf(ruleIntent) !== -1) {
     if (ruleIntent === INTENT.SELL) {

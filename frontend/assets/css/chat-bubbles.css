@@ -60,17 +60,44 @@
   letter-spacing: .02em;
 }
 
+/* ---------- 資料來源卡 ---------- */
+.fm-card--sources {
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgba(26, 29, 27, .06);
+}
+
+.fm-sources__title {
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: .68rem;
+  letter-spacing: .08em;
+}
+
+.fm-sources__list {
+  margin: 0;
+  padding-left: 1.2em;
+  font-size: .76rem;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.fm-sources__list a { color: var(--accent); text-decoration: underline; }
+
 /* 卡片訊息不套氣泡外框：行情、推薦、協議卡共用同一份重設規則。
    寬度沿用一般訊息的上限，只讓卡片填滿訊息寬度。 */
 .fm-msg--market,
 .fm-msg--product,
-.fm-msg--deal {
+.fm-msg--deal,
+.fm-msg--sources {
   width: 100%;
 }
 
 .fm-msg--market .fm-msg__bubble,
 .fm-msg--product .fm-msg__bubble,
-.fm-msg--deal .fm-msg__bubble {
+.fm-msg--deal .fm-msg__bubble,
+.fm-msg--sources .fm-msg__bubble {
   width: 100%;
   padding: 0;
   border: 0;

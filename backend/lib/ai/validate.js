@@ -2,12 +2,13 @@
 
 const { isPlainObject } = require("./json");
 const guard = require("./guard");
+const evidence = require("./evidence");
 
 const INTENTS = [
   "SELL", "BUY", "MARKET", "CANCEL", "EDIT", "CHAT", "WEB", "PRODUCT_RECOMMEND", "UNKNOWN"
 ];
 const PLATFORM_INTENTS = ["SELL", "BUY", "MARKET", "CANCEL", "EDIT"];
-const REPLY_INTENTS = ["CHAT", "WEB"];
+const REPLY_INTENTS = ["CHAT", "WEB", "PRODUCT_RECOMMEND"];
 const SOURCE_INTENTS = ["WEB"];
 const EDIT_FIELDS = ["fish_species", "quantity", "condition", "photo_url", "price"];
 const MAX_REPLY = 500;
@@ -94,55 +95,51 @@ function sanitizeSlots(raw) {
   return slots;
 }
 
-function sanitizeSources(raw) {
-  if (raw == null) return [];
-  if (!Array.isArray(raw) || raw.length > 3) throw invalidOutput();
-  return raw.map(function (source) {
-    if (!isPlainObject(source)) throw invalidOutput();
-    if (!validString(source.title, 120) || typeof source.url !== "string") throw invalidOutput();
-    let url;
-    try {
-      url = new URL(source.url);
-    } catch (error) {
-      throw invalidOutput();
-    }
-    if (url.protocol !== "http:" && url.protocol !== "https:") throw invalidOutput();
-    return { title: source.title.trim(), url: source.url };
-  });
-}
-
 function normalizeOutput(parsed, options) {
   const slots = sanitizeSlots(parsed.slots);
-  const sources = sanitizeSources(parsed.sources);
-  /* 這一版沒有工具；模型自行填的 tool_results 不能當成數字依據。 */
+  /* 模型提供的 sources 一律丟棄；真正來源由後端 web_search 工具結果產生。 */
   if (parsed.tool_results != null && !isPlainObject(parsed.tool_results)) throw invalidOutput();
 
   let replyText = parsed.reply_text == null ? null : parsed.reply_text;
-  if (replyText !== null) {
-    if (typeof replyText !== "string" || replyText.length > MAX_REPLY) throw invalidOutput();
-    replyText = replyText.trim() || null;
-  }
+  if (replyText !== null && typeof replyText !== "string") throw invalidOutput();
+  if (replyText !== null) replyText = replyText.trim() || null;
+  if (replyText && options.replySuffix) replyText += options.replySuffix;
+  if (replyText !== null && replyText.length > MAX_REPLY) throw invalidOutput();
 
   const platform = PLATFORM_INTENTS.indexOf(parsed.intent) !== -1;
   if (platform) {
-    replyText = null;
-  } else if (parsed.intent === "PRODUCT_RECOMMEND") {
-    /* 商品推薦需要後端工具與商品卡（ticket 05）；目前不寫半套回覆。 */
     replyText = null;
   } else if (REPLY_INTENTS.indexOf(parsed.intent) !== -1 && !replyText) {
     throw invalidOutput();
   }
 
-  const pool = guard.numbersIn(options.userText);
-  guard.assertSlotsGrounded(slots, pool);
-  guard.assertReplyGrounded(replyText, pool, options.userText);
+  const officialText = evidence.officialText(options.toolResults, options.toolNames);
+  const webText = evidence.webText(options.webResults);
+  const slotPool = guard.numbersIn(options.userText).concat(guard.numbersIn(officialText));
+
+  let replyEvidence = officialText;
+  if (parsed.intent === "WEB") replyEvidence = webText;
+  if (parsed.intent === "PRODUCT_RECOMMEND") {
+    replyEvidence = evidence.productsText(options.toolResults && options.toolResults.products);
+  }
+
+  const replyPool = parsed.intent === "WEB"
+    ? guard.numbersIn(webText)
+    : guard.numbersIn(options.userText).concat(guard.numbersIn(replyEvidence));
+  const replyContext = parsed.intent === "WEB"
+    ? webText
+    : options.userText + "\n" + replyEvidence;
+  guard.assertSlotsGrounded(slots, slotPool);
+  guard.assertReplyGrounded(replyText, replyPool, replyContext, {
+    strict: parsed.intent === "WEB"
+  });
 
   return {
     intent: parsed.intent,
     slots: slots,
     reply_text: replyText,
-    sources: platform || SOURCE_INTENTS.indexOf(parsed.intent) === -1 ? [] : sources,
-    tool_results: {}
+    sources: platform || SOURCE_INTENTS.indexOf(parsed.intent) === -1 ? [] : (options.sources || []),
+    tool_results: options.toolResults || {}
   };
 }
 

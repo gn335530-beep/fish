@@ -16,6 +16,7 @@ function bubble(message) {
   const isProduct = message.type === "card" && message.card && message.card.type === "product";
   const isDeal = message.type === "card" && message.card &&
     (message.card.type === "deal" || message.card.type === "deal_cancelled");
+  const isSources = message.type === "card" && message.card && message.card.type === "sources";
   const speaker = isSystem ? "系統" : (isAi ? "小幫手" : (mine ? "我" : (state.room && state.room.peer ? state.room.peer.display_name : "對方")));
   let content;
   if (message.type === "card") {
@@ -28,6 +29,7 @@ function bubble(message) {
 
   return '<div class="fm-msg ' + (mine ? "fm-msg--me" : "fm-msg--other") + (isMarket ? " fm-msg--market" : "") +
     (isProduct ? " fm-msg--product" : "") + (isDeal ? " fm-msg--deal" : "") +
+    (isSources ? " fm-msg--sources" : "") +
     '" data-seq="' + escapeHtml(message.seq) + '">' +
     '<div class="fm-msg__meta">' + escapeHtml(speaker) + ' · ' + escapeHtml(timeOf(message.created_at)) + '</div>' +
     '<div class="fm-msg__bubble">' + content + '</div>' +

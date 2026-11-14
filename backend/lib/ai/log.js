@@ -9,7 +9,8 @@ function logReply(meta) {
     intent: meta.intent || null,
     tokens: meta.tokens || { input: 0, output: 0, total: 0 },
     duration_ms: Number(meta.duration_ms) || 0,
-    error_code: meta.error_code || null
+    error_code: meta.error_code || null,
+    tools: meta.tools || []
   }, meta.extra || {});
   console.info("[ai] " + JSON.stringify(entry));
 }

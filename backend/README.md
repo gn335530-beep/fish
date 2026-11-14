@@ -41,14 +41,20 @@ python -m http.server 8000 --directory frontend
 | `LLM_MODEL` | `gemini-3.5-flash-lite` | 可換模型，不需改程式 |
 | `LLM_TIMEOUT_MS` | `8000` | 一般回覆逾時 |
 | `LLM_HISTORY_LIMIT` | `10` | 送入模型的使用者／助手訊息上限 |
+| `LLM_MAX_TOOL_CALLS` | `2` | 每輪唯讀工具呼叫上限 |
+| `LLM_WEB_SEARCH` | `false` | `true` 且設定 Tavily 金鑰才提供網路搜尋工具 |
+| `TAVILY_API_KEY` | 空 | Tavily 金鑰；缺少時不提供 `web_search` |
+| `LLM_SEARCH_TIMEOUT_MS` | `15000` | 啟用網路搜尋的回合逾時 |
 
 - `POST /api/ai/reply` 只接受助手房與該房參與者；不寫入訊息、不修改 `context`。
 - 後端只送最近對話與白名單 context；電話、Email、身分證與地址會先換成 `[已遮蔽]`，不送頭像或個人檔案。
 - 模型失敗、格式錯誤或平台數字無依據時，端點回 HTTP 200 + `handled:false`；前端安靜回到規則引擎。
-- 平台意圖（賣魚、找魚、行情、取消、修改）只回 slots；AI 文字目前用於 `CHAT`／`WEB`。
-- 這一版沒有工具，`tool_results` 一律空；模型自行產生的商品或數字不會被前端當成平台資料。
-- log 只記 request id、使用者 id、intent、token 數、耗時與錯誤碼，不記訊息內容。
-- 目前是 beta 切片：行情／商品／網路工具、商品推薦、資料來源查詢與配額重試為後續 ticket；免費層內容可能被 Google 用於改善產品。
+- 平台意圖（賣魚、找魚、行情、取消、修改）只回 slots；AI 文字用於 `CHAT`／`WEB`，`PRODUCT_RECOMMEND` 另附商品卡。
+- 唯讀工具：`get_market_price`（官方行情）、`search_products`（公開商品，最多 5 筆）、`web_search`（Tavily basic search）。每輪最多 2 次；模型不能寫入商品、訂單或評價。
+- `tool_results` 只由後端工具產生：`market` 是官方行情資料，`products` 是公開商品；模型自行提供的內容一律忽略。
+- `WEB` 的 `sources` 由 Tavily 結果產生，最多 3 個合法 URL；`LLM_WEB_SEARCH` 關閉時模型不提供此工具。
+- log 只記 request id、使用者 id、intent、token 數、耗時、工具名稱／耗時／錯誤碼，不記訊息或工具結果。
+- 目前是 beta 切片：配額重試 UI 與最終 ADR／beta 文件為後續 ticket；免費層內容可能被 Google 用於改善產品，Tavily 也會收到該次查詢。
 
 ## 目錄
 
@@ -56,7 +62,7 @@ python -m http.server 8000 --directory frontend
 backend/
   server.js       啟動
   app.js          middleware、靜態目錄、路由掛載
-  lib/            auth / store / db-file / messages / units / product-stock / product-pricing / timeouts / cards / quantities / deals / deal-items / deal-cancel / deal-transitions / deal-statuses / profile-room / reviews / conversations / regions / ai/ / market/ / http
+  lib/            auth / store / db-file / messages / units / product-stock / product-pricing / timeouts / cards / quantities / deals / deal-items / deal-cancel / deal-transitions / deal-statuses / profile-room / reviews / conversations / regions / ai/ (含 tools/) / market/ / http
   routes/         auth / users / products / chat / chat-messages / ai / conversation-delete / deals / deal-items / deal-proposal / deal-response / reviews / market / market-catalog / uploads
   scripts/        market-fetch.js（行情 CLI）
   test/           node:test 整合測試（使用暫存資料庫）

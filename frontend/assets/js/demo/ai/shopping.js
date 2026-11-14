@@ -4,7 +4,7 @@ import { listProducts } from "../../api/products.js";
 import { findRegion, normalizeCityName } from "../../shared/regions.js";
 import { ensureCatalog, findCatalogName } from "./species-catalog.js";
 
-function productCard(product) {
+export function productCard(product) {
   return {
     type: "product",
     product_id: product.id,
@@ -23,7 +23,7 @@ function productCard(product) {
   };
 }
 
-function shoppingContext(cards) {
+export function shoppingContext(cards) {
   return {
     mode: "shopping",
     draft: null,

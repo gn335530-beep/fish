@@ -81,7 +81,7 @@
 | 37 | POST | `/api/products/:id/delist` | 登入（擁有者） | ✅ 下架 |
 | 38 | POST | `/api/products/:id/relist` | 登入（擁有者） | ✅ 重新上架 |
 | 39 | DELETE | `/api/products/:id` | 登入（擁有者） | ✅ 硬刪 |
-| 40 | POST | `/api/ai/reply` | 參與者（助手房） | 🟡 Beta：文字回覆、平台意圖 slots 與 fallback |
+| 40 | POST | `/api/ai/reply` | 參與者（助手房） | 🟡 Beta：文字回覆、唯讀工具、平台意圖 slots 與 fallback |
 
 ### 2.1 本版新增／變更的端點
 
@@ -109,7 +109,7 @@
 | GET | `/api/market/quote` | 公開 | 新增：名稱→代碼→價格整合查詢 |
 | GET | `/api/market/prices` | 公開 | 變更：只接受 `code`，支援 `include=history` |
 | GET | `/api/market/markets` | 公開 | 新增：市場對照表 |
-| POST | `/api/ai/reply` | 參與者（助手房） | 新增（beta）：回傳 intent、slots、reply_text 與 sources；失敗一律 200 + `handled:false` |
+| POST | `/api/ai/reply` | 參與者（助手房） | 新增（beta）：回傳 intent、slots、reply_text、sources 與工具結果；失敗一律 200 + `handled:false` |
 
 ## 3. 會員
 
@@ -394,7 +394,7 @@
 
 ### `POST /api/ai/reply`
 
-> **Beta**：LLM 預設關閉；`LLM_ENABLED=true` 且設定 `GEMINI_API_KEY` 才會呼叫外部模型。目前支援一般文字回覆（`CHAT`）、`WEB` 文字與平台意圖 slots；行情／商品／網路工具與配額重試屬後續 ticket。
+> **Beta**：LLM 預設關閉；`LLM_ENABLED=true` 且設定 `GEMINI_API_KEY` 才會呼叫外部模型。支援一般文字回覆（`CHAT`）、`WEB` 文字、平台意圖 slots 與唯讀工具（官方行情、平台商品、Tavily 網路搜尋）。配額重試 UI 屬後續 ticket。
 
 ```json
 { "conversation_id": "conv_...", "message_id": "msg_...",
@@ -417,13 +417,15 @@
 ```
 
 - `intent`：`SELL`／`BUY`／`MARKET`／`CANCEL`／`EDIT`／`CHAT`／`WEB`／`PRODUCT_RECOMMEND`／`UNKNOWN`。
-- 平台意圖（`SELL`、`BUY`、`MARKET`、`CANCEL`、`EDIT`）不產生 `reply_text`，前端交由既有規則完成；`CHAT`／`WEB` 才寫入文字。`WEB` 的 Tavily 查詢與資料來源卡屬 ticket 06；`PRODUCT_RECOMMEND` 需要後端商品工具（ticket 05），目前不寫半套回覆並 fallback 規則。
-- 這一版沒有工具，`tool_results` 一律回空物件；模型自行填寫的內容不會被當成平台數字依據。
-- 平台數字（價格、尾數、行情）必須出現在使用者訊息或工具結果中，否則整則回覆丟棄，回 `handled:false` + `LLM_GUARD_REJECTED`。
-- 失敗一律 HTTP 200：`LLM_DISABLED`、`LLM_NOT_CONFIGURED`、`LLM_TIMEOUT`、`LLM_UPSTREAM_ERROR`、`LLM_INVALID_OUTPUT`、`LLM_GUARD_REJECTED` 為靜默 fallback；`LLM_RATE_LIMITED` 的 `retryable:true`（配額提示按鈕為後續 ticket）。
+- 平台意圖（`SELL`、`BUY`、`MARKET`、`CANCEL`、`EDIT`）不產生 `reply_text`，前端交由既有規則完成；`CHAT`／`WEB`／`PRODUCT_RECOMMEND` 才寫入文字。
+- 唯讀工具：`get_market_price`（官方行情）、`search_products`（公開商品，最多 5 筆）、`web_search`（Tavily basic search）。每輪最多 2 次工具呼叫；模型不能使用寫入工具。工具結果視為不可信資料，平台數字只能來自使用者訊息或後端工具結果。
+- `tool_results` 可含 `market`（既有行情卡資料）與 `products`（公開商品陣列）；`PRODUCT_RECOMMEND` 的文字與商品卡只由工具結果產生，模型不能自行改寫。
+- `sources` 只在 `WEB` 出現，由後端從 `web_search` 結果產生，最多 3 個合法 URL；平台答案與 `CHAT` 不顯示來源。
+- 平台數字（價格、尾數、行情、庫存）必須出現在使用者訊息或工具結果中，否則整則回覆丟棄，回 `handled:false` + `LLM_GUARD_REJECTED`。
+- 失敗一律 HTTP 200：`LLM_DISABLED`、`LLM_NOT_CONFIGURED`、`LLM_TIMEOUT`、`LLM_UPSTREAM_ERROR`、`LLM_INVALID_OUTPUT`、`LLM_GUARD_REJECTED` 為靜默 fallback；`LLM_RATE_LIMITED`、`SEARCH_RATE_LIMITED`、`SEARCH_QUOTA_EXHAUSTED` 的 `retryable:true`（提示與重試按鈕為後續 ticket）。
 - 端點不寫入訊息、不改 `context`；AI 訊息仍由前端呼叫 `POST /api/chat/message` 寫入。
-- 設定：`LLM_ENABLED`（預設 `false`）、`GEMINI_API_KEY`、`LLM_MODEL`（預設 `gemini-3.5-flash-lite`）、`LLM_TIMEOUT_MS`（預設 8000）、`LLM_HISTORY_LIMIT`（預設 10）。
-- log 只記 request id、使用者 id、intent、token 數、耗時與錯誤碼；不記訊息、prompt、搜尋結果或 API key。
+- 設定：`LLM_ENABLED`（預設 `false`）、`GEMINI_API_KEY`、`LLM_MODEL`（預設 `gemini-3.5-flash-lite`）、`LLM_TIMEOUT_MS`（預設 8000）、`LLM_HISTORY_LIMIT`（預設 10）、`LLM_MAX_TOOL_CALLS`（預設 2）、`LLM_WEB_SEARCH`（預設 `false`）、`TAVILY_API_KEY`、`LLM_SEARCH_TIMEOUT_MS`（預設 15000）。
+- log 只記 request id、使用者 id、intent、token 數、耗時、工具名稱／耗時／錯誤碼；不記訊息、prompt、工具結果、搜尋結果或 API key。
 
 ### `PUT /api/conversations/:id/context`
 
@@ -780,9 +782,11 @@
 | `LLM_NOT_CONFIGURED` | 200 | AI 回覆（缺少 `GEMINI_API_KEY`） |
 | `LLM_TIMEOUT` | 200 | AI 回覆（模型逾時，靜默 fallback） |
 | `LLM_UPSTREAM_ERROR` | 200 | AI 回覆（模型 5xx 或連線失敗） |
-| `LLM_INVALID_OUTPUT` | 200 | AI 回覆（JSON、schema、sources 或長度不合格） |
+| `LLM_INVALID_OUTPUT` | 200 | AI 回覆（JSON、schema 或長度不合格） |
 | `LLM_GUARD_REJECTED` | 200 | AI 回覆（平台數字無依據） |
 | `LLM_RATE_LIMITED` | 200 | AI 回覆（模型 429，`retryable:true`） |
+| `SEARCH_RATE_LIMITED` | 200 | AI 回覆（Tavily 429，`retryable:true`） |
+| `SEARCH_QUOTA_EXHAUSTED` | 200 | AI 回覆（Tavily 額度用完，`retryable:true`） |
 
 ## 10. 契約陷阱（前端容易踩）
 
