@@ -4,13 +4,13 @@ const service = require("./service");
 const { resolveCode, resolveName } = require("./catalog-mapping");
 
 async function quoteByCode(code, options) {
-  const resolved = await resolveCode(code);
+  const resolved = await resolveCode(code, options);
   if (resolved.error) return resolved;
   return service.getMarketPrice(Object.assign({}, options, { mapping: resolved.mapping }));
 }
 
 async function quoteByName(name, options) {
-  const resolved = await resolveName(name);
+  const resolved = await resolveName(name, options);
   if (resolved.error) return resolved;
   return service.getMarketPrice(Object.assign({}, options, { mapping: resolved.mapping }));
 }

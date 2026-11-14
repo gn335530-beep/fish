@@ -405,7 +405,7 @@
 - `message_id` 必須屬於該房且由目前使用者送出，否則 404 `MESSAGE_NOT_FOUND`；非文字訊息回 400 `INVALID_MESSAGE`。
 - `context` 必須是純物件，序列化後上限 16 KB，否則 400 `INVALID_CONTEXT`。
 - 後端以 `message_id` 從資料庫讀取使用者文字，不信任前端傳來的訊息內容；`context` 不寫回資料庫。
-- 歷史只取最近 10 則使用者與助手文字／卡片訊息；系統訊息、圖片與完整卡片 JSON 不送入模型，卡片以一行摘要取代。
+- 歷史以 `message_id` 為錨點：只取同一間助手房、序號小於或等於該訊息的使用者與助手文字／卡片訊息，最近 10 則；錨定訊息固定是最後一則 user turn，較新的訊息不送入模型。系統訊息、圖片與完整卡片 JSON 不送入模型，卡片以一行摘要取代。
 - 送出前遮蔽電話（含 `+886` 國際碼與括號區碼）、Email、身分證字號與含行政區的地址；一般文字中的「路」「弄」不觸發遮蔽。不送頭像、個人檔案電話或地址。
 - 成功回 HTTP 200，`data`：
 
@@ -419,7 +419,8 @@
 - `intent`：`SELL`／`BUY`／`MARKET`／`CANCEL`／`EDIT`／`CHAT`／`WEB`／`PRODUCT_RECOMMEND`／`UNKNOWN`。
 - 平台意圖（`SELL`、`BUY`、`MARKET`、`CANCEL`、`EDIT`）不產生 `reply_text`，前端交由既有規則完成；`CHAT`／`WEB`／`PRODUCT_RECOMMEND` 才寫入文字。
 - 唯讀工具：`get_market_price`（官方行情）、`search_products`（公開商品，最多 5 筆）、`web_search`（Tavily basic search）。每輪最多 2 次工具呼叫；模型不能使用寫入工具。工具結果視為不可信資料，平台數字只能來自使用者訊息或後端工具結果。
-- `tool_results` 可含 `market`（既有行情卡資料）與 `products`（公開商品陣列）；`PRODUCT_RECOMMEND` 的文字與商品卡只由工具結果產生，模型不能自行改寫。
+- 每次回覆只有一個請求期限：一般 8 秒（`LLM_TIMEOUT_MS`）；該輪執行 `web_search` 後延長為 15 秒（`LLM_SEARCH_TIMEOUT_MS`）。期限同時套用模型呼叫、每個工具與行情上游；工具開始前剩餘時間已用盡就不再呼叫下游，逾時回 `LLM_TIMEOUT` 靜默 fallback。
+- `tool_results` 可含 `market`（既有行情卡資料）與 `products`（公開商品陣列）；`PRODUCT_RECOMMEND` 的文字與商品卡只由工具結果產生，模型不能自行改寫。回覆未提到查詢範圍時，後端在最終文字後補上「（查詢範圍：縣市）」；加入後會超過 500 字就省略後綴，回覆仍成功。
 - `sources` 只在 `WEB` 出現，由後端從 `web_search` 結果產生，最多 3 個合法 URL；平台答案與 `CHAT` 不顯示來源。
 - 平台數字（價格、尾數、行情、庫存）必須出現在使用者訊息或工具結果中，否則整則回覆丟棄，回 `handled:false` + `LLM_GUARD_REJECTED`。
 - 失敗一律 HTTP 200：`LLM_DISABLED`、`LLM_NOT_CONFIGURED`、`LLM_TIMEOUT`、`LLM_UPSTREAM_ERROR`、`LLM_INVALID_OUTPUT`、`LLM_GUARD_REJECTED` 為靜默 fallback；`LLM_RATE_LIMITED`、`SEARCH_RATE_LIMITED`、`SEARCH_QUOTA_EXHAUSTED` 為 `retryable:true`，前端先跑規則，規則無法處理時才顯示提示與重試按鈕。
@@ -781,8 +782,8 @@
 | `UPSTREAM_UNAVAILABLE` | 200 | 行情（上游失敗且無快取） |
 | `LLM_DISABLED` | 200 | AI 回覆（`LLM_ENABLED` 關閉，`data.error_code`） |
 | `LLM_NOT_CONFIGURED` | 200 | AI 回覆（缺少 `GEMINI_API_KEY`） |
-| `LLM_TIMEOUT` | 200 | AI 回覆（模型逾時，靜默 fallback） |
-| `LLM_UPSTREAM_ERROR` | 200 | AI 回覆（模型 5xx 或連線失敗） |
+| `LLM_TIMEOUT` | 200 | AI 回覆（模型、工具或行情上游逾時，靜默 fallback） |
+| `LLM_UPSTREAM_ERROR` | 200 | AI 回覆（模型或行情上游 5xx／連線失敗） |
 | `LLM_INVALID_OUTPUT` | 200 | AI 回覆（JSON、schema、長度不合格，或模型使用未提供的工具） |
 | `LLM_GUARD_REJECTED` | 200 | AI 回覆（平台數字無依據或工具呼叫超過上限） |
 | `LLM_RATE_LIMITED` | 200 | AI 回覆（模型 429，`retryable:true`） |

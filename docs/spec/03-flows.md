@@ -379,17 +379,17 @@
 1. 前端先以既有 `POST /api/chat/message` 寫入使用者訊息，取得 `message_id`。
 2. 交易房直接結束，不呼叫 AI；只有助手房繼續。
 3. 前端以 `conversation_id`、`message_id` 與目前房間 `context` 呼叫 `POST /api/ai/reply`，等待期間顯示「小幫手正在輸入…」。
-4. 後端驗證房間、訊息與 context，讀取最近 10 則使用者／助手訊息，遮蔽個資後呼叫模型；模型可要求唯讀工具，後端執行後再呼叫模型。每輪最多 2 次工具呼叫，端點不回寫任何訊息或 context。
+4. 後端驗證房間、訊息與 context，以本次 `message_id` 為錨點讀取該訊息（含）以前最近 10 則使用者／助手訊息，遮蔽個資後呼叫模型；較新的訊息不送入模型。模型可要求唯讀工具，後端執行後再呼叫模型。每輪最多 2 次工具呼叫，端點不回寫任何訊息或 context。模型、工具與行情上游共用同一個請求期限。
 5. 前端依 `intent` 處理：
    - `SELL`：slots 合併進上架草稿，交給既有追問、行情卡與售價流程；不寫 LLM 文字。
    - `BUY`／`MARKET`／`CANCEL`／`EDIT`：交給既有導購、行情、取消與修改流程；不寫 LLM 文字。
    - `CHAT`：寫入 `reply_text`；若後端行情工具取得資料，後面附既有行情卡。
    - `WEB`：寫入 `reply_text` 與資料來源卡；`sources` 由後端從 Tavily 結果產生，最多 3 個。
-   - `PRODUCT_RECOMMEND`：寫入推薦理由與既有商品卡；商品只來自後端商品工具，context 進入 `shopping` 並更新 `last_cards`。回覆未提到查詢範圍時，後端補上「（查詢範圍：縣市）」，且仍在 500 字上限內。
+   - `PRODUCT_RECOMMEND`：寫入推薦理由與既有商品卡；商品只來自後端商品工具，context 進入 `shopping` 並更新 `last_cards`。回覆未提到查詢範圍時，後端補上「（查詢範圍：縣市）」；若加入後超過 500 字就省略後綴，回覆仍成功。
    - `UNKNOWN`：先走既有規則；規則無法處理且有 `reply_text` 時才使用。
 6. `handled:false` 時只跑既有規則，不顯示技術錯誤；平台意圖優先，不與 LLM 文字重複。
 7. 可重試錯誤（Gemini 429、Tavily 429、Tavily 額度用完）先跑規則：平台意圖能處理就照常完成，不顯示提示；規則也無法處理時，以 `目前無法上網查詢` 或 `小幫手目前比較忙` 取代一般引導句，並顯示重試按鈕。提示不寫入訊息。
-8. 重試沿用同一個 `message_id` 再呼叫端點，不重寫使用者訊息；重試期間仍顯示「小幫手正在輸入…」。重試成功後提示消失並寫入回覆；仍失敗則保留提示，不自動重試。
+8. 重試沿用同一個 `message_id` 再呼叫端點，不重寫使用者訊息；後端以資料庫訊息為錨點，重試前才送出的新訊息不會進入歷史。重試期間仍顯示「小幫手正在輸入…」。重試成功後提示消失並寫入回覆；仍失敗則保留提示，不自動重試。
 9. 上架流程進行中仍會呼叫端點，但規則優先；`CHAT`／`WEB` 文字忽略，`SELL`／`EDIT`／`CANCEL` 可協助合併或取消。
 
 **規則**
@@ -402,7 +402,7 @@
 - `LLM_ENABLED=false` 或缺少 `GEMINI_API_KEY` 時不呼叫外部服務；`LLM_MODEL`、`LLM_TIMEOUT_MS`（預設 8 秒）、`LLM_HISTORY_LIMIT`、`LLM_MAX_TOOL_CALLS`（預設 2）可用環境變數調整。
 - 網路搜尋預設關閉；`LLM_WEB_SEARCH=true` 且設定 `TAVILY_API_KEY` 才提供 `web_search`。一般知識維持 `CHAT`，不消耗 Tavily credits。
 - log 只記 metadata 與工具名稱／耗時／錯誤碼，不記訊息、prompt、工具結果、搜尋結果或 API key。
-- 一般回覆 8 秒逾時；搜尋工具執行後，後續模型呼叫延長至該回合 15 秒上限（`LLM_SEARCH_TIMEOUT_MS`）。
+- 每次回覆只有一個總期限：一般 8 秒；該回合執行 `web_search` 後延長至 15 秒（`LLM_SEARCH_TIMEOUT_MS`）。期限同時套用模型呼叫、每個工具與行情上游；工具開始前剩餘時間已用盡就不再呼叫下游。行情上游逾時也回 `LLM_TIMEOUT`。
 - 逾時、5xx、格式錯誤與數字防護失敗一律靜默 fallback；`LLM_RATE_LIMITED`、`SEARCH_RATE_LIMITED`、`SEARCH_QUOTA_EXHAUSTED` 才顯示提示與重試。
 - 不自動排隊、不自動重試、不快取搜尋結果；平台功能在配額用完時仍可上架、找魚與查行情。
 - 每間助手房使用自己的 context 與草稿；等待期間送出的其他訊息仍會各自寫入，不遺失。

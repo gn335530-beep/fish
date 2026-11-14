@@ -27,12 +27,14 @@ function inFailureBackoff(state) {
 }
 
 /* 以上游實際回傳筆數推進 $skip，直到空頁或整頁都重複；避免忽略 $skip 的上游無窮迴圈。 */
-async function fetchAllRows(from, to) {
+async function fetchAllRows(from, to, timeoutMs) {
   const rows = [];
   const seen = new Set();
   let skip = 0;
   while (true) {
-    const page = await upstream.fetchRows({ from: from, to: to, skip: skip, top: PAGE_SIZE });
+    const page = await upstream.fetchRows({
+      from: from, to: to, skip: skip, top: PAGE_SIZE, timeoutMs: timeoutMs
+    });
     if (!Array.isArray(page) || page.length === 0) break;
     let added = 0;
     for (const raw of page) {
@@ -49,12 +51,12 @@ async function fetchAllRows(from, to) {
   return rows;
 }
 
-async function runSync() {
+async function runSync(timeoutMs) {
   const attemptedAt = new Date().toISOString();
   const to = todayIso();
   const from = addDays(to, -SYNC_DAYS);
   try {
-    const rawRows = await fetchAllRows(from, to);
+    const rawRows = await fetchAllRows(from, to, timeoutMs);
     const entries = buildEntries(rawRows);
     if (entries.length === 0) {
       throw new Error("官方回傳沒有新鮮代碼");
@@ -71,18 +73,51 @@ async function runSync() {
     return { available: true, status: "ok", cached: false, rows: entries.length };
   } catch (err) {
     const message = err && err.message ? err.message : String(err);
+    const timedOut = Boolean(err && (err.timedOut === true ||
+      err.name === "TimeoutError" || err.name === "AbortError"));
     catalogStore.saveState({
       last_status: "error",
       last_attempt_at: attemptedAt,
       last_error: message,
       last_error_at: attemptedAt
     });
-    return { available: catalogStore.count() > 0, status: "error", cached: false, error: message };
+    return {
+      available: catalogStore.count() > 0,
+      status: "error",
+      cached: false,
+      error: message,
+      timedOut: timedOut
+    };
+  }
+}
+
+function timeoutResult() {
+  return {
+    available: catalogStore.count() > 0,
+    status: "error",
+    cached: true,
+    timedOut: true,
+    error: "官方代碼字典同步逾時"
+  };
+}
+
+async function withDeadline(promise, timeoutMs) {
+  const value = Number(timeoutMs);
+  if (!Number.isFinite(value) || value <= 0) return promise;
+  let timer;
+  const timeout = new Promise(function (resolve) {
+    timer = setTimeout(function () { resolve(timeoutResult()); }, value);
+  });
+  try {
+    return await Promise.race([promise, timeout]);
+  } finally {
+    clearTimeout(timer);
   }
 }
 
 /* 有 24 小時內的字典就不再抓；最近失敗後短時間內也不再重試。 */
-async function ensureCatalog() {
+async function ensureCatalog(options) {
+  const timeoutMs = options && options.timeoutMs;
   const state = catalogStore.getState();
   if (isFresh(state)) {
     return { available: catalogStore.count() > 0, status: state.last_status, cached: true };
@@ -90,14 +125,14 @@ async function ensureCatalog() {
   if (inFailureBackoff(state)) {
     return { available: catalogStore.count() > 0, status: "error", cached: true, error: state.last_error };
   }
-  if (inFlight) return inFlight;
+  if (inFlight) return withDeadline(inFlight, timeoutMs);
 
-  inFlight = runSync();
-  try {
-    return await inFlight;
-  } finally {
-    inFlight = null;
-  }
+  const task = runSync(timeoutMs);
+  inFlight = task;
+  task.then(function () {
+    if (inFlight === task) inFlight = null;
+  });
+  return withDeadline(task, timeoutMs);
 }
 
 function reset() {

@@ -12,20 +12,25 @@ function mappingFromCandidate(candidate) {
   };
 }
 
-async function catalogReady() {
-  const result = await catalogSync.ensureCatalog();
-  return result.available;
+async function catalogReady(options) {
+  return catalogSync.ensureCatalog(options);
 }
 
-async function resolveCode(code) {
-  if (!(await catalogReady())) return { error: "CATALOG_UNAVAILABLE" };
+async function resolveCode(code, options) {
+  const ready = await catalogReady(options);
+  if (!ready.available) {
+    return { error: "CATALOG_UNAVAILABLE", timedOut: ready.timedOut === true };
+  }
   const candidate = search.lookup(String(code)).candidates[0];
   if (!candidate) return { error: "SPECIES_NOT_FOUND" };
   return { mapping: mappingFromCandidate(candidate) };
 }
 
-async function resolveName(name) {
-  if (!(await catalogReady())) return { error: "CATALOG_UNAVAILABLE" };
+async function resolveName(name, options) {
+  const ready = await catalogReady(options);
+  if (!ready.available) {
+    return { error: "CATALOG_UNAVAILABLE", timedOut: ready.timedOut === true };
+  }
   const candidates = search.lookup(name).candidates;
   if (candidates.length === 0) return { error: "SPECIES_NOT_FOUND" };
   if (candidates.length > 1) return { error: "AMBIGUOUS_SPECIES", candidates: candidates };

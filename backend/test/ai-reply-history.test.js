@@ -93,6 +93,23 @@ test("訊息與 context 的電話、Email、身分證與地址先遮蔽再送 pr
   assert.doesNotMatch(serialized, /secret\.jpg|avatar_url|username/);
 });
 
+test("重試錨定原始訊息：同房已有較新訊息時 provider 仍只看到被重試的訊息", async function () {
+  const room = await h.createRoom();
+  const anchor = await h.sendUser(room.id, "第一則要重試的訊息");
+  await h.sendUser(room.id, "後來才送出的新訊息");
+  const before = (await h.messages(room.id)).length;
+
+  const result = await h.reply(room.id, anchor.id);
+  assert.equal(result.body.data.handled, true);
+  assert.equal((await h.messages(room.id)).length, before);
+
+  const input = h.calls[0];
+  const last = input.messages[input.messages.length - 1];
+  assert.equal(last.text, "第一則要重試的訊息");
+  assert.equal(last.role, "user");
+  assert.doesNotMatch(JSON.stringify(input.messages), /後來才送出的新訊息/);
+});
+
 test("一般文字保持原樣，+886 手機、括號區碼市話與里鄰地址先遮蔽", async function () {
   const room = await h.createRoom();
   await h.sendUser(

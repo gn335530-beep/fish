@@ -4,11 +4,11 @@
 
 **Blocked by:** 01（後端 AI service 拆分與錯誤一致化）
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] 最終 `reply_text` 包含查詢範圍後綴時，長度仍不超過 500 字。
-- [ ] 後綴加入後會超限時就省略後綴，回覆仍為 `handled:true`。
-- [ ] 不會因為後綴而產生 `LLM_INVALID_OUTPUT`。
-- [ ] 數字防護與 slots 驗證仍套用在最後文字上，不因省略後綴而放寬。
-- [ ] 端點測試涵蓋接近 500 字的 `PRODUCT_RECOMMEND`，斷言回覆成功且長度合規。
-- [ ] 文件同步 `reply_text` 上限與查詢範圍後綴的處理方式。
+- [x] 最終 `reply_text` 包含查詢範圍後綴時，長度仍不超過 500 字。
+- [x] 後綴加入後會超限時就省略後綴，回覆仍為 `handled:true`。
+- [x] 不會因為後綴而產生 `LLM_INVALID_OUTPUT`。
+- [x] 數字防護與 slots 驗證仍套用在最後文字上，不因省略後綴而放寬。
+- [x] 端點測試涵蓋接近 500 字的 `PRODUCT_RECOMMEND`，斷言回覆成功且長度合規。
+- [x] 文件同步 `reply_text` 上限與查詢範圍後綴的處理方式。

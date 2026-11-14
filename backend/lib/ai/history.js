@@ -43,16 +43,32 @@ function messageLine(message) {
   return oneLine(message.text);
 }
 
-/* 依 seq 取最近 limit 則使用者／助手訊息；系統、圖片與完整卡片 JSON 不送入。 */
-function historyFor(conversationId, limit) {
-  return all("messages")
+function isDialogMessage(message) {
+  return (message.type === "text" || message.type === "card") && message.sender_id !== "system";
+}
+
+/* 依 seq 取錨定訊息（含）以前、同一間助手房的最近 limit 則使用者／助手訊息。 */
+function historyFor(conversationId, limit, anchor) {
+  const anchorSeq = anchor ? Number(anchor.seq) : null;
+  const rows = all("messages")
     .filter(function (message) {
       return String(message.conversation_id) === String(conversationId) &&
-        (message.type === "text" || message.type === "card") &&
-        message.sender_id !== "system";
+        isDialogMessage(message) &&
+        (anchorSeq === null || Number(message.seq) <= anchorSeq);
     })
-    .sort(function (a, b) { return Number(a.seq) - Number(b.seq); })
-    .slice(-limit)
+    .sort(function (a, b) { return Number(a.seq) - Number(b.seq); });
+  let selected = rows.slice(-limit);
+
+  /* 錨定訊息一定要是最後一則 user turn；限制或資料異常造成缺席時補回。 */
+  if (anchor && isDialogMessage(anchor) &&
+    String(anchor.conversation_id) === String(conversationId)) {
+    const anchorId = String(anchor.id);
+    const rest = selected.filter(function (message) { return String(message.id) !== anchorId; });
+    const take = Math.max(0, limit - 1);
+    selected = (take > 0 ? rest.slice(-take) : []).concat(anchor);
+  }
+
+  return selected
     .map(function (message) {
       return {
         role: message.sender_id === "ai" ? "assistant" : "user",

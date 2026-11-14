@@ -17,7 +17,9 @@ function clean(data) {
   if (!data || data.found !== true) {
     return {
       found: false,
-      reason: (data && (data.reason || data.error)) || "NO_TRADE_DATA",
+      reason: data && data.timedOut === true
+        ? "UPSTREAM_TIMEOUT"
+        : ((data && (data.reason || data.error)) || "NO_TRADE_DATA"),
       species_code: (data && data.species_code) || null,
       official_name: (data && data.official_name) || null
     };
@@ -40,14 +42,37 @@ function clean(data) {
   };
 }
 
+async function beforeDeadline(promise, timeoutMs) {
+  const value = Number(timeoutMs);
+  if (!Number.isFinite(value) || value <= 0) return promise;
+  let timer;
+  const timeout = new Promise(function (resolve) {
+    timer = setTimeout(function () {
+      resolve({ found: false, reason: "UPSTREAM_TIMEOUT" });
+    }, value);
+  });
+  try {
+    return await Promise.race([promise, timeout]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function run(args, ctx) {
-  const options = { region: regionOf(args, ctx), includeHistory: true, days: 30, force: true };
+  const options = {
+    region: regionOf(args, ctx),
+    includeHistory: true,
+    days: 30,
+    force: true,
+    timeoutMs: ctx.timeoutMs
+  };
   const code = String(args.species_code || args.code || "").trim();
   const name = String(args.species_name || args.species || "").trim();
   try {
-    const data = code
-      ? await quote.quoteByCode(code, options)
-      : await quote.quoteByName(name, options);
+    const data = await beforeDeadline(
+      code ? quote.quoteByCode(code, options) : quote.quoteByName(name, options),
+      ctx.timeoutMs
+    );
     return clean(data);
   } catch (error) {
     return { found: false, reason: "UPSTREAM_UNAVAILABLE" };

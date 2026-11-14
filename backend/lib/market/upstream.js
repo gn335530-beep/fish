@@ -4,7 +4,7 @@ const { toRocDate } = require("./dates");
 
 const SOURCE = "農業部漁產品交易行情";
 const SOURCE_URL = "https://data.moa.gov.tw/Service/OpenData/FromM/AquaticTransData.aspx";
-const TIMEOUT_MS = 15000;
+const DEFAULT_TIMEOUT_MS = 15000;
 
 let fetcher = null;
 
@@ -26,12 +26,41 @@ function buildUrl(options) {
   return base + (base.indexOf("?") === -1 ? "?" : "&") + parts.join("&");
 }
 
+function timeoutError() {
+  const error = new Error("行情上游逾時");
+  error.name = "TimeoutError";
+  error.timedOut = true;
+  return error;
+}
+
+function requestedTimeout(options) {
+  const value = Number(options && options.timeoutMs);
+  return Number.isFinite(value) && value > 0 ? value : DEFAULT_TIMEOUT_MS;
+}
+
+/* 呼叫端期限同時中止上游請求；注入的 fetcher 不支援 signal 時仍會準時回來。 */
+async function fetchWithTimeout(doFetch, url, timeoutMs) {
+  const controller = new AbortController();
+  let timer;
+  const timeout = new Promise(function (resolve, reject) {
+    timer = setTimeout(function () {
+      controller.abort();
+      reject(timeoutError());
+    }, timeoutMs);
+  });
+  try {
+    return await Promise.race([
+      doFetch(url, { headers: { Accept: "application/json" }, signal: controller.signal }),
+      timeout
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function fetchRows(options) {
   const doFetch = fetcher || globalThis.fetch;
-  const response = await doFetch(buildUrl(options), {
-    headers: { Accept: "application/json" },
-    signal: AbortSignal.timeout(TIMEOUT_MS)
-  });
+  const response = await fetchWithTimeout(doFetch, buildUrl(options), requestedTimeout(options));
   if (response && response.ok === false) {
     throw new Error("行情上游 HTTP " + response.status);
   }

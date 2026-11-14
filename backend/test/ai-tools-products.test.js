@@ -71,7 +71,22 @@ test("PRODUCT_RECOMMEND 的文字與商品只來自工具結果", async function
   assert.equal(data.tool_results.products[0].id, "prd_c");
   assert.equal(data.sources.length, 0);
   assert.match(data.reply_text, /乾煎/);
-  assert.match(data.reply_text, /新北市/);
+  assert.match(data.reply_text, /（查詢範圍：新北市）/);
+});
+
+test("接近 500 字的推薦省略查詢範圍後綴並維持成功", async function () {
+  const longText = "推".repeat(495);
+  h.useSequence([
+    { tool_calls: [searchCall({ species: "石斑", region: "新北市" })] },
+    finalOutput({ reply_text: longText })
+  ]);
+  const run = await askRoom("想找石斑");
+
+  const data = (await h.reply(run.room.id, run.message.id)).body.data;
+  assert.equal(data.handled, true, JSON.stringify(data));
+  assert.equal(data.reply_text, longText);
+  assert.equal(data.reply_text.length, 495);
+  assert.doesNotMatch(data.reply_text, /查詢範圍/);
 });
 
 test("模型改寫商品價格或庫存時被 guard 拒絕", async function () {

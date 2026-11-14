@@ -45,7 +45,7 @@ async function reply(options) {
     timeoutMs: config.timeoutMs,
     system: SYSTEM_PROMPT,
     context: contextSummary(options.context),
-    messages: historyFor(options.conversation.id, config.historyLimit)
+    messages: historyFor(options.conversation.id, config.historyLimit, options.message)
   };
 
   try {

@@ -98,7 +98,11 @@ function normalizeOutput(parsed, options) {
   let replyText = parsed.reply_text == null ? null : parsed.reply_text;
   if (replyText !== null && typeof replyText !== "string") throw invalidOutput();
   if (replyText !== null) replyText = replyText.trim() || null;
-  if (replyText && options.replySuffix) replyText += options.replySuffix;
+  /* 查詢範圍後綴只在加入後仍不超過上限時附加；超限就省略，保留原回覆。 */
+  if (replyText && options.replySuffix &&
+    replyText.length + options.replySuffix.length <= MAX_REPLY) {
+    replyText += options.replySuffix;
+  }
   if (replyText !== null && replyText.length > MAX_REPLY) throw invalidOutput();
 
   const platform = PLATFORM_INTENTS.indexOf(parsed.intent) !== -1;

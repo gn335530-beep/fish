@@ -14,14 +14,19 @@ function collectUsage(usage, raw) {
   usage.total += step.total;
 }
 
+function toolFailure(result) {
+  if (!result || result.found !== false) return null;
+  if (result.reason === "UPSTREAM_TIMEOUT") return llmError("LLM_TIMEOUT");
+  if (result.reason === "UPSTREAM_UNAVAILABLE") return llmError("LLM_UPSTREAM_ERROR");
+  return null;
+}
+
 async function runTool(call, ctx, report) {
   const started = Date.now();
   try {
     const result = await tools.execute(call.name, call.args, ctx);
-    if (call.name === "get_market_price" && result && result.found === false &&
-      result.reason === "UPSTREAM_UNAVAILABLE") {
-      throw llmError("LLM_UPSTREAM_ERROR");
-    }
+    const failureError = toolFailure(result);
+    if (failureError) throw failureError;
     report.toolRuns.push({ name: call.name, duration_ms: Date.now() - started, error_code: null });
     return result;
   } catch (error) {
@@ -51,12 +56,14 @@ async function run(input, options, report) {
   let finalRaw = null;
 
   for (let round = 0; round <= maxToolCalls; round++) {
+    if (Date.now() >= deadline) throw llmError("LLM_TIMEOUT");
     const raw = await provider.generate(Object.assign({}, input, {
       timeoutMs: Math.max(1, deadline - Date.now()),
       tools: options.toolDefs,
       tool_turns: toolTurns
     }));
     collectUsage(report.usage, raw);
+    if (Date.now() > deadline) throw llmError("LLM_TIMEOUT");
     const calls = raw && raw.tool_calls ? raw.tool_calls : [];
     if (!Array.isArray(calls)) throw llmError("LLM_GUARD_REJECTED");
     if (!calls.length) {
@@ -71,9 +78,9 @@ async function run(input, options, report) {
       if (call.name === "web_search") {
         deadline = Math.max(deadline, startedAt + options.searchTimeoutMs);
       }
-      const ctx = Object.assign({}, options.toolCtx, {
-        timeoutMs: Math.max(1, deadline - runStarted)
-      });
+      const remainingMs = deadline - runStarted;
+      if (remainingMs <= 0) throw llmError("LLM_TIMEOUT");
+      const ctx = Object.assign({}, options.toolCtx, { timeoutMs: remainingMs });
       const result = await runTool(call, ctx, report);
       toolTurns.push({ name: call.name, args: call.args || {}, result: result });
       if (call.name === "get_market_price") toolResults.market = result;

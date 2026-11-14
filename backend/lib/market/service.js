@@ -7,15 +7,20 @@ const { todayIso } = require("./dates");
 async function getMarketPrice(options) {
   const mapping = options.mapping;
   const fetchOptions = options.includeHistory
-    ? { date: options.date || todayIso(), days: options.days || 7, force: options.force === true }
-    : { date: options.date, force: options.force === true };
+    ? {
+      date: options.date || todayIso(),
+      days: options.days || 7,
+      force: options.force === true,
+      timeoutMs: options.timeoutMs
+    }
+    : { date: options.date, force: options.force === true, timeoutMs: options.timeoutMs };
   const fetched = await fetchService.ensureFor(mapping, fetchOptions);
 
   const result = query.buildResult(Object.assign({}, options, { mapping: mapping }));
   if (fetched.status === "error" && !result.found) {
     return {
       found: false,
-      reason: "UPSTREAM_UNAVAILABLE",
+      reason: fetched.timedOut ? "UPSTREAM_TIMEOUT" : "UPSTREAM_UNAVAILABLE",
       species_code: mapping.code,
       official_name: mapping.official_name || null,
       is_aquaculture: mapping.is_aquaculture === true

@@ -39,17 +39,17 @@ python -m http.server 8000 --directory frontend
 | `LLM_ENABLED` | `false` | `true`／`1` 才呼叫模型 |
 | `GEMINI_API_KEY` | 空 | 啟用時必填；缺少時回 `LLM_NOT_CONFIGURED` |
 | `LLM_MODEL` | `gemini-3.5-flash-lite` | 可換模型，不需改程式 |
-| `LLM_TIMEOUT_MS` | `8000` | 一般回覆逾時 |
+| `LLM_TIMEOUT_MS` | `8000` | 一次回覆的總期限（含模型、工具與行情上游） |
 | `LLM_HISTORY_LIMIT` | `10` | 送入模型的使用者／助手訊息上限 |
 | `LLM_MAX_TOOL_CALLS` | `2` | 每輪唯讀工具呼叫上限 |
 | `LLM_WEB_SEARCH` | `false` | `true` 且設定 Tavily 金鑰才提供網路搜尋工具 |
 | `TAVILY_API_KEY` | 空 | Tavily 金鑰；缺少時不提供 `web_search` |
-| `LLM_SEARCH_TIMEOUT_MS` | `15000` | 啟用網路搜尋的回合逾時 |
+| `LLM_SEARCH_TIMEOUT_MS` | `15000` | 該回合執行 `web_search` 後延長的總期限 |
 
-- `POST /api/ai/reply` 只接受助手房與該房參與者；不寫入訊息、不修改 `context`。
+- `POST /api/ai/reply` 只接受助手房與該房參與者；不寫入訊息、不修改 `context`。歷史以 `message_id` 為錨點，只送該訊息以前的最近 10 則，較新的訊息不會進入模型。
 - 後端只送最近對話與白名單 context；電話（含 `+886` 與括號區碼）、Email、身分證與含行政區的地址會先換成 `[已遮蔽]`，一般文字中的「路」「弄」不觸發遮蔽，不送頭像或個人檔案。
 - 模型失敗、格式錯誤或平台數字無依據時，端點回 HTTP 200 + `handled:false`；前端安靜回到規則引擎。
-- 配額或 429 回 `retryable:true`；前端先跑規則，平台意圖能處理就照常完成，規則無法處理才顯示提示與重試。重試沿用同一個 `message_id`，不重寫使用者訊息；不自動重試、不排隊、不快取搜尋結果。
+- 配額或 429 回 `retryable:true`；前端先跑規則，平台意圖能處理就照常完成，規則無法處理才顯示提示與重試。重試沿用同一個 `message_id`，不重寫使用者訊息，較新的訊息也不會進入該次歷史；不自動重試、不排隊、不快取搜尋結果。
 - 平台意圖（賣魚、找魚、行情、取消、修改）只回 slots；AI 文字用於 `CHAT`／`WEB`，`PRODUCT_RECOMMEND` 另附商品卡。
 - 唯讀工具：`get_market_price`（官方行情）、`search_products`（公開商品，最多 5 筆）、`web_search`（Tavily basic search）。每輪最多 2 次；模型不能寫入商品、訂單或評價。
 - `tool_results` 只由後端工具產生：`market` 是官方行情資料，`products` 是公開商品；模型自行提供的內容一律忽略。

@@ -82,14 +82,15 @@
 
 ### AI 助手（Beta）
 
-`POST /api/ai/reply` 只接受助手房參與者。請求帶 `conversation_id`、剛寫入的 `message_id` 與前端目前 `context`；後端從資料庫讀取訊息、取最近 10 則使用者／助手歷史、遮蔽個資後呼叫 Gemini。回應 `data` 含 `handled`、`intent`、`slots`、`reply_text`、`sources`、`tool_results`、`error_code` 與 `retryable`。
+`POST /api/ai/reply` 只接受助手房參與者。請求帶 `conversation_id`、要回覆的 `message_id`（初次送出時是最新訊息，重試時是原本的訊息）與前端目前 `context`；後端以 `message_id` 為錨點，從資料庫讀取該訊息（含）以前最近 10 則使用者／助手歷史、遮蔽個資後呼叫 Gemini。回應 `data` 含 `handled`、`intent`、`slots`、`reply_text`、`sources`、`tool_results`、`error_code` 與 `retryable`。
 
 - 端點**不寫訊息、不改 context**；AI 文字仍由前端用 `POST /api/chat/message` 寫入。
 - `SELL`／`BUY`／`MARKET`／`CANCEL`／`EDIT` 不產生 `reply_text`，前端只把 slots 交給既有規則。
 - `CHAT`／`WEB`／`PRODUCT_RECOMMEND` 才寫 LLM 文字；`PRODUCT_RECOMMEND` 另附商品卡並把 context 切到 `shopping`。
 - 唯讀工具：官方行情、平台公開商品（最多 5 筆）、Tavily 網路搜尋（最多 3 個來源）。每輪最多 2 次工具呼叫，工具結果只由後端產生。
 - `WEB` 的 `sources` 由 Tavily 結果產生；平台答案與 `CHAT` 不顯示來源。
-- 逾時、5xx、格式錯誤或平台數字無依據時回 HTTP 200 + `handled:false`，前端安靜 fallback；429／額度錯誤 `retryable:true`。前端先跑規則，規則無法處理才顯示提示與「重試」；重試沿用同一個 `message_id`，不重寫使用者訊息，也不自動重試或快取搜尋結果。
+- 逾時、5xx、格式錯誤或平台數字無依據時回 HTTP 200 + `handled:false`，前端安靜 fallback；429／額度錯誤 `retryable:true`。前端先跑規則，規則無法處理才顯示提示與「重試」；重試沿用同一個 `message_id`，不重寫使用者訊息，較新的訊息也不會進入該次歷史，不自動重試或快取搜尋結果。
+- `LLM_TIMEOUT_MS` 是一次回覆的總期限（預設 8000，含模型、工具與行情上游）；該回合執行 `web_search` 後改用 `LLM_SEARCH_TIMEOUT_MS`（預設 15000）。
 - `LLM_ENABLED` 預設 `false`；另可設 `GEMINI_API_KEY`、`LLM_MODEL`、`LLM_TIMEOUT_MS`、`LLM_HISTORY_LIMIT`、`LLM_MAX_TOOL_CALLS`、`LLM_WEB_SEARCH`、`TAVILY_API_KEY`、`LLM_SEARCH_TIMEOUT_MS`。
 - 交易房不得呼叫此端點；後端也會回 409。
 
