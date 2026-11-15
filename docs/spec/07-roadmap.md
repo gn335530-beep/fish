@@ -11,7 +11,7 @@
 | 商品生命週期 | ✅ | 上架紀錄、下架、重新上架、刪除；公開列表只顯示可購買（ADR 0009） |
 | 圖片上傳與壓縮 | ✅ | `routes/uploads.js`、`demo/upload.js` |
 | 助手房 | ✅ | 可多間、各自 context 與草稿 |
-| 助手房 AI 回覆 | 🟡 Beta 軟啟動（ticket 01–08＋remediation 01–11） | `POST /api/ai/reply`、`CHAT`／`WEB`、平台意圖 slots、行情／商品／網路工具、第一輪強制工具、商品推薦與查無商品文字、資料來源卡、靜默 fallback、等待指示、配額提示與重試；ADR-0011 與 beta 文件已完成，但不承諾正式 SLA |
+| 助手房 AI 回覆 | 🟡 Beta 軟啟動（ticket 01–08＋remediation 01–11＋remediation-2 01–06） | `POST /api/ai/reply`、`CHAT`／`WEB`、平台意圖 slots、行情／商品／網路工具、第一輪強制工具、商品推薦與查無商品文字、資料來源卡、靜默 fallback、等待指示、配額提示與重試；第二輪完成遮蔽、用詞、共用期限、前端重試流程、路由分檔與測試 fixture；ADR-0011 與 beta 文件已完成，但不承諾正式 SLA |
 | 對話清單與收件匣 | ✅ | 新增／切換／刪除任何房間；交易房保留已成交訂單 |
 | 增量訊息與 3 秒輪詢 | ✅ | `after_seq`、`demo/poll.js` |
 | 未讀與已讀 | ✅ | `read_at`、`/read` |
@@ -196,7 +196,7 @@
 ### M6 LLM（Beta，🟡 軟啟動）
 
 **做**：`POST /api/ai/reply`、唯讀工具（官方行情、平台商品、Tavily 網路搜尋）、數字防護、逾時回退規則式、商品推薦卡與資料來源卡、配額提示與重試。
-**現況**：ticket 01–08 與 remediation 01–11 已完成端點、歷史摘要與個資遮蔽、`CHAT`／`WEB` 回覆、等待指示、平台意圖 slots 合併、唯讀行情／商品／網路工具、第一輪強制工具、商品推薦與查無商品文字、商品 count 防護、資料來源卡、配額重試、Gemini 3 工具簽章、token log 與 header 認證，以及 ADR-0011／beta 文件。這是 **soft launch beta**：不強制邀請名單、不承諾 SLA，免費層額度仍是硬限制；不標記為正式完成。
+**現況**：ticket 01–08、remediation 01–11 與 remediation-2 01–06 已完成端點、歷史摘要與個資遮蔽、`CHAT`／`WEB` 回覆、等待指示、平台意圖 slots 合併、唯讀行情／商品／網路工具、第一輪強制工具、商品推薦與查無商品文字、商品 count 防護、資料來源卡、配額重試、Gemini 3 工具簽章、token log 與 header 認證，以及 ADR-0011／beta 文件。第二輪另完成 `+886` 市話與行政區錨點遮蔽、用詞一致、共用期限工具、前端首次送出／重試共用流程、AI 路由分檔與測試 fixture。這是 **soft launch beta**：不強制邀請名單、不承諾 SLA，免費層額度仍是硬限制；不標記為正式完成。
 **前提**：M5 完成。AI 行情工具與防護規則此時才寫入 `03-flows.md`。
 **驗收（已完成的切片）**：`LLM_ENABLED=false` 時沒有外部請求；`CHAT` 寫入 AI 文字；平台意圖不重複寫字；上架流程中 `CHAT` 被忽略；防護失敗不寫訊息；交易房不呼叫 AI；配額錯誤顯示提示與重試，平台功能照常。
 
