@@ -33,14 +33,6 @@ function newestFirst(rows) {
   });
 }
 
-/* 助手房隨時可刪；交易房要全部訂單都已取消（因此也沒有成交歷史）。 */
-function isDeletable(conversation) {
-  if (conversation.type !== "deal") return true;
-  return dealsOf(conversation.id).every(function (deal) {
-    return deal.deal_status === "CANCELLED";
-  });
-}
-
 function orderSummary(deal) {
   const items = itemsOf(deal);
   return {
@@ -92,7 +84,8 @@ function summary(conversation, user) {
     orders: orders,
     last_message: messages.length ? messages[messages.length - 1] : null,
     unread_count: unreadCount(conversation, user.id),
-    deletable: isDeletable(conversation),
+    /* 任何房間都能刪；未成交資料會被清除，已成交訂單留在交易紀錄。 */
+    deletable: true,
     created_at: conversation.created_at,
     last_message_at: conversation.last_message_at || null
   };
@@ -117,7 +110,6 @@ module.exports = {
   isParticipant: isParticipant,
   messagesOf: messagesOf,
   dealsOf: dealsOf,
-  isDeletable: isDeletable,
   orderSummary: orderSummary,
   summary: summary,
   unreadCount: unreadCount,

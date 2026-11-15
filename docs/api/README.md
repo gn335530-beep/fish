@@ -30,7 +30,7 @@
 | `POST` | `/api/products/create` | 登入 | 上架商品；可帶可選 `species_code` |
 | `GET` | `/api/conversations` | 登入 | 房間清單 |
 | `POST` | `/api/conversations/assistant` | 登入 | 每次建立一間新的助手房（登入時若完全沒有才由前端自動呼叫） |
-| `DELETE` | `/api/conversations/{id}` | 參與者 | 刪除助手房或可刪的交易房 |
+| `DELETE` | `/api/conversations/{id}` | 參與者 | 刪除任何房間；交易房保留已成交訂單與評價 |
 | `GET` | `/api/conversations/{id}/messages` | 參與者 | 訊息，支援 `after_seq`、`limit` |
 | `POST` | `/api/chat/message` | 參與者 | 送出訊息 |
 | `POST` | `/api/ai/reply` | 參與者（助手房） | AI 回覆（beta）；需求 `conversation_id`、`message_id`、`context`；失敗回 200 + `handled:false` |
@@ -64,7 +64,7 @@
 
 `GET /api/market/codes` 回傳官方代碼、官方名稱、別名、分類、養殖旗標與最後出現日期。字典在執行時同步最近 30 天官方資料，成功後快取 24 小時；同步失敗時沿用舊字典。查無名稱回 `404 SPECIES_NOT_FOUND`，字典不可用回 `503 CATALOG_UNAVAILABLE`。
 
-交易房由 `POST /api/deals/initiate-channel`（商品）或 `POST /api/deals/initiate-room`（個人資訊）開啟，房間唯一鍵是 `buyer_id + seller_id`，方向固定；同一釣客的多個商品會進同一筆草稿訂單。由個人資訊開啟且對方沒有商品時，房間沒有任何 `deals`，是純聊天房，購物車不顯示。交易房的系統訊息會計入未讀。助手房每次 `POST /api/conversations/assistant` 都是獨立一間，有自己的 `context` 與草稿；`GET /api/conversations` 會回 `deletable` 供收件匣決定是否顯示刪除，純聊天房恆為可刪。
+交易房由 `POST /api/deals/initiate-channel`（商品）或 `POST /api/deals/initiate-room`（個人資訊）開啟，房間唯一鍵是 `buyer_id + seller_id`，只計算現存房間；方向固定，同一釣客的多個商品會進同一筆草稿訂單。由個人資訊開啟且對方沒有商品時，房間沒有任何 `deals`，是純聊天房，購物車不顯示。交易房的系統訊息會計入未讀。助手房每次 `POST /api/conversations/assistant` 都是獨立一間，有自己的 `context` 與草稿；`GET /api/conversations` 的 `deletable` 目前恆為 true。任何房間都能刪；交易房刪除後未成交訂單消失，已成交訂單與評價保留，之後再交易會開新房間。
 
 ### 對話摘要欄位
 
@@ -91,7 +91,7 @@
 - `WEB` 的 `sources` 由 Tavily 結果產生，最多 3 個合法 URL；`CHAT` 永遠 `sources: []`，平台答案也不顯示來源。模型自稱 `CHAT` 但成功使用 `web_search` 時，回應會升級為 `WEB` 並附來源。
 - 逾時、5xx、格式錯誤或平台數字無依據時回 HTTP 200 + `handled:false`，前端安靜 fallback；429／額度錯誤 `retryable:true`。前端先跑規則，規則無法處理才顯示提示與「重試」；重試沿用同一個 `message_id`，不重寫使用者訊息，較新的訊息也不會進入該次歷史，不自動重試或快取搜尋結果。
 - `LLM_TIMEOUT_MS` 是一次回覆的總期限（預設 8000，含模型、工具與行情上游）；該回合執行 `web_search` 後改用 `LLM_SEARCH_TIMEOUT_MS`（預設 15000）。
-- `LLM_ENABLED` 預設 `false`；另可設 `GEMINI_API_KEY`、`LLM_MODEL`、`LLM_TIMEOUT_MS`、`LLM_WEB_SEARCH`、`TAVILY_API_KEY`、`LLM_SEARCH_TIMEOUT_MS`。歷史固定最近 10 則、每輪最多 2 次工具呼叫。
+- 後端啟動時自動載入 `backend/.env`，既有環境變數優先。`LLM_ENABLED` 預設 `false`；另可設 `GEMINI_API_KEY`、`LLM_MODEL`、`LLM_TIMEOUT_MS`、`LLM_WEB_SEARCH`、`TAVILY_API_KEY`、`LLM_SEARCH_TIMEOUT_MS`。歷史固定最近 10 則、每輪最多 2 次工具呼叫。
 - 交易房不得呼叫此端點；後端也會回 409。
 
 ## 3. 商品回應欄位

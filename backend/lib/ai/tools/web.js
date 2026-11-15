@@ -2,6 +2,7 @@
 
 const { redactText } = require("../redact");
 const { llmError } = require("../error");
+const { abortSignal } = require("../../deadline");
 
 const TAVILY_URL = "https://api.tavily.com/search";
 const MAX_RESULTS = 5;
@@ -43,8 +44,8 @@ async function run(args, ctx) {
   const query = redactText(String(args.query || "").trim());
   if (!query) throw llmError("LLM_INVALID_OUTPUT");
 
-  const controller = new AbortController();
-  const timer = setTimeout(function () { controller.abort(); }, ctx.timeoutMs || 15000);
+  const request = abortSignal(ctx.timeoutMs === undefined ? 15000 : ctx.timeoutMs);
+  if (request.signal === null) throw llmError("LLM_TIMEOUT");
   try {
     const response = await fetchImpl()(TAVILY_URL, {
       method: "POST",
@@ -57,7 +58,7 @@ async function run(args, ctx) {
         search_depth: "basic",
         max_results: MAX_RESULTS
       }),
-      signal: controller.signal
+      signal: request.signal
     });
 
     if (response.status === 429) throw llmError("SEARCH_RATE_LIMITED", { retryable: true });
@@ -72,7 +73,7 @@ async function run(args, ctx) {
     if (error && error.name === "AbortError") throw llmError("LLM_TIMEOUT");
     throw error;
   } finally {
-    clearTimeout(timer);
+    request.clear();
   }
 }
 

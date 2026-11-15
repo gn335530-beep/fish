@@ -1,6 +1,7 @@
 /* 房間切換：載入訊息、標記已讀、新增助手房與刪除。 */
 
 import { state, update, emptyProposal, replaceMessages } from "./store.js";
+import { isConfirmed } from "./deal-state.js";
 import * as api from "./api.js";
 
 export function viewOf(room) {
@@ -85,13 +86,31 @@ export function roomLabel(room) {
   return room && room.type === "deal" ? "交易房" : "助手房";
 }
 
+/* 刪除交易房時說清楚哪些資料會消失、哪些會留下。 */
+function deleteConfirmText(room) {
+  if (!room || room.type !== "deal") return "確定刪除" + roomLabel(room) + "？";
+
+  const orders = room.orders || [];
+  const confirmed = orders.some(function (order) {
+    return isConfirmed(order && order.status);
+  }) || [room.order, room.last_order].some(function (order) {
+    return isConfirmed(order && order.status);
+  });
+  if (confirmed) {
+    return "確定刪除交易房？訊息與未成交訂單會移除，已成交訂單與交易紀錄會保留。";
+  }
+  if (orders.length || room.order || room.last_order) {
+    return "確定刪除交易房？訊息與未成交訂單會一併刪除，且無法復原。";
+  }
+  return "確定刪除交易房？訊息會移除。";
+}
+
 /* 刪除目前房間後，切到下一間助手房；沒有就回到空狀態，不自動補一間。 */
 export async function deleteConversation(conversationId, options) {
   const target = (state.conversations || []).find(function (item) {
     return item.id === conversationId;
   }) || (state.room && state.room.id === conversationId ? state.room : null);
-  const label = roomLabel(target);
-  if (!(options && options.confirm === false) && window.confirm && !window.confirm("確定刪除" + label + "？")) {
+  if (!(options && options.confirm === false) && window.confirm && !window.confirm(deleteConfirmText(target))) {
     return false;
   }
   await api.deleteConversation(conversationId);

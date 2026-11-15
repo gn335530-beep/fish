@@ -32,7 +32,7 @@ function room(overrides) {
     created_at: "2026-10-27T00:00:00.000Z",
     last_message_at: "2026-10-27T00:00:00.000Z",
     last_message: { text: "還有貨嗎" },
-    deletable: false
+    deletable: true
   }, overrides || {});
 }
 

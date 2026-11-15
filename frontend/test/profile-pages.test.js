@@ -34,6 +34,7 @@ test("新頁面有 header／footer placeholder、共用 CSS 與正確模組", fu
   assert.match(profilePage, /type="module" src="\.\.\/assets\/js\/pages\/profile\.js/);
   assert.match(profilePage, /assets\/css\/profile-content\.css/);
   assert.match(settingsPage, /type="module" src="\.\.\/assets\/js\/pages\/settings\.js/);
+  assert.doesNotMatch(settingsPage, /地址|set-address/);
 });
 
 test("導覽列「我的」順序為個人資訊、設定、交易紀錄、上架紀錄、登出", function () {

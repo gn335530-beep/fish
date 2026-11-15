@@ -1,3 +1,6 @@
+const { loadEnv } = require("./lib/env");
+
+loadEnv();
 const app = require("./app");
 
 const port = Number(process.env.PORT) || 3001;

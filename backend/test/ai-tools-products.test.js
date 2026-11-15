@@ -33,6 +33,34 @@ test.before(start);
 test.after(stop);
 test.beforeEach(function () { h.reset(); });
 
+test("商品筆數由工具結果的 count 提供", async function () {
+  await create({ fish_species: "測試魚", quantity: 1, price: 100, region: "新北市", photo_url: "/uploads/test-count.jpg" });
+  h.useSequence([
+    { tool_calls: [searchCall({ species: "測試魚" })] },
+    finalOutput({ reply_text: "找到 1 筆測試魚。" })
+  ]);
+  const run = await askRoom("想找測試魚");
+
+  const data = (await h.reply(run.room.id, run.message.id)).body.data;
+  assert.equal(data.handled, true, JSON.stringify(data));
+  assert.equal(data.intent, "PRODUCT_RECOMMEND");
+  assert.match(data.reply_text, /1 筆/);
+});
+
+test("查無商品時轉成 CHAT 文字，不產生商品卡", async function () {
+  h.useSequence([
+    { tool_calls: [searchCall({ species: "不存在魚" })] },
+    finalOutput({ reply_text: "剛好售完。" })
+  ]);
+  const run = await askRoom("想找不存在魚");
+
+  const data = (await h.reply(run.room.id, run.message.id)).body.data;
+  assert.equal(data.handled, true, JSON.stringify(data));
+  assert.equal(data.intent, "CHAT");
+  assert.equal(data.reply_text, "目前沒有符合條件的商品，可以換個魚種、地區或預算再試。");
+  assert.deepEqual(data.tool_results.products, []);
+});
+
 test("商品工具只回公開商品、最多 5 筆且不含地址", async function () {
   patch("products", "prd_a", { location: "新北市瑞芳區鼻頭路 1 號" });
   await create({ fish_species: "石斑", quantity: 1, price: 1200, region: "新北市", photo_url: "/uploads/s1.jpg" });
@@ -54,7 +82,7 @@ test("商品工具只回公開商品、最多 5 筆且不含地址", async funct
   assert.equal(products.some(function (product) { return product.id === "prd_b"; }), false);
   const serialized = JSON.stringify(products);
   assert.doesNotMatch(serialized, /鼻頭路|location|phone|address|username/);
-  assert.equal(h.calls[1].tool_turns[0].result.region, "新北市");
+  assert.equal(h.calls[1].tool_rounds[0].results[0].result.region, "新北市");
 });
 
 test("PRODUCT_RECOMMEND 的文字與商品只來自工具結果", async function () {

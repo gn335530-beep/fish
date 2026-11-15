@@ -36,6 +36,7 @@ async function askRoom() {
 test.before(start);
 test.after(stop);
 test.beforeEach(function () {
+  /* LLM_MAX_TOOL_CALLS 已移除；刻意設成 5 驗證每輪仍固定最多 2 次工具呼叫。 */
   h.reset({ LLM_MAX_TOOL_CALLS: 5 });
   resetMarket();
   seedGrouper();
@@ -67,7 +68,7 @@ test("行情工具使用官方平均價，回傳行情資料並附在 CHAT", asy
 
   assert.deepEqual(h.calls[0].tools.map(function (tool) { return tool.name; }),
     ["get_market_price", "search_products"]);
-  const modelMarket = h.calls[1].tool_turns[0].result;
+  const modelMarket = h.calls[1].tool_rounds[0].results[0].result;
   assert.equal(modelMarket.price_per_taijin, 60);
   assert.equal(modelMarket.trade_date, "2026-10-22");
   assert.equal(modelMarket.region, "高雄市");

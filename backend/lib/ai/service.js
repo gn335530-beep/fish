@@ -2,6 +2,7 @@
 
 const { llmConfig } = require("./config");
 const { SYSTEM_PROMPT } = require("./prompt");
+const { forceToolFor } = require("./classify");
 const { historyFor, contextSummary } = require("./history");
 const { parseOutput, normalizeOutput, finalIntent } = require("./validate");
 const tools = require("./tools");
@@ -9,6 +10,8 @@ const toolLoop = require("./tool-loop");
 const { logReply } = require("./log");
 const { failure, mapError, sourcesOf } = require("./result");
 const { llmError } = require("./error");
+
+const NO_PRODUCTS_TEXT = "目前沒有符合條件的商品，可以換個魚種、地區或預算再試。";
 
 function replySuffix(intent, replyText, scope) {
   return intent === "PRODUCT_RECOMMEND" && replyText &&
@@ -40,6 +43,7 @@ async function reply(options) {
   }
 
   const webEnabled = config.webSearch && Boolean(config.tavilyApiKey);
+  const forceTool = forceToolFor(options.message.text, { webEnabled: webEnabled });
   const input = {
     model: config.model,
     timeoutMs: config.timeoutMs,
@@ -53,6 +57,7 @@ async function reply(options) {
       timeoutMs: config.timeoutMs,
       searchTimeoutMs: config.searchTimeoutMs,
       toolDefs: tools.definitions({ webEnabled: webEnabled }),
+      forceTool: forceTool,
       toolCtx: {
         user: options.user,
         webEnabled: webEnabled,
@@ -61,6 +66,19 @@ async function reply(options) {
     }, report);
 
     const parsed = parseOutput(loop.raw.text);
+    const productToolUsed = report.toolRuns.some(function (run) {
+      return run.name === "search_products" && !run.error_code;
+    });
+    if (parsed.intent === "PRODUCT_RECOMMEND" && !productToolUsed) {
+      throw llmError("LLM_GUARD_REJECTED");
+    }
+    const products = Array.isArray(loop.toolResults.products) ? loop.toolResults.products : [];
+    if (parsed.intent === "PRODUCT_RECOMMEND" && productToolUsed && !products.length) {
+      /* 有查商品但沒有符合結果：回文字，不進商品推薦卡流程。 */
+      parsed.intent = "CHAT";
+      parsed.reply_text = NO_PRODUCTS_TEXT;
+    }
+
     intent = finalIntent(parsed.intent, loop.webResults);
     const scope = loop.productRegion || "全省";
     const output = normalizeOutput(Object.assign({}, parsed, { intent: intent }), {
@@ -72,11 +90,6 @@ async function reply(options) {
       sources: loop.webResults.length ? sourcesOf(loop.webResults) : [],
       replySuffix: replySuffix(intent, parsed.reply_text, scope)
     });
-
-    if (intent === "PRODUCT_RECOMMEND" &&
-      (!Array.isArray(loop.toolResults.products) || !loop.toolResults.products.length)) {
-      throw llmError("LLM_GUARD_REJECTED");
-    }
     if (loop.toolResults.market && loop.toolResults.market.found === false) {
       const text = output.reply_text || "";
       if (text && (/\d/.test(text) || text.indexOf("暫無行情") === -1)) {

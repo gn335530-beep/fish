@@ -23,9 +23,11 @@ function marketText(market) {
 }
 
 function productsText(products) {
-  return JSON.stringify((products || []).map(function (product) {
+  const rows = (products || []).map(function (product) {
     return pick(product, PRODUCT_KEYS);
-  }));
+  });
+  /* count 讓「找到 N 筆」有依據；N 必須等於工具回傳的商品數。 */
+  return JSON.stringify({ count: rows.length, products: rows });
 }
 
 function webText(results) {

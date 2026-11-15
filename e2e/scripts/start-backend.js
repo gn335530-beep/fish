@@ -12,5 +12,8 @@ fs.copyFileSync(SEED_FILE, DB_FILE);
 
 process.env.FISHMATCH_DB = DB_FILE;
 process.env.PORT = process.env.PORT || "3101";
+/* E2E 一律走規則引擎，避免本機 .env 讓測試打真實外部服務。 */
+process.env.LLM_ENABLED = "false";
+process.env.LLM_WEB_SEARCH = "false";
 
 require("../../backend/server.js");

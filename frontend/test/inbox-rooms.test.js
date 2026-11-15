@@ -1,4 +1,4 @@
-/* 收件匣與助手房空狀態：新增 AI 對話、可刪除的 X、最後一間刪掉後不自動補。 */
+/* 收件匣與助手房空狀態：新增 AI 對話、任何房間都能刪、最後一間刪掉後不自動補。 */
 
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -37,24 +37,24 @@ test("助手房可新增 AI 對話，刪除 X 標示助手房", function () {
   assert.doesNotMatch(html, /聊天室/);
 });
 
-test("交易房只有可刪時才顯示 X", function () {
-  const deal = function (deletable) {
-    return room({
+test("交易房一律顯示 X，包含已成交房間", function () {
+  const order = { status: "CONFIRMED", item_count: 1, total_quantity: 1, final_price: 100 };
+  update({
+    conversations: [room({
       id: "conv_deal",
       type: "deal",
       peer: { id: 1, display_name: "陳阿海", username: "0912345678" },
-      order: { status: "CANCELLED", item_count: 1, total_quantity: 1, final_price: 100 },
-      deletable: deletable
-    });
-  };
-  update({ conversations: [deal(true)], room: null });
+      order: null,
+      last_order: order,
+      orders: [order],
+      deletable: true
+    })],
+    room: null
+  });
   const html = renderInbox();
   assert.match(html, /data-action="delete-room"/);
   assert.match(html, /aria-label="刪除交易房"/);
   assert.doesNotMatch(html, /聊天室/);
-
-  update({ conversations: [deal(false)], room: null });
-  assert.doesNotMatch(renderInbox(), /data-action="delete-room"/);
 });
 
 test("沒有任何對話時顯示新增 AI 對話的空狀態", function () {

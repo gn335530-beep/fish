@@ -86,6 +86,8 @@ function reviewStatusOf(deal) {
 }
 
 function reviewCardMessage(deal) {
+  /* 聊天室窗可能已被刪除；已成交訂單仍保留，但不再補評價卡訊息。 */
+  if (!findById("conversations", deal.conversation_id)) return null;
   const status = reviewStatusOf(deal);
   return cardMessage(deal.conversation_id, "system", {
     type: "review",

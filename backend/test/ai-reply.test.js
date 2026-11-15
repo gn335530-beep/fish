@@ -122,6 +122,7 @@ test("log 只記 metadata，不含訊息內容", async function () {
   assert.match(line, /"request_id":"[^"]+"/);
   assert.match(line, /"user_id":2/);
   assert.match(line, /"intent":"CHAT"/);
+  assert.match(line, /"tokens":\{"input":12,"output":8,"total":20\}/);
   assert.match(line, /"duration_ms":\d+/);
   assert.doesNotMatch(line, /吳郭魚|肉質|test-key|prompt/);
 });

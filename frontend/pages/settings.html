@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/svg+xml" href="../assets/images/favicon.svg?v=v8">
 <title>設定 — 一支釣</title>
-<meta name="description" content="一支釣個人設定：編輯頭像、暱稱、電話、縣市、區與詳細地址。">
+<meta name="description" content="一支釣個人設定：編輯頭像、暱稱、電話、縣市與區。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400..700&family=Noto+Serif+TC:wght@600&display=swap" rel="stylesheet">
@@ -49,7 +49,7 @@
   <div class="page-head">
     <span class="eyebrow">Settings</span>
     <h1>設定</h1>
-    <p class="lead">編輯頭像、暱稱、電話與地址；儲存後立即更新導覽列。</p>
+    <p class="lead">編輯頭像、暱稱、電話、縣市與區；儲存後立即更新導覽列。</p>
   </div>
 
   <form class="settings" id="settings-form" novalidate>
@@ -88,14 +88,9 @@
         <div class="field-err" id="e-city">請選擇縣市</div>
       </div>
       <div class="field" id="f-district">
-        <label for="set-district">鄉鎮市區 <span class="opt-tag">選填</span></label>
+        <label for="set-district">區 <span class="opt-tag">選填</span></label>
         <input class="input" type="text" id="set-district" maxlength="20" autocomplete="address-level2" aria-describedby="e-district">
         <div class="field-err" id="e-district">最多 20 字</div>
-      </div>
-      <div class="field" id="f-address">
-        <label for="set-address">詳細地址 <span class="opt-tag">選填</span></label>
-        <input class="input" type="text" id="set-address" maxlength="100" autocomplete="street-address" aria-describedby="e-address">
-        <div class="field-err" id="e-address">最多 100 字</div>
       </div>
     </section>
 

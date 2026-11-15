@@ -29,7 +29,6 @@ export function validateSettings(input, regions) {
 
   if (!normalizeCity(values.city, regions)) errors.city = "請選擇縣市";
   if (String(values.district || "").trim().length > 20) errors.district = "最多 20 字";
-  if (String(values.address_line || "").trim().length > 100) errors.address_line = "最多 100 字";
 
   return { valid: Object.keys(errors).length === 0, errors: errors };
 }
@@ -51,7 +50,6 @@ export function updatePayload(input, avatarUrl, regions) {
     phone: normalizePhone(values.phone),
     avatar_url: avatarUrl || "",
     city: normalizeCity(values.city, regions),
-    district: String(values.district || "").trim(),
-    address_line: String(values.address_line || "").trim()
+    district: String(values.district || "").trim()
   };
 }

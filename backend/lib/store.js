@@ -64,21 +64,37 @@ function nextCode(collection, prefix) {
   return base + pad3(max + 1);
 }
 
-/* 商品硬刪後仍不重用 ID：每日流水號另存於 counters，只保留數字。 */
-function nextProductCode() {
+/* 硬刪後仍不重用 ID：每日流水號另存於 counters，只保留數字。 */
+function nextStableCode(collection, prefix) {
   const day = todayCode();
-  const base = "prd_" + day + "_";
-  const existingMax = all("products").reduce(function (m, row) {
+  const base = prefix + "_" + day + "_";
+  const existingMax = all(collection).reduce(function (m, row) {
     const id = String(row.id || "");
     if (id.indexOf(base) !== 0) return m;
     return Math.max(m, Number(id.slice(base.length)) || 0);
   }, 0);
-  const key = "products_" + day;
+  const key = collection + "_" + day;
   const counter = findById("counters", key);
   const next = Math.max(existingMax, Number(counter && counter.value) || 0) + 1;
   if (counter) patch("counters", key, { value: next });
   else insert("counters", { id: key, value: next });
   return base + pad3(next);
+}
+
+function nextProductCode() {
+  return nextStableCode("products", "prd");
+}
+
+/* 硬刪房間時把當日計數器推到至少該序號，避免舊資料引用被新 ID 撞上。 */
+function bumpStableCode(collection, prefix, id) {
+  const base = prefix + "_" + todayCode() + "_";
+  const text = String(id || "");
+  if (text.indexOf(base) !== 0) return;
+  const key = collection + "_" + todayCode();
+  const counter = findById("counters", key);
+  const next = Math.max(Number(text.slice(base.length)) || 0, Number(counter && counter.value) || 0);
+  if (counter) patch("counters", key, { value: next });
+  else insert("counters", { id: key, value: next });
 }
 
 function nextNumericId(collection) {
@@ -104,7 +120,9 @@ module.exports = {
   patch: patch,
   remove: remove,
   nextCode: nextCode,
+  nextStableCode: nextStableCode,
   nextProductCode: nextProductCode,
+  bumpStableCode: bumpStableCode,
   nextNumericId: nextNumericId,
   nextSeq: nextSeq
 };

@@ -41,7 +41,7 @@ async function runTool(call, ctx, report) {
 
 /* report 由 service 建立，成功或失敗都拿得到工具紀錄與 token 數供 log 使用。 */
 async function run(input, options, report) {
-  const toolTurns = [];
+  const toolRounds = [];
   const toolResults = {};
   let webResults = [];
   const startedAt = Date.now();
@@ -51,10 +51,15 @@ async function run(input, options, report) {
 
   for (let round = 0; round <= MAX_TOOL_CALLS; round++) {
     if (Date.now() >= deadline) throw llmError("LLM_TIMEOUT");
+    /* 強制工具只用在第一輪；工具結果回來後讓模型自由輸出 JSON。 */
+    const toolConfig = !toolRounds.length && options.forceTool
+      ? { functionCallingConfig: { mode: "ANY", allowedFunctionNames: [options.forceTool] } }
+      : undefined;
     const raw = await provider.generate(Object.assign({}, input, {
       timeoutMs: Math.max(1, deadline - Date.now()),
       tools: options.toolDefs,
-      tool_turns: toolTurns
+      tool_rounds: toolRounds,
+      toolConfig: toolConfig
     }));
     collectUsage(report.usage, raw);
     if (Date.now() > deadline) throw llmError("LLM_TIMEOUT");
@@ -67,7 +72,9 @@ async function run(input, options, report) {
 
     const remaining = MAX_TOOL_CALLS - report.toolRuns.length;
     if (remaining <= 0) throw llmError("LLM_GUARD_REJECTED");
-    for (const call of calls.slice(0, remaining)) {
+    const roundCalls = calls.slice(0, remaining);
+    const roundResults = [];
+    for (const call of roundCalls) {
       const runStarted = Date.now();
       if (call.name === "web_search") {
         deadline = Math.max(deadline, startedAt + options.searchTimeoutMs);
@@ -76,9 +83,9 @@ async function run(input, options, report) {
       if (remainingMs <= 0) throw llmError("LLM_TIMEOUT");
       const ctx = Object.assign({}, options.toolCtx, { timeoutMs: remainingMs });
       const result = await runTool(call, ctx, report);
-      toolTurns.push({
+      roundResults.push({
         name: call.name,
-        args: call.args || {},
+        id: call.id,
         result: tools.modelResult(call.name, result)
       });
       if (call.name === "get_market_price") toolResults.market = result;
@@ -90,6 +97,17 @@ async function run(input, options, report) {
         webResults = webResults.concat(result.results || []);
       }
     }
+    toolRounds.push({
+      calls: roundCalls.map(function (call) {
+        return {
+          name: call.name,
+          args: call.args || {},
+          id: call.id,
+          thoughtSignature: call.thoughtSignature
+        };
+      }),
+      results: roundResults
+    });
     if (calls.length > remaining) throw llmError("LLM_GUARD_REJECTED");
   }
   if (!finalRaw) throw llmError("LLM_GUARD_REJECTED");

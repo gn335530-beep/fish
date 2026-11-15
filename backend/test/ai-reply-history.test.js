@@ -16,6 +16,7 @@ const CHAT = {
 
 test.before(start);
 test.after(stop);
+/* LLM_HISTORY_LIMIT 已移除；刻意設成 30 驗證歷史仍固定只取 10 則。 */
 test.beforeEach(function () { h.reset({ LLM_HISTORY_LIMIT: 30 }); h.useJson(CHAT); });
 
 test("歷史只取最近 10 則使用者／助手訊息，卡片以一行摘要取代", async function () {

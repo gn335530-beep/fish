@@ -1,4 +1,4 @@
-/* 設定頁：登入限定，一次儲存頭像、暱稱、電話與地址；成功後同步本機會員與導覽列。 */
+/* 設定頁：登入限定，一次儲存頭像、暱稱、電話、縣市與區；成功後同步本機會員與導覽列。 */
 
 import {
   validateSettings, avatarHTML, updatePayload, normalizeCity, normalizePhone
@@ -13,7 +13,6 @@ const FIELDS = {
   phone: { field: "f-phone", error: "e-phone" },
   city: { field: "f-city", error: "e-city" },
   district: { field: "f-district", error: "e-district" },
-  address_line: { field: "f-address", error: "e-address" },
   avatar_url: { field: "f-avatar", error: "e-avatar" }
 };
 
@@ -28,8 +27,7 @@ function values() {
     display_name: el("set-name").value,
     phone: el("set-phone").value,
     city: el("set-city").value,
-    district: el("set-district").value,
-    address_line: el("set-address").value
+    district: el("set-district").value
   };
 }
 
@@ -70,7 +68,6 @@ function fillForm(user) {
   el("set-name").value = user.nick || "";
   el("set-phone").value = user.phone || "";
   el("set-district").value = user.district || "";
-  el("set-address").value = user.addressLine || "";
   fillCities(user);
   avatarUrl = user.avatarUrl || "";
   renderPreview();

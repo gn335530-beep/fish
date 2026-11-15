@@ -4,6 +4,7 @@ const upstream = require("./upstream");
 const catalogStore = require("./catalog-store");
 const { buildEntries } = require("./catalog-normalize");
 const { addDays, todayIso } = require("./dates");
+const deadline = require("../deadline");
 
 const TTL_MS = 24 * 3600 * 1000;
 const FAILURE_BACKOFF_MS = 60 * 1000;
@@ -101,20 +102,6 @@ function timeoutResult() {
   };
 }
 
-async function withDeadline(promise, timeoutMs) {
-  const value = Number(timeoutMs);
-  if (!Number.isFinite(value) || value <= 0) return promise;
-  let timer;
-  const timeout = new Promise(function (resolve) {
-    timer = setTimeout(function () { resolve(timeoutResult()); }, value);
-  });
-  try {
-    return await Promise.race([promise, timeout]);
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
 /* 有 24 小時內的字典就不再抓；最近失敗後短時間內也不再重試。 */
 async function ensureCatalog(options) {
   const timeoutMs = options && options.timeoutMs;
@@ -125,14 +112,16 @@ async function ensureCatalog(options) {
   if (inFailureBackoff(state)) {
     return { available: catalogStore.count() > 0, status: "error", cached: true, error: state.last_error };
   }
-  if (inFlight) return withDeadline(inFlight, timeoutMs);
+  if (inFlight) return deadline.race(inFlight, timeoutMs, timeoutResult());
 
-  const task = runSync(timeoutMs);
-  inFlight = task;
-  task.then(function () {
-    if (inFlight === task) inFlight = null;
-  });
-  return withDeadline(task, timeoutMs);
+  return deadline.race(function () {
+    const task = runSync(timeoutMs);
+    inFlight = task;
+    task.then(function () {
+      if (inFlight === task) inFlight = null;
+    });
+    return task;
+  }, timeoutMs, timeoutResult());
 }
 
 function reset() {

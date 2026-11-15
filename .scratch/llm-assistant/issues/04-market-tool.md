@@ -18,3 +18,4 @@
 ## Comments
 
 - 2026-11-14：新增 `lib/ai/tools/` 與服務端工具迴圈，`LLM_MAX_TOOL_CALLS` 預設 2；`get_market_price` 包裝既有行情服務，行情資料只從工具結果進入 `tool_results.market`。CHAT 文字後由前端附行情卡；工具結果與模型文字都受數字防護。log 加入工具名稱、耗時與錯誤碼，不含結果內容。測試見 `backend/test/ai-tools-market.test.js`、`frontend/test/ai-tool-cards.test.js`。
+- 2026-11-15：後續 remediation ticket 10 已移除 `LLM_MAX_TOOL_CALLS`；工具呼叫固定最多 2 次，不再有環境變數。

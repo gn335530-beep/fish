@@ -100,10 +100,11 @@
 - LLM 使用 Google AI Studio 免費層（Gemini Developer API），預設模型為 `gemini-3.5-flash-lite`，可用 `LLM_MODEL` 更換。
 - 網路搜尋使用 Tavily 免費層（每月 1,000 credits，basic search 每次 1 credit）；不使用 Google Search grounding，也不使用 Vertex AI。
 - 不需要 `gcloud`、ADC 或 Google Cloud 專案；需要 `GEMINI_API_KEY` 與 `TAVILY_API_KEY`。
+- 後端啟動時自動載入 `backend/.env`；既有環境變數優先。
 - 主要開關：
   - `LLM_ENABLED`：預設關閉；關閉時助手完全走規則引擎。
   - `LLM_WEB_SEARCH`：預設關閉；關閉時不呼叫 Tavily，只能回答一般知識與平台資料。
-  - `LLM_MODEL`、`LLM_TIMEOUT_MS`（一般 8,000）、`LLM_SEARCH_TIMEOUT_MS`（有搜尋 15,000）、`LLM_HISTORY_LIMIT`（10）、`LLM_MAX_TOOL_CALLS`（2）。
+  - `LLM_MODEL`、`LLM_TIMEOUT_MS`（一般 8,000）、`LLM_SEARCH_TIMEOUT_MS`（有搜尋 15,000）；歷史固定 10 則、每輪最多 2 次工具呼叫，沒有環境變數可調。
 - 缺少金鑰、金鑰無效或 `LLM_ENABLED` 關閉時，AI 回覆端點回傳未處理，前端直接走規則引擎；不顯示錯誤。
 - 免費層內容可能被 Google 用於改善產品；這件事只寫在 README 與 beta 說明，不在 UI 顯示。
 
@@ -157,6 +158,8 @@ LLM 只能使用三個唯讀工具；後端執行工具，模型不會直接接�
 | `web_search` | Tavily | basic search、最多 3～5 個結果；查詢先遮蔽個資；每次 1 credit；回傳標題、URL、摘要；失敗回對應錯誤碼 |
 
 - 明確的行情意圖仍走既有行情規則與行情卡；`get_market_price` 供 LLM 在一般比較、跨魚種或規則無法解析的問題中取得官方數字，不能取代既有行情流程。
+- 第一輪依問題類型強制工具：時效性／天氣／新聞 → `web_search`；商品推薦／找魚 → `search_products`；平台意圖與一般知識不強制。工具結果回來後恢復自動輸出 JSON。
+- `search_products` 回空陣列時，後端把 `PRODUCT_RECOMMEND` 轉成 `CHAT`，只回目前沒有符合條件的商品，不產生商品卡；商品筆數 `N` 的依據是工具回傳的 `count`。
 - 每輪最多 2 次工具呼叫，避免模型迴圈；這是技術護欄，不是使用額度。
 - 平台商品與行情永遠優先於網路資料；網路結果不得覆蓋平台價格、庫存或行情。
 - 工具輸出視為不可信資料；system prompt 明確要求模型不得遵從工具結果中的指令，也不得因網頁內容執行平台動作。
@@ -311,7 +314,7 @@ LLM 只能使用三個唯讀工具；後端執行工具，模型不會直接接�
 
 - **Beta 定位**：這是 soft launch，不是正式上線。免費層內容可能被 Google 用於改善產品；Tavily 每月 1,000 credits；不強制名單；任何註冊使用者都能使用。若之後要公開放大，應先補 allowlist、使用額度與 UI 隱私提示。
 - **遷移路徑**：若 beta 驗證成功，優先升級到 AI Studio 付費層＋Google Search grounding，或 Vertex AI＋Google Search grounding；web search adapter 與 LLM provider 應保持可替換，讓遷移只改設定與認證。
-- **前置條件**：申請 AI Studio API key 與 Tavily API key，放進後端環境變數；不需要 `gcloud` 或 Google Cloud 專案。
+- **前置條件**：申請 AI Studio API key 與 Tavily API key，放進 `backend/.env`（後端啟動時自動載入，既有環境變數優先）；不需要 `gcloud` 或 Google Cloud 專案。
 - **安全**：所有工具唯讀；網路內容不可信；平台數字嚴格防護；不記錄訊息內容；API key 只在後端。
 - **文件同步**：Roadmap M6 標記 beta；新增 ADR-0011；更新 API、流程、UI、資料模型、GLOSSARY 與各 README。
 - **命名**：使用者可見名稱維持「小幫手」「助手房」「交易房」「商品」「行情」「資料來源」；避免在 UI 使用「LLM」「Tavily」「Gemini」等實作名詞。

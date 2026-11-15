@@ -55,7 +55,7 @@
 | `review_count` | number | 評價數 |
 | `no_show_count` | number | 臨時放鳥次數 |
 | `is_blacklisted` | boolean | 未到 3 次後為真 |
-| `city` / `district` / `address_line` | string | 地址三段；`city` 註冊時必填，區與詳細地址可後補 |
+| `city` / `district` / `address_line` | string | 地址三段；`city` 註冊時必填，區可後補；`address_line` 保留舊資料，設定頁不再編輯 |
 | `seller_terms_accepted_at` | string \| null | 第一次販賣確認時間；有值就永久跳過法規告知 |
 | `bank_code` / `bank_account` / `bank_account_name` | string | 不對外回傳 |
 
@@ -114,7 +114,7 @@
 | `context` | object \| null | ✓ | `null` |
 | `read_at` | `{ [userId]: ISO }` | ✓ | ✓ |
 | `cleared_before_seq` | number | ✓（可缺） | 不使用 |
-| `archived` | boolean | ✓ | ✓ |
+| `archived` | boolean | ✓（legacy，未使用） | ✓（legacy，未使用） |
 | `created_at` / `last_message_at` | string | ✓ | ✓ |
 
 **助手房 `context`**
@@ -136,15 +136,17 @@
 
 `pending_sale_text` 只在法規告知期間有值；`awaiting_consent` 標記等待法規確認。確認後用它進入 listing、兩者清空；取消後也清空。`seller_terms_accepted_at` 一旦寫入永久有效，不因法規文字更新重問。`market_quoted` 標記這份草稿已送過行情卡；魚種改變時重設。`choosing_edit` 標記正在等待使用者選擇要修改的草稿欄位。
 
-**唯一鍵**：助手房＝`id`（每位使用者可以有多間，不再用 `type + user_ids[0]`）；交易房＝`type + buyer_id + seller_id`。
+**唯一鍵**：助手房＝`id`（每位使用者可以有多間，不再用 `type + user_ids[0]`）；交易房＝`type + buyer_id + seller_id`，只計算現存房間。刪除交易房後，同一組人可再建立新房間，舊房間不會被重用。
 
 交易房方向固定：`buyer_id` 是按「聊聊」或「洽談購買」的人，`seller_id` 是被看／商品擁有者。同一組人反向交易會是另一間房，不共用同一間。由個人資訊開啟的交易房可以沒有任何 `deals` 資料列；沒有商品時是純聊天房。
 
 **刪除**：
 
-- 助手房任何時候都能刪；刪除時移除該房訊息與 context。
-- 沒有任何 `deals` 的純聊天房任何時候都能刪；刪除時移除該房訊息。
-- 有訂單的交易房必須沒有任何 `CONFIRMED` 訂單，且目前訂單 `CANCELLED`（或全部訂單皆 `CANCELLED`）時才能刪；刪除時一併移除訊息、`deals` 與 `deal_items`，交易紀錄不再顯示。有成交歷史或進行中（`DRAFT`／`PENDING_REVIEW`／`NEGOTIATING`）不可刪。
+- 助手房任何時候都能刪；刪除時移除該房訊息與 `context`。
+- 交易房任何時候都能刪；刪除時一律移除房間與訊息。
+- 沒有 `CONFIRMED` 訂單時，該房所有 `deals` 與項目一併刪除，交易紀錄不再顯示。
+- 有 `CONFIRMED` 訂單時，只保留已成交訂單與項目；未成交訂單（`DRAFT`／`PENDING_REVIEW`／`NEGOTIATING`／`CANCELLED`）與項目刪除。保留訂單的 `conversation_id` 指向已刪除房間，只是歷史參考。
+- 房間 ID 由 `counters` 的每日流水號產生，硬刪後不重用，避免舊訂單誤指到新房間。
 
 **權限**：一律以 `user_ids` 判斷。`buyer_id` / `seller_id` 只作為語意標籤與查詢用，**必須與 `user_ids` 一致**（ADR 0001）。
 
@@ -264,7 +266,7 @@
 - `cancelled_by` 是使用者 id；逾時取消時是 `"system"`。
 - `review_status` 由評價端點維護，成交後插入的評價卡會跟著更新。
 - 重新發起會在同一間房建立新的 `DRAFT`，複製原項目快照並以目前可售為數量上限；原 `CANCELLED` 訂單保留。
-- **刪除**：交易房刪除時，該房所有 `deals` 與其項目一起移除；房內須無 `CONFIRMED` 歷史，且目前訂單為 `CANCELLED`（或全部訂單皆 `CANCELLED`）才可刪。商品的可售／已售不受影響（取消時已釋放保留）。
+- **刪除**：交易房刪除時，未成交訂單（`DRAFT`／`PENDING_REVIEW`／`NEGOTIATING`／`CANCELLED`）與其項目一起移除；`CONFIRMED` 訂單、項目與評價保留，供交易紀錄使用。保留訂單的 `conversation_id` 可能指向已刪除房間。商品的可售／已售不受影響。
 
 ## 8. `reviews`
 
@@ -363,9 +365,10 @@
 | 資料 | 保留 | 說明 |
 | --- | --- | --- |
 | 商品 | 可刪除 | 硬刪 `products`；照片與訂單快照保留 |
-| 成交訂單、評價 | 永久 | 成交訂單不可刪 |
-| 商品流水號計數器 | 永久 | 只存數字；硬刪商品後仍保留，避免 ID 重用 |
-| AI 對話、已取消交易房 | 可刪除 | 助手房任何時候；交易房須無 `CONFIRMED` 歷史且目前訂單 `CANCELLED`；刪除交易房一併刪該房所有訂單與項目 |
+| 成交訂單 | 永久 | 刪除交易房時保留；商品已售量與雙方成交筆數不回滾 |
+| 評價 | 永久 | 刪除交易房不刪評價 |
+| 商品／房間流水號計數器 | 永久 | 只存數字；硬刪後仍保留，避免 ID 重用 |
+| 助手房、交易房與訊息 | 可刪除 | 任何房間任何時候都能刪；交易房保留已成交訂單，其餘訂單與項目刪除 |
 | 行情 | 90 天 | 目標；只快取被查詢過的魚種與日期 |
 | 行情原始檔 | 7 天 | 目標 |
 | 種子圖片 | 永久 | `backend/seed-assets/`，進版控；掛在 `/uploads` 下供 seed 資料使用 |

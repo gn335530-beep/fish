@@ -1,4 +1,4 @@
-/* 收件匣：助手房與交易房清單；可新增助手房，刪除可刪的房間。 */
+/* 收件匣：助手房與交易房清單；可新增助手房，刪除任何房間。 */
 
 import { state } from "../store.js";
 import { roomLabel } from "../rooms.js";

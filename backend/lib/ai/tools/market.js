@@ -2,6 +2,7 @@
 
 const quote = require("../../market/quote-service");
 const { regionOf } = require("./region");
+const deadline = require("../../deadline");
 
 const HISTORY_KEYS = ["trade_date", "price_per_kg", "price_per_taijin"];
 const MODEL_KEYS = [
@@ -62,22 +63,6 @@ function clean(data) {
   };
 }
 
-async function beforeDeadline(promise, timeoutMs) {
-  const value = Number(timeoutMs);
-  if (!Number.isFinite(value) || value <= 0) return promise;
-  let timer;
-  const timeout = new Promise(function (resolve) {
-    timer = setTimeout(function () {
-      resolve({ found: false, reason: "UPSTREAM_TIMEOUT" });
-    }, value);
-  });
-  try {
-    return await Promise.race([promise, timeout]);
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
 async function run(args, ctx) {
   const options = {
     region: regionOf(args, ctx),
@@ -89,10 +74,9 @@ async function run(args, ctx) {
   const code = String(args.species_code || args.code || "").trim();
   const name = String(args.species_name || args.species || "").trim();
   try {
-    const data = await beforeDeadline(
-      code ? quote.quoteByCode(code, options) : quote.quoteByName(name, options),
-      ctx.timeoutMs
-    );
+    const data = await deadline.race(function () {
+      return code ? quote.quoteByCode(code, options) : quote.quoteByName(name, options);
+    }, ctx.timeoutMs, { found: false, reason: "UPSTREAM_TIMEOUT" });
     return clean(data);
   } catch (error) {
     return { found: false, reason: "UPSTREAM_UNAVAILABLE" };

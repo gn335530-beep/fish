@@ -1,6 +1,7 @@
 /* 農業部漁產品交易行情上游：只組查詢與取回原始列，正規化留給 fetch 服務。 */
 
 const { toRocDate } = require("./dates");
+const deadline = require("../deadline");
 
 const SOURCE = "農業部漁產品交易行情";
 const SOURCE_URL = "https://data.moa.gov.tw/Service/OpenData/FromM/AquaticTransData.aspx";
@@ -33,34 +34,28 @@ function timeoutError() {
   return error;
 }
 
+/* 只有未指定期限時才套預設值；0 或負數代表期限已用盡，交給 race 直接回逾時。 */
 function requestedTimeout(options) {
-  const value = Number(options && options.timeoutMs);
-  return Number.isFinite(value) && value > 0 ? value : DEFAULT_TIMEOUT_MS;
+  const value = options && options.timeoutMs;
+  if (value === undefined || value === null) return DEFAULT_TIMEOUT_MS;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : DEFAULT_TIMEOUT_MS;
 }
 
 /* 呼叫端期限同時中止上游請求；注入的 fetcher 不支援 signal 時仍會準時回來。 */
-async function fetchWithTimeout(doFetch, url, timeoutMs) {
-  const controller = new AbortController();
-  let timer;
-  const timeout = new Promise(function (resolve, reject) {
-    timer = setTimeout(function () {
-      controller.abort();
-      reject(timeoutError());
-    }, timeoutMs);
-  });
-  try {
-    return await Promise.race([
-      doFetch(url, { headers: { Accept: "application/json" }, signal: controller.signal }),
-      timeout
-    ]);
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
 async function fetchRows(options) {
   const doFetch = fetcher || globalThis.fetch;
-  const response = await fetchWithTimeout(doFetch, buildUrl(options), requestedTimeout(options));
+  const controller = new AbortController();
+  const response = await deadline.race(function () {
+    return doFetch(buildUrl(options), {
+      headers: { Accept: "application/json" },
+      signal: controller.signal
+    });
+  }, requestedTimeout(options), timeoutError());
+  if (response && response.timedOut === true) {
+    controller.abort();
+    throw response;
+  }
   if (response && response.ok === false) {
     throw new Error("行情上游 HTTP " + response.status);
   }

@@ -1,7 +1,7 @@
 /* 對話：助手房建立、對話清單、訊息讀取。 */
 
 const express = require("express");
-const { all, insert, patch, nextCode, nextSeq } = require("../lib/store");
+const { all, insert, patch, nextCode, nextStableCode, nextSeq } = require("../lib/store");
 const { requireUser } = require("../lib/auth");
 const { isParticipant, messagesOf, summary, requireRoom } = require("../lib/conversations");
 const { sweepExpired } = require("../lib/timeouts");
@@ -25,7 +25,7 @@ router.post("/api/conversations/assistant", requireUser, function (req, res) {
   const user = req.user;
   const now = new Date().toISOString();
   const conversation = insert("conversations", {
-    id: nextCode("conversations", "conv"),
+    id: nextStableCode("conversations", "conv"),
     type: "assistant",
     user_ids: [user.id],
     buyer_id: null,

@@ -89,25 +89,39 @@ test("刪除目前房間後切換到另一間助手房", async function () {
   assert.equal(state.room.id, "conv_2");
 });
 
-test("刪除提問依房間類型顯示助手房或交易房", async function () {
+test("刪除提問依房間狀態說明哪些資料會保留", async function () {
   const asked = [];
   const original = window.confirm;
   window.confirm = function (message) { asked.push(message); return false; };
 
-  try {
-    conversations = [ROOM1];
-    update({ conversations: conversations, room: ROOM1 });
-    await rooms.deleteConversation("conv_1");
+  async function ask(room) {
+    conversations = [room];
+    update({ conversations: conversations, room: room });
+    await rooms.deleteConversation(room.id);
+  }
 
-    const deal = Object.assign({}, ROOM1, { id: "conv_deal", type: "deal", order: null });
-    conversations = [deal];
-    update({ conversations: conversations, room: deal });
-    await rooms.deleteConversation("conv_deal");
+  try {
+    await ask(ROOM1);
+    await ask(Object.assign({}, ROOM1, {
+      id: "conv_pure", type: "deal", order: null, last_order: null, orders: []
+    }));
+    await ask(Object.assign({}, ROOM1, {
+      id: "conv_draft", type: "deal", order: { status: "DRAFT" }, orders: [{ status: "DRAFT" }]
+    }));
+    await ask(Object.assign({}, ROOM1, {
+      id: "conv_done", type: "deal", order: null,
+      last_order: { status: "CONFIRMED" }, orders: [{ status: "CONFIRMED" }]
+    }));
   } finally {
     window.confirm = original;
   }
 
-  assert.deepEqual(asked, ["確定刪除助手房？", "確定刪除交易房？"]);
+  assert.deepEqual(asked, [
+    "確定刪除助手房？",
+    "確定刪除交易房？訊息會移除。",
+    "確定刪除交易房？訊息與未成交訂單會一併刪除，且無法復原。",
+    "確定刪除交易房？訊息與未成交訂單會移除，已成交訂單與交易紀錄會保留。"
+  ]);
 });
 
 test("刪到最後一間助手房後回到空狀態，不自動建立", async function () {

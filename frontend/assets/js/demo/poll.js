@@ -69,8 +69,31 @@ export async function syncOpenRoom() {
 async function tick() {
   if (running || !state.user) return;
   running = true;
+  const openRoomId = state.room ? state.room.id : null;
   try {
-    await refreshRooms();
+    const conversations = await refreshRooms();
+    /* 對方刪除房間後，離開已不存在的房間，避免後續訊息請求一直 404。
+       只處理同一個房間；輪詢期間切換到新房時不要誤清。 */
+    if (openRoomId && state.room && state.room.id === openRoomId &&
+      !(conversations || []).some(function (room) {
+        return room.id === openRoomId;
+      })) {
+      const notice = "這間對話已被刪除";
+      update({
+        room: null,
+        messages: [],
+        lastSeq: 0,
+        deal: null,
+        view: "inbox",
+        notice: notice
+      });
+      if (window.setTimeout) {
+        window.setTimeout(function () {
+          if (state.notice === notice) update({ notice: "" });
+        }, 4000);
+      }
+      return;
+    }
     await syncOpenRoom();
     if (state.room && state.view !== "inbox") await refreshMessages();
   } catch (error) {

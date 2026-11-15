@@ -1,6 +1,6 @@
 /* 交易房與訂單：找或建立唯一的房間與草稿、對外樣貌與協議狀態。 */
 
-const { all, findById, insert, patch, nextCode } = require("./store");
+const { all, findById, insert, patch, nextCode, nextStableCode } = require("./store");
 const { productAvailability } = require("./product-stock");
 const { itemsOf, itemsTotal, addSnapshotBatch } = require("./deal-items");
 const { systemMessage } = require("./messages");
@@ -20,7 +20,7 @@ function findConversation(buyerId, sellerId) {
 
 function createConversation(buyerId, sellerId, now) {
   return insert("conversations", {
-    id: nextCode("conversations", "conv"),
+    id: nextStableCode("conversations", "conv"),
     type: "deal",
     user_ids: [Number(buyerId), Number(sellerId)],
     buyer_id: Number(buyerId),

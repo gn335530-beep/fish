@@ -103,7 +103,7 @@
 | POST | `/api/deals/items/batch` | 登入（買家） | 新增：一次加入多個商品，只留一則系統訊息 |
 | POST | `/api/deals/reinitiate` | 登入（買家） | 新增：取消後複製最後一筆訂單為新草稿 |
 | POST | `/api/deals/cancel` | 參與者 | 變更：接受自由文字 `note` |
-| DELETE | `/api/conversations/:id` | 參與者 | 新增：刪除助手房、純聊天房或已取消交易房 |
+| DELETE | `/api/conversations/:id` | 參與者 | 變更：任何房間都能刪；交易房保留已成交訂單 |
 | GET | `/api/reviews` | 公開 | 變更：支援 `role`、`sort`、`rating`、`offset`、`limit`；回角色摘要、分布與商品照片 |
 | GET | `/api/market/codes` | 公開 | 新增：官方代碼字典與候選查詢 |
 | GET | `/api/market/quote` | 公開 | 新增：名稱→代碼→價格整合查詢 |
@@ -347,7 +347,7 @@
 
 交易房方向固定：`buyer_id` 是按「聊聊」或「洽談購買」的人，`seller_id` 是被看／商品擁有者；反向交易是另一間房。由個人資訊開啟且對方沒有商品時，房間沒有任何 `deals`，是純聊天房；`order`、`last_order`、`orders` 皆為 `null` 或空陣列。
 
-未讀數不含自己送出的訊息。助手房的系統訊息不算未讀；交易房的系統訊息（開房、加購通知）算未讀。`deletable` 表示這間房目前是否可刪（助手房恆為 true；沒有任何訂單的純聊天房為 true；有訂單的交易房需全部訂單皆已取消）。
+未讀數不含自己送出的訊息。助手房的系統訊息不算未讀；交易房的系統訊息（開房、加購通知）算未讀。`deletable` 目前恆為 true；保留欄位供前端決定是否顯示刪除入口。任何房間都能刪，交易房刪除後未成交訂單會消失，已成交訂單留在交易紀錄。
 
 **副作用**：會先做一次逾時掃描（`sweepExpired`），所以讀取清單可能讓過期的協議轉為 `CANCELLED` 並留下系統訊息。
 
@@ -406,7 +406,7 @@
 - `context` 必須是純物件，序列化後上限 16 KB，否則 400 `INVALID_CONTEXT`。
 - 後端以 `message_id` 從資料庫讀取使用者文字，不信任前端傳來的訊息內容；`context` 不寫回資料庫。
 - 歷史以 `message_id` 為錨點：只取同一間助手房、序號小於或等於該訊息的使用者與助手文字／卡片訊息，最近 10 則；錨定訊息固定是最後一則 user turn，較新的訊息不送入模型。系統訊息、圖片與完整卡片 JSON 不送入模型，卡片以一行摘要取代。
-- 送出前遮蔽電話（含 `+886` 國際碼與括號區碼）、Email、身分證字號與含行政區的地址；一般文字中的「路」「弄」不觸發遮蔽。不送頭像、個人檔案電話或地址。
+- 送出前遮蔽手機、市話（含 `+886` 國際碼、括號或分隔區碼、4 碼區碼）、Email、身分證字號與具行政區錨點的地址；地址必須有縣市或鄉鎮市區錨點，街名不得以虛詞開頭，因此「台北市區的網路」「新北市的路況」「弄一桌好菜」不觸發遮蔽。不送頭像、個人檔案電話或地址。
 - 成功回 HTTP 200，`data`：
 
 ```jsonc
@@ -419,6 +419,8 @@
 - `intent`：`SELL`／`BUY`／`MARKET`／`CANCEL`／`EDIT`／`CHAT`／`WEB`／`PRODUCT_RECOMMEND`／`UNKNOWN`。
 - 平台意圖（`SELL`、`BUY`、`MARKET`、`CANCEL`、`EDIT`）不產生 `reply_text`，前端交由既有規則完成；`CHAT`／`WEB`／`PRODUCT_RECOMMEND` 才寫入文字。
 - 唯讀工具：`get_market_price`（官方行情）、`search_products`（公開商品，最多 5 筆）、`web_search`（Tavily basic search）。每輪最多 2 次工具呼叫；模型不能使用寫入工具。工具結果視為不可信資料，平台數字只能來自使用者訊息或後端工具結果。
+- 第一輪依問題類型強制工具：時效性／天氣／新聞 → `web_search`；商品推薦／找魚 → `search_products`；平台意圖與一般知識不強制。工具結果回來後恢復自動輸出 JSON。
+- `search_products` 回空陣列時，後端把 `PRODUCT_RECOMMEND` 轉成 `CHAT`，只回目前沒有符合條件的商品，不產生商品卡。商品筆數 `N` 的依據是工具回傳的 `count`。
 - 每次回覆只有一個請求期限：一般 8 秒（`LLM_TIMEOUT_MS`）；該輪執行 `web_search` 後延長為 15 秒（`LLM_SEARCH_TIMEOUT_MS`）。期限同時套用模型呼叫、每個工具與行情上游；工具開始前剩餘時間已用盡就不再呼叫下游，逾時回 `LLM_TIMEOUT` 靜默 fallback。
 - `tool_results` 可含 `market`（給前端行情卡的完整官方資料，含 7／30 交易日歷史、品質旗標、抓取時間與來源 URL）與 `products`（公開商品陣列）；`PRODUCT_RECOMMEND` 的文字與商品卡只由工具結果產生，模型不能自行改寫。回覆未提到查詢範圍時，後端在最終文字後補上「（查詢範圍：縣市）」；加入後會超過 500 字就省略後綴，回覆仍成功。
 - 模型看到的 `get_market_price` 結果只有是否查到、官方代碼、官方名稱、地區、交易日期、每公斤與每台斤平均價與養殖標記；歷史、品質、抓取時間與來源 URL 不進模型，也不進數字防護證據池。
@@ -427,7 +429,7 @@
 - 失敗一律 HTTP 200：`LLM_DISABLED`、`LLM_NOT_CONFIGURED`、`LLM_TIMEOUT`、`LLM_UPSTREAM_ERROR`、`LLM_INVALID_OUTPUT`、`LLM_GUARD_REJECTED` 為靜默 fallback；`LLM_RATE_LIMITED`、`SEARCH_RATE_LIMITED`、`SEARCH_QUOTA_EXHAUSTED` 為 `retryable:true`，前端先跑規則，規則無法處理時才顯示提示與重試按鈕。
 - 端點不寫入訊息、不改 `context`；AI 訊息仍由前端呼叫 `POST /api/chat/message` 寫入。
 - 重試由前端按鈕觸發，沿用同一個 `message_id`；後端不保存重試狀態、不自動重試、不排隊、不快取搜尋結果。
-- 設定：`LLM_ENABLED`（預設 `false`）、`GEMINI_API_KEY`、`LLM_MODEL`（預設 `gemini-3.5-flash-lite`）、`LLM_TIMEOUT_MS`（預設 8000）、`LLM_WEB_SEARCH`（預設 `false`）、`TAVILY_API_KEY`、`LLM_SEARCH_TIMEOUT_MS`（預設 15000）。歷史固定最近 10 則、每輪最多 2 次工具呼叫，沒有環境變數可調。
+- 設定：後端啟動時自動載入 `backend/.env`，既有環境變數優先。`LLM_ENABLED`（預設 `false`）、`GEMINI_API_KEY`、`LLM_MODEL`（預設 `gemini-3.5-flash-lite`）、`LLM_TIMEOUT_MS`（預設 8000）、`LLM_WEB_SEARCH`（預設 `false`）、`TAVILY_API_KEY`、`LLM_SEARCH_TIMEOUT_MS`（預設 15000）。歷史固定最近 10 則、每輪最多 2 次工具呼叫，沒有環境變數可調。
 - log 只記 request id、使用者 id、intent、token 數、耗時、工具名稱／耗時／錯誤碼；不記訊息、prompt、工具結果、搜尋結果或 API key。
 
 ### `PUT /api/conversations/:id/context`
@@ -455,9 +457,12 @@
 刪除一間對話。權限：參與者。
 
 - **助手房**：任何時候都能刪；刪除該房訊息與 `context`。
-- **交易房**：只有在房內沒有任何 `CONFIRMED` 訂單，且目前訂單 `deal_status = "CANCELLED"`（或全部訂單皆 `CANCELLED`）時才能刪；刪除時一併移除訊息、該房所有 `deals` 與訂單項目，交易紀錄不再顯示。有成交歷史或進行中（`DRAFT`／`PENDING_REVIEW`／`NEGOTIATING`）訂單時，回 409 `DEAL_NOT_DELETABLE`。
-- 回 200 `{ deleted: true }`。
-- 錯誤：404 `CONVERSATION_NOT_FOUND`、403 `FORBIDDEN`、409 `DEAL_NOT_DELETABLE`。
+- **交易房**：任何時候都能刪；一律移除 `conversations` 資料列與訊息。
+  - 房內沒有 `CONFIRMED` 訂單：所有 `deals` 與訂單項目一併移除，交易紀錄不再顯示。
+  - 房內有 `CONFIRMED` 訂單：保留已成交訂單、項目與評價；未成交（`DRAFT`／`PENDING_REVIEW`／`NEGOTIATING`／`CANCELLED`）訂單與項目移除。保留訂單的 `conversation_id` 指向已刪除房間，只是歷史參考。
+  - 刪除後再交易會建立新房間；房間 ID 不重用。
+- 回 200 `{ deleted: true, kept_orders: N }`；`kept_orders` 是保留的已成交訂單數。
+- 錯誤：404 `CONVERSATION_NOT_FOUND`、403 `FORBIDDEN`。
 
 ## 6. 上傳
 
@@ -516,7 +521,7 @@
 { "product_id": "prd_...", "quantity": 2 }
 ```
 
-回 200：`{ conversation, deal, product }`。行為：以 `product.seller_id` 找或建立交易房（唯一鍵 `buyer_id + seller_id`）→ 找或建立草稿訂單 → 加入或累加項目 → 房間轉 `HUMAN` → 插入系統訊息（第一次開房時另有「已進入交易洽談」）。再次洽談同一位釣客的另一個商品時，一律加入或累加，不清空既有草稿；舊客戶端若帶 `replace_items` 也忽略。`conversation` 是對話摘要（含 `peer.username` 完整電話與 `order`），`deal` 是草稿訂單，項目為商品快照。
+回 200：`{ conversation, deal, product }`。行為：以 `product.seller_id` 找或建立交易房（唯一鍵 `buyer_id + seller_id`，只找現存房間）→ 找或建立草稿訂單 → 加入或累加項目 → 房間轉 `HUMAN` → 插入系統訊息（第一次開房時另有「已進入交易洽談」）。刪除交易房後再洽談會建立新房間。再次洽談同一位釣客的另一個商品時，一律加入或累加，不清空既有草稿；舊客戶端若帶 `replace_items` 也忽略。`conversation` 是對話摘要（含 `peer.username` 完整電話與 `order`），`deal` 是草稿訂單，項目為商品快照。
 
 錯誤：404 `PRODUCT_NOT_FOUND`、400 `INVALID_QUANTITY`、400 `OWN_PRODUCT`（自己的商品）、409 `INSUFFICIENT_QUANTITY`（附 `product_id`、`available`、`in_draft`）。
 
@@ -752,7 +757,6 @@
 | `MESSAGE_TOO_LONG` | 400 | 訊息 |
 | `AI_NOT_ACTIVE` | 409 | 訊息 |
 | `NOT_ASSISTANT_ROOM` | 409 | context、clear、訊息 |
-| `DEAL_NOT_DELETABLE` | 409 | 刪除交易房（有成交歷史或非 CANCELLED） |
 | `INVALID_CONTEXT` | 400 | 訊息 |
 | `MISSING_IMAGE` / `INVALID_IMAGE` / `UNSUPPORTED_TYPE` / `EMPTY_IMAGE` | 400 | 上傳 |
 | `IMAGE_TOO_LARGE` | 413 | 上傳 |
@@ -819,7 +823,7 @@
 | 行情卡走勢要帶 `include=history`；沒有 `summary` 端點 | 用 `days=7` 或 `days=30`（最近 7／30 個交易日） |
 | `is_aquaculture: true` | 行情查詢成功時回行情卡；卡片不顯示「養殖價格」標記 |
 | 助手房可以有多間 | 每間有自己的 `context` 與草稿；不要假設只有一間 |
-| 交易房只有 `CANCELLED` 能刪 | 房內必須沒有 `CONFIRMED` 歷史；刪除會一併移除該房所有訂單與項目 |
+| 交易房任何狀態都能刪 | 未成交訂單與訊息會移除；已成交訂單與評價保留，之後再交易開新房間 |
 | 商品不保存行情 | 商品卡與推薦卡不顯示行情；上架行情卡才是行情顯示處 |
 | 取消上架會刪除目前 AI 對話 | 前端要先確認，再呼叫 `DELETE /api/conversations/:id`；刪除成功後立即建立並開啟新的助手房 |
 | `seller_terms_accepted_at` 有值就永久跳過法規告知 | 不要每次賣魚都重問或重送 consent |
