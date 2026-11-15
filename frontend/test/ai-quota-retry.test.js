@@ -2,42 +2,28 @@
 
 import test from "node:test";
 import assert from "node:assert/strict";
-import { USER, IDLE, createMessageFactory, installApi } from "./ai-fixtures.js";
+import { IDLE, setupAiTest } from "./ai-fixtures.js";
 
-let requests = [];
 let replies = [];
 let notifyError = null;
 
-const messageOf = createMessageFactory();
-
-installApi({
-  messageOf: messageOf,
-  onRequest: function (path, body) {
-    requests.push({ path: path, body: body });
-  },
+const ai = await setupAiTest({
   handle: async function (path) {
     if (path === "/api/ai/reply") return { data: replies.shift() };
     if (path.indexOf("/messages") !== -1) return { data: [] };
     if (path.indexOf("/read") !== -1) return { data: {} };
     throw new Error("unexpected path: " + path);
-  }
-});
-
-const store = await import("../assets/js/demo/store.js");
-const flow = await import("../assets/js/demo/flow.js");
-const rooms = await import("../assets/js/demo/rooms.js");
-const assistantView = await import("../assets/js/demo/views/assistant.js");
-
-flow.initFlow({
-  render: function () {},
-  scrollEnd: function () {},
-  scrollToBatch: function () {},
+  },
   notify: function (error) { notifyError = error; }
 });
 
-function aiPaths() {
-  return requests.filter(function (entry) { return entry.path === "/api/ai/reply"; });
-}
+const store = ai.store;
+const flow = ai.flow;
+const requests = ai.requests;
+const aiPaths = ai.aiPaths;
+const assistantTexts = ai.assistantTexts;
+const rooms = await import("../assets/js/demo/rooms.js");
+const assistantView = await import("../assets/js/demo/views/assistant.js");
 
 function userPaths() {
   return requests.filter(function (entry) {
@@ -45,29 +31,14 @@ function userPaths() {
   });
 }
 
-function assistantTexts() {
-  return store.state.messages.filter(function (message) {
-    return message.sender_id === "ai";
-  }).map(function (message) { return message.text; });
-}
-
 function html() {
   return assistantView.renderAssistant();
 }
 
 test.beforeEach(function () {
-  messageOf.reset();
-  requests = [];
+  ai.reset();
   replies = [];
   notifyError = null;
-  store.update({
-    user: USER,
-    room: { id: "conv_1", type: "assistant", context: IDLE },
-    messages: [],
-    lastSeq: 0,
-    aiPending: 0,
-    aiRetry: null
-  });
 });
 
 test("平台意圖能由規則完成時，可重試錯誤不顯示提示", async function () {

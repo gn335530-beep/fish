@@ -2,12 +2,21 @@
 
 import test from "node:test";
 import assert from "node:assert/strict";
-import { USER_CITY, IDLE, createMessageFactory, installApi } from "./ai-fixtures.js";
+import { USER_CITY, setupAiTest } from "./ai-fixtures.js";
 
-let requests = [];
 let aiReply = null;
 
-const messageOf = createMessageFactory();
+const ai = await setupAiTest({
+  user: USER_CITY,
+  handle: async function (path) {
+    if (path === "/api/ai/reply") return { data: aiReply };
+    if (path === "/api/products/prd_2") return { data: product("prd_2", "黑鯛") };
+    throw new Error("unexpected path: " + path);
+  }
+});
+
+const store = ai.store;
+const flow = ai.flow;
 
 function product(id, name) {
   return {
@@ -25,39 +34,9 @@ function product(id, name) {
   };
 }
 
-installApi({
-  messageOf: messageOf,
-  onRequest: function (path, body) {
-    requests.push({ path: path, body: body });
-  },
-  handle: async function (path) {
-    if (path === "/api/ai/reply") return { data: aiReply };
-    if (path === "/api/products/prd_2") return { data: product("prd_2", "黑鯛") };
-    throw new Error("unexpected path: " + path);
-  }
-});
-
-const store = await import("../assets/js/demo/store.js");
-const flow = await import("../assets/js/demo/flow.js");
-
-flow.initFlow({
-  render: function () {},
-  scrollEnd: function () {},
-  scrollToBatch: function () {},
-  notify: function (error) { throw error; }
-});
-
 test.beforeEach(function () {
-  messageOf.reset();
-  requests = [];
+  ai.reset();
   aiReply = { handled: false };
-  store.update({
-    user: USER_CITY,
-    room: { id: "conv_1", type: "assistant", context: IDLE },
-    messages: [],
-    lastSeq: 0,
-    aiPending: 0
-  });
 });
 
 test("PRODUCT_RECOMMEND 寫入文字與商品卡，context 進入 shopping", async function () {

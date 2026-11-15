@@ -32,10 +32,8 @@ function offerRetry(room, exchange, notice) {
   });
 }
 
-/* 使用者送出訊息後呼叫；可重試錯誤由這裡決定是否顯示提示。 */
-export async function sendAiReply(room, message, userText, user, runReplies) {
-  const exchange = { messageId: message.id, userText: userText };
-  update({ aiRetry: null });
+/* 首次送出與重試共用：請求、提示判斷、交付與等待計數都在這裡。 */
+async function attempt(room, exchange, user, runReplies, clearRetry) {
   adjustAiPendingReplies(1);
   try {
     const routed = await requestReply(room, { id: exchange.messageId }, exchange.userText, user);
@@ -44,28 +42,29 @@ export async function sendAiReply(room, message, userText, user, runReplies) {
       offerRetry(room, exchange, notice);
       return;
     }
+    if (clearRetry) update({ aiRetry: null });
     await deliver(routed, room, runReplies);
   } finally {
     adjustAiPendingReplies(-1);
   }
 }
 
+/* 重試前置條件只在這裡判斷：有重試狀態、同房、沒有其他等待中的回覆。 */
+function canRetry(retry, room) {
+  return Boolean(retry) && Boolean(room) && retry.roomId === room.id &&
+    Number(state.aiPending || 0) === 0;
+}
+
+/* 使用者送出訊息後呼叫；可重試錯誤由這裡決定是否顯示提示。 */
+export async function sendAiReply(room, message, userText, user, runReplies) {
+  update({ aiRetry: null });
+  await attempt(room, { messageId: message.id, userText: userText }, user, runReplies, false);
+}
+
 /* 重試沿用原本的 message_id，不重寫使用者訊息。 */
 export async function retryAiReply(runReplies) {
   const retry = state.aiRetry;
   const room = state.room;
-  if (!retry || !room || retry.roomId !== room.id || state.aiPending > 0) return;
-  adjustAiPendingReplies(1);
-  try {
-    const routed = await requestReply(room, { id: retry.messageId }, retry.userText, state.user);
-    const notice = retryableNotice(routed);
-    if (notice) {
-      offerRetry(room, retry, notice);
-      return;
-    }
-    update({ aiRetry: null });
-    await deliver(routed, room, runReplies);
-  } finally {
-    adjustAiPendingReplies(-1);
-  }
+  if (!canRetry(retry, room)) return;
+  await attempt(room, retry, state.user, runReplies, true);
 }

@@ -2,18 +2,11 @@
 
 import test from "node:test";
 import assert from "node:assert/strict";
-import { USER, IDLE, createMessageFactory, installApi } from "./ai-fixtures.js";
+import { setupAiTest } from "./ai-fixtures.js";
 
-let requests = [];
 let aiReply = null;
 
-const messageOf = createMessageFactory();
-
-installApi({
-  messageOf: messageOf,
-  onRequest: function (path, body) {
-    requests.push({ path: path, body: body });
-  },
+const ai = await setupAiTest({
   handle: async function (path) {
     if (path === "/api/ai/reply") return { data: aiReply };
     if (path.indexOf("/api/market/codes") === 0) return { data: { candidates: [] } };
@@ -30,15 +23,9 @@ installApi({
   }
 });
 
-const store = await import("../assets/js/demo/store.js");
-const flow = await import("../assets/js/demo/flow.js");
-
-flow.initFlow({
-  render: function () {},
-  scrollEnd: function () {},
-  scrollToBatch: function () {},
-  notify: function (error) { throw error; }
-});
+const store = ai.store;
+const flow = ai.flow;
+const requests = ai.requests;
 
 function aiTexts() {
   return store.state.messages.filter(function (message) {
@@ -51,16 +38,8 @@ function latestAssistantText() {
 }
 
 test.beforeEach(function () {
-  messageOf.reset();
-  requests = [];
+  ai.reset();
   aiReply = { handled: false };
-  store.update({
-    user: USER,
-    room: { id: "conv_1", type: "assistant", context: IDLE },
-    messages: [],
-    lastSeq: 0,
-    aiPending: 0
-  });
 });
 
 test("明確行情由既有規則完成，不寫入重複 AI 文字", async function () {

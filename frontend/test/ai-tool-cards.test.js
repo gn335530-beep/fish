@@ -2,26 +2,20 @@
 
 import test from "node:test";
 import assert from "node:assert/strict";
-import { USER_CITY, IDLE, createMessageFactory, installApi } from "./ai-fixtures.js";
+import { USER_CITY, setupAiTest } from "./ai-fixtures.js";
 
-let requests = [];
 let aiReply = null;
 
-const messageOf = createMessageFactory();
-
-installApi({
-  messageOf: messageOf,
-  onRequest: function (path, body) {
-    requests.push({ path: path, body: body });
-  },
+const ai = await setupAiTest({
+  user: USER_CITY,
   handle: async function (path) {
     if (path === "/api/ai/reply") return { data: aiReply };
     throw new Error("unexpected path: " + path);
   }
 });
 
-const store = await import("../assets/js/demo/store.js");
-const flow = await import("../assets/js/demo/flow.js");
+const store = ai.store;
+const flow = ai.flow;
 const assistantView = await import("../assets/js/demo/views/assistant.js");
 
 function marketToolResult() {
@@ -44,24 +38,9 @@ function marketToolResult() {
   };
 }
 
-flow.initFlow({
-  render: function () {},
-  scrollEnd: function () {},
-  scrollToBatch: function () {},
-  notify: function (error) { throw error; }
-});
-
 test.beforeEach(function () {
-  messageOf.reset();
-  requests = [];
+  ai.reset();
   aiReply = { handled: false };
-  store.update({
-    user: USER_CITY,
-    room: { id: "conv_1", type: "assistant", context: IDLE },
-    messages: [],
-    lastSeq: 0,
-    aiPending: 0
-  });
 });
 
 test("CHAT 有行情工具結果時，文字後附既有行情卡", async function () {

@@ -4,7 +4,7 @@ import { getProduct } from "../../api/products.js";
 import { INTENT } from "./intents.js";
 import { detectIntent, isCancelListing } from "./rules.js";
 import { mergeDraft } from "./draft.js";
-import { normalize, resetContext, advance, withDraft, startListing, continueListing, requestCancel, dismissCancel } from "./listing.js";
+import { normalize, advance, withDraft, startListing, continueListing, requestCancel, dismissCancel } from "./listing.js";
 import { editText, editPhoto, askDraftEdit, chooseEditField } from "./editing.js";
 import {
   needsConsent, requestConsent, resumeAfterConsent, declineConsent
@@ -13,6 +13,7 @@ import { resolveReferent } from "./referents.js";
 import { shoppingReply } from "./shopping.js";
 import { marketReply } from "./market.js";
 import { matchCandidate } from "./listing-species.js";
+import { resetReply } from "./reset.js";
 
 /* ---- 上架照片 ---- */
 
@@ -147,7 +148,7 @@ export async function handleText(context, text, user) {
     return startListing(source, user, ctx);
   }
   if (intent === INTENT.CANCEL) {
-    return { context: resetContext(), replies: [{ text: "好，已經重來。想賣魚或找魚都可以直接說。" }] };
+    return resetReply();
   }
   if (intent === INTENT.MARKET) {
     const result = await marketReply(source, user, ctx);

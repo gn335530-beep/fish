@@ -2,20 +2,13 @@
 
 import test from "node:test";
 import assert from "node:assert/strict";
-import { USER, IDLE, createMessageFactory, installApi } from "./ai-fixtures.js";
+import { IDLE, setupAiTest } from "./ai-fixtures.js";
 
-let requests = [];
 let aiReply = null;
 let aiDelay = 0;
 let notifyError = null;
 
-const messageOf = createMessageFactory();
-
-installApi({
-  messageOf: messageOf,
-  onRequest: function (path, body) {
-    requests.push({ path: path, body: body });
-  },
+const ai = await setupAiTest({
   handle: async function (path) {
     if (path === "/api/ai/reply") {
       if (aiDelay) await new Promise(function (resolve) { setTimeout(resolve, aiDelay); });
@@ -23,45 +16,24 @@ installApi({
       return { data: aiReply };
     }
     throw new Error("unexpected path: " + path);
-  }
+  },
+  notify: function (error) { notifyError = error; }
 });
 
-const store = await import("../assets/js/demo/store.js");
-const flow = await import("../assets/js/demo/flow.js");
+const store = ai.store;
+const flow = ai.flow;
+const requests = ai.requests;
+const aiPaths = ai.aiPaths;
+const assistantTexts = ai.assistantTexts;
 const assistantView = await import("../assets/js/demo/views/assistant.js");
 
 const CONTEXT = IDLE;
 
-flow.initFlow({
-  render: function () {},
-  scrollEnd: function () {},
-  scrollToBatch: function () {},
-  notify: function (error) { notifyError = error; }
-});
-
-function aiPaths() {
-  return requests.filter(function (entry) { return entry.path === "/api/ai/reply"; });
-}
-
-function assistantTexts() {
-  return store.state.messages.filter(function (message) {
-    return message.sender_id === "ai";
-  }).map(function (message) { return message.text; });
-}
-
 test.beforeEach(function () {
-  messageOf.reset();
-  requests = [];
+  ai.reset();
   aiReply = { handled: false };
   aiDelay = 0;
   notifyError = null;
-  store.update({
-    user: USER,
-    room: { id: "conv_1", type: "assistant", context: CONTEXT },
-    messages: [],
-    lastSeq: 0,
-    aiPending: 0
-  });
 });
 
 test("送出使用者訊息後才以 message_id 與房間 context 呼叫 AI 端點", async function () {

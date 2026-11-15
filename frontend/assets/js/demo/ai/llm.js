@@ -1,41 +1,20 @@
-/* LLM 結果路由：平台意圖交給既有規則，只有 CHAT／WEB／推薦才寫 LLM 文字。 */
+/* LLM 結果路由：只決定規則／模型意圖優先序與要交付的結果。 */
 
 import { INTENT, PLATFORM_INTENTS, REPLY_INTENTS, RULE_PRIORITY_INTENTS } from "./intents.js";
 import { detectIntent, isCancelListing } from "./rules.js";
-import { normalize, advance, withDraft, resetContext, requestCancel } from "./listing.js";
+import { normalize, withDraft, requestCancel } from "./listing.js";
 import { mergeDraft } from "./draft.js";
-import { extractSlots } from "./slots.js";
-import { beginEdit, applyEditValue } from "./editing.js";
-import { needsConsent, requestConsent } from "./consent.js";
-import { marketReply } from "./market.js";
-import { shoppingReply } from "./shopping.js";
+import { draftSlots } from "./llm-slots.js";
+import { applyLlmEdit, platformReply } from "./platform.js";
 import { handleText } from "./service.js";
 
-const DRAFT_SLOTS = [
-  "fish_species", "species_code", "quantity", "condition", "price", "price_per_taijin", "region"
-];
 const RECOMMEND_BLOCKERS = [INTENT.SELL, INTENT.MARKET, INTENT.CANCEL, INTENT.EDIT];
 const FALLBACK = /你是想賣魚，還是想找魚/;
-const RESET_TEXT = "好，已經重來。想賣魚或找魚都可以直接說。";
 
 /* 規則是否只回了通用的「賣魚或找魚」引導；配額提示會取代這句話。 */
 export function isFallbackReply(result) {
   const replies = (result && result.replies) || [];
   return replies.length === 1 && FALLBACK.test(replies[0].text || "");
-}
-
-/* 後端已驗證 slots；前端只挑草稿欄位使用，不再檢查型別或數字來源。 */
-function llmSlots(llm) {
-  return (llm && llm.slots && typeof llm.slots === "object") ? llm.slots : {};
-}
-
-function draftSlots(llm) {
-  const raw = llmSlots(llm);
-  const found = {};
-  DRAFT_SLOTS.forEach(function (key) {
-    if (raw[key] !== undefined) found[key] = raw[key];
-  });
-  return found;
 }
 
 function mergeListingSlots(ctx, llm) {
@@ -46,77 +25,6 @@ function mergeListingSlots(ctx, llm) {
     changes.market_quoted = false;
   }
   return withDraft(ctx, mergeDraft(ctx.draft, found), changes);
-}
-
-function slotHints(llm) {
-  const slots = llmSlots(llm);
-  return {
-    fish_species: slots.fish_species,
-    species_code: slots.species_code,
-    region: slots.region
-  };
-}
-
-function applyLlmEdit(ctx, llm) {
-  const raw = llmSlots(llm);
-  if (!raw.edit_field || raw.edit_value === undefined || raw.edit_value === null) return null;
-  const started = beginEdit(ctx, raw.edit_field);
-  if (!started) return null;
-  return applyEditValue(started.context, String(raw.edit_value)) || started;
-}
-
-async function sellReply(ctx, userText, user, llm) {
-  if (needsConsent(user)) return requestConsent(ctx, userText);
-  const found = Object.assign({}, extractSlots(userText, null), draftSlots(llm));
-  const draft = mergeDraft(null, found);
-  const next = withDraft(ctx, draft, {
-    last_cards: [],
-    selected_product_id: null,
-    editing: null,
-    choosing_edit: null,
-    market_quoted: false,
-    detail_asked: false
-  });
-  return advance(next, user);
-}
-
-function resetReply(ctx) {
-  return { context: resetContext(), replies: [{ text: RESET_TEXT }] };
-}
-
-async function buyOrMarketReply(ctx, userText, user, intent, hints) {
-  if (intent === INTENT.BUY) return shoppingReply(userText, user, hints);
-  const result = await marketReply(userText, user, ctx, hints);
-  return { context: result.context || ctx, replies: result.replies || [] };
-}
-
-async function buyReply(ctx, userText, user, llm) {
-  return buyOrMarketReply(ctx, userText, user, INTENT.BUY, slotHints(llm));
-}
-
-async function marketOnlyReply(ctx, userText, user, llm) {
-  return buyOrMarketReply(ctx, userText, user, INTENT.MARKET, slotHints(llm));
-}
-
-async function editReply(ctx, userText, user, llm) {
-  const edited = applyLlmEdit(ctx, llm);
-  if (edited) return edited;
-  if (!ctx.draft) return { context: ctx, replies: [{ text: "目前沒有可修改的草稿。" }] };
-  return handleText(ctx, userText, user);
-}
-
-const PLATFORM_REPLIES = {
-  [INTENT.SELL]: sellReply,
-  [INTENT.BUY]: buyReply,
-  [INTENT.MARKET]: marketOnlyReply,
-  [INTENT.CANCEL]: resetReply,
-  [INTENT.EDIT]: editReply
-};
-
-async function platformReply(ctx, userText, user, llm) {
-  const handler = PLATFORM_REPLIES[llm.intent];
-  if (handler) return handler(ctx, userText, user, llm);
-  return handleText(ctx, userText, user);
 }
 
 /* 回傳 { origin:"rules", result } 或 { origin:"llm", llm }；flow 依 origin 決定寫入什麼。 */
@@ -144,20 +52,21 @@ export async function handleMessage(context, text, user, llm) {
   if (productRecommendation) return { origin: "llm", llm: llm };
 
   if (RULE_PRIORITY_INTENTS.indexOf(ruleIntent) !== -1) {
-    if (ruleIntent === INTENT.SELL) {
-      return { origin: "rules", result: await sellReply(ctx, userText, user, llm) };
+    /* CANCEL 走既有規則服務，保留修改中與確認中的特殊處理。 */
+    if (ruleIntent === INTENT.CANCEL) {
+      return { origin: "rules", result: await handleText(ctx, userText, user) };
     }
-    if (ruleIntent === INTENT.MARKET) {
-      return {
-        origin: "rules",
-        result: await buyOrMarketReply(ctx, userText, user, ruleIntent, slotHints(llm))
-      };
-    }
-    return { origin: "rules", result: await handleText(ctx, userText, user) };
+    return {
+      origin: "rules",
+      result: await platformReply(ctx, userText, user, ruleIntent, llm)
+    };
   }
 
   if (PLATFORM_INTENTS.indexOf(llmIntent) !== -1) {
-    return { origin: "rules", result: await platformReply(ctx, userText, user, llm) };
+    return {
+      origin: "rules",
+      result: await platformReply(ctx, userText, user, llmIntent, llm)
+    };
   }
 
   if (llm && llm.handled && REPLY_INTENTS.indexOf(llmIntent) !== -1 && llm.reply_text) {
