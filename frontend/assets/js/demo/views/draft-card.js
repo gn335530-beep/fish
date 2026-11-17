@@ -2,9 +2,11 @@
 
 import { escapeHtml, money, resolveImage, definitionRow } from "./html.js";
 
-export function renderDraftCard(card) {
+export function renderDraftCard(card, publishing) {
   const draft = card.draft || {};
-  return '<div class="fm-card fm-card--draft">' +
+  const busy = publishing ? ' aria-busy="true"' : "";
+  const disabled = publishing ? " disabled" : "";
+  return '<div class="fm-card fm-card--draft"' + busy + '>' +
     '<b>上架草稿</b>' +
     '<dl>' +
     definitionRow("魚種", draft.fish_species) +
@@ -15,9 +17,10 @@ export function renderDraftCard(card) {
     '</dl>' +
     (draft.photo_url ? '<img class="fm-card__thumb" src="' + escapeHtml(resolveImage(draft.photo_url)) + '" alt="商品照片">' : "") +
     '<div class="fm-card__acts">' +
-    '<button type="button" class="fm-card__primary" data-action="publish">確認上架</button>' +
-    '<button type="button" data-action="edit-draft">修改草稿</button>' +
-    '<button type="button" data-action="cancel-listing">取消上架</button>' +
+    '<button type="button" class="fm-card__primary" data-action="publish"' + disabled + '>' +
+    (publishing ? "上架中…" : "確認上架") + '</button>' +
+    '<button type="button" data-action="edit-draft"' + disabled + '>修改草稿</button>' +
+    '<button type="button" data-action="cancel-listing"' + disabled + '>取消上架</button>' +
     '</div>' +
     '</div>';
 }

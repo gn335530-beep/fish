@@ -9,10 +9,10 @@ import { renderLegalCard, renderCancelCard } from "./legal-card.js";
 import { renderDealCancelledCard } from "./deal-cancelled-card.js";
 import { renderSourcesCard } from "./sources-card.js";
 
-export function renderCard(card, messageId) {
+export function renderCard(card, messageId, publishing) {
   if (!card) return "";
   if (card.type === "product") return renderProductCard(card);
-  if (card.type === "draft") return renderDraftCard(card);
+  if (card.type === "draft") return renderDraftCard(card, publishing);
   if (card.type === "market_quote") return renderMarketCard(card, messageId);
   if (card.type === "legal_consent") return renderLegalCard(card);
   if (card.type === "draft_cancel") return renderCancelCard(card);

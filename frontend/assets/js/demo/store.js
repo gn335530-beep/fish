@@ -13,6 +13,7 @@ export function emptyState() {
     lastSeq: 0,
     view: "assistant",
     notice: "",
+    publishing: false,
     aiPending: 0,
     aiRetry: null,
     deal: null,

@@ -45,6 +45,8 @@
 }
 
 .fm-card__acts button:hover { border-color: var(--accent); color: var(--accent); }
+.fm-card__acts button:disabled { opacity: .55; cursor: not-allowed; }
+.fm-card__acts button:disabled:hover { border-color: var(--rule); color: var(--ink); }
 
 .fm-card__sold {
   align-self: center;

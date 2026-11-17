@@ -27,7 +27,7 @@
 | `POST` | `/api/products/{id}/delist` | 登入 | 下架自己的商品 |
 | `POST` | `/api/products/{id}/relist` | 登入 | 重新上架自己的已下架商品 |
 | `DELETE` | `/api/products/{id}` | 登入 | 刪除已下架或已售出商品 |
-| `POST` | `/api/products/create` | 登入 | 上架商品；可帶可選 `species_code` |
+| `POST` | `/api/products/create` | 登入 | 上架商品；可帶可選 `species_code` 與 `client_request_id`；同釣客同識別碼重送回同一商品 |
 | `GET` | `/api/conversations` | 登入 | 房間清單 |
 | `POST` | `/api/conversations/assistant` | 登入 | 每次建立一間新的助手房（登入時若完全沒有才由前端自動呼叫） |
 | `DELETE` | `/api/conversations/{id}` | 參與者 | 刪除任何房間；交易房保留已成交訂單與評價 |

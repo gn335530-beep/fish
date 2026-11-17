@@ -71,6 +71,7 @@
 | --- | --- | --- |
 | `id` | string | |
 | `seller_id` | number | 由 Token 決定，不由 client 傳 |
+| `client_request_id` | string \| null | 內部發布識別碼；同釣客同值重送只建立一筆，商品 API 不外露 |
 | `title` | string | 伺服器產生：`{魚種}（{尾數}尾 / {處理}）` |
 | `fish_species` | string | 使用者說的魚種名稱（未知魚種也存這裡） |
 | `species_code` | number \| null | 對到官方代碼才有；未回填舊商品 |
@@ -98,6 +99,8 @@
 **變更（2026-10-29）**：商品移除 `species_id` 與 `species_latin`，新增可選 `species_code`。啟動正規化會清除舊欄位、保留 `fish_species`，並把舊商品的 `species_code` 設為 `null`，不自動回填。
 
 **變更（2026-11-08）**：新增 `listed_at`、`delisted_at`；既有商品啟動時回填 `listed_at = created_at`。商品可下架、重新上架與硬刪；刪除不新增 `deleted_at`，也不刪照片檔。商品 ID 另存於 `counters`，避免硬刪後重用。
+
+**變更（2026-11-17）**：新增內部 `client_request_id`；同一釣客重送相同值時回傳第一次建立的商品，不再新增。沒有此欄位的舊商品維持原行為；硬刪商品後不保留額外識別碼紀錄。
 
 **索引需求**：`seller_id`、`region`、`fish_species`、`listed_at`、`created_at`（目前是線性掃描，資料量小可接受）。
 

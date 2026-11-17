@@ -4,6 +4,7 @@ import { state, update, replaceMessages, appendMessages } from "./store.js";
 import * as api from "./api.js";
 import { getProduct, createProduct } from "../api/products.js";
 import * as ai from "./ai/service.js";
+import { resetContext } from "./ai/listing.js";
 import { sendAiReply, retryAiReply } from "./ai/reply-flow.js";
 import { draftToProduct } from "./ai/draft.js";
 import { uploadImage } from "./upload.js";
@@ -114,35 +115,47 @@ export async function submitPhoto(file) {
 }
 
 export async function publishDraft() {
-  const draft = state.room && state.room.context ? state.room.context.draft : null;
+  const room = state.room;
+  const context = room && room.context;
+  const draft = context ? context.draft : null;
   if (!draft) {
     ui.notify(new Error("找不到草稿，請重新上架"));
     return;
   }
-  if (ai.needsConsent(state.user)) {
-    await runReplies(ai.requestConsent(state.room.context, state.room.context.pending_sale_text || "我要賣魚"));
-    return;
-  }
+  if (state.publishing) return;
 
+  const roomId = room.id;
+  update({ publishing: true });
   try {
+    if (ai.needsConsent(state.user)) {
+      await runReplies(ai.requestConsent(context, context.pending_sale_text || "我要賣魚"), roomId);
+      return;
+    }
+
     const product = await createProduct(draftToProduct(draft, state.user));
-    const message = await api.sendMessage(state.room.id, {
+    const notice = "已上架：" + product.title;
+    const message = await api.sendMessage(roomId, {
       sender_type: "ai",
-      text: "已上架：" + product.title
+      text: notice
     });
 
-    const context = ai.resetContext();
-    await api.updateContext(state.room.id, { context: context });
-    await api.clearConversation(state.room.id, message.seq);
+    const nextContext = resetContext();
+    await api.updateContext(roomId, { context: nextContext });
+    await api.clearConversation(roomId, message.seq);
 
-    update({ room: Object.assign({}, state.room, { context: context }) });
-    replaceMessages([message]);
-    showMessages();
+    if (isCurrentRoom(roomId)) {
+      update({ room: Object.assign({}, state.room, { context: nextContext }) });
+      replaceMessages([message]);
+      showMessages();
+    }
 
     document.dispatchEvent(new CustomEvent("haisen:products-changed"));
-    if (window.toast) window.toast("已上架：" + product.title);
+    if (window.toast) window.toast(notice);
   } catch (error) {
-    ui.notify(error);
+    if (window.toast) window.toast(error && error.message ? error.message : "上架失敗，請再試一次");
+    if (isCurrentRoom(roomId)) ui.notify(error);
+  } finally {
+    update({ publishing: false });
   }
 }
 

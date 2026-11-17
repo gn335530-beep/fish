@@ -33,6 +33,13 @@ function speciesCodeOf(value) {
   return Number.isInteger(code) && code > 0 ? code : null;
 }
 
+/* 發布識別碼只是可選的冪等鍵；空白或格式不合就當作沒有帶，不阻擋上架。 */
+const CLIENT_REQUEST_ID = /^[A-Za-z0-9_-]{1,80}$/;
+
+function clientRequestIdOf(value) {
+  return typeof value === "string" && CLIENT_REQUEST_ID.test(value) ? value : null;
+}
+
 function listedTimeOf(product) {
   const time = Date.parse(product.listed_at || product.created_at || "");
   return Number.isFinite(time) ? time : 0;
@@ -92,6 +99,18 @@ router.get("/api/products/:id", function (req, res) {
 
 router.post("/api/products/create", requireUser, async function (req, res) {
   const body = req.body || {};
+  const user = req.user;
+  const clientRequestId = clientRequestIdOf(body.client_request_id);
+  if (clientRequestId) {
+    const existing = all("products").find(function (product) {
+      return ownedBy(product, user.id) && product.client_request_id === clientRequestId;
+    });
+    if (existing) {
+      ok(res, decorateProduct(existing, all("deals")), "商品已上架");
+      return;
+    }
+  }
+
   const fishSpecies = String(body.fish_species || "").trim();
   const weightKg = Number(body.weight_kg);
   const weight = Number.isFinite(weightKg) && weightKg > 0 ? round1(weightKg) : null;
@@ -130,7 +149,6 @@ router.post("/api/products/create", requireUser, async function (req, res) {
     return;
   }
 
-  const user = req.user;
   const rawRegion = String(body.region || user.city || "").trim();
   const region = normalizeRegion(rawRegion);
   const now = new Date().toISOString();
@@ -138,6 +156,7 @@ router.post("/api/products/create", requireUser, async function (req, res) {
   const product = insert("products", {
     id: nextProductCode(),
     seller_id: user.id,
+    client_request_id: clientRequestId,
     title: buildTitle(fishSpecies, quantity, condition),
     fish_species: fishSpecies,
     species_code: speciesCodeOf(body.species_code),

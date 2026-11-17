@@ -74,7 +74,7 @@ test("LLM_ENABLED=false 時規則式助手仍可上架、找魚、查行情，�
 
   /* 開啟種子交易房；送出訊息不得呼叫 AI 端點。 */
   await page.locator('#fm-panel [data-action="inbox"]').click();
-  await page.locator('#fm-panel [data-room="conv_20261101_001"]').click();
+  await page.locator('#fm-panel [data-action="room"][data-room="conv_20261101_001"]').click();
   await expect(page.locator("#fm-title")).toHaveText("陳阿海");
 
   const aiBeforeDeal = aiCalls.length;

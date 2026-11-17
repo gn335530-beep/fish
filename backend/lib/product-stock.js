@@ -37,6 +37,7 @@ function decorateProduct(product, deals) {
   const clean = Object.assign({}, product);
   delete clean.species_id;
   delete clean.species_latin;
+  delete clean.client_request_id;
   const delisted = Boolean(product.delisted_at);
   const quantity = Number(product.quantity || 0);
   const sold = Number(product.sold_quantity || 0);

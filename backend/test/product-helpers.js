@@ -1,8 +1,8 @@
-/* 商品測試共用：以釣客 Token 建立商品。 */
+/* 商品測試共用：以指定釣客 Token 建立商品，預設 seller。 */
 
 const { call, tokens } = require("./client");
 
-function create(overrides) {
+function create(overrides, token) {
   const payload = Object.assign({
     fish_species: "石斑",
     quantity: 1,
@@ -14,7 +14,7 @@ function create(overrides) {
   Object.keys(payload).forEach(function (key) {
     if (payload[key] === undefined) delete payload[key];
   });
-  return call("POST", "/api/products/create", { token: tokens.seller, body: payload });
+  return call("POST", "/api/products/create", { token: token || tokens.seller, body: payload });
 }
 
 module.exports = { create: create };

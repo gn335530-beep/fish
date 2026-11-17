@@ -85,7 +85,7 @@
 
 ### 2.1 本版新增／變更的端點
 
-交易房改版新增批次加購與重新發起；商品建立改為整批售價必填、重量選填；取消改為自由文字 `note`。
+交易房改版新增批次加購與重新發起；商品建立改為整批售價必填、重量選填，並支援可選的 `client_request_id` 冪等鍵；取消改為自由文字 `note`。
 
 | 方法 | 路徑 | 權限 | 說明 |
 | --- | --- | --- | --- |
@@ -94,7 +94,7 @@
 | GET | `/api/users/:id` | 公開 | 新增：公開個人資訊與角色評分 |
 | PUT | `/api/users/profile` | 登入 | 變更：接受 `phone`、`avatar_url`；電話唯一 |
 | POST | `/api/deals/initiate-room` | 登入 | 新增：由個人資訊開交易房；無商品時純聊天 |
-| POST | `/api/products/create` | 登入 | 變更：整批售價必填、每台斤選填、重量選填、不再自動計算；ID 使用 `nextProductCode()`、寫入 `listed_at` |
+| POST | `/api/products/create` | 登入 | 變更：整批售價必填、每台斤選填、重量選填、不再自動計算；可選 `client_request_id` 冪等鍵；ID 使用 `nextProductCode()`、寫入 `listed_at` |
 | GET | `/api/products` | 公開 | 變更：只回 `ACTIVE`／`PARTIALLY_RESERVED`，依 `listed_at` 排序 |
 | GET | `/api/products/mine` | 登入 | 新增：目前釣客所有未刪除商品 |
 | POST | `/api/products/:id/delist` | 登入（擁有者） | 新增：下架 |
@@ -211,7 +211,7 @@
 ```json
 { "fish_species": "石斑", "species_code": 2201, "quantity": 1,
   "condition": "放血冰鎮", "photo_url": "/uploads/ab12.jpg",
-  "price": 1000, "price_per_taijin": 200,
+  "price": 1000, "price_per_taijin": 200, "client_request_id": "pub_abc123",
   "region": "新北市", "location": "新北市瑞芳區鼻頭路 1 號",
   "catch_time": "2026-10-25T14:00:00+08:00" }
 ```
@@ -219,6 +219,9 @@
 伺服器行為：
 
 - `seller_id` 取自 Token，client 傳的值一律忽略。
+- `client_request_id` 是選填的冪等鍵，1–80 個英數字、底線或連字號；空白或格式不合法視同沒有帶，不新增錯誤碼。
+- 同一釣客帶相同 `client_request_id` 重送時，先回傳第一次建立的商品（200），不新增；查重先於其他欄位驗證，不同釣客可重複使用同一值。
+- 沒有帶 `client_request_id` 時維持可建立多筆相同內容商品的舊行為。商品硬刪後識別碼紀錄也消失；同值重送可建立新商品。
 - `species_code` 是選填的正整數；空白或非數字存 `null`，未知代碼也不阻擋建立。伺服器不回填、也不改寫使用者輸入的 `fish_species`。
 - `title` 由後端產生並隨商品回應回傳：`{魚種}（{尾數}尾 / {處理}）`；前端直接顯示，標題缺漏時使用通用文案，不自行拼接。
 - `condition` 是自由文字：trim、非空、最多 20 字。
@@ -233,7 +236,8 @@
 - `id` 使用 `nextProductCode()`：每日流水號寫回 `counters`，硬刪後不重用。
 - `listed_at = now`、`delisted_at = null`。
 - `region` 預設個人檔案的縣市；`location` 預設三段地址串接。
-- 回 201，`data` 是含衍生欄位的商品。
+- 首次建立回 201，`data` 是含衍生欄位的商品；同識別碼重送回 200，`data` 是第一次建立的商品。相同識別碼搭配不同內容時 first write wins。
+- 商品資料保存 `client_request_id`，但所有商品 API 回應都不包含它。
 
 錯誤：400 `MISSING_SPECIES`、`INVALID_QUANTITY`、`MISSING_CONDITION`、`INVALID_CONDITION`、`FIELD_TOO_LONG`、`MISSING_PRICE`、`INVALID_PRICE`、`MISSING_PHOTO`。
 

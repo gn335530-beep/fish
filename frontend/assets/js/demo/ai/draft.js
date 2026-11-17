@@ -5,8 +5,18 @@ import { normalizeCityName } from "../../shared/regions.js";
 const SLOT_ORDER = ["fish_species", "quantity", "condition", "photo_url", "price"];
 const NON_PRICE_SLOTS = SLOT_ORDER.filter(function (slot) { return slot !== "price"; });
 
+let requestSeq = 0;
+
+/* 每份草稿一組穩定識別碼；同一份草稿重試時後端可據此去重。 */
+function newClientRequestId() {
+  requestSeq += 1;
+  return "pub_" + Date.now().toString(36) + "_" + requestSeq.toString(36) +
+    "_" + Math.random().toString(36).slice(2, 8);
+}
+
 function emptyDraft() {
   return {
+    client_request_id: newClientRequestId(),
     fish_species: "",
     species_code: null,
     quantity: null,
@@ -76,6 +86,7 @@ export function draftToProduct(draft, user) {
     location: normalizeCityName((user && user.address) || ""),
     price: draft.price
   };
+  if (draft.client_request_id) payload.client_request_id = draft.client_request_id;
   if (draft.price_per_taijin != null) payload.price_per_taijin = draft.price_per_taijin;
   return payload;
 }

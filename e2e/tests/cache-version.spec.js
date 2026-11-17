@@ -22,7 +22,7 @@ const CACHE_LOCKED_FILES = [
   { file: "deal-bot.css", minVersion: 9, pages: ALL_PAGES },
   { file: "market-card.css", minVersion: 17, pages: ALL_PAGES },
   { file: "components.css", minVersion: 9, pages: ALL_PAGES },
-  { file: "deal-cards.css", minVersion: 9, pages: ALL_PAGES }
+  { file: "deal-cards.css", minVersion: 10, pages: ALL_PAGES }
 ];
 
 function localAssets() {

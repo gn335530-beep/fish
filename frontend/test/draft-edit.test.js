@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 globalThis.window = { HaisenAPI: { BASE: "http://api.test" } };
 
 const { renderCard } = await import("../assets/js/demo/views/cards.js");
+const draftApi = await import("../assets/js/demo/ai/draft.js");
 const editing = await import("../assets/js/demo/ai/editing.js");
 const listing = await import("../assets/js/demo/ai/listing.js");
 
@@ -42,6 +43,46 @@ test("草稿卡只留三個動作，沒有總重與自動計算", function () {
   assert.doesNotMatch(html, /自動計算/);
   assert.doesNotMatch(html, /data-action="edit-slot"/);
   assert.doesNotMatch(html, /fm-card__edits/);
+});
+
+test("發布中的草稿卡顯示上架中並停用三個動作", function () {
+  const html = renderCard({ type: "draft", draft: draft() }, "msg_1", true);
+  assert.match(html, /上架中…/);
+  assert.doesNotMatch(html, /確認上架/);
+  assert.equal((html.match(/disabled/g) || []).length, 3);
+  assert.match(html, /aria-busy="true"/);
+});
+
+test("一般草稿卡的三個動作可用", function () {
+  const html = renderCard({ type: "draft", draft: draft() }, "msg_1");
+  assert.match(html, /確認上架/);
+  assert.doesNotMatch(html, /disabled/);
+  assert.doesNotMatch(html, /aria-busy/);
+});
+
+test("每份草稿有固定 client_request_id，修改後不變、新草稿不同，並隨建立商品送出", function () {
+  const first = draftApi.mergeDraft(null, { fish_species: "花枝" });
+  const edited = draftApi.mergeDraft(first, { quantity: 2 });
+  const fresh = draftApi.mergeDraft(null, { fish_species: "花枝" });
+
+  assert.match(first.client_request_id, /^pub_/);
+  assert.equal(edited.client_request_id, first.client_request_id);
+  assert.notEqual(fresh.client_request_id, first.client_request_id);
+
+  const payload = draftApi.draftToProduct(edited, { city: "高雄市" });
+  assert.equal(payload.client_request_id, first.client_request_id);
+});
+
+test("沒有 client_request_id 的舊草稿送後端時不帶欄位", function () {
+  const legacy = {
+    fish_species: "石斑",
+    quantity: 1,
+    condition: "活體",
+    photo_url: "/uploads/a.jpg",
+    price: 1000
+  };
+  const payload = draftApi.draftToProduct(legacy, { city: "高雄市" });
+  assert.equal("client_request_id" in payload, false);
 });
 
 test("按修改草稿後用文字問要改哪一項", function () {

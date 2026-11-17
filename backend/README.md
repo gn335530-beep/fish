@@ -107,7 +107,7 @@ backend/
 | `POST` | `/api/products/{id}/delist` | 下架自己的商品；需登入 |
 | `POST` | `/api/products/{id}/relist` | 重新上架自己的已下架商品；需登入 |
 | `DELETE` | `/api/products/{id}` | 刪除已下架或已售出商品；需登入 |
-| `POST` | `/api/products/create` | 上架商品；整批售價必填、每台斤與重量選填；可帶可選 `species_code`；需登入 |
+| `POST` | `/api/products/create` | 上架商品；整批售價必填、每台斤與重量選填；可帶可選 `species_code` 與 `client_request_id`；同釣客同識別碼重送回同一商品；需登入 |
 | `GET` | `/api/conversations` | 目前會員的房間清單；需登入 |
 | `POST` | `/api/conversations/assistant` | 每次建立一間新的助手房；需登入 |
 | `DELETE` | `/api/conversations/{id}` | 刪除任何房間；交易房保留已成交訂單與評價；需參與者 |
