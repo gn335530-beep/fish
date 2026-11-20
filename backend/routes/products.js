@@ -34,10 +34,10 @@ function speciesCodeOf(value) {
 }
 
 /* 發布識別碼只是可選的冪等鍵；空白或格式不合就當作沒有帶，不阻擋上架。 */
-const CLIENT_REQUEST_ID = /^[A-Za-z0-9_-]{1,80}$/;
+const CLIENT_REQUEST_ID_PATTERN = /^[A-Za-z0-9_-]{1,80}$/;
 
 function clientRequestIdOf(value) {
-  return typeof value === "string" && CLIENT_REQUEST_ID.test(value) ? value : null;
+  return typeof value === "string" && CLIENT_REQUEST_ID_PATTERN.test(value) ? value : null;
 }
 
 function listedTimeOf(product) {

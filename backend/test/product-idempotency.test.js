@@ -14,13 +14,18 @@ function mineOf(token) {
 
 test("同釣客同 client_request_id 重送回 200 同一商品，不新增第二筆", async function () {
   const key = "pub_same_key";
+  const before = await mineOf(tokens.seller);
   const first = await create({ client_request_id: key });
+  const afterFirst = await mineOf(tokens.seller);
   const second = await create({ client_request_id: key });
+  const afterSecond = await mineOf(tokens.seller);
 
   assert.equal(first.status, 201);
   assert.equal(second.status, 200);
   assert.equal(second.body.data.id, first.body.data.id);
   assert.equal(second.body.data.title, first.body.data.title);
+  assert.equal(afterFirst.body.data.length, before.body.data.length + 1);
+  assert.equal(afterSecond.body.data.length, before.body.data.length + 1);
   assert.equal(first.body.data.client_request_id, undefined);
   assert.equal(second.body.data.client_request_id, undefined);
 

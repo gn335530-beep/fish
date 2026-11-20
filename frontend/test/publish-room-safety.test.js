@@ -2,7 +2,7 @@
 
 import test from "node:test";
 import assert from "node:assert/strict";
-import { NOTICE, setupPublishTest } from "./publish-fixtures.js";
+import { NOTICE, PRODUCT, createGate, setupPublishTest } from "./publish-fixtures.js";
 
 const publish = await setupPublishTest();
 const store = publish.store;
@@ -20,17 +20,16 @@ function switchRoom() {
 }
 
 test("發布期間切房，結果只寫回原本房間", async function () {
-  let release;
-  const gate = new Promise(function (resolve) { release = resolve; });
+  const gate = createGate();
   publish.reset();
   harness.createHandler = async function () {
-    await gate;
-    return { data: { id: "prd_test", title: "花枝（2尾 / 放血冰鎮）" } };
+    await gate.promise;
+    return { data: PRODUCT };
   };
 
   const running = flow.publishDraft();
   const other = switchRoom();
-  release();
+  gate.release();
   await running;
 
   assert.equal(store.state.room.id, "conv_b");
@@ -48,17 +47,16 @@ test("發布期間切房，結果只寫回原本房間", async function () {
 });
 
 test("發布期間切房後失敗，不在目前房間顯示面板提示", async function () {
-  let release;
-  const gate = new Promise(function (resolve) { release = resolve; });
+  const gate = createGate();
   publish.reset();
   harness.createHandler = async function () {
-    await gate;
+    await gate.promise;
     throw new Error("上架失敗");
   };
 
   const running = flow.publishDraft();
   const other = switchRoom();
-  release();
+  gate.release();
   await running;
 
   assert.equal(store.state.room.context, other.context);
