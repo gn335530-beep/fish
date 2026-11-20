@@ -67,7 +67,7 @@ test("行情工具使用官方平均價，回傳行情資料並附在 CHAT", asy
   assert.match(data.tool_results.market.source_url, /^https:/);
 
   assert.deepEqual(h.calls[0].tools.map(function (tool) { return tool.name; }),
-    ["get_market_price", "search_products"]);
+    ["get_market_price", "search_products", "get_local_conditions"]);
   const modelMarket = h.calls[1].tool_rounds[0].results[0].result;
   assert.equal(modelMarket.price_per_taijin, 60);
   assert.equal(modelMarket.trade_date, "2026-10-22");

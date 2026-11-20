@@ -1,4 +1,4 @@
-/* 第一輪工具分類：平台意圖不強制、天氣上網、商品查平台。 */
+/* 第一輪工具分類：平台意圖不強制、在地天氣用條件工具、商品查平台。 */
 
 const test = require("node:test");
 const assert = require("node:assert/strict");
@@ -6,12 +6,16 @@ const { forceToolFor } = require("../lib/ai/classify");
 
 const web = { webEnabled: true };
 const noWeb = { webEnabled: false };
+const noLocal = { webEnabled: true, localEnabled: false };
 
-test("時效性與天氣問題強制 web_search", function () {
-  assert.equal(forceToolFor("今天台南天氣如何？", web), "web_search");
+test("台灣天氣與海況強制在地條件工具；國外地點與時效性問題上網", function () {
+  assert.equal(forceToolFor("今天台南天氣如何？", web), "get_local_conditions");
+  assert.equal(forceToolFor("現在氣溫幾度", web), "get_local_conditions");
+  assert.equal(forceToolFor("高雄今天海況如何？", web), "get_local_conditions");
   assert.equal(forceToolFor("最新漁業新聞", web), "web_search");
-  assert.equal(forceToolFor("現在氣溫幾度", web), "web_search");
-  assert.equal(forceToolFor("今天台南天氣如何？", noWeb), null);
+  assert.equal(forceToolFor("東京天氣如何？", web), "web_search");
+  assert.equal(forceToolFor("今天台南天氣如何？", noLocal), "web_search");
+  assert.equal(forceToolFor("今天台南天氣如何？", noWeb), "get_local_conditions");
 });
 
 test("商品推薦與找魚問題強制 search_products", function () {

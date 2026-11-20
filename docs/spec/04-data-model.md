@@ -219,6 +219,8 @@
 
 **AI 配額提示不是資料**：`LLM_RATE_LIMITED`、`SEARCH_RATE_LIMITED` 與 `SEARCH_QUOTA_EXHAUSTED` 的提示與重試按鈕只存在前端 transient state，不寫入 `messages`、不新增卡片型別；重新整理或切換房間後消失。AI 回覆端點也不保存重試狀態。
 
+**AI 地區暫存不是資料**：沒有設定縣市時，使用者在助手房回答的縣市只存在後端記憶體，依對話隔離、30 分鐘過期，刪除對話時清除；不寫入 `users.city`、`conversations`、`messages` 或任何資料表，伺服器重啟後遺失。地區暫存只用縣市，不含區或地址。
+
 ## 7. `deals`
 
 `DRAFT` 由開啟交易房建立；送提案後是 `PENDING_REVIEW`，確認是 `CONFIRMED`，取消或逾時是 `CANCELLED`。`NEGOTIATING` 只保留舊資料，新流程不再產生。協議卡的 `status` 會跟著最新一張卡同步為 `pending`／`confirmed`／`cancelled`／`expired`；舊資料的 `rejected` 仍可顯示。舊卡保留當時的狀態。

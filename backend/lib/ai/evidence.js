@@ -36,12 +36,25 @@ function webText(results) {
   }).join("\n");
 }
 
+/* 天氣、海況數字只給模型當輪工具拿到的內容；不含原始 payload 或網址。 */
+function localText(local) {
+  if (!local || local.found !== true) return "";
+  return JSON.stringify({
+    mode: local.mode,
+    city: local.city,
+    sea_area: local.sea_area,
+    weather: local.weather || null,
+    marine: local.marine || null
+  });
+}
+
 /* 依實際使用的工具組出官方數字依據；模型自填的 tool_results 不會進來。 */
 function officialText(toolResults, toolNames) {
   const used = toolNames || [];
   const parts = [];
   if (used.indexOf("get_market_price") !== -1) parts.push(marketText(toolResults && toolResults.market));
   if (used.indexOf("search_products") !== -1) parts.push(productsText(toolResults && toolResults.products));
+  if (used.indexOf("get_local_conditions") !== -1) parts.push(localText(toolResults && toolResults.local));
   return parts.filter(Boolean).join("\n");
 }
 
@@ -49,5 +62,6 @@ module.exports = {
   marketText: marketText,
   productsText: productsText,
   webText: webText,
+  localText: localText,
   officialText: officialText
 };

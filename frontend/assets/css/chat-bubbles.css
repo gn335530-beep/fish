@@ -32,6 +32,7 @@
   font-size: .82rem;
   line-height: 1.7;
   overflow-wrap: anywhere;
+  white-space: pre-wrap;
 }
 
 .fm-msg--me .fm-msg__bubble {

@@ -33,9 +33,9 @@ LLM_ENABLED=true
 GEMINI_API_KEY=your-gemini-key
 ```
 
-可選 `LLM_MODEL`（預設 `gemini-3.5-flash-lite`）、`LLM_TIMEOUT_MS`（一次回覆的總期限，預設 8000）與 `LLM_SEARCH_TIMEOUT_MS`（執行 `web_search` 的回合總期限，預設 15000）。歷史固定取最近 10 則，每輪最多 2 次工具呼叫，沒有環境變數可調。缺少金鑰、逾時或格式錯誤時，助手會安靜回到規則引擎；交易房永遠不呼叫 LLM。助手可使用唯讀的官方行情、平台公開商品與網路搜尋工具，價格與庫存只來自工具結果；行情上游也受同一個回覆期限約束，模型只看到回答所需的平均價與日期。網路搜尋預設關閉；要啟用請另設 `LLM_WEB_SEARCH=true` 與 `TAVILY_API_KEY`。實際使用網路資料的回答會升級為 `WEB` 並顯示最多 3 個來源；`CHAT` 與平台回答不顯示來源。配額用完或 429 時，平台功能仍照常；只有規則也無法處理的問題會顯示提示與重試，重試不會重複寫入訊息，較新的訊息也不會進入重試的歷史。
+可選 `LLM_MODEL`（預設 `gemini-3.5-flash-lite`）、`LLM_TIMEOUT_MS`（一次回覆的總期限，預設 8000）與 `LLM_SEARCH_TIMEOUT_MS`（執行 `web_search` 的回合總期限，預設 15000）。歷史固定取最近 10 則，每輪最多 2 次工具呼叫，沒有環境變數可調。缺少金鑰、逾時或格式錯誤時，助手會安靜回到規則引擎；交易房永遠不呼叫 LLM。助手可使用唯讀的官方行情、平台公開商品、台灣在地天氣／海況（Open-Meteo）與網路搜尋工具，價格、庫存、天氣與海況數字只來自工具結果；行情與氣象上游也受同一個回覆期限約束。地區問題預設使用設定頁縣市，訊息中的明確縣市優先；沒有縣市時助手會先問，回答只暫存在該對話 30 分鐘，刪除對話時清除，不寫回個人設定。天氣只回天氣，海況回浪況與海域天氣；AI 文字保留換行。網路搜尋預設關閉；要啟用請另設 `LLM_WEB_SEARCH=true` 與 `TAVILY_API_KEY`。實際使用網路資料的回答會升級為 `WEB` 並顯示最多 3 個來源；`CHAT` 與平台回答不顯示來源。配額用完或 429 時，平台功能仍照常；只有規則也無法處理的問題會顯示提示與重試，重試不會重複寫入訊息，較新的訊息也不會進入重試的歷史。
 
-這是 **soft launch beta**，不是正式上線：不強制邀請名單、任何註冊使用者都能使用，也不承諾 SLA、稽核或資料落地。Gemini 免費層與 Tavily 免費層仍有硬限制（Tavily 每月 1,000 credits，basic search 每次 1 credit）；免費層內容可能被 Google 用於改善產品，Tavily 也會收到該次搜尋查詢。若之後要公開放大，應先補 allowlist、使用額度與 UI 隱私提示。設計取捨與遷移路徑見 [ADR-0011](./docs/adr/0011-hybrid-llm-assistant.md)。
+這是 **soft launch beta**，不是正式上線：不強制邀請名單、任何註冊使用者都能使用，也不承諾 SLA、稽核或資料落地。Gemini 免費層與 Tavily 免費層仍有硬限制（Tavily 每月 1,000 credits，basic search 每次 1 credit）；免費層內容可能被 Google 用於改善產品，Tavily 也會收到該次搜尋查詢，地區天氣與海況會把縣市或海域座標送給 Open-Meteo。若之後要公開放大，應先補 allowlist、使用額度與 UI 隱私提示。設計取捨與遷移路徑見 [ADR-0011](./docs/adr/0011-hybrid-llm-assistant.md)。
 
 > 若使用其他靜態伺服器，請以 `frontend/` 作為網站根目錄，例如：
 > `python -m http.server 8010 --directory frontend`。

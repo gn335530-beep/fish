@@ -6,6 +6,7 @@ const { requireUser } = require("../lib/auth");
 const { requireRoom, messagesOf, dealsOf } = require("../lib/conversations");
 const { ok } = require("../lib/http");
 const { sweepExpired } = require("../lib/timeouts");
+const regionStore = require("../lib/ai/region-store");
 
 const router = express.Router();
 
@@ -27,6 +28,7 @@ router.delete("/api/conversations/:id", requireUser, function (req, res) {
     remove("messages", message.id);
   });
   bumpStableCode("conversations", "conv", conversation.id);
+  regionStore.forget(conversation.id);
   remove("conversations", conversation.id);
 
   ok(res, { deleted: true, kept_orders: kept.length }, "對話已刪除");

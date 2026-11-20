@@ -3,6 +3,7 @@
 const market = require("./market");
 const products = require("./products");
 const web = require("./web");
+const conditions = require("./conditions");
 const { llmError } = require("../error");
 
 const MARKET_TOOL = {
@@ -44,8 +45,23 @@ const WEB_TOOL = {
   }
 };
 
+const CONDITIONS_TOOL = {
+  name: "get_local_conditions",
+  description: "查台灣縣市的天氣或海域海況。mode=weather 只回天氣；mode=sea 回浪況與該海域天氣。" +
+    "查不到時回 found:true 但缺少對應資料，不要自行補數字。",
+  parameters: {
+    type: "OBJECT",
+    properties: {
+      mode: { type: "STRING", enum: ["weather", "sea"], description: "weather 只查天氣；sea 查海況與天氣" },
+      city: { type: "STRING", description: "縣市；省略時使用本輪地區或使用者縣市" },
+      sea_area: { type: "STRING", description: "海域名稱；省略時使用縣市主要海域" }
+    },
+    required: ["mode"]
+  }
+};
+
 function definitions(config) {
-  const tools = [MARKET_TOOL, PRODUCT_TOOL];
+  const tools = [MARKET_TOOL, PRODUCT_TOOL, CONDITIONS_TOOL];
   if (config && config.webEnabled) tools.push(WEB_TOOL);
   return tools;
 }
@@ -54,6 +70,7 @@ async function execute(name, args, ctx) {
   const input = args && typeof args === "object" && !Array.isArray(args) ? args : {};
   if (name === "get_market_price") return market.run(input, ctx);
   if (name === "search_products") return products.run(input, ctx);
+  if (name === "get_local_conditions") return conditions.run(input, ctx);
   if (name === "web_search") {
     if (!ctx.webEnabled) throw llmError("LLM_INVALID_OUTPUT", { message: "web_search is disabled" });
     return web.run(input, ctx);

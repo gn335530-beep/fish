@@ -1,4 +1,4 @@
-/* 第一輪強制工具：時效性問 web、商品問 products、一般與平台意圖不強制。 */
+/* 第一輪強制工具：在地天氣問條件工具、國外與時效性問 web、商品問 products。 */
 
 const test = require("node:test");
 const assert = require("node:assert/strict");
@@ -21,8 +21,18 @@ async function ask(text, overrides) {
   return h.calls[0];
 }
 
-test("天氣問題第一輪要求 web_search", async function () {
+test("台灣天氣問題第一輪要求在地條件工具", async function () {
   const input = await ask("今天台南天氣如何？", {
+    LLM_WEB_SEARCH: true,
+    TAVILY_API_KEY: "test"
+  });
+  assert.deepEqual(input.toolConfig, {
+    functionCallingConfig: { mode: "ANY", allowedFunctionNames: ["get_local_conditions"] }
+  });
+});
+
+test("國外地點天氣第一輪要求 web_search", async function () {
+  const input = await ask("東京天氣如何？", {
     LLM_WEB_SEARCH: true,
     TAVILY_API_KEY: "test"
   });
@@ -45,7 +55,11 @@ test("一般知識與平台意圖不強制工具", async function () {
   assert.equal(platform.toolConfig, undefined);
 });
 
-test("未開啟網路搜尋時不強制 web_search", async function () {
-  const input = await ask("今天台南天氣如何？");
-  assert.equal(input.toolConfig, undefined);
+test("未開啟網路搜尋時，在地天氣仍強制條件工具；國外地點不強制", async function () {
+  const local = await ask("今天台南天氣如何？");
+  assert.deepEqual(local.toolConfig, {
+    functionCallingConfig: { mode: "ANY", allowedFunctionNames: ["get_local_conditions"] }
+  });
+  const foreign = await ask("東京天氣如何？");
+  assert.equal(foreign.toolConfig, undefined);
 });

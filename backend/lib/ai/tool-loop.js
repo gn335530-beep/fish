@@ -89,6 +89,7 @@ async function run(input, options, report) {
         result: tools.modelResult(call.name, result)
       });
       if (call.name === "get_market_price") toolResults.market = result;
+      if (call.name === "get_local_conditions") toolResults.local = result;
       if (call.name === "search_products") {
         toolResults.products = result.products || [];
         productRegion = result.region || null;

@@ -46,13 +46,17 @@ python -m http.server 8000 --directory frontend
 | `TAVILY_API_KEY` | 空 | Tavily 金鑰；缺少時不提供 `web_search` |
 | `LLM_SEARCH_TIMEOUT_MS` | `15000` | 該回合執行 `web_search` 後延長的總期限 |
 
+在地天氣與海況使用 Open-Meteo Weather／Marine API，不需要金鑰；天氣與海況上游也受同一個回覆期限約束。地區暫存縣市只存在記憶體，重啟後遺失。
+
 - `POST /api/ai/reply` 只接受助手房與該房參與者；不寫入訊息、不修改 `context`。歷史以 `message_id` 為錨點，含它在內的最近 10 則；較新的訊息不會進入模型。
-- 後端只送最近對話與白名單 context；手機、市話（含 `+886` 國際碼、括號或分隔區碼、4 碼區碼）、Email、身分證與具行政區錨點的地址會先換成 `[已遮蔽]`，一般文字中的「路」「弄」「市區」不觸發遮蔽，不送頭像或個人檔案。
+- 後端只送最近對話與白名單 context；手機、市話（含 `+886` 國際碼、括號或分隔區碼、4 碼區碼）、Email、身分證與具行政區錨點的地址會先換成 `[已遮蔽]`，一般文字中的「路」「弄」「市區」不觸發遮蔽，不送頭像或個人檔案。地區問題只把縣市放進 prompt 與 Open-Meteo 查詢，不送區或地址。
 - 模型失敗、格式錯誤或平台數字無依據時，端點回 HTTP 200 + `handled:false`；前端安靜回到規則引擎。
 - 配額或 429 回 `retryable:true`；前端先跑規則，平台意圖能處理就照常完成，規則無法處理才顯示提示與重試。重試沿用同一個 `message_id`，不重寫使用者訊息，較新的訊息也不會進入該次歷史；不自動重試、不排隊、不快取搜尋結果。
 - 平台意圖（賣魚、找魚、行情、取消、修改）只回 slots；AI 文字用於 `CHAT`／`WEB`，`PRODUCT_RECOMMEND` 另附商品卡。
-- 唯讀工具：`get_market_price`（官方行情）、`search_products`（公開商品，最多 5 筆）、`web_search`（Tavily basic search）。每輪最多 2 次；模型不能寫入商品、訂單或評價。
-- 第一輪依問題類型強制工具：時效性／天氣／新聞 → `web_search`；商品推薦／找魚 → `search_products`；平台意圖與一般知識不強制。工具結果回來後恢復自動輸出 JSON。
+- 唯讀工具：`get_market_price`（官方行情）、`search_products`（公開商品，最多 5 筆）、`get_local_conditions`（台灣縣市天氣或海域海況）、`web_search`（Tavily basic search）。每輪最多 2 次；模型不能寫入商品、訂單或評價。
+- 第一輪依問題類型強制工具：在地天氣／海況 → `get_local_conditions`；國外地點天氣、時效性／新聞 → `web_search`；商品推薦／找魚 → `search_products`；平台意圖與一般知識不強制。工具結果回來後恢復自動輸出 JSON。
+- 地區相關問題預設使用設定頁縣市，訊息中的明確縣市優先；非地區問題不送縣市。沒有有效縣市時直接問「你所在的縣市是哪裡？」，回答只暫存在該助手房 30 分鐘，不寫回個人設定，刪除對話時清除。海況優先使用明確海域，否則縣市主要海域；內陸縣市會問「你想問哪個海域？」。
+- 天氣只回天氣，海況回浪況與海域天氣；數字只來自當輪 Open-Meteo 結果。上游逾時、無資料或格式錯誤時只說明缺少什麼，不產生數字。AI 文字氣泡保留換行。
 - `search_products` 回空陣列時，後端把 `PRODUCT_RECOMMEND` 轉成 `CHAT`，只回目前沒有符合條件的商品，不產生商品卡。商品筆數 `N` 的依據是工具回傳的 `count`。
 - `tool_results` 只由後端工具產生：`market` 是給行情卡的完整官方資料（含歷史），模型看到的行情結果只含平均價、交易日期與識別欄位；`products` 是公開商品；模型自行提供的內容一律忽略。
 - `WEB` 的 `sources` 由 Tavily 結果產生，最多 3 個合法 URL；模型自稱 `CHAT` 但成功使用 `web_search` 時會升級為 `WEB`，`CHAT` 與平台答案永遠不帶來源。`LLM_WEB_SEARCH` 關閉時模型不提供此工具。
@@ -65,7 +69,7 @@ python -m http.server 8000 --directory frontend
 backend/
   server.js       啟動
   app.js          middleware、靜態目錄、路由掛載
-  lib/            auth / store / db-file / messages / units / product-stock / product-pricing / timeouts / cards / quantities / deals / deal-items / deal-cancel / deal-transitions / deal-statuses / profile-room / reviews / conversations / regions / ai/ (含 tools/) / market/ / http
+  lib/            auth / store / db-file / messages / units / product-stock / product-pricing / timeouts / cards / quantities / deals / deal-items / deal-cancel / deal-transitions / deal-statuses / profile-room / reviews / conversations / regions / conditions/ (Open-Meteo 與地點對照) / ai/ (含 tools/) / market/ / http
   routes/         auth / users / products / chat / chat-messages / ai / conversation-delete / deals / deal-items / deal-proposal / deal-response / reviews / market / market-catalog / uploads
   scripts/        market-fetch.js（行情 CLI）
   test/           node:test 整合測試（使用暫存資料庫）
