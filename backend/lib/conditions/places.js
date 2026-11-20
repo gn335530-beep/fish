@@ -1,5 +1,7 @@
 /* 在地氣象地點：縣市座標與縣市→海域對照；海域名稱以中央氣象署用語為準。 */
 
+const { normalizeArea } = require("../regions");
+
 const CITY_COORDS = {
   "基隆市": { lat: 25.1283, lon: 121.7392 },
   "台北市": { lat: 25.0330, lon: 121.5654 },
@@ -74,7 +76,7 @@ const SEA_ALIASES = [
 ];
 
 function normalizeKey(value) {
-  return String(value || "").replace(/臺/g, "台").trim();
+  return normalizeArea(value).trim();
 }
 
 function canonicalSea(value) {

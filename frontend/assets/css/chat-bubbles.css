@@ -32,6 +32,9 @@
   font-size: .82rem;
   line-height: 1.7;
   overflow-wrap: anywhere;
+}
+
+.fm-msg__text {
   white-space: pre-wrap;
 }
 

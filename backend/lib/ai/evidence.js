@@ -44,7 +44,8 @@ function localText(local) {
     city: local.city,
     sea_area: local.sea_area,
     weather: local.weather || null,
-    marine: local.marine || null
+    marine: local.marine || null,
+    errors: local.errors || null
   });
 }
 

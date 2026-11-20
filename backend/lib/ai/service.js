@@ -64,17 +64,6 @@ async function reply(options) {
   const report = { toolRuns: [], usage: { input: 0, output: 0, total: 0 } };
   let intent = null;
 
-  const local = localContext.prepare({
-    conversationId: options.conversation.id,
-    text: options.message.text,
-    user: options.user
-  });
-  if (local.askCity) return directReply(baseLog, started, "你所在的縣市是哪裡？");
-  if (local.askSea) return directReply(baseLog, started, "你想問哪個海域？");
-  if (local.ackCity) {
-    return directReply(baseLog, started, "好的，已記住你在" + local.ackCity + "。想問天氣、海況或在地資訊嗎？");
-  }
-
   if (!config.enabled) {
     logReply(Object.assign({}, baseLog, { duration_ms: Date.now() - started, error_code: "LLM_DISABLED" }));
     return failure("LLM_DISABLED", false);
@@ -86,18 +75,25 @@ async function reply(options) {
     return failure("LLM_NOT_CONFIGURED", false);
   }
 
-  const webEnabled = config.webSearch && Boolean(config.tavilyApiKey);
-  const forceTool = forceToolFor(options.message.text, {
-    webEnabled: webEnabled,
-    localEnabled: true
+  const local = localContext.prepare({
+    conversationId: options.conversation.id,
+    text: options.message.text,
+    user: options.user
   });
-  const localPlace = local.city || local.seaArea;
+  if (local.askCity) return directReply(baseLog, started, "你所在的縣市是哪裡？");
+  if (local.askSea) return directReply(baseLog, started, "你想問哪個海域？");
+  if (local.ackCity) {
+    return directReply(baseLog, started, "好的，已記住你在" + local.ackCity + "。想問天氣、海況或在地資訊嗎？");
+  }
+
+  const webEnabled = config.webSearch && Boolean(config.tavilyApiKey);
+  const forceTool = forceToolFor(options.message.text, { webEnabled: webEnabled });
+  const localPlace = local.seaArea || local.city;
   const input = {
     model: config.model,
     timeoutMs: config.timeoutMs,
-    system: local.active && localPlace
-      ? SYSTEM_PROMPT + localContext.promptLine(localPlace)
-      : SYSTEM_PROMPT,
+    system: SYSTEM_PROMPT + localContext.dateLine() +
+      (local.active && localPlace ? localContext.promptLine(localPlace) : ""),
     context: contextSummary(options.context),
     messages: historyFor(options.conversation.id, options.message)
   };
@@ -112,11 +108,11 @@ async function reply(options) {
         user: options.user,
         webEnabled: webEnabled,
         tavilyApiKey: config.tavilyApiKey,
-        local: {
+        local: local.active ? {
           mode: local.mode || "weather",
           city: local.city,
           seaArea: local.seaArea
-        }
+        } : null
       }
     }, report);
 

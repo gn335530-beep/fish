@@ -1,8 +1,8 @@
 /* get_local_conditions：天氣或海況一次取得；回傳結構化資料，缺資料時說明原因。 */
 
-const { normalizeRegion } = require("../../regions");
 const openMeteo = require("../../conditions/open-meteo");
 const places = require("../../conditions/places");
+const { regionValue } = require("./region");
 
 function reasonOf(error) {
   if (error && error.reason) return error.reason;
@@ -16,10 +16,7 @@ function modeOf(args, ctx) {
 }
 
 function cityOf(args, ctx) {
-  return normalizeRegion(args.city) ||
-    (ctx.local && ctx.local.city) ||
-    normalizeRegion(ctx.user && ctx.user.city) ||
-    "";
+  return regionValue(args.city) || (ctx.local && ctx.local.city) || "";
 }
 
 async function weatherResult(city, timeoutMs) {

@@ -1,19 +1,12 @@
 /* 助手地區上下文：只有地區問題才帶縣市；缺縣市或海域時反問，暫存在目前對話。 */
 
-const { CITIES, normalizeRegion } = require("../regions");
+const { CITIES, normalizeArea, normalizeRegion } = require("../regions");
 const places = require("../conditions/places");
+const questions = require("./question-types");
 const regionStore = require("./region-store");
 
-const REGION_QUESTION = /(天氣|氣象|下雨|降雨|氣溫|溫度|風速|風向|海況|浪況|浪高|浪向|浪週期|海浪|風浪|海溫|潮汐|潮水|滿潮|乾潮|新聞|交通|路況|活動|附近|這裡|這邊|在地)/;
-const WEATHER_QUESTION = /(天氣|氣象|下雨|降雨|氣溫|溫度|風速|風向)/;
-const SEA_QUESTION = /(海況|浪況|浪高|浪向|浪週期|海浪|風浪|海溫)/;
-
-function normalize(text) {
-  return String(text || "").replace(/臺/g, "台");
-}
-
 function cityInText(text) {
-  const source = normalize(text);
+  const source = normalizeArea(text);
   const exact = CITIES.filter(function (city) {
     return source.indexOf(city) !== -1;
   })[0];
@@ -26,7 +19,7 @@ function cityInText(text) {
 
 function cityOnly(text, city) {
   if (!city) return false;
-  const rest = normalize(text)
+  const rest = normalizeArea(text)
     .split(city).join("")
     .split(city.slice(0, -1)).join("")
     .replace(/[，,。.!！?？、:：;；\s]/g, "");
@@ -41,10 +34,16 @@ function prepare(options) {
   const asked = regionStore.wasAsked(conversationId);
   const stored = regionStore.cityOf(conversationId);
   const profile = normalizeRegion(options.user && options.user.city);
-  const sea = SEA_QUESTION.test(String(text || ""));
+  const sea = questions.isSeaQuestion(text);
   const explicitSea = places.seaAreaInText(text);
-  const active = REGION_QUESTION.test(String(text || "")) || Boolean(explicit);
+  const foreign = !explicit && !explicitSea && questions.hasForeignPlace(text);
 
+  if (foreign) {
+    if (asked) regionStore.clearAsked(conversationId);
+    return { active: false, city: "", mode: "", seaArea: "", askCity: false, askSea: false, ackCity: "" };
+  }
+
+  const active = questions.isRegionQuestion(text) || Boolean(explicit);
   if (asked && explicit) {
     regionStore.rememberCity(conversationId, explicit);
     regionStore.clearAsked(conversationId);
@@ -64,11 +63,17 @@ function prepare(options) {
   if (sea && !seaArea) {
     return { active: true, city: city, mode: "sea", seaArea: "", askCity: false, askSea: true, ackCity: "" };
   }
-  const mode = sea ? "sea" : (WEATHER_QUESTION.test(String(text || "")) ? "weather" : "");
+  const mode = sea ? "sea" : (questions.isWeatherQuestion(text) ? "weather" : "");
   return {
     active: active, city: city, mode: mode, seaArea: seaArea,
     askCity: false, askSea: false, ackCity: ""
   };
+}
+
+function dateLine(at) {
+  const time = Number.isFinite(at) ? at : Date.now();
+  const date = new Date(time + 8 * 3600 * 1000).toISOString().slice(0, 10);
+  return "\n\n目前日期（Asia/Taipei）：" + date + "。";
 }
 
 function promptLine(place) {
@@ -77,7 +82,6 @@ function promptLine(place) {
 
 module.exports = {
   prepare: prepare,
-  promptLine: promptLine,
-  cityInText: cityInText,
-  isRegionQuestion: function (text) { return REGION_QUESTION.test(String(text || "")); }
+  dateLine: dateLine,
+  promptLine: promptLine
 };

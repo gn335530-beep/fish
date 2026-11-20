@@ -19,3 +19,4 @@
 
 - 2026-11-20：由 `local-conditions` 設計拆分。
 - 2026-11-20：完成。`local-context.js` 加入海況判斷、明確海域優先與內陸反問；`conditions.js` 以 `mode=sea` 並行查 Marine 與海域座標 Weather，單邊失敗保留另一邊並標記 `errors`，兩邊都失敗才回「查不到海況與天氣」。海域別名取最長匹配，避免「東北部海面」被誤判為北部。測試見 `ai-tools-sea.test.js`；`npm test` 全數通過。
+- 2026-11-20：review 後 prompt 在地區海況時以海域名稱優先，並要求回覆寫出海域名稱；缺失原因 `errors` 也納入數字依據文字，讓模型能逐項說明。

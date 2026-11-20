@@ -98,9 +98,5 @@ function marineSummary(payload) {
 
 module.exports = {
   weatherSummary: weatherSummary,
-  marineSummary: marineSummary,
-  weatherText: weatherText,
-  directionText: directionText,
-  beaufort: beaufort,
-  noData: noData
+  marineSummary: marineSummary
 };

@@ -57,6 +57,7 @@ test("台灣縣市天氣使用 Open-Meteo，回覆含現象、氣溫、降雨與
   assert.match(upstream.urls[0], /api\.open-meteo\.com\/v1\/forecast/);
   assert.match(upstream.urls[0], /latitude=22\.6273/);
   assert.match(upstream.urls[0], /timezone=Asia%2FTaipei/);
+  assert.match(h.calls[0].system, /目前日期（Asia\/Taipei）：\d{4}-\d{2}-\d{2}/);
   assert.equal(h.calls[0].toolConfig.functionCallingConfig.allowedFunctionNames[0],
     "get_local_conditions");
   const modelView = h.calls[1].tool_rounds[0].results[0].result;

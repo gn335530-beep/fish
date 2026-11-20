@@ -24,7 +24,7 @@ function bubble(message) {
   } else if (message.type === "image") {
     content = '<img class="fm-msg__image" src="' + escapeHtml(resolveImage(message.image_url)) + '" alt="訊息圖片">';
   } else {
-    content = '<span>' + escapeHtml(message.text) + '</span>';
+    content = '<span class="fm-msg__text">' + escapeHtml(message.text) + '</span>';
   }
 
   return '<div class="fm-msg ' + (mine ? "fm-msg--me" : "fm-msg--other") + (isMarket ? " fm-msg--market" : "") +

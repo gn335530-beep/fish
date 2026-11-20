@@ -7,10 +7,14 @@ const CITIES = [
   "台東縣", "澎湖縣", "金門縣", "連江縣"
 ];
 
+function normalizeArea(value) {
+  return String(value == null ? "" : value).replace(/臺/g, "台");
+}
+
 function normalizeRegion(value) {
   if (typeof value !== "string") return "";
-  const text = value.trim().replace(/臺/g, "台");
+  const text = normalizeArea(value).trim();
   return CITIES.indexOf(text) === -1 ? "" : text;
 }
 
-module.exports = { CITIES: CITIES, normalizeRegion: normalizeRegion };
+module.exports = { CITIES: CITIES, normalizeArea: normalizeArea, normalizeRegion: normalizeRegion };

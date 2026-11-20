@@ -20,3 +20,4 @@
 
 - 2026-11-20：由 `local-conditions` 設計拆分。
 - 2026-11-20：完成。新增 `lib/conditions/places.js`（22 縣市座標與縣市→海域對照）、`normalize.js`（WMO 現象、風向、蒲福風級、7 日預報）、`open-meteo.js`（可注入 fetcher 的 Weather／Marine 讀取）與 `lib/ai/tools/conditions.js`；`get_local_conditions` 納入工具目錄，天氣／海況數字進入既有數字依據。天氣上限為 7 日預報，逾時或無資料由 `service.js` 直接回「查不到即時天氣」。`chat-bubbles.css` 加上 `white-space: pre-wrap` 保留換行。測試見 `ai-tools-weather.test.js`；`npm test` 全數通過。
+- 2026-11-20：review 後把換行樣式限定在 `.fm-msg__text`，卡片不受影響；system prompt 加上 Asia/Taipei 目前日期，讓今天／明天／這週有依據；非台灣地點改走網路且不注入設定縣市（完整國外流程仍由 ticket 08 收斂）。

@@ -18,4 +18,4 @@ function regionOf(args, ctx) {
     null;
 }
 
-module.exports = { regionOf: regionOf };
+module.exports = { regionOf: regionOf, regionValue: regionValue };

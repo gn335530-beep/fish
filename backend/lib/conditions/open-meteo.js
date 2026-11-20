@@ -82,7 +82,5 @@ module.exports = {
   weatherAt: weatherAt,
   marineAt: marineAt,
   setFetcher: setFetcher,
-  resetFetcher: resetFetcher,
-  WEATHER_URL: WEATHER_URL,
-  MARINE_URL: MARINE_URL
+  resetFetcher: resetFetcher
 };

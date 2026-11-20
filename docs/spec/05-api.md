@@ -424,7 +424,7 @@
 - 平台意圖（`SELL`、`BUY`、`MARKET`、`CANCEL`、`EDIT`）不產生 `reply_text`，前端交由既有規則完成；`CHAT`／`WEB`／`PRODUCT_RECOMMEND` 才寫入文字。
 - 唯讀工具：`get_market_price`（官方行情）、`search_products`（公開商品，最多 5 筆）、`get_local_conditions`（台灣縣市天氣或海域海況）、`web_search`（Tavily basic search）。每輪最多 2 次工具呼叫；模型不能使用寫入工具。工具結果視為不可信資料，平台數字、天氣與海況數字只能來自使用者訊息或後端工具結果。
 - 第一輪依問題類型強制工具：在地天氣／海況 → `get_local_conditions`；國外地點天氣、時效性／新聞 → `web_search`；商品推薦／找魚 → `search_products`；平台意圖與一般知識不強制。工具結果回來後恢復自動輸出 JSON。
-- 地區上下文只用於地區相關問題：預設設定頁縣市，訊息中明確縣市優先；非地區問題不把縣市放進 prompt 或工具查詢。沒有有效縣市時回 200 + `handled:true`、`intent:CHAT`、`reply_text:"你所在的縣市是哪裡？"`，不呼叫模型；使用者回答的縣市只暫存在後端記憶體（同一對話、30 分鐘、刪除對話時清除），不寫回個人設定。只使用縣市，不使用區或地址。
+- 地區上下文只用於地區相關問題：預設設定頁縣市，訊息中明確縣市優先；非地區問題不把縣市放進 prompt 或工具查詢。system prompt 固定帶目前日期（Asia/Taipei）。沒有有效縣市時回 200 + `handled:true`、`intent:CHAT`、`reply_text:"你所在的縣市是哪裡？"`，不呼叫模型；使用者回答的縣市只暫存在後端記憶體（同一對話、30 分鐘、刪除對話時清除），不寫回個人設定。只使用縣市，不使用區或地址。`LLM_ENABLED=false` 或缺少金鑰時仍回靜默 fallback，不建立暫存。
 - 天氣問題的 `get_local_conditions` 結果只含天氣現象、現在氣溫、今日高低溫、降雨機率、風速風向與 7 日預報；海況結果含浪高、浪向、浪週期、海溫、海域天氣與風速陣風。海況優先使用訊息中的明確海域，否則縣市主要海域；內陸縣市或無法對應時回 200 + `intent:CHAT`、`reply_text:"你想問哪個海域？"`，不呼叫模型。上游逾時、無資料或格式錯誤時只回缺少什麼，不產生數字。
 - `search_products` 回空陣列時，後端把 `PRODUCT_RECOMMEND` 轉成 `CHAT`，只回目前沒有符合條件的商品，不產生商品卡。商品筆數 `N` 的依據是工具回傳的 `count`。
 - 每次回覆只有一個請求期限：一般 8 秒（`LLM_TIMEOUT_MS`）；該輪執行 `web_search` 後延長為 15 秒（`LLM_SEARCH_TIMEOUT_MS`）。期限同時套用模型呼叫、每個工具與行情／氣象上游；工具開始前剩餘時間已用盡就不再呼叫下游，逾時回 `LLM_TIMEOUT` 靜默 fallback。

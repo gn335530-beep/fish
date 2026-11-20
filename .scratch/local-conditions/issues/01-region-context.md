@@ -19,3 +19,4 @@
 
 - 2026-11-20：由 `local-conditions` 設計拆分。
 - 2026-11-20：完成。新增 `lib/ai/local-context.js`（地區問題判斷、縣市抽取、反問與 prompt 行）與 `lib/ai/region-store.js`（依對話隔離、30 分鐘 TTL、刪除對話清除的記憶體暫存）；`service.js` 在地區缺縣市時直接回覆、不呼叫模型，並只在地區問題附加縣市 prompt。刪除對話路由同步清除暫存。測試見 `ai-region-context.test.js`；`npm test` 全數通過。
+- 2026-11-20：review 後把地區反問移到 LLM 開關與金鑰檢查之後，LLM 關閉時維持靜默 fallback；非地區回合的工具 context 不再帶縣市，模型即使誤呼叫在地工具也不會拿到設定縣市；system prompt 固定帶 Asia/Taipei 日期；國外地點不注入設定縣市。問題類型關鍵詞集中到 `lib/ai/question-types.js`，避免分類與地區上下文漂移。

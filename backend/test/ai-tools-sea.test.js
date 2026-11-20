@@ -64,7 +64,9 @@ test("海況使用縣市主要海域的 Marine 與 Weather，回覆含浪況、�
   assert.match(upstream.urls[1], /api\.open-meteo\.com\/v1\/forecast/);
   assert.equal(h.calls[0].toolConfig.functionCallingConfig.allowedFunctionNames[0],
     "get_local_conditions");
-  assert.match(h.calls[0].system, /新北市/);
+  assert.match(h.calls[0].system, /臺灣北部海面/);
+  assert.doesNotMatch(h.calls[0].system, /新北市/);
+  assert.match(h.calls[0].system, /海域名稱/);
 });
 
 test("訊息中的明確海域優先，沒有縣市也能回答海況", async function () {
