@@ -23,7 +23,7 @@ function localSourceRows(local) {
   if (local.mode === "sea") {
     if (local.marine) rows.push(MARINE_SOURCE);
     if (local.weather) rows.push({
-      title: "Open-Meteo 海域天氣",
+      title: "Open-Meteo 天氣",
       url: "https://open-meteo.com/"
     });
     if (local.tide) rows.push(TIDE_SOURCE);

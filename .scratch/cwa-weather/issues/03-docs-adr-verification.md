@@ -21,3 +21,4 @@
 - 2026-11-21：完成。新增 ADR-0014；ADR-0013 與 ADR-0011 的天氣資料來源、隱私與交叉引用已更新。流程、API、UI、根目錄與 backend README、`GLOSSARY.md` 已同步為「天氣 F-D0047-091＋O-A0001-001、海況 Open-Meteo、CWA 失敗不 fallback」。
 - 2026-11-21：真實 `CWA_API_KEY` smoke test（工具層）：高雄市與花蓮縣均取得 7 日預報、今日高低溫／降雨／風與自動氣象站目前氣溫（高雄市新興 20.5°C、花蓮 18.5°C，附觀測時間）；來源列中央氣象署天氣預報與自動氣象站觀測。缺金鑰回「查不到即時天氣」；預報 1ms 逾時為 `UPSTREAM_TIMEOUT`，文案同上；觀測使用無效金鑰為 `UPSTREAM_UNAVAILABLE`，僅觀測失敗時會補「目前氣溫暫無資料」。
 - 2026-11-21：`npm test` 789 全綠；測試不呼叫真實 Gemini、Tavily、Open-Meteo 或 CWA。新增與修改的程式碼檔案最大 200 行（`validate.js`），其餘皆低於上限。文件與程式搜尋只剩歷史 `.scratch/local-conditions` ticket 提到舊的 Open-Meteo 天氣；現行文件與程式的 Open-Meteo 描述均限海況／海域天氣，並明確寫出不 fallback。
+- 2026-11-21：review follow-up。`GLOSSARY.md` 的天氣定義補上「今日高低溫」；prompt 要求天氣回覆開頭寫出縣市名稱。`npm test` 791 全綠。

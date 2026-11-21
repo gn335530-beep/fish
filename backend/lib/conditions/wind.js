@@ -5,9 +5,7 @@ const BEAUFORT_MAX = [1, 6, 12, 20, 29, 39, 50, 62, 75, 89, 103, 118];
 
 function numberOrNull(value) {
   const number = Number(value);
-  if (value === null || value === undefined || value === "" || !Number.isFinite(number)) {
-    return null;
-  }
+  if (value === null || value === undefined || !Number.isFinite(number)) return null;
   return number;
 }
 
@@ -43,7 +41,6 @@ function msToKmh(ms) {
 }
 
 module.exports = {
-  DIRECTIONS: DIRECTIONS,
   numberOrNull: numberOrNull,
   directionText: directionText,
   directionFromText: directionFromText,

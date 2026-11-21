@@ -40,6 +40,10 @@ function valueOf(index, start, key) {
   return row && row[key] !== undefined && row[key] !== null ? row[key] : null;
 }
 
+function numberValue(value) {
+  return value === "" ? null : numberOrNull(value);
+}
+
 function indexesOf(elements) {
   return {
     max: valueIndex(elements[ELEMENT.max]),
@@ -56,8 +60,8 @@ function segmentOf(time, index) {
   const end = String(time.EndTime || time.endTime || "");
   const startMs = Date.parse(start);
   if (!start || !Number.isFinite(startMs)) return null;
-  const speed = msToKmh(valueOf(index.wind, start, "WindSpeed"));
-  const scale = numberOrNull(valueOf(index.wind, start, "BeaufortScale"));
+  const speed = msToKmh(numberValue(valueOf(index.wind, start, "WindSpeed")));
+  const scale = numberValue(valueOf(index.wind, start, "BeaufortScale"));
   const weather = valueOf(index.weather, start, "Weather");
   return {
     date: start.slice(0, 10),
@@ -65,9 +69,9 @@ function segmentOf(time, index) {
     endMs: Date.parse(end),
     daytime: start.slice(11, 13) === "06",
     weather_text: weather ? String(weather) : "",
-    high_c: numberOrNull(valueOf(index.max, start, "MaxTemperature")),
-    low_c: numberOrNull(valueOf(index.min, start, "MinTemperature")),
-    rain_probability: numberOrNull(valueOf(index.rain, start, "ProbabilityOfPrecipitation")),
+    high_c: numberValue(valueOf(index.max, start, "MaxTemperature")),
+    low_c: numberValue(valueOf(index.min, start, "MinTemperature")),
+    rain_probability: numberValue(valueOf(index.rain, start, "ProbabilityOfPrecipitation")),
     wind_speed_kmh: speed,
     wind_scale: scale === null ? beaufort(speed) : scale,
     wind_direction_text: directionFromText(valueOf(index.direction, start, "WindDirection"))
@@ -164,6 +168,5 @@ function summarize(location, at) {
 }
 
 module.exports = {
-  summarize: summarize,
-  taipeiDate: taipeiDate
+  summarize: summarize
 };

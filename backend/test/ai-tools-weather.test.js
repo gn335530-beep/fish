@@ -100,21 +100,22 @@ test("模型已寫目前氣溫暫無資料時不重複追加", async function ()
   assert.equal((data.reply_text.match(/目前氣溫暫無資料/g) || []).length, 1);
 });
 
-test("訊息中的明確縣市優先於設定縣市，並以縣市名稱查詢", async function () {
-  const upstream = c.fakeForecast({ city: "花蓮縣" });
+test("訊息中的明確縣市優先於設定縣市，並以中央氣象署的臺北市名稱查詢", async function () {
+  const upstream = c.fakeForecast({ city: "臺北市" });
   h.useSequence([
     { tool_calls: [c.conditionsCall("weather")] },
-    c.finalChat("花蓮縣今天多雲。\n今天 26–31°C，降雨機率 40%，東南風 3 級。")
+    c.finalChat("台北市今天多雲。\n今天 26–31°C，降雨機率 40%，東南風 3 級。")
   ]);
   const room = await h.createRoom(tokens.buyer);
-  const message = await h.sendUser(room.id, "花蓮今天天氣如何？");
+  const message = await h.sendUser(room.id, "台北今天天氣如何？");
 
   const data = (await h.reply(room.id, message.id)).body.data;
   assert.equal(data.handled, true, JSON.stringify(data));
-  assert.equal(data.tool_results.local.city, "花蓮縣");
-  assert.match(h.calls[0].system, /花蓮縣/);
+  assert.equal(data.tool_results.local.city, "台北市");
+  assert.ok(data.tool_results.local.weather);
+  assert.match(h.calls[0].system, /台北市/);
   assert.doesNotMatch(h.calls[0].system, /新北市/);
-  assert.match(upstream.urls[0], /LocationName=%E8%8A%B1%E8%93%AE%E7%B8%A3/);
+  assert.match(upstream.urls[0], /LocationName=%E8%87%BA%E5%8C%97%E5%B8%82/);
 });
 
 test("沒有縣市時天氣問題先反問，不呼叫 CWA", async function () {

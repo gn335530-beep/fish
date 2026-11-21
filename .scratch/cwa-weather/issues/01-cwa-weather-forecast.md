@@ -23,3 +23,4 @@
 
 - 2026-11-21：由 `cwa-weather` spec 拆分；依建議 A，排在 `local-conditions-review-followup` 01–08 之後。
 - 2026-11-21：完成。新增 `conditions/cwa-forecast.js` 與 `cwa-forecast-summary.js` 解析 F-D0047-091，12 小時分段合併成 7 日資料；`get_local_conditions` 天氣模式改走 CWA，缺少金鑰、逾時、5xx 或格式錯誤回「查不到即時天氣」，不呼叫 Open-Meteo。`current_temperature_c` 維持 `null`，後端在 `validate.js` 保證補上「目前氣溫暫無資料」；天氣來源卡改列中央氣象署天氣預報。測試見 `ai-tools-weather.test.js`，其餘天氣／來源／模式測試改用假 CWA；`npm test` 782 全綠。文件同步到流程、API、roadmap、根目錄與 backend README、ADR-0011。程式碼檔案最大 200 行（`validate.js`）。
+- 2026-11-21：review follow-up。修正 `台北市`／`台中市`／`台南市`／`台東縣` 的 CWA 查詢名稱：F-D0047-091 只接受「臺」，改以 `CWA_CITY_NAME` 映射送出，本地仍以正規化縣市比對；真實 API 已確認四縣市可取得預報。另移除未使用的 `taipeiDate` export、維持 Open-Meteo 數值解析原行為、還原海況來源標題，並補天氣模式的未支持數字測試 `ai-weather-number-guard.test.js`。

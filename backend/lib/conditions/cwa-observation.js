@@ -37,6 +37,7 @@ function stationsOf(payload) {
 
 /* CWA 以 -99 表示缺值；溫度、風速、陣風與高度都沿用這個規則。 */
 function validNumber(value) {
+  if (value === "") return null;
   const number = numberOrNull(value);
   return number === -99 ? null : number;
 }

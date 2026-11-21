@@ -1,11 +1,18 @@
 /* 中央氣象署 F-D0047-091 一週天氣預報：以縣市名稱查詢，正規化見 summary。 */
 
 const { fetchJson, reasonError } = require("./fetch-json");
-const { summarize, taipeiDate } = require("./cwa-forecast-summary");
+const { summarize } = require("./cwa-forecast-summary");
 const { normalizeArea } = require("../regions");
 
 const API_URL = "https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-D0047-091";
 const ELEMENT_NAME = "平均溫度,最高溫度,最低溫度,12小時降雨機率,風向,風速,天氣現象";
+/* CWA 查詢參數使用「臺」，平台內部統一用「台」；本地比對仍會正規化。 */
+const CWA_CITY_NAME = {
+  "台北市": "臺北市",
+  "台中市": "臺中市",
+  "台南市": "臺南市",
+  "台東縣": "臺東縣"
+};
 
 let fetcher = null;
 
@@ -21,11 +28,16 @@ function fetchImpl() {
   return fetcher || fetch;
 }
 
+function cwaCityName(city) {
+  const normalized = normalizeArea(city);
+  return CWA_CITY_NAME[normalized] || normalized;
+}
+
 function forecastUrl(city, apiKey) {
   const params = new URLSearchParams({
     Authorization: apiKey,
     format: "JSON",
-    LocationName: normalizeArea(city),
+    LocationName: cwaCityName(city),
     ElementName: ELEMENT_NAME
   });
   return API_URL + "?" + params.toString();
@@ -69,6 +81,5 @@ async function forecastFor(city, options) {
 module.exports = {
   forecastFor: forecastFor,
   setFetcher: setFetcher,
-  resetFetcher: resetFetcher,
-  taipeiDate: taipeiDate
+  resetFetcher: resetFetcher
 };
