@@ -1,25 +1,13 @@
 /* 中央氣象署 O-A0001-001 自動氣象站：依縣市在本地過濾並選站。 */
 
-const { fetchJson, reasonError } = require("./fetch-json");
+const { fetchJson, reasonError, createFetcher } = require("./fetch-json");
 const { numberOrNull, directionText, msToKmh, beaufort } = require("./wind");
 const { normalizeArea } = require("../regions");
 const places = require("./places");
 
 const API_URL = "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0001-001";
 
-let fetcher = null;
-
-function setFetcher(fake) {
-  fetcher = fake;
-}
-
-function resetFetcher() {
-  fetcher = null;
-}
-
-function fetchImpl() {
-  return fetcher || fetch;
-}
+const fetcherSlot = createFetcher();
 
 function observationUrl(apiKey) {
   const params = new URLSearchParams({
@@ -130,7 +118,7 @@ async function observationFor(city, options) {
   if (!settings.apiKey) throw reasonError("NOT_CONFIGURED");
   const payload = await fetchJson(observationUrl(settings.apiKey), {
     timeoutMs: settings.timeoutMs,
-    fetcher: fetchImpl()
+    fetcher: fetcherSlot.current()
   });
   const rows = stationsOf(payload).map(stationRow);
   if (!rows.length) throw reasonError("NO_DATA");
@@ -139,6 +127,6 @@ async function observationFor(city, options) {
 
 module.exports = {
   observationFor: observationFor,
-  setFetcher: setFetcher,
-  resetFetcher: resetFetcher
+  setFetcher: fetcherSlot.set,
+  resetFetcher: fetcherSlot.reset
 };

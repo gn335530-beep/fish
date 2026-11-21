@@ -93,7 +93,7 @@ test("處理方式縮短提議存入 contract 但不改草稿", async function (
     reply_text: "要不要改成「放血冰鎮去鰓」？",
     condition_proposal: PROPOSAL,
     next_action: "ask"
-  }, listingContext(draft()));
+  }, listingContext(draft(), { condition_ask_count: 2 }));
   const listing = result.body.data.listing;
   assert.equal(listing.condition_proposal, PROPOSAL);
   assert.equal("condition" in listing.draft_changes, false);
@@ -118,4 +118,43 @@ test("釣客說好之後才套用縮短版並清掉提議", async function () {
   assert.equal(result.body.data.handled, true);
   assert.equal(result.body.data.listing.draft_changes.condition, PROPOSAL);
   assert.equal(result.body.data.listing.condition_proposal, null);
+});
+
+test("處理方式回問訊號遞增回問計數", async function () {
+  const result = await ask("放血冰鎮然後去鰓去鱗去內臟再真空包裝並且低溫冷藏保存", {
+    reply_text: "目前 26 字，請縮短到 20 字以內。",
+    condition_ask: true,
+    next_action: "ask"
+  }, listingContext(draft()));
+  assert.equal(result.body.data.handled, true);
+  assert.equal(result.body.data.listing.condition_ask_count, 1);
+});
+
+test("回問未滿兩次時提議縮短版被丟棄", async function () {
+  const result = await ask("放血冰鎮然後去鰓", {
+    reply_text: "要不要改成「放血冰鎮去鰓」？",
+    condition_proposal: PROPOSAL,
+    next_action: "ask"
+  }, listingContext(draft()));
+  assert.equal(result.body.data.handled, true);
+  assert.equal(result.body.data.listing.condition_proposal, null);
+});
+
+test("回問滿兩次後提議縮短版被接受", async function () {
+  const result = await ask("放血冰鎮然後去鰓", {
+    reply_text: "要不要改成「放血冰鎮去鰓」？",
+    condition_proposal: PROPOSAL,
+    next_action: "ask"
+  }, listingContext(draft(), { condition_ask_count: 2 }));
+  assert.equal(result.body.data.listing.condition_proposal, PROPOSAL);
+  assert.equal(result.body.data.listing.condition_ask_count, 2);
+});
+
+test("處理方式寫入有效值後回問計數歸零", async function () {
+  const result = await ask("活體", {
+    reply_text: "好的，處理方式是活體。",
+    draft_changes: { condition: "活體" },
+    next_action: "ask"
+  }, listingContext(draft(), { condition_ask_count: 3 }));
+  assert.equal(result.body.data.listing.condition_ask_count, 0);
 });

@@ -107,6 +107,21 @@ test("草稿未完成時，模型要求顯示草稿卡會降級為 ask", async f
   assert.equal(result.body.data.listing.next_action, "ask");
 });
 
+test("修正紀錄不接受白名單以外的欄位", async function () {
+  const room = await h.createRoom();
+  const message = await h.sendUser(room.id, "3尾");
+  h.useJson({
+    reply_text: "好的。",
+    corrections: [{ field: "price", original: "3000", corrected: "3000" }],
+    next_action: "ask"
+  });
+
+  const result = await h.reply(room.id, message.id, undefined, listingContext());
+  assert.equal(result.status, 200);
+  assert.equal(result.body.data.handled, false);
+  assert.equal(result.body.data.error_code, "LLM_GUARD_REJECTED");
+});
+
 test("修正記錄會併入既有 correction_history 並帶時間", async function () {
   const room = await h.createRoom();
   const message = await h.sendUser(room.id, "鬼頭刀");

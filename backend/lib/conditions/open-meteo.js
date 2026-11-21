@@ -1,24 +1,12 @@
 /* Open-Meteo 讀取：天氣與海況各自一個端點；測試以 setFetcher 注入假回應。 */
 
-const { fetchJson } = require("./fetch-json");
+const { fetchJson, createFetcher } = require("./fetch-json");
 const { weatherSummary, marineSummary } = require("./normalize");
 
 const WEATHER_URL = "https://api.open-meteo.com/v1/forecast";
 const MARINE_URL = "https://marine-api.open-meteo.com/v1/marine";
 
-let fetcher = null;
-
-function setFetcher(fake) {
-  fetcher = fake;
-}
-
-function resetFetcher() {
-  fetcher = null;
-}
-
-function fetchImpl() {
-  return fetcher || fetch;
-}
+const fetcherSlot = createFetcher();
 
 function weatherUrl(coords) {
   const params = new URLSearchParams({
@@ -47,20 +35,20 @@ function marineUrl(coords) {
 async function weatherAt(coords, timeoutMs) {
   return weatherSummary(await fetchJson(weatherUrl(coords), {
     timeoutMs: timeoutMs,
-    fetcher: fetchImpl()
+    fetcher: fetcherSlot.current()
   }));
 }
 
 async function marineAt(coords, timeoutMs) {
   return marineSummary(await fetchJson(marineUrl(coords), {
     timeoutMs: timeoutMs,
-    fetcher: fetchImpl()
+    fetcher: fetcherSlot.current()
   }));
 }
 
 module.exports = {
   weatherAt: weatherAt,
   marineAt: marineAt,
-  setFetcher: setFetcher,
-  resetFetcher: resetFetcher
+  setFetcher: fetcherSlot.set,
+  resetFetcher: fetcherSlot.reset
 };

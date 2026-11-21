@@ -34,7 +34,8 @@ export async function applyListingReply(ctx, listing, user) {
   const extra = {
     correction_history: listing.correction_history || [],
     protected_names: listing.protected_names || [],
-    condition_proposal: listing.condition_proposal || null
+    condition_proposal: listing.condition_proposal || null,
+    condition_ask_count: Number.isInteger(listing.condition_ask_count) ? listing.condition_ask_count : 0
   };
   /* 魚種換了先讓舊行情失效；行情卡依 next_action 重查。 */
   if (Object.prototype.hasOwnProperty.call(changes, "fish_species")) extra.market_quoted = false;

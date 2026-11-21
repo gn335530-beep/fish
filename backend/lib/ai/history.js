@@ -122,6 +122,7 @@ function contextSummary(context) {
     out.protected_names = source.protected_names.slice(-20);
   }
   if (source.condition_proposal) out.condition_proposal = String(source.condition_proposal).slice(0, 60);
+  if (Number.isInteger(source.condition_ask_count)) out.condition_ask_count = source.condition_ask_count;
   /* 白名單欄位裡的每個字串都套用同一套遮蔽規則，含草稿與商品摘要。 */
   return redactFields(out);
 }

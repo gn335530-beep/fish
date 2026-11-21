@@ -1,23 +1,11 @@
 /* 中央氣象署潮汐預報：讀取 F-A0021-001，整理今日與明日的滿潮、乾潮時間。 */
 
-const { fetchJson, reasonError } = require("./fetch-json");
+const { fetchJson, reasonError, createFetcher } = require("./fetch-json");
 
 const API_URL = "https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-A0021-001";
 const TIME_RE = /(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/;
 
-let fetcher = null;
-
-function setFetcher(fake) {
-  fetcher = fake;
-}
-
-function resetFetcher() {
-  fetcher = null;
-}
-
-function fetchImpl() {
-  return fetcher || fetch;
-}
+const fetcherSlot = createFetcher();
 
 function taipeiDate(at) {
   const time = Number.isFinite(at) ? at : Date.now();
@@ -116,7 +104,7 @@ async function forecastFor(station, options) {
   const started = Date.now();
   let remaining = settings.timeoutMs;
   const request = function () {
-    return { timeoutMs: remaining, fetcher: fetchImpl() };
+    return { timeoutMs: remaining, fetcher: fetcherSlot.current() };
   };
   let payload = await fetchJson(tideUrl(station.location, settings.apiKey), request());
   if (!locationsOf(payload).length && station.fallback) {
@@ -130,7 +118,7 @@ async function forecastFor(station, options) {
 
 module.exports = {
   forecastFor: forecastFor,
-  setFetcher: setFetcher,
-  resetFetcher: resetFetcher,
+  setFetcher: fetcherSlot.set,
+  resetFetcher: fetcherSlot.reset,
   taipeiDate: taipeiDate
 };

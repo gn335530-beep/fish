@@ -1,6 +1,6 @@
 /* 中央氣象署 F-D0047-091 一週天氣預報：以縣市名稱查詢，正規化見 summary。 */
 
-const { fetchJson, reasonError } = require("./fetch-json");
+const { fetchJson, reasonError, createFetcher } = require("./fetch-json");
 const { summarize } = require("./cwa-forecast-summary");
 const { normalizeArea } = require("../regions");
 
@@ -14,19 +14,7 @@ const CWA_CITY_NAME = {
   "台東縣": "臺東縣"
 };
 
-let fetcher = null;
-
-function setFetcher(fake) {
-  fetcher = fake;
-}
-
-function resetFetcher() {
-  fetcher = null;
-}
-
-function fetchImpl() {
-  return fetcher || fetch;
-}
+const fetcherSlot = createFetcher();
 
 function cwaCityName(city) {
   const normalized = normalizeArea(city);
@@ -71,7 +59,7 @@ async function forecastFor(city, options) {
   if (!settings.apiKey) throw reasonError("NOT_CONFIGURED");
   const payload = await fetchJson(forecastUrl(city, settings.apiKey), {
     timeoutMs: settings.timeoutMs,
-    fetcher: fetchImpl()
+    fetcher: fetcherSlot.current()
   });
   const location = pickLocation(payload, city);
   if (!location) throw reasonError("NO_DATA");
@@ -80,6 +68,6 @@ async function forecastFor(city, options) {
 
 module.exports = {
   forecastFor: forecastFor,
-  setFetcher: setFetcher,
-  resetFetcher: resetFetcher
+  setFetcher: fetcherSlot.set,
+  resetFetcher: fetcherSlot.reset
 };

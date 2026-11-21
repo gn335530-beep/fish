@@ -77,6 +77,15 @@ test("模型回傳草稿變更時，草稿更新並寫進 room.context", async f
   assert.deepEqual(assistantTexts(), ["好的，已更新為 3 尾。"]);
 });
 
+test("回問計數隨 listing 契約寫進 room.context", async function () {
+  aiReply = listingReply({ condition_ask_count: 1 });
+  store.update({ room: { id: "conv_1", type: "assistant", context: listingContext(DRAFT) } });
+
+  await flow.submitText("放血冰鎮");
+
+  assert.equal(store.state.room.context.condition_ask_count, 1);
+});
+
 test("一句話多個欄位時一次套用", async function () {
   aiReply = listingReply({
     reply_text: "好的，已更新尾數、處理方式與售價。",

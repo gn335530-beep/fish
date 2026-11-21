@@ -111,14 +111,9 @@ function validateConditionChange(applied, ctx, userText) {
   if (!condition.validCondition(value)) throw guardRejected();
 }
 
-/* 新的提議優先；已套用任何處理方式就清掉待同意版。 */
-function nextConditionProposal(rawProposal, ctx, applied) {
-  if (rawProposal != null) {
-    if (!condition.validCondition(rawProposal)) throw guardRejected();
-    return rawProposal;
-  }
-  if (Object.prototype.hasOwnProperty.call(applied, "condition")) return null;
-  return ctx.condition_proposal || null;
+function priorAskCount(ctx) {
+  const value = ctx && ctx.condition_ask_count;
+  return Number.isInteger(value) && value > 0 ? value : 0;
 }
 
 const EDIT_HINT = "想修改直接告訴我。";
@@ -137,9 +132,26 @@ async function buildResult(parsed, ctx, userText, config) {
   const corrections = validateCorrections(parsed.corrections);
   const applied = await applyCorrections(changes, corrections, draft, protectedNames, config.timeoutMs);
   validateConditionChange(applied, ctx, userText);
-  const proposal = nextConditionProposal(parsed.condition_proposal, ctx, applied);
+
+  const conditionWritten = Object.prototype.hasOwnProperty.call(applied, "condition");
+  let askCount = priorAskCount(ctx);
+  if (parsed.condition_ask === true) askCount += 1;
+  if (conditionWritten) askCount = 0;
+
+  /* 提議縮短版只在回問兩次後接受；未達兩次就丟棄並降級成回問。 */
+  let proposal = null;
+  let proposalDropped = false;
+  if (parsed.condition_proposal != null) {
+    if (!condition.validCondition(parsed.condition_proposal)) throw guardRejected();
+    if (askCount >= 2) proposal = parsed.condition_proposal;
+    else proposalDropped = true;
+  } else if (!conditionWritten) {
+    proposal = ctx.condition_proposal || null;
+  }
+
   const effective = draftHelpers.effectiveDraft(draft, applied);
-  const nextAction = draftHelpers.validateNextAction(parsed.next_action, effective);
+  let nextAction = draftHelpers.validateNextAction(parsed.next_action, effective);
+  if (proposalDropped) nextAction = "ask";
   const replyText = nextAction === "show_draft_card" ? withEditHint(parsed.reply_text) : parsed.reply_text;
 
   return {
@@ -153,6 +165,7 @@ async function buildResult(parsed, ctx, userText, config) {
       correction_history: appendHistory(ctx.correction_history, corrections),
       protected_names: protectedNames,
       condition_proposal: proposal,
+      condition_ask_count: askCount,
       next_action: nextAction
     },
     reply_text: null,

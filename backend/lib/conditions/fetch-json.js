@@ -36,8 +36,19 @@ async function fetchJson(url, options) {
   }
 }
 
+/* 可注入 fetcher 插槽：每個資料源各自建立一個，測試以 set/reset 注入假回應。 */
+function createFetcher() {
+  let fetcher = null;
+  return {
+    set: function (fake) { fetcher = fake; },
+    reset: function () { fetcher = null; },
+    current: function () { return fetcher || fetch; }
+  };
+}
+
 module.exports = {
   fetchJson: fetchJson,
   reasonError: reasonError,
-  reasonOf: reasonOf
+  reasonOf: reasonOf,
+  createFetcher: createFetcher
 };

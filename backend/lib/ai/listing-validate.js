@@ -6,6 +6,7 @@ const { llmError } = require("./error");
 
 const LISTING_FIELDS = ["fish_species", "quantity", "condition", "price", "price_per_taijin"];
 const NUMBER_FIELDS = ["quantity", "price", "price_per_taijin"];
+const CORRECTION_FIELDS = ["fish_species", "condition"];
 const NEXT_ACTIONS = ["ask", "show_market_card", "show_draft_card", "none"];
 
 function invalidOutput() { return llmError("LLM_INVALID_OUTPUT"); }
@@ -26,6 +27,9 @@ function parseListingOutput(raw) {
   }
   if (!isPlainObject(parsed)) throw invalidOutput();
   if (parsed.next_action !== undefined && NEXT_ACTIONS.indexOf(parsed.next_action) === -1) {
+    throw invalidOutput();
+  }
+  if (parsed.condition_ask !== undefined && typeof parsed.condition_ask !== "boolean") {
     throw invalidOutput();
   }
   return parsed;
@@ -59,7 +63,7 @@ function validateCorrections(raw) {
   if (!Array.isArray(raw)) throw guardRejected();
   return raw.map(function (item) {
     if (!isPlainObject(item)) throw guardRejected();
-    if (LISTING_FIELDS.indexOf(item.field) === -1) throw guardRejected();
+    if (CORRECTION_FIELDS.indexOf(item.field) === -1) throw guardRejected();
     const original = String(item.original == null ? "" : item.original);
     const corrected = String(item.corrected == null ? "" : item.corrected);
     if (!original || !corrected) throw guardRejected();
