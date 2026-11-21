@@ -53,6 +53,7 @@ function logListing(baseLog, started, errorCode, report) {
 async function buildInput(options, config, deadline) {
   const context = contextSummary(options.context);
   const draft = options.context.draft || {};
+  context.missing_fields = draftHelpers.missingFields(draft);
   if (draft.fish_species) {
     const budget = Math.min(Math.max(1, deadline - Date.now()), 3000);
     const found = await species.lookup(draft.fish_species, budget);
@@ -120,6 +121,15 @@ function nextConditionProposal(rawProposal, ctx, applied) {
   return ctx.condition_proposal || null;
 }
 
+const EDIT_HINT = "想修改直接告訴我。";
+
+/* 草稿卡出現時，助手文字一定要有「想修改直接告訴我」；卡片本身不加。 */
+function withEditHint(replyText) {
+  const text = String(replyText || "").trim();
+  if (text.indexOf("想修改直接告訴我") !== -1) return text;
+  return text ? text + "\n" + EDIT_HINT : EDIT_HINT;
+}
+
 async function buildResult(parsed, ctx, userText, config) {
   const draft = ctx.draft || {};
   const protectedNames = mergeProtectedNames(ctx.protected_names, parsed.protected_names);
@@ -129,19 +139,21 @@ async function buildResult(parsed, ctx, userText, config) {
   validateConditionChange(applied, ctx, userText);
   const proposal = nextConditionProposal(parsed.condition_proposal, ctx, applied);
   const effective = draftHelpers.effectiveDraft(draft, applied);
+  const nextAction = draftHelpers.validateNextAction(parsed.next_action, effective);
+  const replyText = nextAction === "show_draft_card" ? withEditHint(parsed.reply_text) : parsed.reply_text;
 
   return {
     handled: true,
     intent: "SELL",
     slots: {},
     listing: {
-      reply_text: parsed.reply_text || null,
+      reply_text: replyText || null,
       corrections: corrections,
       draft_changes: applied,
       correction_history: appendHistory(ctx.correction_history, corrections),
       protected_names: protectedNames,
       condition_proposal: proposal,
-      next_action: draftHelpers.validateNextAction(parsed.next_action, effective)
+      next_action: nextAction
     },
     reply_text: null,
     sources: [],

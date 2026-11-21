@@ -3,6 +3,7 @@
 import { mergeDraft } from "./draft.js";
 import { withDraft } from "./listing.js";
 import { handleText } from "./service.js";
+import { quoteForDraft } from "./listing-market.js";
 
 export const BASIC_MODE_NOTICE = "AI 暫時無法協助，已切換基本模式；你仍可完成上架。";
 
@@ -26,9 +27,8 @@ export async function enterBasicMode(ctx, userText, user) {
   };
 }
 
-/* 套用模型回傳的草稿變更與修正紀錄；卡片顯示時機已由後端驗證。
-   show_market_card 的行情卡時機留待 ticket 07 實作。 */
-export async function applyListingReply(ctx, listing) {
+/* 套用模型回傳的草稿變更與修正紀錄；卡片顯示時機已由後端驗證。 */
+export async function applyListingReply(ctx, listing, user) {
   const changes = listing.draft_changes || {};
   const draft = mergeDraft(ctx.draft, changes);
   const extra = {
@@ -36,13 +36,28 @@ export async function applyListingReply(ctx, listing) {
     protected_names: listing.protected_names || [],
     condition_proposal: listing.condition_proposal || null
   };
-  /* 魚種換了先讓舊行情失效；ticket 07 會依 next_action 重查。 */
+  /* 魚種換了先讓舊行情失效；行情卡依 next_action 重查。 */
   if (Object.prototype.hasOwnProperty.call(changes, "fish_species")) extra.market_quoted = false;
   const next = withDraft(ctx, draft, extra);
   const replies = [];
   if (listing.reply_text) replies.push({ text: listing.reply_text });
-  if (listing.next_action === "show_draft_card") {
+
+  if (listing.next_action === "show_market_card") {
+    await pushMarketCard(replies, draft, user);
+  } else if (listing.next_action === "show_draft_card") {
     replies.push({ card: { type: "draft", draft: draft, hide_edit: true } });
   }
   return { context: next, replies: replies };
+}
+
+/* 行情卡只由官方 API 產生；多候選時退回問魚種，不顯示模型編的數字。 */
+async function pushMarketCard(replies, draft, user) {
+  const quote = await quoteForDraft(draft, user);
+  if (quote.ambiguous) {
+    replies.push({ text: "搜尋到多種" + (draft.fish_species || "") + "，請先告訴我是哪一種。" });
+  } else if (quote.card) {
+    replies.push({ card: quote.card });
+  } else if (quote.text) {
+    replies.push({ text: quote.text });
+  }
 }

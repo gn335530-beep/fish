@@ -11,7 +11,7 @@
 | 商品生命週期 | ✅ | 上架紀錄、下架、重新上架、刪除；公開列表只顯示可購買（ADR 0009） |
 | 圖片上傳與壓縮 | ✅ | `routes/uploads.js`、`demo/upload.js` |
 | 助手房 | ✅ | 可多間、各自 context 與草稿 |
-| 助手房 AI 回覆 | 🟡 Beta 軟啟動（ticket 01–08＋remediation 01–11＋remediation-2 01–06） | `POST /api/ai/reply`、`CHAT`／`WEB`、平台意圖 slots、行情／商品／網路／在地天氣海況潮汐工具、第一輪強制工具、商品推薦與查無商品文字、釣魚建議、國外地點天氣、來源請求、靜默 fallback、等待指示、配額提示與重試；第二輪完成遮蔽、用詞、共用期限、前端重試流程、路由分檔與測試 fixture；ADR-0011／0013 與 beta 文件已完成，但不承諾正式 SLA |
+| 助手房 AI 回覆 | 🟡 Beta 軟啟動（ticket 01–08＋remediation 01–11＋remediation-2 01–06＋llm-listing 01–09） | `POST /api/ai/reply`、`CHAT`／`WEB`、平台意圖 slots、行情／商品／網路／在地天氣海況潮汐工具、第一輪強制工具、商品推薦與查無商品文字、釣魚建議、國外地點天氣、來源請求、靜默 fallback、等待指示、配額提示與重試；模型驅動上架（listing 契約、魚種解析與錯字修正、處理方式、卡片時機、多欄位修改、基本模式）、唯讀 `lookup_species` 工具；第二輪完成遮蔽、用詞、共用期限、前端重試流程、路由分檔與測試 fixture；ADR-0011／0013／0015 與 beta 文件已完成，但不承諾正式 SLA |
 | 對話清單與收件匣 | ✅ | 新增／切換／刪除任何房間；交易房保留已成交訂單 |
 | 增量訊息與 3 秒輪詢 | ✅ | `after_seq`、`demo/poll.js` |
 | 未讀與已讀 | ✅ | `read_at`、`/read` |

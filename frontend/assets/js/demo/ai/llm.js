@@ -43,7 +43,7 @@ export async function handleMessage(context, text, user, llm) {
       return { origin: "rules", result: await handleText(ctx, userText, user) };
     }
     if (llm && llm.handled && llm.listing) {
-      return { origin: "rules", result: await applyListingReply(ctx, llm.listing) };
+      return { origin: "rules", result: await applyListingReply(ctx, llm.listing, user) };
     }
     if (llmIntent === INTENT.CANCEL && !ctx.editing && !ctx.choosing_edit &&
       !isCancelListing(userText)) {

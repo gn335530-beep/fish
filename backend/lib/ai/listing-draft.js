@@ -29,9 +29,17 @@ function validateNextAction(action, draft) {
   return action || "ask";
 }
 
+/* 缺哪些欄位：非價格先問，售價最後；照片只由使用者上傳。 */
+function missingFields(draft) {
+  const missing = NON_PRICE_FIELDS.filter(function (slot) { return !hasValue(draft[slot]); });
+  if (!hasValue(draft.price)) missing.push("price");
+  return missing;
+}
+
 module.exports = {
   effectiveDraft: effectiveDraft,
   nonPriceComplete: nonPriceComplete,
   allComplete: allComplete,
-  validateNextAction: validateNextAction
+  validateNextAction: validateNextAction,
+  missingFields: missingFields
 };

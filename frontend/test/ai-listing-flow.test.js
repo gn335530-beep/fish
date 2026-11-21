@@ -77,6 +77,21 @@ test("模型回傳草稿變更時，草稿更新並寫進 room.context", async f
   assert.deepEqual(assistantTexts(), ["好的，已更新為 3 尾。"]);
 });
 
+test("一句話多個欄位時一次套用", async function () {
+  aiReply = listingReply({
+    reply_text: "好的，已更新尾數、處理方式與售價。",
+    draft_changes: { quantity: 2, condition: "活體", price: 3000 }
+  });
+  store.update({ room: { id: "conv_1", type: "assistant", context: listingContext(DRAFT) } });
+
+  await flow.submitText("2尾、活體、整批3000");
+
+  const draft = store.state.room.context.draft;
+  assert.equal(draft.quantity, 2);
+  assert.equal(draft.condition, "活體");
+  assert.equal(draft.price, 3000);
+});
+
 test("模型逾時時切換基本模式並顯示一次提示", async function () {
   aiReply = { handled: false, error_code: "LLM_TIMEOUT", retryable: false };
   store.update({
