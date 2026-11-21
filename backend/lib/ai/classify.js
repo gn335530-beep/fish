@@ -31,4 +31,20 @@ function forceToolFor(text, options) {
   return null;
 }
 
-module.exports = { forceToolFor: forceToolFor, isPlatformText: isPlatformText };
+/* 同一則要求來源時，依上一句的問題種類改寫第一輪強制工具。 */
+function forceToolForTurn(text, options) {
+  const settings = options || {};
+  const base = forceToolFor(text, { webEnabled: settings.webEnabled });
+  if (!settings.wantsSources) return base;
+  if (settings.sourceKind === "web") return settings.webEnabled ? "web_search" : null;
+  if (settings.sourceKind === "" && !base && !isPlatformText(text)) {
+    return settings.webEnabled ? "web_search" : null;
+  }
+  return base;
+}
+
+module.exports = {
+  forceToolFor: forceToolFor,
+  forceToolForTurn: forceToolForTurn,
+  isPlatformText: isPlatformText
+};

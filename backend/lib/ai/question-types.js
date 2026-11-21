@@ -6,7 +6,9 @@ const WEATHER = /(天氣|氣象|下雨|降雨|氣溫|溫度|風速|風向)/;
 const SEA = /(海況|浪況|浪高|浪向|浪週期|海浪|風浪|海溫)/;
 const TIDE = /(潮汐|潮水|滿潮|乾潮)/;
 const FISHING = /((適合|可以|能不能|能|要注意|注意什麼)[^。？！]{0,8}(釣魚|海釣|磯釣|去海邊)|釣魚嗎|磯釣嗎)/;
-const LOCAL_INFO = /(新聞|颱風|即時|最新|交通|路況|活動|在地)/;
+const LOCAL_NEWS = /((在地|地方)(的)?(新聞|消息))/;
+const REGIONAL_INFO = /(颱風|交通|路況|活動)/;
+const LOCAL_INFO = /(新聞|即時|最新|在地)/;
 const NEARBY = /(附近|這裡|這邊)/;
 const TEMPORAL = /(今天|今日|現在|目前)/;
 const FOREIGN = /(東京|大阪|京都|北海道|沖繩|首爾|釜山|北京|上海|廈門|香港|澳門|新加坡|曼谷|雪梨|倫敦|巴黎|紐約|洛杉磯|溫哥華|多倫多|日本|韓國|中國|美國|加拿大|英國|法國|德國|澳洲|紐西蘭|泰國|越南|菲律賓|馬來西亞|印尼)/;
@@ -24,7 +26,8 @@ function isSeaQuestion(text) {
 }
 
 function isLocalInfoQuestion(text) {
-  return LOCAL_INFO.test(String(text || ""));
+  const value = String(text || "");
+  return LOCAL_INFO.test(value) || REGIONAL_INFO.test(value);
 }
 
 function isFishingQuestion(text) {
@@ -40,10 +43,11 @@ function isSeaTopicQuestion(text) {
   return isSeaQuestion(text) || isTideQuestion(text) || isFishingQuestion(text);
 }
 
+/* 需要縣市的地區問題；一般新聞與單獨的「最新」不算。 */
 function isRegionQuestion(text) {
   const value = String(text || "");
   return WEATHER.test(value) || SEA.test(value) || TIDE.test(value) || FISHING.test(value) ||
-    LOCAL_INFO.test(value) || NEARBY.test(value);
+    NEARBY.test(value) || LOCAL_NEWS.test(value) || REGIONAL_INFO.test(value);
 }
 
 function isTemporalQuestion(text) {

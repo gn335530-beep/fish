@@ -29,7 +29,22 @@ function mapError(error) {
   return { code: "LLM_UPSTREAM_ERROR", retryable: false };
 }
 
+/* 國外天氣回合的網路工具失敗：只有逾時與上游錯誤改成「查不到」直接回覆。 */
+function webFailureCode(report) {
+  const runs = report.toolRuns || [];
+  for (let index = runs.length - 1; index >= 0; index--) {
+    const run = runs[index];
+    if (run.name !== "web_search") continue;
+    if (!run.error_code) return "";
+    return run.error_code === "LLM_TIMEOUT" || run.error_code === "LLM_UPSTREAM_ERROR"
+      ? run.error_code
+      : "";
+  }
+  return "";
+}
+
 module.exports = {
   failure: failure,
-  mapError: mapError
+  mapError: mapError,
+  webFailureCode: webFailureCode
 };

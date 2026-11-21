@@ -96,6 +96,25 @@ test("規則判為 BUY 但後端回 CHAT 時仍採用模型文字", async functi
   assert.match(latestAssistantText(), /今天多雲短暫雨/);
 });
 
+test("後端回地區反問時，平台問題仍由規則完成且不顯示反問", async function () {
+  aiReply = {
+    handled: true,
+    intent: "CHAT",
+    slots: {},
+    reply_text: "你所在的縣市是哪裡？",
+    sources: [],
+    tool_results: {}
+  };
+
+  await flow.submitText("最新行情");
+
+  assert.doesNotMatch(latestAssistantText(), /你所在的縣市是哪裡/);
+  assert.match(latestAssistantText(), /暫無行情|請問想查哪一種魚的行情/);
+  assert.ok(requests.some(function (entry) {
+    return entry.path.indexOf("/api/market/quote") === 0;
+  }));
+});
+
 test("取消上架與修改草稿由既有規則完成", async function () {
   aiReply = {
     handled: true,

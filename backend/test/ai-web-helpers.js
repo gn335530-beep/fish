@@ -2,14 +2,17 @@
 
 const web = require("../lib/ai/tools/web");
 
-function fakeTavily(results) {
+function fakeTavily(results, options) {
+  const settings = options || {};
   const state = { calls: [], bodies: [] };
-  web.setFetcher(async function (url, options) {
+  web.setFetcher(async function (url, request) {
     state.calls.push(url);
-    state.bodies.push(JSON.parse(options.body));
+    state.bodies.push(JSON.parse(request.body));
+    if (settings.error) throw settings.error;
+    const status = settings.status || 200;
     return {
-      ok: true,
-      status: 200,
+      ok: status < 400,
+      status: status,
       json: async function () { return { results: results || [] }; }
     };
   });

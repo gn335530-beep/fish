@@ -2,7 +2,7 @@
 
 const { llmConfig } = require("./config");
 const { SYSTEM_PROMPT } = require("./prompt");
-const { forceToolFor, isPlatformText } = require("./classify");
+const { forceToolForTurn } = require("./classify");
 const localContext = require("./local-context");
 const questions = require("./question-types");
 const advice = require("./fishing-advice");
@@ -12,9 +12,9 @@ const { parseOutput, normalizeOutput, finalIntent, isPlatformIntent } = require(
 const tools = require("./tools");
 const toolLoop = require("./tool-loop");
 const { logReply } = require("./log");
-const { failure, mapError } = require("./result");
+const { failure, mapError, webFailureCode } = require("./result");
 const { llmError } = require("./error");
-const { directReply, withSourceNote, localFailureText, replySuffix, NO_PRODUCTS_TEXT } =
+const { directReply, foreignWeatherFailure, localFallback, replySuffix, NO_PRODUCTS_TEXT } =
   require("./reply-output");
 
 async function reply(options) {
@@ -55,8 +55,7 @@ async function reply(options) {
   });
   if (preflight.direct) {
     return directReply(baseLog, started, preflight.direct.text, {}, {
-      sources: preflight.direct.sources,
-      intent: preflight.direct.intent
+      sources: preflight.direct.sources, intent: preflight.direct.intent
     });
   }
   const wantsSources = preflight.wantsSources;
@@ -74,13 +73,11 @@ async function reply(options) {
   }
 
   const sourceKind = wantsSources ? sourceRequest.sourceKindFor(text) : "";
-  const baseForce = forceToolFor(text, { webEnabled: webEnabled });
-  let forceTool = baseForce;
-  if (wantsSources && sourceKind === "web") {
-    forceTool = webEnabled ? "web_search" : null;
-  } else if (wantsSources && sourceKind === "" && !baseForce && !isPlatformText(text)) {
-    forceTool = webEnabled ? "web_search" : null;
-  }
+  const forceTool = forceToolForTurn(text, {
+    webEnabled: webEnabled,
+    wantsSources: wantsSources,
+    sourceKind: sourceKind
+  });
   const wantsAdvice = questions.isFishingQuestion(text);
   const localPlace = local.seaArea || local.city;
   const input = {
@@ -104,7 +101,7 @@ async function reply(options) {
         localEnabled: !foreignWeather,
         tavilyApiKey: config.tavilyApiKey,
         cwaApiKey: config.cwaApiKey,
-        local: local.active ? {
+        local: local.usesLocalTool ? {
           mode: local.mode || "weather",
           city: local.city,
           seaArea: local.seaArea
@@ -113,23 +110,21 @@ async function reply(options) {
     }, report);
 
     if (foreignWeather && !loop.webResults.length) {
-      return directReply(baseLog, started,
-        withSourceNote("查不到國外地點天氣，請稍後再試。", wantsSources));
+      return directReply(baseLog, started, foreignWeatherFailure(wantsSources));
     }
 
     const parsed = parseOutput(loop.raw.text);
+    /* 非地區問題誤用在地工具：不採用模型文字，回到安全 fallback。 */
+    if (loop.toolResults.local && !local.usesLocalTool && !isPlatformIntent(parsed.intent)) {
+      throw llmError("LLM_GUARD_REJECTED");
+    }
     if (!isPlatformIntent(parsed.intent)) {
-      if (wantsAdvice) {
-        const missing = advice.missingText(loop.toolResults.local);
-        if (missing) {
-          return directReply(baseLog, started, withSourceNote(missing, wantsSources),
-            { local: loop.toolResults.local });
-        }
-      }
-      const localFailure = localFailureText(loop.toolResults.local);
-      if (localFailure) {
-        return directReply(baseLog, started, withSourceNote(localFailure, wantsSources),
-          { local: loop.toolResults.local });
+      const fallback = localFallback(loop.toolResults.local, {
+        wantsAdvice: wantsAdvice,
+        wantsSources: wantsSources
+      });
+      if (fallback) {
+        return directReply(baseLog, started, fallback.text, fallback.toolResults);
       }
     }
 
@@ -186,6 +181,11 @@ async function reply(options) {
     return Object.assign({ handled: true }, output, { error_code: null, retryable: false });
   } catch (error) {
     const mapped = mapError(error);
+    const webFailure = foreignWeather ? webFailureCode(report) : "";
+    if (webFailure) {
+      return directReply(baseLog, started, foreignWeatherFailure(wantsSources), {},
+        { logErrorCode: webFailure });
+    }
     logReply(Object.assign({}, baseLog, {
       intent: intent,
       tokens: report.usage,
