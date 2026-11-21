@@ -97,6 +97,11 @@ function prepare(options) {
   });
 }
 
+function toolContext(local) {
+  if (!local || !local.usesLocalTool) return null;
+  return { mode: local.mode, city: local.city, seaArea: local.seaArea };
+}
+
 function dateLine(at) {
   const time = Number.isFinite(at) ? at : Date.now();
   const date = new Date(time + 8 * 3600 * 1000).toISOString().slice(0, 10);
@@ -109,6 +114,7 @@ function promptLine(place) {
 
 module.exports = {
   prepare: prepare,
+  toolContext: toolContext,
   dateLine: dateLine,
   promptLine: promptLine,
   cityInText: cityInText,

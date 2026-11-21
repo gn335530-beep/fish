@@ -49,6 +49,8 @@ test("缺少 CWA 金鑰且模型漏寫時，後端補上潮汐暫無資料", asy
   assert.equal(data.handled, true, JSON.stringify(data));
   assert.equal(data.tool_results.local.tide, null);
   assert.equal(data.tool_results.local.errors.tide, "NOT_CONFIGURED");
+  assert.ok(data.tool_results.local.marine);
+  assert.ok(data.tool_results.local.weather);
   assert.equal(count(data.reply_text, TIDE_TEXT), 1);
   assert.doesNotMatch(data.reply_text, /\d{1,2}:\d{2}/);
   assert.equal(tide.urls.length, 0);

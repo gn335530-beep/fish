@@ -5,7 +5,7 @@ const guard = require("./guard");
 const localGuard = require("./local-guard");
 const evidence = require("./evidence");
 const { safeSources, NO_SOURCE_TEXT } = require("./sources");
-const { TIDE_MISSING_TEXT, needsTideNote, withNotes } = require("./reply-output");
+const { TIDE_MISSING_TEXT, needsTideNote, withNotes, assertWeatherOnly } = require("./reply-output");
 const { llmError } = require("./error");
 
 const INTENTS = [
@@ -149,7 +149,6 @@ function normalizeOutput(parsed, options) {
     notes.push(NO_SOURCE_TEXT);
   }
   replyText = withNotes(replyText, notes, MAX_REPLY);
-  if (replyText !== null && replyText.length > MAX_REPLY) throw invalidOutput();
 
   const officialText = evidence.officialText(options.toolResults, options.toolNames);
   const webText = evidence.webText(options.webResults);
@@ -180,6 +179,7 @@ function normalizeOutput(parsed, options) {
     localGuard.assertLocalUnits(replyText, localResults, options.userText);
     localGuard.assertLocalDirections(replyText, localResults);
   }
+  assertWeatherOnly(replyText, options.localMode);
 
   return {
     intent: parsed.intent,

@@ -3,6 +3,7 @@
 const { logReply } = require("./log");
 const { NO_SOURCE_TEXT } = require("./sources");
 const advice = require("./fishing-advice");
+const { llmError } = require("./error");
 
 const NO_PRODUCTS_TEXT = "目前沒有符合條件的商品，可以換個魚種、地區或預算再試。";
 const FOREIGN_WEATHER_NOT_FOUND = "查不到國外地點天氣，請稍後再試。";
@@ -46,6 +47,14 @@ function tideMissing(local) {
 function needsTideNote(replyText, local) {
   return Boolean(replyText && tideMissing(local) &&
     replyText.indexOf(TIDE_MISSING_TEXT) === -1);
+}
+
+const SEA_REPLY_TERMS = /(海況|浪高|浪向|浪週期|浪況|海浪|風浪|長浪|大浪|小浪|湧浪|海溫|潮汐|潮水|漲潮|退潮|潮位|滿潮|乾潮|海象)|(?<![熱寒聲流])浪/;
+
+/* 天氣模式回覆不得混入海況、浪或潮汐；即使該輪沒有工具結果也適用。 */
+function assertWeatherOnly(replyText, mode) {
+  if (!replyText || mode !== "weather") return;
+  if (SEA_REPLY_TERMS.test(replyText)) throw llmError("LLM_GUARD_REJECTED");
 }
 
 function appendTideNote(text, local) {
@@ -108,6 +117,7 @@ module.exports = {
   tideMissing: tideMissing,
   needsTideNote: needsTideNote,
   appendTideNote: appendTideNote,
+  assertWeatherOnly: assertWeatherOnly,
   withNotes: withNotes,
   localFailureText: localFailureText,
   localFallback: localFallback,

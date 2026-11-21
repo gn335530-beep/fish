@@ -7,8 +7,10 @@ const { localSourceRows } = require("../../conditions/sources");
 const { reasonOf } = require("../../conditions/fetch-json");
 const { regionValue } = require("./region");
 
+/* 後端依問題類型決定的模式優先；沒有地區模式時才採用模型參數。 */
 function modeOf(args, ctx) {
-  const value = String(args.mode || (ctx.local && ctx.local.mode) || "weather").trim();
+  const forced = ctx.local && ctx.local.mode;
+  const value = String(forced || args.mode || "weather").trim();
   return value === "sea" ? "sea" : "weather";
 }
 

@@ -101,11 +101,7 @@ async function reply(options) {
         localEnabled: !foreignWeather,
         tavilyApiKey: config.tavilyApiKey,
         cwaApiKey: config.cwaApiKey,
-        local: local.usesLocalTool ? {
-          mode: local.mode || "weather",
-          city: local.city,
-          seaArea: local.seaArea
-        } : null
+        local: localContext.toolContext(local)
       }
     }, report);
 
@@ -151,7 +147,7 @@ async function reply(options) {
       })
       : [];
     const output = normalizeOutput(Object.assign({}, parsed, { intent: intent }), {
-      userText: options.message.text,
+      userText: options.message.text, localMode: local.mode,
       toolResults: loop.toolResults,
       toolNames: report.toolRuns.filter(function (run) { return !run.error_code; })
         .map(function (run) { return run.name; }),
