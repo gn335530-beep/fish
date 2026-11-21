@@ -5,9 +5,9 @@ const { SYSTEM_PROMPT } = require("./prompt");
 const { forceToolFor } = require("./classify");
 const localContext = require("./local-context");
 const questions = require("./question-types");
-const advice = require("./advice");
+const advice = require("./fishing-advice");
 const { historyFor, contextSummary } = require("./history");
-const { parseOutput, normalizeOutput, finalIntent } = require("./validate");
+const { parseOutput, normalizeOutput, finalIntent, isPlatformIntent } = require("./validate");
 const tools = require("./tools");
 const toolLoop = require("./tool-loop");
 const { logReply } = require("./log");
@@ -120,16 +120,18 @@ async function reply(options) {
       }
     }, report);
 
-    if (wantsAdvice) {
-      const missing = advice.missingText(loop.toolResults.local);
-      if (missing) return directReply(baseLog, started, missing, { local: loop.toolResults.local });
-    }
-    const localFailure = localFailureText(loop.toolResults.local);
-    if (localFailure) {
-      return directReply(baseLog, started, localFailure, { local: loop.toolResults.local });
+    const parsed = parseOutput(loop.raw.text);
+    if (!isPlatformIntent(parsed.intent)) {
+      if (wantsAdvice) {
+        const missing = advice.missingText(loop.toolResults.local);
+        if (missing) return directReply(baseLog, started, missing, { local: loop.toolResults.local });
+      }
+      const localFailure = localFailureText(loop.toolResults.local);
+      if (localFailure) {
+        return directReply(baseLog, started, localFailure, { local: loop.toolResults.local });
+      }
     }
 
-    const parsed = parseOutput(loop.raw.text);
     const productToolUsed = report.toolRuns.some(function (run) {
       return run.name === "search_products" && !run.error_code;
     });

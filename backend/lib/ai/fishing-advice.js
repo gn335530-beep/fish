@@ -2,9 +2,9 @@
 
 const { llmError } = require("./error");
 
-const ABSOLUTE = /(保證安全|保證沒問題|一定可以|一定安全|絕對沒問題|絕對安全|絕對可以|保證適合)/;
+const ABSOLUTE = /(保證安全|保證沒問題|保證不會出事|一定可以|一定安全|一定沒問題|一定不會|絕對沒問題|絕對安全|絕對可以|絕對不會|保證適合)/;
 const DISCLAIMER = /(請自行評估|請自行判斷|自行承擔|風險自負)/;
-const JUDGEMENT = /(偏適合|偏不適合|適合釣魚|適合海釣|適合磯釣|適合去海邊|不適合釣魚)/;
+const JUDGEMENT = /(偏適合|偏不適合|適合釣魚|適合海釣|適合磯釣|適合去海邊|不適合釣魚|不建議釣魚|建議釣魚|可以釣魚|可以出海|適合出海|適合下水)/;
 
 function reject() {
   return llmError("LLM_GUARD_REJECTED");

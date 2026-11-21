@@ -71,10 +71,27 @@ test("模型使用保證安全等絕對說法時丟棄回覆", async function ()
   h.reset({ CWA_API_KEY: "test-key" });
   c.fakeOpenMeteo();
   c.fakeTide();
-  const data = await ask("今天適合釣魚嗎？", "保證安全，一定可以，偏適合釣魚。");
+  const data = await ask("今天適合釣魚嗎？", "保證不會出事，偏適合釣魚。");
 
   assert.equal(data.handled, false);
   assert.equal(data.error_code, "LLM_GUARD_REJECTED");
+});
+
+test("平台意圖優先於釣魚建議，不因海況缺資料被改成 CHAT", async function () {
+  h.useJson({
+    intent: "SELL",
+    slots: { fish_species: "石斑魚" },
+    reply_text: null,
+    sources: [],
+    tool_results: {}
+  });
+  const room = await h.createRoom(tokens.buyer);
+  const message = await h.sendUser(room.id, "我要賣石斑魚，今天適合釣魚嗎？");
+
+  const data = (await h.reply(room.id, message.id)).body.data;
+  assert.equal(data.handled, true, JSON.stringify(data));
+  assert.equal(data.intent, "SELL");
+  assert.equal(data.slots.fish_species, "石斑魚");
 });
 
 test("單純天氣或海況不會自動變成適合釣魚的建議", async function () {
@@ -94,7 +111,7 @@ test("單純天氣或海況不會自動變成適合釣魚的建議", async funct
   message = await h.sendUser(room.id, "今天海況如何？");
   h.useSequence([
     { tool_calls: [c.conditionsCall("sea")] },
-    c.finalChat("海況浪高 1.5 公尺，偏適合釣魚。")
+    c.finalChat("海況浪高 1.5 公尺，今天不建議釣魚。")
   ]);
   data = (await h.reply(room.id, message.id)).body.data;
   assert.equal(data.handled, false);

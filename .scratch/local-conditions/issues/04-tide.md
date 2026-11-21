@@ -18,3 +18,4 @@
 
 - 2026-11-20：由 `local-conditions` 設計拆分。
 - 2026-11-21：完成。新增 `lib/conditions/cwa-tide.js`，使用 F-A0021-001 的 `locationName` 查詢，整理今日與明日滿潮／乾潮；代表潮位站取自中央氣象署潮汐預報 NSea 分區（例如臺灣海峽南部→高雄市鼓山區）。共用 `fetch-json.js` 處理逾時與格式錯誤，`CWA_API_KEY` 缺少時不呼叫上游並標記 `errors.tide: NOT_CONFIGURED`。測試見 `ai-tools-tide.test.js`；`npm test` 全數通過。
+- 2026-11-21：review 後補上「只問潮汐」也強制走 `mode=sea` 海況包，並在 prompt 與工具描述明確要求海況回覆包含當日滿潮／乾潮；海域座標與代表潮位站合併為單一對照表。

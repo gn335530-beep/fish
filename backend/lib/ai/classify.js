@@ -10,7 +10,7 @@ function forceToolFor(text, options) {
   const value = String(text || "");
   const webEnabled = Boolean(options && options.webEnabled);
   if (PLATFORM.test(value)) return null;
-  if (questions.isSeaQuestion(value) || questions.isFishingQuestion(value)) {
+  if (questions.isSeaTopicQuestion(value)) {
     if (places.seaAreaInText(value)) return "get_local_conditions";
     return questions.hasForeignPlace(value)
       ? (webEnabled ? "web_search" : null)

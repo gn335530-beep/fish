@@ -47,7 +47,7 @@ const WEB_TOOL = {
 
 const CONDITIONS_TOOL = {
   name: "get_local_conditions",
-  description: "查台灣縣市的天氣或海域海況。mode=weather 只回天氣；mode=sea 回浪況與該海域天氣。" +
+  description: "查台灣縣市的天氣或海域海況。mode=weather 只回天氣；mode=sea 回浪況、該海域天氣與潮汐。" +
     "查不到時回 found:true 但缺少對應資料，不要自行補數字。",
   parameters: {
     type: "OBJECT",

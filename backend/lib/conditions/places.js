@@ -49,17 +49,48 @@ const CITY_SEA = {
   "連江縣": "馬祖海面"
 };
 
-const SEA_COORDS = {
-  "臺灣北部海面": { lat: 25.4, lon: 121.8 },
-  "臺灣海峽北部": { lat: 24.6, lon: 120.5 },
-  "臺灣海峽南部": { lat: 22.8, lon: 119.8 },
-  "臺灣東北部海面": { lat: 24.8, lon: 122.0 },
-  "臺灣東部海面": { lat: 23.7, lon: 122.0 },
-  "臺灣東南部海面": { lat: 22.4, lon: 121.5 },
-  "澎湖海面": { lat: 23.6, lon: 119.5 },
-  "金門海面": { lat: 24.3, lon: 118.2 },
-  "馬祖海面": { lat: 26.1, lon: 120.0 },
-  "巴士海峽": { lat: 21.8, lon: 120.8 }
+/* 海況座標與代表潮位站；潮位站取自中央氣象署潮汐預報的 NSea 分區。 */
+const SEA_AREAS = {
+  "臺灣北部海面": {
+    lat: 25.4, lon: 121.8,
+    tide: { name: "基隆", location: "基隆市中正區", fallback: "基隆市中正" }
+  },
+  "臺灣海峽北部": {
+    lat: 24.6, lon: 120.5,
+    tide: { name: "香山", location: "新竹市香山區", fallback: "新竹市香山" }
+  },
+  "臺灣海峽南部": {
+    lat: 22.8, lon: 119.8,
+    tide: { name: "鼓山", location: "高雄市鼓山區", fallback: "高雄市鼓山" }
+  },
+  "臺灣東北部海面": {
+    lat: 24.8, lon: 122.0,
+    tide: { name: "蘇澳", location: "宜蘭縣蘇澳鎮", fallback: "宜蘭縣蘇澳" }
+  },
+  "臺灣東部海面": {
+    lat: 23.7, lon: 122.0,
+    tide: { name: "花蓮", location: "花蓮縣花蓮市", fallback: "花蓮縣花蓮" }
+  },
+  "臺灣東南部海面": {
+    lat: 22.4, lon: 121.5,
+    tide: { name: "成功", location: "臺東縣成功鎮", fallback: "臺東縣成功" }
+  },
+  "澎湖海面": {
+    lat: 23.6, lon: 119.5,
+    tide: { name: "馬公", location: "澎湖縣馬公市", fallback: "澎湖縣馬公" }
+  },
+  "金門海面": {
+    lat: 24.3, lon: 118.2,
+    tide: { name: "金城", location: "金門縣金城鎮", fallback: "金門縣金城" }
+  },
+  "馬祖海面": {
+    lat: 26.1, lon: 120.0,
+    tide: { name: "南竿", location: "連江縣南竿鄉", fallback: "連江縣南竿" }
+  },
+  "巴士海峽": {
+    lat: 21.8, lon: 120.8,
+    tide: { name: "恆春", location: "屏東縣恆春鎮", fallback: "屏東縣恆春" }
+  }
 };
 
 const SEA_ALIASES = [
@@ -74,20 +105,6 @@ const SEA_ALIASES = [
   ["馬祖海面", ["馬祖海面"]],
   ["巴士海峽", ["巴士海峽"]]
 ];
-
-/* 代表潮位站取自中央氣象署潮汐預報的 NSea 分區；location 是潮汐開放資料的地點名稱。 */
-const TIDE_STATIONS = {
-  "臺灣北部海面": { name: "基隆", location: "基隆市中正區", fallback: "基隆市中正" },
-  "臺灣海峽北部": { name: "香山", location: "新竹市香山區", fallback: "新竹市香山" },
-  "臺灣海峽南部": { name: "鼓山", location: "高雄市鼓山區", fallback: "高雄市鼓山" },
-  "臺灣東北部海面": { name: "蘇澳", location: "宜蘭縣蘇澳鎮", fallback: "宜蘭縣蘇澳" },
-  "臺灣東部海面": { name: "花蓮", location: "花蓮縣花蓮市", fallback: "花蓮縣花蓮" },
-  "臺灣東南部海面": { name: "成功", location: "臺東縣成功鎮", fallback: "臺東縣成功" },
-  "澎湖海面": { name: "馬公", location: "澎湖縣馬公市", fallback: "澎湖縣馬公" },
-  "金門海面": { name: "金城", location: "金門縣金城鎮", fallback: "金門縣金城" },
-  "馬祖海面": { name: "南竿", location: "連江縣南竿鄉", fallback: "連江縣南竿" },
-  "巴士海峽": { name: "恆春", location: "屏東縣恆春鎮", fallback: "屏東縣恆春" }
-};
 
 function normalizeKey(value) {
   return normalizeArea(value).trim();
@@ -126,11 +143,12 @@ function coordsForCity(city) {
 }
 
 function coordsForSea(area) {
-  return SEA_COORDS[area] || null;
+  const row = SEA_AREAS[area];
+  return row ? { lat: row.lat, lon: row.lon } : null;
 }
 
 function tideStationForSea(area) {
-  return TIDE_STATIONS[area] || null;
+  return SEA_AREAS[area] ? SEA_AREAS[area].tide : null;
 }
 
 module.exports = {

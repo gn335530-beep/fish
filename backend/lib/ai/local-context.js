@@ -34,7 +34,7 @@ function prepare(options) {
   const asked = regionStore.wasAsked(conversationId);
   const stored = regionStore.cityOf(conversationId);
   const profile = normalizeRegion(options.user && options.user.city);
-  const sea = questions.isSeaQuestion(text) || questions.isFishingQuestion(text);
+  const sea = questions.isSeaTopicQuestion(text);
   const explicitSea = places.seaAreaInText(text);
   const foreign = !explicit && !explicitSea && questions.hasForeignPlace(text);
 

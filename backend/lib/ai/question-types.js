@@ -5,7 +5,7 @@ const { CITIES, normalizeArea } = require("../regions");
 const WEATHER = /(天氣|氣象|下雨|降雨|氣溫|溫度|風速|風向)/;
 const SEA = /(海況|浪況|浪高|浪向|浪週期|海浪|風浪|海溫)/;
 const TIDE = /(潮汐|潮水|滿潮|乾潮)/;
-const FISHING = /((適合|可以|能不能|能|要注意|注意什麼)[^。？！]{0,8}(釣魚|海釣|磯釣|去海邊)|釣魚嗎|海釣)/;
+const FISHING = /((適合|可以|能不能|能|要注意|注意什麼)[^。？！]{0,8}(釣魚|海釣|磯釣|去海邊)|釣魚嗎|磯釣嗎)/;
 const LOCAL_INFO = /(新聞|颱風|即時|最新|交通|路況|活動|在地)/;
 const NEARBY = /(附近|這裡|這邊)/;
 const TEMPORAL = /(今天|今日|現在|目前)/;
@@ -29,6 +29,15 @@ function isLocalInfoQuestion(text) {
 
 function isFishingQuestion(text) {
   return FISHING.test(String(text || ""));
+}
+
+function isTideQuestion(text) {
+  return TIDE.test(String(text || ""));
+}
+
+/* 海況、潮汐與釣魚建議共用同一個完整海況包。 */
+function isSeaTopicQuestion(text) {
+  return isSeaQuestion(text) || isTideQuestion(text) || isFishingQuestion(text);
 }
 
 function isRegionQuestion(text) {
@@ -65,6 +74,8 @@ module.exports = {
   isSeaQuestion: isSeaQuestion,
   isLocalInfoQuestion: isLocalInfoQuestion,
   isFishingQuestion: isFishingQuestion,
+  isTideQuestion: isTideQuestion,
+  isSeaTopicQuestion: isSeaTopicQuestion,
   isRegionQuestion: isRegionQuestion,
   isTemporalQuestion: isTemporalQuestion,
   hasForeignPlace: hasForeignPlace

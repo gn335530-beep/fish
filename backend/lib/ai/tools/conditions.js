@@ -15,6 +15,13 @@ function cityOf(args, ctx) {
   return regionValue(args.city) || (ctx.local && ctx.local.city) || "";
 }
 
+function settled(rows, index) {
+  const row = rows[index];
+  return row.status === "fulfilled"
+    ? { value: row.value, error: null }
+    : { value: null, error: reasonOf(row.reason) };
+}
+
 async function weatherResult(city, timeoutMs) {
   const coords = places.cityCoords(city);
   if (!coords) return { found: true, mode: "weather", city: city, weather: null, error: "NO_REGION" };
@@ -48,29 +55,29 @@ async function seaResult(args, ctx) {
     openMeteo.weatherAt(coords, ctx.timeoutMs),
     tideTask
   ]);
-  const marine = results[0].status === "fulfilled" ? results[0].value : null;
-  const weather = results[1].status === "fulfilled" ? results[1].value : null;
-  const tide = results[2].status === "fulfilled" ? results[2].value : null;
-  let tideError = null;
+  const marineResult = settled(results, 0);
+  const weatherResult = settled(results, 1);
+  const tideResult = settled(results, 2);
+  const tide = tideResult.value;
+  let tideError = tideResult.error;
   if (!apiKey) tideError = "NOT_CONFIGURED";
   else if (!station) tideError = "NO_STATION";
-  else if (results[2].status !== "fulfilled") tideError = reasonOf(results[2].reason);
   const out = {
     found: true,
     mode: "sea",
     city: city || null,
     sea_area: seaArea,
     timezone: "Asia/Taipei",
-    marine: marine,
-    weather: weather,
+    marine: marineResult.value,
+    weather: weatherResult.value,
     tide: tide,
     errors: {
-      marine: marine ? null : reasonOf(results[0].reason),
-      weather: weather ? null : reasonOf(results[1].reason),
+      marine: marineResult.error,
+      weather: weatherResult.error,
       tide: tide ? null : tideError
     }
   };
-  if (!marine && !weather) out.error = "UPSTREAM_UNAVAILABLE";
+  if (!marineResult.value && !weatherResult.value) out.error = "UPSTREAM_UNAVAILABLE";
   return out;
 }
 

@@ -116,6 +116,27 @@ test("潮汐無資料或逾時時標記原因，不編造時間", async function
   assert.equal(data.tool_results.local.errors.tide, "UPSTREAM_TIMEOUT");
 });
 
+test("只問潮汐也走海況包並取得滿乾潮", async function () {
+  h.reset({ CWA_API_KEY: "test-key" });
+  c.fakeOpenMeteo();
+  c.fakeTide();
+  h.useSequence([
+    { tool_calls: [c.conditionsCall("sea")] },
+    c.finalChat("潮汐：滿潮 09:12、21:30；乾潮 03:05、15:20。")
+  ]);
+  const room = await h.createRoom(tokens.buyer);
+  const message = await h.sendUser(room.id, "今天潮汐幾點？");
+
+  const data = (await h.reply(room.id, message.id)).body.data;
+  assert.equal(data.handled, true, JSON.stringify(data));
+  assert.equal(data.tool_results.local.mode, "sea");
+  assert.equal(data.tool_results.local.tide.today.high[0].time, "09:12");
+  assert.ok(data.tool_results.local.marine);
+  assert.ok(data.tool_results.local.weather);
+  assert.equal(h.calls[0].toolConfig.functionCallingConfig.allowedFunctionNames[0],
+    "get_local_conditions");
+});
+
 test("天氣問題不查潮汐，也不回傳 tide 欄位", async function () {
   h.reset({ CWA_API_KEY: "test-key" });
   const sea = c.fakeOpenMeteo();

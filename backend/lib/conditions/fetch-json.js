@@ -20,12 +20,7 @@ async function fetchJson(url, options) {
   if (request.signal === null) throw reasonError("UPSTREAM_TIMEOUT");
   const fetcher = settings.fetcher || fetch;
   try {
-    const response = await fetcher(url, {
-      method: settings.method || "GET",
-      headers: settings.headers,
-      body: settings.body,
-      signal: request.signal
-    });
+    const response = await fetcher(url, { signal: request.signal });
     if (!response.ok) throw reasonError("UPSTREAM_UNAVAILABLE");
     try {
       return await response.json();

@@ -1,4 +1,4 @@
-/* 輸出驗證：JSON／schema／sources 不合格回 INVALID_OUTPUT；數字防護見 guard.js。 */
+/* 輸出驗證：JSON／schema 不合格回 INVALID_OUTPUT；來源與 URL 在此隱藏；數字防護見 guard.js。 */
 
 const { isPlainObject } = require("./json");
 const guard = require("./guard");
@@ -23,6 +23,10 @@ function finalIntent(intent, webResults) {
   const webUsed = Array.isArray(webResults) && webResults.length > 0;
   if (webUsed && PLATFORM_INTENTS.indexOf(intent) === -1) return "WEB";
   return intent;
+}
+
+function isPlatformIntent(intent) {
+  return PLATFORM_INTENTS.indexOf(intent) !== -1;
 }
 
 function parseOutput(raw) {
@@ -110,7 +114,7 @@ function sanitizeSlots(raw) {
 
 function normalizeOutput(parsed, options) {
   const slots = sanitizeSlots(parsed.slots);
-  /* 模型提供的 sources 一律丟棄；真正來源由後端 web_search 工具結果產生。 */
+  /* 模型提供的 sources 一律丟棄；後端預設不回傳來源。 */
   if (parsed.tool_results != null && !isPlainObject(parsed.tool_results)) throw invalidOutput();
 
   let replyText = parsed.reply_text == null ? null : parsed.reply_text;
@@ -164,5 +168,6 @@ function normalizeOutput(parsed, options) {
 module.exports = {
   parseOutput: parseOutput,
   normalizeOutput: normalizeOutput,
-  finalIntent: finalIntent
+  finalIntent: finalIntent,
+  isPlatformIntent: isPlatformIntent
 };
