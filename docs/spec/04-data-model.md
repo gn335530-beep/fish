@@ -137,13 +137,14 @@
   "basic_mode": false,
   "correction_history": [],
   "protected_names": [],
-  "condition_proposal": null
+  "condition_proposal": null,
+  "condition_ask_count": 0
 }
 ```
 
 `pending_sale_text` 只在法規告知期間有值；`awaiting_consent` 標記等待法規確認。確認後用它進入 listing、兩者清空；取消後也清空。`seller_terms_accepted_at` 一旦寫入永久有效，不因法規文字更新重問。`market_quoted` 標記這份草稿已送過行情卡；魚種改變時重設。`choosing_edit` 標記正在等待使用者選擇要修改的草稿欄位。
 
-`basic_mode` 預設 `false`，模型逾時、429、無金鑰、上游或格式錯誤時設為 `true` 並改走規則引擎，開新助手房才重設。`correction_history` 是累積的錯字修正紀錄（每筆含 `field`、`original`、`corrected`、`time`）。`protected_names` 是釣客要求保留的原始字串，同一間助手房不再自動修正。`condition_proposal` 是待釣客同意的處理方式縮短版。這些欄位在舊草稿缺值時視為空陣列或 `null`，不需資料遷移。
+`basic_mode` 預設 `false`，模型逾時、429、無金鑰、上游或格式錯誤時設為 `true` 並改走規則引擎，開新助手房才重設。`correction_history` 是累積的錯字修正紀錄（每筆含 `field`、`original`、`corrected`、`time`），修正只限魚種與處理方式欄位。`protected_names` 是釣客要求保留的原始字串，同一間助手房不再自動修正。`condition_proposal` 是待釣客同意的處理方式縮短版。`condition_ask_count` 是處理方式的回問計數，達兩次後才接受縮短提議，處理方式寫入有效值後歸零。這些欄位在舊草稿缺值時視為空陣列或 `null`／`0`，不需資料遷移。
 
 **唯一鍵**：助手房＝`id`（每位使用者可以有多間，不再用 `type + user_ids[0]`）；交易房＝`type + buyer_id + seller_id`，只計算現存房間。刪除交易房後，同一組人可再建立新房間，舊房間不會被重用。
 

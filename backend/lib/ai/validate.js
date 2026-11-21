@@ -9,6 +9,9 @@ const { TIDE_MISSING_TEXT, TEMP_MISSING_TEXT, needsTideNote, needsTemperatureNot
   withNotes, assertWeatherOnly } = require("./reply-output");
 const { llmError } = require("./error");
 
+/* intent 常數與前端 `frontend/assets/js/demo/ai/intents.js` 對應（前後端各別維護，改任一邊要同步另一邊）：
+   INTENTS ↔ INTENT、PLATFORM_INTENTS ↔ PLATFORM_INTENTS、REPLY_INTENTS ↔ REPLY_INTENTS；
+   EDIT_FIELDS 與前端 llm-slots.js 的 DRAFT_SLOTS 有重疊欄位，也要一併核對。 */
 const INTENTS = [
   "SELL", "BUY", "MARKET", "CANCEL", "EDIT", "CHAT", "WEB", "PRODUCT_RECOMMEND", "UNKNOWN"
 ];

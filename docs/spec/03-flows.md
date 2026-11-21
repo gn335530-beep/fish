@@ -382,7 +382,7 @@
 3. 前端以 `conversation_id`、`message_id` 與目前房間 `context` 呼叫 `POST /api/ai/reply`，等待期間顯示「小幫手正在輸入…」。
 4. 後端驗證房間、訊息與 context，以本次 `message_id` 為錨點讀取該訊息（含）以前最近 10 則使用者／助手訊息，遮蔽個資後呼叫模型；較新的訊息不送入模型。模型可要求唯讀工具，後端執行後再呼叫模型。每輪最多 2 次工具呼叫，端點不回寫任何訊息或 context。模型、工具與行情上游共用同一個請求期限。
 5. 前端依 `intent` 處理：
-   - `SELL`：上架草稿進行中（`mode === "listing"` 且有草稿）改走 `listing` 契約——套用 `draft_changes`、寫入 `correction_history`／`protected_names`／`condition_proposal`，依 `next_action` 顯示草稿卡；不在 listing 時，slots 合併進上架草稿，交給既有追問、行情卡與售價流程；不寫 LLM 文字。
+   - `SELL`：上架草稿進行中（`mode === "listing"` 且有草稿）改走 `listing` 契約——套用 `draft_changes`、寫入 `correction_history`／`protected_names`／`condition_proposal`／`condition_ask_count`，依 `next_action` 顯示草稿卡；不在 listing 時，slots 合併進上架草稿，交給既有追問、行情卡與售價流程；不寫 LLM 文字。
    - `BUY`／`MARKET`／`CANCEL`／`EDIT`：交給既有導購、行情、取消與修改流程；不寫 LLM 文字。`BUY` 不否決後端的 `PRODUCT_RECOMMEND`。
    - `CHAT`：沒有使用網路資料時寫入 `reply_text`；若後端行情工具取得資料，後面附既有行情卡。
    - `WEB`：這一輪成功使用網路資料；即使模型自稱 `CHAT` 也升級為 `WEB`，寫入 `reply_text`。預設不附資料來源卡，回覆文字中的 URL 一律移除；若行情工具取得資料，也附行情卡。使用者明確要求來源時，才附後端工具產生的來源卡。

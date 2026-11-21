@@ -6,6 +6,7 @@ const tools = require("./tools");
 const { mapError, failure } = require("./result");
 const { historyFor, contextSummary } = require("./history");
 const { logReply } = require("./log");
+const { remainingMs } = require("../deadline");
 const { LISTING_PROMPT } = require("./listing-prompt");
 const { parseListingOutput, validateDraftChanges, validateCorrections, guardRejected } =
   require("./listing-validate");
@@ -55,7 +56,7 @@ async function buildInput(options, config, deadline) {
   const draft = options.context.draft || {};
   context.missing_fields = draftHelpers.missingFields(draft);
   if (draft.fish_species) {
-    const budget = Math.min(Math.max(1, deadline - Date.now()), 3000);
+    const budget = Math.min(remainingMs(deadline), 3000);
     const found = await species.lookup(draft.fish_species, budget);
     context.species_lookup = {
       name: draft.fish_species,
@@ -65,7 +66,7 @@ async function buildInput(options, config, deadline) {
   }
   return {
     model: config.model,
-    timeoutMs: Math.max(1, deadline - Date.now()),
+    timeoutMs: remainingMs(deadline),
     system: LISTING_PROMPT,
     context: context,
     messages: historyFor(options.conversation.id, options.message)
@@ -183,10 +184,10 @@ async function reply(options, config, baseLog, started) {
     const input = await buildInput(options, config, deadline);
     /* 只提供唯讀的官方字典工具；模型不能用 listing 工具做任何寫入。 */
     const loop = await toolLoop.run(input, {
-      timeoutMs: Math.max(1, deadline - Date.now()),
-      searchTimeoutMs: Math.max(1, deadline - Date.now()),
+      timeoutMs: remainingMs(deadline),
+      searchTimeoutMs: remainingMs(deadline),
       toolDefs: tools.listingDefinitions(),
-      toolCtx: { timeoutMs: Math.max(1, deadline - Date.now()) }
+      toolCtx: { timeoutMs: remainingMs(deadline) }
     }, report);
     const parsed = parseListingOutput(loop.raw.text);
     const result = await buildResult(parsed, options.context, options.message.text, config);

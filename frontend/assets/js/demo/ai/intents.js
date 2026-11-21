@@ -1,4 +1,7 @@
-/* 助手房 intent 與路由分類：前端只使用這裡的常數，避免裸字串分叉。 */
+/* 助手房 intent 與路由分類：前端只使用這裡的常數，避免裸字串分叉。
+   intent 常數與後端 `backend/lib/ai/validate.js` 對應（前後端各別維護，改任一邊要同步另一邊）：
+   INTENT ↔ INTENTS、PLATFORM_INTENTS ↔ PLATFORM_INTENTS、REPLY_INTENTS ↔ REPLY_INTENTS；
+   llm-slots.js 的 DRAFT_SLOTS 與後端 EDIT_FIELDS 有重疊欄位，也要一併核對。 */
 
 export const INTENT = {
   SELL: "SELL",

@@ -44,7 +44,13 @@ async function race(task, timeoutMs, fallback) {
   }
 }
 
+/* 距絕對期限的剩餘毫秒，下限 1ms；呼叫端自行判斷期限是否已用盡。 */
+function remainingMs(deadline) {
+  return Math.max(1, deadline - Date.now());
+}
+
 module.exports = {
   abortSignal: abortSignal,
-  race: race
+  race: race,
+  remainingMs: remainingMs
 };
