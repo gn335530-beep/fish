@@ -6,6 +6,7 @@ const advice = require("./fishing-advice");
 
 const NO_PRODUCTS_TEXT = "目前沒有符合條件的商品，可以換個魚種、地區或預算再試。";
 const FOREIGN_WEATHER_NOT_FOUND = "查不到國外地點天氣，請稍後再試。";
+const TIDE_MISSING_TEXT = "潮汐暫無資料";
 
 function directReply(baseLog, started, text, toolResults, extra) {
   const settings = extra || {};
@@ -38,6 +39,30 @@ function foreignWeatherFailure(wantsSources) {
   return withSourceNote(FOREIGN_WEATHER_NOT_FOUND, wantsSources);
 }
 
+function tideMissing(local) {
+  return Boolean(local && local.found === true && local.mode === "sea" && !local.tide);
+}
+
+function needsTideNote(replyText, local) {
+  return Boolean(replyText && tideMissing(local) &&
+    replyText.indexOf(TIDE_MISSING_TEXT) === -1);
+}
+
+function appendTideNote(text, local) {
+  return needsTideNote(text, local) ? text + "\n" + TIDE_MISSING_TEXT : text;
+}
+
+/* 提示句優先保留；空間不足時截斷模型文字，不丟掉提示。 */
+function withNotes(replyText, notes, maxLength) {
+  if (!notes.length) return replyText;
+  const noteText = notes.join("\n");
+  if (noteText.length >= maxLength) return noteText.slice(0, maxLength);
+  if (!replyText) return noteText;
+  const available = maxLength - noteText.length - 1;
+  const base = available > 0 ? replyText.slice(0, available).trim() : "";
+  return base ? base + "\n" + noteText : noteText;
+}
+
 function localFailureText(local) {
   if (!local) return "";
   if (local.error === "NO_REGION") return "你所在的縣市是哪裡？";
@@ -52,21 +77,18 @@ function localFailureText(local) {
 /* 釣魚建議缺資料或在地工具失敗時的直接回覆；沒有就直接進模型文字。 */
 function localFallback(local, options) {
   const settings = options || {};
+  function result(text) {
+    return {
+      text: appendTideNote(withSourceNote(text, settings.wantsSources), local),
+      toolResults: { local: local }
+    };
+  }
   if (settings.wantsAdvice) {
     const missing = advice.missingText(local);
-    if (missing) {
-      return {
-        text: withSourceNote(missing, settings.wantsSources),
-        toolResults: { local: local }
-      };
-    }
+    if (missing) return result(missing);
   }
   const failure = localFailureText(local);
-  if (!failure) return null;
-  return {
-    text: withSourceNote(failure, settings.wantsSources),
-    toolResults: { local: local }
-  };
+  return failure ? result(failure) : null;
 }
 
 function replySuffix(intent, replyText, scope) {
@@ -79,9 +101,14 @@ function replySuffix(intent, replyText, scope) {
 module.exports = {
   NO_PRODUCTS_TEXT: NO_PRODUCTS_TEXT,
   FOREIGN_WEATHER_NOT_FOUND: FOREIGN_WEATHER_NOT_FOUND,
+  TIDE_MISSING_TEXT: TIDE_MISSING_TEXT,
   directReply: directReply,
   withSourceNote: withSourceNote,
   foreignWeatherFailure: foreignWeatherFailure,
+  tideMissing: tideMissing,
+  needsTideNote: needsTideNote,
+  appendTideNote: appendTideNote,
+  withNotes: withNotes,
   localFailureText: localFailureText,
   localFallback: localFallback,
   replySuffix: replySuffix

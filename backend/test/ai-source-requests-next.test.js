@@ -48,18 +48,17 @@ test("下一句只要求來源時重查上一則工具，不呼叫模型", async
   assert.deepEqual(data.sources, []);
   const calls = h.calls.length;
 
-  message = await h.sendUser(room.id, "有連結嗎？");
-  data = (await h.reply(room.id, message.id)).body.data;
-  assert.equal(data.handled, true, JSON.stringify(data));
-  assert.equal(data.sources.length, 1);
-  assert.equal(h.calls.length, calls);
-
-  message = await h.sendUser(room.id, "引用來源");
-  data = (await h.reply(room.id, message.id)).body.data;
-  assert.equal(data.handled, true, JSON.stringify(data));
-  assert.equal(data.sources.length, 1);
-  assert.equal(h.calls.length, calls);
-  assert.equal(upstream.urls.length, 3);
+  for (const text of [
+    "有連結嗎？", "引用來源", "來源是哪個網站？", "這則的來源",
+    "查證", "請給我來源", "原始來源", "給我看連結"
+  ]) {
+    message = await h.sendUser(room.id, text);
+    data = (await h.reply(room.id, message.id)).body.data;
+    assert.equal(data.handled, true, text + " " + JSON.stringify(data));
+    assert.equal(data.sources.length, 1, text);
+    assert.equal(h.calls.length, calls, text);
+  }
+  assert.equal(upstream.urls.length, 9);
 });
 
 test("下一句要求網路來源時重跑 Tavily 查詢", async function () {

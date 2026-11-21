@@ -2,8 +2,10 @@
 
 const { isPlainObject } = require("./json");
 const guard = require("./guard");
+const localGuard = require("./local-guard");
 const evidence = require("./evidence");
 const { safeSources, NO_SOURCE_TEXT } = require("./sources");
+const { TIDE_MISSING_TEXT, needsTideNote, withNotes } = require("./reply-output");
 const { llmError } = require("./error");
 
 const INTENTS = [
@@ -118,6 +120,7 @@ function normalizeOutput(parsed, options) {
   /* 模型提供的 sources 一律丟棄；後端預設不回傳來源。 */
   if (parsed.tool_results != null && !isPlainObject(parsed.tool_results)) throw invalidOutput();
   const sources = options.includeSources === true ? safeSources(options.sources) : [];
+  const localResults = options.toolResults && options.toolResults.local;
 
   let replyText = parsed.reply_text == null ? null : parsed.reply_text;
   if (replyText !== null && typeof replyText !== "string") throw invalidOutput();
@@ -135,34 +138,48 @@ function normalizeOutput(parsed, options) {
   } else if (REPLY_INTENTS.indexOf(parsed.intent) !== -1 && !replyText) {
     throw invalidOutput();
   }
-  /* 要求來源但沒有任何後端來源時，明確說明沒有。 */
-  if (!platform && options.includeSources === true && !sources.length) {
-    const note = NO_SOURCE_TEXT;
-    replyText = replyText && replyText.length + note.length + 1 <= MAX_REPLY
-      ? replyText + "\n" + note
-      : note;
+  const notes = [];
+  if (!platform && parsed.intent !== "PRODUCT_RECOMMEND" &&
+    needsTideNote(replyText, localResults)) {
+    notes.push(TIDE_MISSING_TEXT);
   }
+  /* 要求來源但沒有任何後端來源時，明確說明沒有。 */
+  if (!platform && options.includeSources === true && !sources.length &&
+    (!replyText || replyText.indexOf(NO_SOURCE_TEXT) === -1)) {
+    notes.push(NO_SOURCE_TEXT);
+  }
+  replyText = withNotes(replyText, notes, MAX_REPLY);
+  if (replyText !== null && replyText.length > MAX_REPLY) throw invalidOutput();
 
   const officialText = evidence.officialText(options.toolResults, options.toolNames);
   const webText = evidence.webText(options.webResults);
+  const localText = evidence.localText(localResults);
+  const localUsed = (options.toolNames || []).indexOf("get_local_conditions") !== -1;
   const slotPool = guard.numbersIn(options.userText).concat(guard.numbersIn(officialText));
 
   let replyEvidence = officialText;
-  if (parsed.intent === "WEB") replyEvidence = webText;
+  if (parsed.intent === "WEB") {
+    replyEvidence = localUsed ? webText + "\n" + localText : webText;
+  }
   if (parsed.intent === "PRODUCT_RECOMMEND") {
     replyEvidence = evidence.productsText(options.toolResults && options.toolResults.products);
   }
 
   const replyPool = parsed.intent === "WEB"
-    ? guard.numbersIn(webText)
+    ? guard.numbersIn(replyEvidence)
     : guard.numbersIn(options.userText).concat(guard.numbersIn(replyEvidence));
   const replyContext = parsed.intent === "WEB"
-    ? webText
+    ? replyEvidence
     : options.userText + "\n" + replyEvidence;
   guard.assertSlotsGrounded(slots, slotPool);
   guard.assertReplyGrounded(replyText, replyPool, replyContext, {
-    strict: parsed.intent === "WEB"
+    strict: parsed.intent === "WEB" || localUsed
   });
+  if (localUsed) {
+    localGuard.assertLocalDateTimes(replyText, localText, localResults);
+    localGuard.assertLocalUnits(replyText, localResults, options.userText);
+    localGuard.assertLocalDirections(replyText, localResults);
+  }
 
   return {
     intent: parsed.intent,

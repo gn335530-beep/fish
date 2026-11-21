@@ -39,11 +39,13 @@ function webText(results) {
 /* 天氣、海況數字只給模型當輪工具拿到的內容；不含原始 payload 或網址。 */
 function localText(local) {
   if (!local || local.found !== true) return "";
+  const weather = local.weather || null;
   return JSON.stringify({
     mode: local.mode,
     city: local.city,
     sea_area: local.sea_area,
-    weather: local.weather || null,
+    forecast_days: weather && Array.isArray(weather.days) ? weather.days.length : null,
+    weather: weather,
     marine: local.marine || null,
     tide: local.tide || null,
     errors: local.errors || null

@@ -27,7 +27,7 @@ test.afterEach(function () {
 });
 
 const SEA_TEXT = "海況：浪高約 1.5 公尺，西南浪，浪週期 6 秒，海溫 27°C；" +
-  "東南風 4 級、陣風 6 級。天氣多雲，26–31°C，降雨機率 40%。";
+  "東南風 3 級、陣風 4 級。天氣多雲，26–31°C，降雨機率 40%。";
 
 test("海域別名取最長匹配，避免東北部被當成北部", function () {
   assert.equal(places.seaAreaInText("東北部海面浪況"), "臺灣東北部海面");
@@ -141,7 +141,7 @@ test("部分資料缺失時逐項說明；兩邊都失敗時明確說查不到",
   message = await h.sendUser(room.id, "今天海況如何？");
   data = (await h.reply(room.id, message.id)).body.data;
   assert.equal(data.handled, true, JSON.stringify(data));
-  assert.equal(data.reply_text, "查不到海況與天氣，請稍後再試。");
+  assert.equal(data.reply_text, "查不到海況與天氣，請稍後再試。\n潮汐暫無資料");
   assert.equal(state.urls.length, 2);
 });
 

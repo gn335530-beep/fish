@@ -110,11 +110,13 @@ test("沒有可提供來源時明確說沒有，平台意圖不附來源", async
 
   message = await h.sendUser(room.id, "我要賣花枝");
   await h.reply(room.id, message.id);
-  message = await h.sendUser(room.id, "有連結嗎？");
-  data = (await h.reply(room.id, message.id)).body.data;
-  assert.equal(data.handled, true, JSON.stringify(data));
-  assert.deepEqual(data.sources, []);
-  assert.match(data.reply_text, /沒有可提供的來源/);
+  for (const text of ["這則的來源", "請給我來源"]) {
+    message = await h.sendUser(room.id, text);
+    data = (await h.reply(room.id, message.id)).body.data;
+    assert.equal(data.handled, true, text + " " + JSON.stringify(data));
+    assert.deepEqual(data.sources, []);
+    assert.match(data.reply_text, /沒有可提供的來源/);
+  }
 });
 
 test("網路查無結果時回覆明確說沒有來源，不編造連結", async function () {
