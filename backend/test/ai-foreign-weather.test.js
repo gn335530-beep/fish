@@ -8,20 +8,8 @@ const web = require("../lib/ai/tools/web");
 const openMeteo = require("../lib/conditions/open-meteo");
 const cwaTide = require("../lib/conditions/cwa-tide");
 const regionStore = require("../lib/ai/region-store");
+const { fakeTavily } = require("./ai-web-helpers");
 const c = require("./ai-conditions-helpers");
-
-function fakeTavily(results) {
-  const state = { calls: [] };
-  web.setFetcher(async function () {
-    state.calls.push(true);
-    return {
-      ok: true,
-      status: 200,
-      json: async function () { return { results: results || [] }; }
-    };
-  });
-  return state;
-}
 
 test.before(start);
 test.after(stop);
@@ -59,6 +47,21 @@ test("東京天氣走 web_search，不用台灣海況或潮汐工具", async fun
   assert.deepEqual(data.sources, []);
   assert.doesNotMatch(data.reply_text, /海況|潮汐|浪高/);
   assert.equal(h.calls[0].tools.some(function (tool) { return tool.name === "web_search"; }), true);
+  assert.equal(h.calls[0].tools.some(function (tool) { return tool.name === "get_local_conditions"; }), false);
+});
+
+test("國外地點即使模型硬呼叫在地工具也不會執行", async function () {
+  h.reset({ LLM_WEB_SEARCH: "true", TAVILY_API_KEY: "tvly-test", CWA_API_KEY: "test-key" });
+  fakeTavily([]);
+  const upstream = c.fakeOpenMeteo();
+  h.useSequence([{ tool_calls: [c.conditionsCall("weather")] }]);
+  const room = await h.createRoom(tokens.buyer);
+  const message = await h.sendUser(room.id, "東京天氣如何？");
+
+  const data = (await h.reply(room.id, message.id)).body.data;
+  assert.equal(data.handled, false);
+  assert.equal(data.error_code, "LLM_INVALID_OUTPUT");
+  assert.equal(upstream.urls.length, 0);
 });
 
 test("國外地點要求來源時由來源流程附 Tavily 來源", async function () {

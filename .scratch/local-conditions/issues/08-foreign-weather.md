@@ -18,3 +18,4 @@
 
 - 2026-11-20：由 `local-conditions` 設計拆分。
 - 2026-11-21：完成。`hasForeignPlace` 與天氣／海況判斷把國外地點導向 `web_search`，在地 context 不注入縣市；網路搜尋關閉或回空結果時直接回「查不到國外地點天氣，請稍後再試。」。台灣縣市仍走 `get_local_conditions`。測試見 `ai-foreign-weather.test.js`。
+- 2026-11-21：review 後在國外地點回合直接從工具目錄移除 `get_local_conditions`，即使模型硬呼叫也會被拒絕，確保不執行台灣天氣／海況／潮汐工具。

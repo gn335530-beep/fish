@@ -3,6 +3,7 @@
 const openMeteo = require("../../conditions/open-meteo");
 const cwaTide = require("../../conditions/cwa-tide");
 const places = require("../../conditions/places");
+const { localSourceRows } = require("../../conditions/sources");
 const { reasonOf } = require("../../conditions/fetch-json");
 const { regionValue } = require("./region");
 
@@ -27,7 +28,14 @@ async function weatherResult(city, timeoutMs) {
   if (!coords) return { found: true, mode: "weather", city: city, weather: null, error: "NO_REGION" };
   try {
     const weather = await openMeteo.weatherAt(coords, timeoutMs);
-    return { found: true, mode: "weather", city: city, timezone: "Asia/Taipei", weather: weather };
+    return {
+      found: true,
+      mode: "weather",
+      city: city,
+      timezone: "Asia/Taipei",
+      weather: weather,
+      sources: localSourceRows({ mode: "weather", weather: weather })
+    };
   } catch (error) {
     return { found: true, mode: "weather", city: city, weather: null, error: reasonOf(error) };
   }
@@ -71,6 +79,7 @@ async function seaResult(args, ctx) {
     marine: marineResult.value,
     weather: weatherResult.value,
     tide: tide,
+    sources: localSourceRows({ mode: "sea", marine: marineResult.value, weather: weatherResult.value, tide: tide }),
     errors: {
       marine: marineResult.error,
       weather: weatherResult.error,

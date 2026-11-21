@@ -61,8 +61,10 @@ const CONDITIONS_TOOL = {
 };
 
 function definitions(config) {
-  const tools = [MARKET_TOOL, PRODUCT_TOOL, CONDITIONS_TOOL];
-  if (config && config.webEnabled) tools.push(WEB_TOOL);
+  const settings = config || {};
+  const tools = [MARKET_TOOL, PRODUCT_TOOL];
+  if (settings.localEnabled !== false) tools.push(CONDITIONS_TOOL);
+  if (settings.webEnabled) tools.push(WEB_TOOL);
   return tools;
 }
 
@@ -70,7 +72,10 @@ async function execute(name, args, ctx) {
   const input = args && typeof args === "object" && !Array.isArray(args) ? args : {};
   if (name === "get_market_price") return market.run(input, ctx);
   if (name === "search_products") return products.run(input, ctx);
-  if (name === "get_local_conditions") return conditions.run(input, ctx);
+  if (name === "get_local_conditions") {
+    if (ctx.localEnabled === false) throw llmError("LLM_INVALID_OUTPUT", { message: "local conditions is disabled" });
+    return conditions.run(input, ctx);
+  }
   if (name === "web_search") {
     if (!ctx.webEnabled) throw llmError("LLM_INVALID_OUTPUT", { message: "web_search is disabled" });
     return web.run(input, ctx);

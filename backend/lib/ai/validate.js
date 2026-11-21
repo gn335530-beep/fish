@@ -3,7 +3,7 @@
 const { isPlainObject } = require("./json");
 const guard = require("./guard");
 const evidence = require("./evidence");
-const { safeSources } = require("./sources");
+const { safeSources, NO_SOURCE_TEXT } = require("./sources");
 const { llmError } = require("./error");
 
 const INTENTS = [
@@ -137,7 +137,7 @@ function normalizeOutput(parsed, options) {
   }
   /* 要求來源但沒有任何後端來源時，明確說明沒有。 */
   if (!platform && options.includeSources === true && !sources.length) {
-    const note = "目前沒有可提供的來源。";
+    const note = NO_SOURCE_TEXT;
     replyText = replyText && replyText.length + note.length + 1 <= MAX_REPLY
       ? replyText + "\n" + note
       : note;

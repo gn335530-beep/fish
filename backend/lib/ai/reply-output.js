@@ -1,7 +1,7 @@
 /* 回覆輸出：直接回覆、來源補充、在地失敗文案與查詢範圍後綴。 */
 
 const { logReply } = require("./log");
-const sourceRequest = require("./source-request");
+const { NO_SOURCE_TEXT } = require("./sources");
 
 const NO_PRODUCTS_TEXT = "目前沒有符合條件的商品，可以換個魚種、地區或預算再試。";
 
@@ -28,7 +28,7 @@ function directReply(baseLog, started, text, toolResults, extra) {
 }
 
 function withSourceNote(text, wantsSources) {
-  return wantsSources ? text + "\n" + sourceRequest.NO_SOURCE_TEXT : text;
+  return wantsSources ? text + "\n" + NO_SOURCE_TEXT : text;
 }
 
 function localFailureText(local) {

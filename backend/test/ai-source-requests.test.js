@@ -8,6 +8,7 @@ const web = require("../lib/ai/tools/web");
 const openMeteo = require("../lib/conditions/open-meteo");
 const cwaTide = require("../lib/conditions/cwa-tide");
 const regionStore = require("../lib/ai/region-store");
+const { fakeTavily } = require("./ai-web-helpers");
 const c = require("./ai-conditions-helpers");
 
 const RESULTS = [
@@ -17,20 +18,6 @@ const RESULTS = [
   { title: "新聞三", url: "https://example.com/3", content: "新聞" },
   { title: "惡意", url: "javascript:alert(1)", content: "bad" }
 ];
-
-function fakeTavily(results) {
-  const state = { calls: [], queries: [] };
-  web.setFetcher(async function (url, options) {
-    state.calls.push(url);
-    state.queries.push(JSON.parse(options.body).query);
-    return {
-      ok: true,
-      status: 200,
-      json: async function () { return { results: results === undefined ? RESULTS : results }; }
-    };
-  });
-  return state;
-}
 
 test.before(start);
 test.after(stop);
@@ -85,7 +72,7 @@ test("同一則海況問題要求來源時附海況與潮汐來源，最多 3 �
 
 test("同一則網路問題要求來源時附 Tavily 來源，最多 3 個", async function () {
   h.reset({ LLM_WEB_SEARCH: "true", TAVILY_API_KEY: "tvly-test" });
-  fakeTavily();
+  fakeTavily(RESULTS);
   h.useSequence([
     { tool_calls: [{ name: "web_search", args: { query: "高雄今天新聞" } }] },
     c.finalChat("今天高雄有多則新聞。")
@@ -98,45 +85,6 @@ test("同一則網路問題要求來源時附 Tavily 來源，最多 3 個", asy
   assert.equal(data.sources.length, 3);
   assert.match(data.sources[0].url, /^https:/);
   assert.doesNotMatch(data.sources.map(function (row) { return row.url; }).join(" "), /javascript/);
-});
-
-test("下一句只要求來源時重查上一則工具，不呼叫模型", async function () {
-  h.reset();
-  const upstream = c.fakeOpenMeteo();
-  h.useSequence([
-    { tool_calls: [c.conditionsCall("weather")] },
-    c.finalChat("高雄今天多雲，現在 27°C。")
-  ]);
-  const room = await h.createRoom(tokens.buyer);
-  let message = await h.sendUser(room.id, "高雄天氣如何？");
-  let data = (await h.reply(room.id, message.id)).body.data;
-  assert.deepEqual(data.sources, []);
-  const calls = h.calls.length;
-
-  message = await h.sendUser(room.id, "有連結嗎？");
-  data = (await h.reply(room.id, message.id)).body.data;
-  assert.equal(data.handled, true, JSON.stringify(data));
-  assert.equal(data.sources.length, 1);
-  assert.equal(h.calls.length, calls);
-  assert.equal(upstream.urls.length, 2);
-});
-
-test("下一句要求網路來源時重跑 Tavily 查詢", async function () {
-  h.reset({ LLM_WEB_SEARCH: "true", TAVILY_API_KEY: "tvly-test" });
-  const tavily = fakeTavily();
-  h.useSequence([
-    { tool_calls: [{ name: "web_search", args: { query: "高雄今天新聞" } }] },
-    c.finalChat("今天高雄有多則新聞。")
-  ]);
-  const room = await h.createRoom(tokens.buyer);
-  let message = await h.sendUser(room.id, "高雄今天有什麼新聞？");
-  await h.reply(room.id, message.id);
-
-  message = await h.sendUser(room.id, "資料哪來？");
-  const data = (await h.reply(room.id, message.id)).body.data;
-  assert.equal(data.handled, true, JSON.stringify(data));
-  assert.equal(data.sources.length, 3);
-  assert.equal(tavily.calls.length, 2);
 });
 
 test("沒有可提供來源時明確說沒有，平台意圖不附來源", async function () {

@@ -26,14 +26,19 @@ function cityOnly(text, city) {
   return rest === "";
 }
 
+function cityForTurn(options) {
+  return cityInText(options.text) ||
+    regionStore.cityOf(options.conversationId) ||
+    normalizeRegion(options.user && options.user.city) ||
+    "";
+}
+
 /* 回傳這一輪是否為地區問題、縣市與海域，以及是否需要反問或確認。 */
 function prepare(options) {
   const conversationId = options.conversationId;
   const text = options.text;
   const explicit = cityInText(text);
   const asked = regionStore.wasAsked(conversationId);
-  const stored = regionStore.cityOf(conversationId);
-  const profile = normalizeRegion(options.user && options.user.city);
   const sea = questions.isSeaTopicQuestion(text);
   const explicitSea = places.seaAreaInText(text);
   const foreign = !explicit && !explicitSea && questions.hasForeignPlace(text);
@@ -53,7 +58,7 @@ function prepare(options) {
   }
   if (asked && !explicit && !active) regionStore.clearAsked(conversationId);
 
-  const city = explicit || stored || profile || "";
+  const city = cityForTurn({ text: text, conversationId: conversationId, user: options.user });
   if (active && !city && !(sea && explicitSea)) {
     regionStore.markAsked(conversationId);
     return { active: true, city: "", mode: "", seaArea: "", askCity: true, askSea: false, ackCity: "" };
@@ -84,5 +89,6 @@ module.exports = {
   prepare: prepare,
   dateLine: dateLine,
   promptLine: promptLine,
-  cityInText: cityInText
+  cityInText: cityInText,
+  cityForTurn: cityForTurn
 };
