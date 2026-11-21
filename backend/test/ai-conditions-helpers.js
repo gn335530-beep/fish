@@ -3,6 +3,7 @@
 const openMeteo = require("../lib/conditions/open-meteo");
 const cwaTide = require("../lib/conditions/cwa-tide");
 const { forecastPayload, fakeForecast } = require("./ai-cwa-helpers");
+const { observationPayload, fakeObservation } = require("./ai-observation-helpers");
 
 function weatherPayload(overrides) {
   const payload = {
@@ -155,8 +156,10 @@ module.exports = {
   marinePayload: marinePayload,
   tidePayload: tidePayload,
   forecastPayload: forecastPayload,
+  observationPayload: observationPayload,
   fakeOpenMeteo: fakeOpenMeteo,
   fakeForecast: fakeForecast,
+  fakeObservation: fakeObservation,
   fakeTide: fakeTide,
   taipeiDate: taipeiDate,
   timeoutError: timeoutError,

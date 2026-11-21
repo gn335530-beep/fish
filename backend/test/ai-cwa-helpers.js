@@ -1,6 +1,7 @@
 /* CWA 測試共用：假 F-D0047-091 預報 payload 與 fetcher。 */
 
 const cwaForecast = require("../lib/conditions/cwa-forecast");
+const { fakeObservation } = require("./ai-observation-helpers");
 
 function jsonResponse(payload) {
   return {
@@ -130,6 +131,8 @@ function fakeForecast(options) {
       : settings.payload;
     return jsonResponse(payload);
   });
+  /* 天氣題同時查觀測；預設注入成功假觀測，可用 observation 覆寫。 */
+  state.observation = fakeObservation(settings.observation || {});
   return state;
 }
 

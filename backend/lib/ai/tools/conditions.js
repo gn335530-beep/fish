@@ -2,6 +2,7 @@
 
 const openMeteo = require("../../conditions/open-meteo");
 const cwaForecast = require("../../conditions/cwa-forecast");
+const cwaObservation = require("../../conditions/cwa-observation");
 const cwaTide = require("../../conditions/cwa-tide");
 const places = require("../../conditions/places");
 const { localSourceRows } = require("../../conditions/sources");
@@ -26,7 +27,25 @@ function settled(rows, index) {
     : { value: null, error: reasonOf(row.reason) };
 }
 
-/* 天氣只使用中央氣象署官方預報；查不到即時天氣，不 fallback 回 Open-Meteo。 */
+/* 天氣以 CWA 預報為主；目前氣溫、現象與風只採用自動氣象站觀測。 */
+function mergeObservation(weather, observation) {
+  if (!observation) return weather;
+  const merged = Object.assign({}, weather);
+  merged.current_temperature_c = observation.temperature_c;
+  if (observation.weather_text) merged.current_weather_text = observation.weather_text;
+  if (observation.wind_speed_kmh !== null) {
+    merged.current_wind_speed_kmh = observation.wind_speed_kmh;
+    merged.current_wind_scale = observation.wind_scale;
+  }
+  if (observation.wind_direction_text) {
+    merged.current_wind_direction_text = observation.wind_direction_text;
+  }
+  merged.current_wind_gust_kmh = observation.wind_gust_kmh;
+  merged.current_wind_gust_scale = observation.wind_gust_scale;
+  return merged;
+}
+
+/* 天氣只使用中央氣象署官方預報與觀測；查不到即時天氣，不 fallback 回 Open-Meteo。 */
 async function weatherResult(city, ctx) {
   if (!places.cityCoords(city)) {
     return { found: true, mode: "weather", city: city || null, weather: null, error: "NO_REGION" };
@@ -34,22 +53,26 @@ async function weatherResult(city, ctx) {
   if (!ctx.cwaApiKey) {
     return { found: true, mode: "weather", city: city, weather: null, error: "NOT_CONFIGURED" };
   }
-  try {
-    const weather = await cwaForecast.forecastFor(city, {
-      apiKey: ctx.cwaApiKey,
-      timeoutMs: ctx.timeoutMs
-    });
-    return {
-      found: true,
-      mode: "weather",
-      city: city,
-      timezone: "Asia/Taipei",
-      weather: weather,
-      sources: localSourceRows({ mode: "weather", weather: weather })
-    };
-  } catch (error) {
-    return { found: true, mode: "weather", city: city, weather: null, error: reasonOf(error) };
+  const results = await Promise.allSettled([
+    cwaForecast.forecastFor(city, { apiKey: ctx.cwaApiKey, timeoutMs: ctx.timeoutMs }),
+    cwaObservation.observationFor(city, { apiKey: ctx.cwaApiKey, timeoutMs: ctx.timeoutMs })
+  ]);
+  const forecast = settled(results, 0);
+  if (!forecast.value) {
+    return { found: true, mode: "weather", city: city, weather: null, error: forecast.error };
   }
+  const observed = settled(results, 1);
+  const weather = mergeObservation(forecast.value, observed.value);
+  return {
+    found: true,
+    mode: "weather",
+    city: city,
+    timezone: "Asia/Taipei",
+    weather: weather,
+    observation: observed.value,
+    observation_error: observed.value ? null : observed.error,
+    sources: localSourceRows({ mode: "weather", weather: weather, observation: observed.value })
+  };
 }
 
 async function seaResult(args, ctx) {

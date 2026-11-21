@@ -47,8 +47,9 @@ test("同一則天氣問題要求來源時附中央氣象署天氣預報來源",
 
   const data = (await h.reply(room.id, message.id)).body.data;
   assert.equal(data.handled, true, JSON.stringify(data));
-  assert.equal(data.sources.length, 1);
-  assert.match(data.sources[0].title, /中央氣象署天氣預報/);
+  assert.equal(data.sources.length, 2);
+  assert.ok(data.sources.some(function (row) { return /中央氣象署天氣預報/.test(row.title); }));
+  assert.ok(data.sources.some(function (row) { return /自動氣象站觀測/.test(row.title); }));
   assert.match(data.sources[0].url, /^https:/);
   assert.doesNotMatch(data.reply_text, /https?:\/\//);
 });

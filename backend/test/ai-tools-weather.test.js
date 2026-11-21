@@ -43,7 +43,7 @@ test("台灣縣市天氣使用中央氣象署預報，回覆含今日高低溫�
   const local = data.tool_results.local;
   assert.equal(local.mode, "weather");
   assert.equal(local.city, "高雄市");
-  assert.equal(local.weather.current_temperature_c, null);
+  assert.equal(local.weather.current_temperature_c, 27);
   assert.equal(local.weather.current_weather_text, "多雲");
   assert.equal(local.weather.today.high_c, 31);
   assert.equal(local.weather.today.low_c, 26);
@@ -53,17 +53,24 @@ test("台灣縣市天氣使用中央氣象署預報，回覆含今日高低溫�
   assert.equal(local.weather.days.length, 7);
   assert.equal(local.weather.days[1].high_c, 30);
   assert.equal(local.weather.marine, undefined);
+  assert.equal(local.observation.temperature_c, 27);
+  assert.match(local.observation.station_name, /高雄市/);
+  assert.match(local.observation.observed_at, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
+  assert.equal(local.observation_error, null);
 
   assert.equal(upstream.urls.length, 1);
   assert.match(upstream.urls[0], /F-D0047-091/);
   assert.match(upstream.urls[0], /LocationName=%E9%AB%98%E9%9B%84%E5%B8%82/);
+  assert.equal(upstream.observation.urls.length, 1);
+  assert.match(upstream.observation.urls[0], /O-A0001-001/);
   assert.match(h.calls[0].system, /目前日期（Asia\/Taipei）：\d{4}-\d{2}-\d{2}/);
   const modelView = h.calls[1].tool_rounds[0].results[0].result;
-  assert.equal(modelView.weather.current_temperature_c, null);
+  assert.equal(modelView.weather.current_temperature_c, 27);
+  assert.equal(modelView.observation.temperature_c, 27);
 });
 
 test("目前氣溫欄位為 null 時，後端保證標示目前氣溫暫無資料", async function () {
-  c.fakeForecast();
+  c.fakeForecast({ observation: { error: c.timeoutError() } });
   h.useSequence([
     { tool_calls: [c.conditionsCall("weather")] },
     c.finalChat("高雄市今天多雲。\n今天 26–31°C，降雨機率 40%，東南風 3 級。")
@@ -75,10 +82,12 @@ test("目前氣溫欄位為 null 時，後端保證標示目前氣溫暫無資�
   assert.equal(data.handled, true, JSON.stringify(data));
   assert.match(data.reply_text, /目前氣溫暫無資料/);
   assert.equal(data.tool_results.local.weather.current_temperature_c, null);
+  assert.equal(data.tool_results.local.observation, null);
+  assert.equal(data.tool_results.local.observation_error, "UPSTREAM_TIMEOUT");
 });
 
 test("模型已寫目前氣溫暫無資料時不重複追加", async function () {
-  c.fakeForecast();
+  c.fakeForecast({ observation: { error: c.timeoutError() } });
   h.useSequence([
     { tool_calls: [c.conditionsCall("weather")] },
     c.finalChat("高雄市今天多雲。\n目前氣溫暫無資料。")
@@ -120,6 +129,7 @@ test("沒有縣市時天氣問題先反問，不呼叫 CWA", async function () {
   assert.equal(data.reply_text, "你所在的縣市是哪裡？");
   assert.equal(h.calls.length, 0);
   assert.equal(state.urls.length, 0);
+  assert.equal(state.observation.urls.length, 0);
 });
 
 test("預報逾時、5xx 或格式錯誤時說查不到，不呼叫 Open-Meteo", async function () {
@@ -173,24 +183,7 @@ test("缺少 CWA_API_KEY 時說查不到，不呼叫任何氣象端點", async f
   assert.equal(data.handled, true, JSON.stringify(data));
   assert.equal(data.reply_text, "查不到即時天氣，請稍後再試。");
   assert.equal(state.urls.length, 0);
+  assert.equal(state.observation.urls.length, 0);
   assert.equal(sea.urls.length, 0);
   openMeteo.resetFetcher();
-});
-
-test("要求來源時天氣來源卡列中央氣象署天氣預報", async function () {
-  c.fakeForecast();
-  h.useSequence([
-    { tool_calls: [c.conditionsCall("weather")] },
-    c.finalChat("高雄市今天多雲。\n今天 26–31°C，降雨機率 40%，東南風 3 級。")
-  ]);
-  const room = await h.createRoom(tokens.buyer);
-  const message = await h.sendUser(room.id, "高雄天氣如何？有來源嗎？");
-
-  const data = (await h.reply(room.id, message.id)).body.data;
-  assert.equal(data.handled, true, JSON.stringify(data));
-  assert.equal(data.sources.length, 1);
-  assert.match(data.sources[0].title, /中央氣象署/);
-  assert.match(data.sources[0].title, /天氣預報/);
-  assert.match(data.sources[0].url, /^https:/);
-  assert.doesNotMatch(data.reply_text, /https?:\/\//);
 });

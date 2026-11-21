@@ -3,6 +3,7 @@
 const { call, tokens } = require("./client");
 const provider = require("../lib/ai/provider");
 const cwaForecast = require("../lib/conditions/cwa-forecast");
+const cwaObservation = require("../lib/conditions/cwa-observation");
 
 const calls = [];
 
@@ -27,6 +28,7 @@ function reset(overrides) {
   calls.length = 0;
   provider.resetProvider();
   cwaForecast.resetFetcher();
+  cwaObservation.resetFetcher();
   setEnv(overrides);
 }
 
