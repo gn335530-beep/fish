@@ -11,6 +11,8 @@
 - **listing 模式改由模型驅動。** 當 conversation context 的 `mode === "listing"` 且草稿存在時，`POST /api/ai/reply` 改用 listing 契約：模型回傳 `reply_text`、`corrections`、`draft_changes`、`protected_names`、`condition_proposal` 與 `next_action`，後端再累積出 `correction_history`，取代原本的 `intent`／`slots`。
 - **模型只回變更，程式寫入。** 模型不能直接寫資料庫、不能發布／下架／刪除商品；`draft_changes` 只接受 `fish_species`、`quantity`、`condition`、`price`、`price_per_taijin` 五個白名單欄位，官方代碼與照片不由模型提供。草稿寫入仍由前端套用並存進 conversation context。
 - **數字嚴格防護。** `quantity`、`price`、`price_per_taijin` 必須出現在釣客這一則訊息，否則整輪丟棄（`LLM_GUARD_REJECTED`）。
+- **魚種以官方代碼字典為唯一權威。** 合法別名保留原文；只有唯一候選才由後端帶入官方代碼，商品名稱仍是原文。多候選回問、查無問一次、釣客可保留原字串。錯字修正需原字串查無、修正後唯一候選、原值等於草稿、原字串不在 `protected_names`，後端會再驗一次。listing 只提供唯讀 `lookup_species` 工具，精確比對、不做模糊搜尋。
+- **處理方式保留原句。** 只接受編輯距離 2 以內的錯字修正；超過 20 字或只有數字／單位時整輪丟棄，由模型回問並顯示字數。縮短版存在 `condition_proposal`，釣客明確同意後才套用；長度縮短不寫入 `corrections`。
 - **卡片時機由程式把關。** `next_action` 只有 `ask`／`show_market_card`／`show_draft_card`／`none` 四種；行情卡只能在非價格欄位完成後顯示，草稿卡只能在全部欄位完成後顯示，不符就降級為 `ask`。
 - **基本模式。** 模型逾時、429、無金鑰、上游錯誤或格式錯誤時，前端把該房 `basic_mode` 設為 `true`、顯示一次「AI 暫時無法協助，已切換基本模式；你仍可完成上架」，改走規則引擎，草稿卡恢復「修改草稿」；`basic_mode` 寫進 context，開新助手房才重試模型。欄位驗證失敗只丟棄該輪、改用規則，不切換基本模式。`LLM_ENABLED=false` 是正常規則模式，不算故障、不顯示提示。
 - **草稿卡按鈕由卡片資料決定。** 模型模式草稿卡只有「確認上架」與「取消上架」，不顯示「修改草稿」；基本／規則模式恢復「修改草稿」。

@@ -55,6 +55,8 @@ python -m http.server 8000 --directory frontend
 - 配額或 429 回 `retryable:true`；前端先跑規則，平台意圖能處理就照常完成，規則無法處理才顯示提示與重試。重試沿用同一個 `message_id`，不重寫使用者訊息，較新的訊息也不會進入該次歷史；不自動重試、不排隊、不快取搜尋結果。
 - 平台意圖（賣魚、找魚、行情、取消、修改）只回 slots；AI 文字用於 `CHAT`／`WEB`，`PRODUCT_RECOMMEND` 另附商品卡。
 - 上架草稿進行中（context `mode: "listing"` 且草稿存在）改由模型驅動：端點回 `listing` 契約（`reply_text`、`corrections`、`draft_changes`、`correction_history`、`protected_names`、`condition_proposal`、`next_action`），取代 `intent`／`slots`。`draft_changes` 只接受魚種、尾數、處理方式、整批售價、每台斤售價；尾數與售價必須出現在釣客這一則訊息，否則整輪丟棄（`LLM_GUARD_REJECTED`）。`next_action` 只有 `ask`／`show_market_card`／`show_draft_card`／`none`，卡片時機由程式把關。模型不能發布、下架、刪除或修改已上架商品。
+- 魚種以官方代碼字典為唯一權威：原字串精確查詢有候選（含合法別名）時保留原文；只有一個候選才由後端帶入官方代碼，商品名稱仍是原文；多候選不自動選、查無不擋上架。只有原字串查無、修正後唯一候選、原值等於草稿且原字串不在 `protected_names` 時才套用錯字修正，後端會再驗一次。`lookup_species` 是 listing 模式唯一的唯讀工具，只做精確比對。
+- 處理方式保留原句，只接受編輯距離 2 以內的錯字修正；超過 20 字或只有數字／單位時整輪丟棄，由模型回問並顯示字數。`condition_proposal` 是待同意的 20 字內版本，寫進 context 但未同意前不改草稿；釣客明確說「好」或「套用」後才可套用。長度縮短不寫入 `corrections`。
 - 模型逾時、429、無金鑰、上游錯誤或格式錯誤時，前端切換基本模式：該房 `basic_mode` 設為 `true`、顯示一次「AI 暫時無法協助，已切換基本模式」、改走規則引擎、草稿卡恢復「修改草稿」；欄位驗證失敗只丟棄該輪不改模式；`LLM_ENABLED=false` 是正常規則模式，不顯示提示。
 - 唯讀工具：`get_market_price`（官方行情）、`search_products`（公開商品，最多 5 筆）、`get_local_conditions`（中央氣象署縣市天氣預報、Open-Meteo 海域海況與 CWA 潮汐）、`web_search`（Tavily basic search）。每輪最多 2 次；模型不能寫入商品、訂單或評價。
 - 第一輪依問題類型強制工具：需要縣市的天氣／海況／潮汐／釣魚建議 → `get_local_conditions`；國外地點天氣、一般新聞、時效性問題 → `web_search`；商品推薦／找魚 → `search_products`；平台意圖與一般知識不強制。工具結果回來後恢復自動輸出 JSON。

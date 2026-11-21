@@ -4,6 +4,7 @@ const market = require("./market");
 const products = require("./products");
 const web = require("./web");
 const conditions = require("./conditions");
+const species = require("./species");
 const { llmError } = require("../error");
 
 const MARKET_TOOL = {
@@ -60,6 +61,19 @@ const CONDITIONS_TOOL = {
   }
 };
 
+const SPECIES_TOOL = {
+  name: "lookup_species",
+  description: "查官方魚種代碼字典的精確候選；只做精確名稱／別名比對，不做模糊搜尋。" +
+    "回傳代碼、官方名稱與別名；查無時 candidates 為空陣列。",
+  parameters: {
+    type: "OBJECT",
+    properties: {
+      name: { type: "STRING", description: "魚種名稱或別名，例如鬼頭刀" }
+    },
+    required: ["name"]
+  }
+};
+
 function definitions(config) {
   const settings = config || {};
   const tools = [MARKET_TOOL, PRODUCT_TOOL];
@@ -68,10 +82,16 @@ function definitions(config) {
   return tools;
 }
 
+/* listing 模式只提供唯讀字典工具，不提供行情、商品、網路或在地工具。 */
+function listingDefinitions() {
+  return [SPECIES_TOOL];
+}
+
 async function execute(name, args, ctx) {
   const input = args && typeof args === "object" && !Array.isArray(args) ? args : {};
   if (name === "get_market_price") return market.run(input, ctx);
   if (name === "search_products") return products.run(input, ctx);
+  if (name === "lookup_species") return species.run(input, ctx);
   if (name === "get_local_conditions") {
     if (ctx.localEnabled === false) throw llmError("LLM_INVALID_OUTPUT", { message: "local conditions is disabled" });
     return conditions.run(input, ctx);
@@ -88,4 +108,9 @@ function modelResult(name, result) {
   return result;
 }
 
-module.exports = { definitions: definitions, execute: execute, modelResult: modelResult };
+module.exports = {
+  definitions: definitions,
+  listingDefinitions: listingDefinitions,
+  execute: execute,
+  modelResult: modelResult
+};

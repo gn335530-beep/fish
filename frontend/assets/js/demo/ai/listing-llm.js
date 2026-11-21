@@ -29,12 +29,16 @@ export async function enterBasicMode(ctx, userText, user) {
 /* 套用模型回傳的草稿變更與修正紀錄；卡片顯示時機已由後端驗證。
    show_market_card 的行情卡時機留待 ticket 07 實作。 */
 export async function applyListingReply(ctx, listing) {
-  const draft = mergeDraft(ctx.draft, listing.draft_changes || {});
-  const next = withDraft(ctx, draft, {
+  const changes = listing.draft_changes || {};
+  const draft = mergeDraft(ctx.draft, changes);
+  const extra = {
     correction_history: listing.correction_history || [],
     protected_names: listing.protected_names || [],
     condition_proposal: listing.condition_proposal || null
-  });
+  };
+  /* 魚種換了先讓舊行情失效；ticket 07 會依 next_action 重查。 */
+  if (Object.prototype.hasOwnProperty.call(changes, "fish_species")) extra.market_quoted = false;
+  const next = withDraft(ctx, draft, extra);
   const replies = [];
   if (listing.reply_text) replies.push({ text: listing.reply_text });
   if (listing.next_action === "show_draft_card") {

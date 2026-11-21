@@ -4,6 +4,12 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const { start, stop, call, tokens } = require("./client");
 const h = require("./ai-reply-helpers");
+const { raw, seedCatalog, resetCatalog } = require("./market-catalog-helpers");
+
+const ROWS = [
+  raw({ "品種代碼": 2101, "魚貨名稱": "鬼頭刀" }),
+  raw({ "品種代碼": 2201, "魚貨名稱": "石斑魚" })
+];
 
 const DRAFT = {
   client_request_id: "pub_x",
@@ -28,8 +34,11 @@ function listingContext(overrides) {
 test.before(start);
 test.after(stop);
 test.beforeEach(function () {
+  resetCatalog();
+  seedCatalog(ROWS);
   h.reset({ LLM_ENABLED: "true", GEMINI_API_KEY: "test-key" });
 });
+test.after(resetCatalog);
 
 test("模型回傳尾數時，回傳契約含草稿變更與下一個動作", async function () {
   const room = await h.createRoom();
