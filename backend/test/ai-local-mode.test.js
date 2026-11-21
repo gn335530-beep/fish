@@ -24,7 +24,8 @@ test.afterEach(function () {
 });
 
 test("天氣問題誤傳海況模式時，工具仍只查天氣", async function () {
-  const upstream = c.fakeOpenMeteo();
+  const openMeteo = c.fakeOpenMeteo();
+  const upstream = c.fakeForecast();
   c.fakeTide();
   h.useSequence([
     { tool_calls: [c.conditionsCall("sea")] },
@@ -39,7 +40,7 @@ test("天氣問題誤傳海況模式時，工具仍只查天氣", async function
   assert.equal(data.tool_results.local.marine, undefined);
   assert.equal(data.tool_results.local.tide, undefined);
   assert.equal(upstream.urls.length, 1);
-  assert.doesNotMatch(upstream.urls[0], /marine-api/);
+  assert.equal(openMeteo.urls.length, 0);
   assert.doesNotMatch(data.reply_text, /浪|海況|潮汐|滿潮|乾潮|海溫/);
 });
 

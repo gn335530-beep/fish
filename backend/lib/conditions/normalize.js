@@ -1,5 +1,7 @@
 /* Open-Meteo 正規化：WMO 現象、風向、蒲福風級與每日預報。 */
 
+const { numberOrNull, directionText, beaufort } = require("./wind");
+
 const WEATHER_TEXT = {
   0: "晴朗", 1: "晴時多雲", 2: "多雲", 3: "陰天",
   45: "有霧", 48: "有霧",
@@ -10,38 +12,14 @@ const WEATHER_TEXT = {
   95: "雷雨", 96: "雷雨伴冰雹", 99: "雷雨伴冰雹"
 };
 
-const DIRECTIONS = ["北", "東北", "東", "東南", "南", "西南", "西", "西北"];
-const BEAUFORT_MAX = [1, 6, 12, 20, 29, 39, 50, 62, 75, 89, 103, 118];
-
 function noData() {
   const error = new Error("NO_DATA");
   error.reason = "NO_DATA";
   return error;
 }
 
-function numberOrNull(value) {
-  const number = Number(value);
-  return value === null || value === undefined || !Number.isFinite(number) ? null : number;
-}
-
 function weatherText(code) {
   return WEATHER_TEXT[Number(code)] || "天氣不明";
-}
-
-function directionText(degrees) {
-  const value = numberOrNull(degrees);
-  if (value === null) return "";
-  return DIRECTIONS[Math.round((value % 360) / 45) % 8];
-}
-
-/* Open-Meteo 風速預設是 km/h；回覆用蒲福風級比較好讀。 */
-function beaufort(kmh) {
-  const value = numberOrNull(kmh);
-  if (value === null) return null;
-  for (let level = 0; level < BEAUFORT_MAX.length; level++) {
-    if (value < BEAUFORT_MAX[level]) return level;
-  }
-  return 12;
 }
 
 function daySummary(daily, index) {

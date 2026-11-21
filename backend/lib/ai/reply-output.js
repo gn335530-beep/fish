@@ -8,6 +8,7 @@ const { llmError } = require("./error");
 const NO_PRODUCTS_TEXT = "目前沒有符合條件的商品，可以換個魚種、地區或預算再試。";
 const FOREIGN_WEATHER_NOT_FOUND = "查不到國外地點天氣，請稍後再試。";
 const TIDE_MISSING_TEXT = "潮汐暫無資料";
+const TEMP_MISSING_TEXT = "目前氣溫暫無資料";
 
 function directReply(baseLog, started, text, toolResults, extra) {
   const settings = extra || {};
@@ -47,6 +48,17 @@ function tideMissing(local) {
 function needsTideNote(replyText, local) {
   return Boolean(replyText && tideMissing(local) &&
     replyText.indexOf(TIDE_MISSING_TEXT) === -1);
+}
+
+/* 預報成功但沒有自動氣象站觀測氣溫時，後端保證標示目前氣溫暫無資料。 */
+function temperatureMissing(local) {
+  return Boolean(local && local.found === true && local.mode === "weather" &&
+    local.weather && local.weather.current_temperature_c == null);
+}
+
+function needsTemperatureNote(replyText, local) {
+  return Boolean(replyText && temperatureMissing(local) &&
+    replyText.indexOf(TEMP_MISSING_TEXT) === -1);
 }
 
 const SEA_REPLY_TERMS = /(海況|浪高|浪向|浪週期|浪況|海浪|風浪|長浪|大浪|小浪|湧浪|海溫|潮汐|潮水|漲潮|退潮|潮位|滿潮|乾潮|海象)|(?<![熱寒聲流])浪/;
@@ -111,11 +123,14 @@ module.exports = {
   NO_PRODUCTS_TEXT: NO_PRODUCTS_TEXT,
   FOREIGN_WEATHER_NOT_FOUND: FOREIGN_WEATHER_NOT_FOUND,
   TIDE_MISSING_TEXT: TIDE_MISSING_TEXT,
+  TEMP_MISSING_TEXT: TEMP_MISSING_TEXT,
   directReply: directReply,
   withSourceNote: withSourceNote,
   foreignWeatherFailure: foreignWeatherFailure,
   tideMissing: tideMissing,
   needsTideNote: needsTideNote,
+  temperatureMissing: temperatureMissing,
+  needsTemperatureNote: needsTemperatureNote,
   appendTideNote: appendTideNote,
   assertWeatherOnly: assertWeatherOnly,
   withNotes: withNotes,

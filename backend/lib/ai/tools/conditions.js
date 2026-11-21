@@ -1,6 +1,7 @@
 /* get_local_conditions：天氣或海況一次取得；回傳結構化資料，缺資料時說明原因。 */
 
 const openMeteo = require("../../conditions/open-meteo");
+const cwaForecast = require("../../conditions/cwa-forecast");
 const cwaTide = require("../../conditions/cwa-tide");
 const places = require("../../conditions/places");
 const { localSourceRows } = require("../../conditions/sources");
@@ -25,11 +26,19 @@ function settled(rows, index) {
     : { value: null, error: reasonOf(row.reason) };
 }
 
-async function weatherResult(city, timeoutMs) {
-  const coords = places.cityCoords(city);
-  if (!coords) return { found: true, mode: "weather", city: city, weather: null, error: "NO_REGION" };
+/* 天氣只使用中央氣象署官方預報；查不到即時天氣，不 fallback 回 Open-Meteo。 */
+async function weatherResult(city, ctx) {
+  if (!places.cityCoords(city)) {
+    return { found: true, mode: "weather", city: city || null, weather: null, error: "NO_REGION" };
+  }
+  if (!ctx.cwaApiKey) {
+    return { found: true, mode: "weather", city: city, weather: null, error: "NOT_CONFIGURED" };
+  }
   try {
-    const weather = await openMeteo.weatherAt(coords, timeoutMs);
+    const weather = await cwaForecast.forecastFor(city, {
+      apiKey: ctx.cwaApiKey,
+      timeoutMs: ctx.timeoutMs
+    });
     return {
       found: true,
       mode: "weather",
@@ -95,7 +104,7 @@ async function seaResult(args, ctx) {
 async function run(args, ctx) {
   const input = args && typeof args === "object" && !Array.isArray(args) ? args : {};
   if (modeOf(input, ctx) === "sea") return seaResult(input, ctx);
-  return weatherResult(cityOf(input, ctx), ctx.timeoutMs);
+  return weatherResult(cityOf(input, ctx), ctx);
 }
 
 module.exports = { run: run };

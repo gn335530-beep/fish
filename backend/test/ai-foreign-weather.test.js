@@ -109,7 +109,7 @@ test("網路查無結果時國外天氣明確說查不到，不猜測", async fu
 
 test("台灣縣市仍走在地天氣工具，不受國外路由影響", async function () {
   h.reset({ CWA_API_KEY: "test-key" });
-  const upstream = c.fakeOpenMeteo();
+  const upstream = c.fakeForecast();
   h.useSequence([
     { tool_calls: [c.conditionsCall("weather")] },
     c.finalChat("高雄今天多雲，現在 27°C。")

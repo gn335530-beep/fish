@@ -139,7 +139,8 @@ test("只問潮汐也走海況包並取得滿乾潮", async function () {
 
 test("天氣問題不查潮汐，也不回傳 tide 欄位", async function () {
   h.reset({ CWA_API_KEY: "test-key" });
-  const sea = c.fakeOpenMeteo();
+  const openMeteo = c.fakeOpenMeteo();
+  const forecast = c.fakeForecast();
   const tide = c.fakeTide();
   h.useSequence([
     { tool_calls: [c.conditionsCall("weather")] },
@@ -151,6 +152,7 @@ test("天氣問題不查潮汐，也不回傳 tide 欄位", async function () {
   const data = (await h.reply(room.id, message.id)).body.data;
   assert.equal(data.handled, true, JSON.stringify(data));
   assert.equal(data.tool_results.local.tide, undefined);
-  assert.equal(sea.urls.length, 1);
+  assert.equal(openMeteo.urls.length, 0);
+  assert.equal(forecast.urls.length, 1);
   assert.equal(tide.urls.length, 0);
 });

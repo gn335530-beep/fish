@@ -422,10 +422,10 @@
 
 - `intent`：`SELL`／`BUY`／`MARKET`／`CANCEL`／`EDIT`／`CHAT`／`WEB`／`PRODUCT_RECOMMEND`／`UNKNOWN`。
 - 平台意圖（`SELL`、`BUY`、`MARKET`、`CANCEL`、`EDIT`）不產生 `reply_text`，前端交由既有規則完成；`CHAT`／`WEB`／`PRODUCT_RECOMMEND` 才寫入文字。
-- 唯讀工具：`get_market_price`（官方行情）、`search_products`（公開商品，最多 5 筆）、`get_local_conditions`（台灣縣市天氣或海域海況＋潮汐）、`web_search`（Tavily basic search）。每輪最多 2 次工具呼叫；模型不能使用寫入工具。工具結果視為不可信資料，平台數字、天氣、海況與潮汐數字只能來自使用者訊息或後端工具結果。
+- 唯讀工具：`get_market_price`（官方行情）、`search_products`（公開商品，最多 5 筆）、`get_local_conditions`（中央氣象署 F-D0047-091 縣市天氣預報，或 Open-Meteo 海域海況＋CWA 潮汐）、`web_search`（Tavily basic search）。每輪最多 2 次工具呼叫；模型不能使用寫入工具。工具結果視為不可信資料，平台數字、天氣、海況與潮汐數字只能來自使用者訊息或後端工具結果。
 - 第一輪依問題類型強制工具：需要縣市的天氣／海況／潮汐／釣魚建議 → `get_local_conditions`；國外地點天氣、一般新聞、時效性問題 → `web_search`；商品推薦／找魚 → `search_products`；平台意圖與一般知識不強制。工具結果回來後恢復自動輸出 JSON。
 - 地區上下文只用於需要縣市的地區問題：天氣、海況、潮汐、釣魚建議、在地新聞／地方新聞、颱風、交通、路況、活動、附近／這裡／這邊與縣市名稱。預設設定頁縣市，訊息中明確縣市優先；一般新聞（例如「NBA 新聞」）與單獨的「最新」不需要縣市，沒有縣市時不反問，網路搜尋可用就走網路搜尋；有設定、暫存或訊息中的縣市時仍帶入該縣市。平台意圖永遠優先，不反問縣市、不把縣市放進 prompt、不強制在地工具。其他非地區問題不把縣市放進 prompt 或工具查詢。system prompt 固定帶目前日期（Asia/Taipei）。需要縣市但沒有有效縣市時回 200 + `handled:true`、`intent:CHAT`、`reply_text:"你所在的縣市是哪裡？"`，不呼叫模型；使用者回答的縣市只暫存在後端記憶體（同一對話、30 分鐘、刪除對話時清除），不寫回個人設定。只使用縣市，不使用區或地址。非地區問題若模型誤呼叫在地工具，不採用模型文字，回 `LLM_GUARD_REJECTED`。`LLM_ENABLED=false` 或缺少金鑰時仍回靜默 fallback，不建立暫存。
-- 天氣問題的 `get_local_conditions` 結果只含天氣現象、現在氣溫、今日高低溫、降雨機率、風速風向與 7 日預報；海況結果含浪高、浪向、浪週期、海溫、海域天氣、風速陣風與當日滿潮／乾潮時間。模式由後端依問題類型決定：天氣問題固定用天氣模式，海況／潮汐／釣魚建議固定用海況模式，模型傳錯模式不影響工具結果；天氣回覆混入海況、浪或潮汐時回 `LLM_GUARD_REJECTED`。只有該輪沒有在地模式時才允許模型選擇天氣或海況模式。海況優先使用訊息中的明確海域，否則縣市主要海域；內陸縣市或無法對應時回 200 + `intent:CHAT`、`reply_text:"你想問哪個海域？"`，不呼叫模型。缺少 `CWA_API_KEY`、沒有代表潮位站、潮汐逾時、無資料或格式錯誤時一定顯示「潮汐暫無資料」；模型漏寫時後端補上，已寫時不重複，追加後超過 500 字時優先保留提示。上游逾時、無資料或格式錯誤時只回缺少什麼，不產生數字。
+- 天氣問題的 `get_local_conditions` 結果只含天氣現象、目前氣溫、今日高低溫、降雨機率、風速風向與 7 日預報；預報使用中央氣象署 F-D0047-091，12 小時分段在後端整理成每日資料。目前氣溫只來自自動氣象站觀測；沒有觀測時 `current_temperature_c` 為 `null`，回覆一定標示「目前氣溫暫無資料」，不拿 12 小時平均預報溫度冒充。預報失敗、逾時、格式錯誤或缺少 `CWA_API_KEY` 時回「查不到即時天氣」，不 fallback 回 Open-Meteo。海況結果含浪高、浪向、浪週期、海溫、海域天氣、風速陣風與當日滿潮／乾潮時間。模式由後端依問題類型決定：天氣問題固定用天氣模式，海況／潮汐／釣魚建議固定用海況模式，模型傳錯模式不影響工具結果；天氣回覆混入海況、浪或潮汐時回 `LLM_GUARD_REJECTED`。只有該輪沒有在地模式時才允許模型選擇天氣或海況模式。海況優先使用訊息中的明確海域，否則縣市主要海域；內陸縣市或無法對應時回 200 + `intent:CHAT`、`reply_text:"你想問哪個海域？"`，不呼叫模型。缺少 `CWA_API_KEY`、沒有代表潮位站、潮汐逾時、無資料或格式錯誤時一定顯示「潮汐暫無資料」；模型漏寫時後端補上，已寫時不重複，追加後超過 500 字時優先保留提示。上游逾時、無資料或格式錯誤時只回缺少什麼，不產生數字。
 - 國外地點天氣走 Tavily `web_search`，不呼叫台灣縣市天氣／海況／潮汐工具；網路搜尋關閉、逾時、上游錯誤或無結果時都回 200 + `handled:true`、`intent:CHAT`、`reply_text:"查不到國外地點天氣，請稍後再試。"`，不呼叫模型產生替代答案。要求來源時同一則加「目前沒有可提供的來源。」且 `sources` 為空陣列；回應 `error_code` 為 `null`，內部 log 保留 `LLM_TIMEOUT` 或 `LLM_UPSTREAM_ERROR`。配額用完與速率限制維持可重試，不套用這個直接回覆。
 - 使用者問「適合釣魚嗎／要注意什麼」時，使用天氣、海況與潮汐的完整海況包，可回偏適合、需注意或偏不適合；資料不足時只說明缺少哪一項，不做適合／不適合判斷。絕對保證用語與固定免責句會使整則回覆回 `LLM_GUARD_REJECTED`；單純天氣或海況不自動產生釣魚建議。
 - `search_products` 回空陣列時，後端把 `PRODUCT_RECOMMEND` 轉成 `CHAT`，只回目前沒有符合條件的商品，不產生商品卡。商品筆數 `N` 的依據是工具回傳的 `count`。
@@ -438,7 +438,7 @@
 - 失敗一律 HTTP 200：`LLM_DISABLED`、`LLM_NOT_CONFIGURED`、`LLM_TIMEOUT`、`LLM_UPSTREAM_ERROR`、`LLM_INVALID_OUTPUT`、`LLM_GUARD_REJECTED` 為靜默 fallback；`LLM_RATE_LIMITED`、`SEARCH_RATE_LIMITED`、`SEARCH_QUOTA_EXHAUSTED` 為 `retryable:true`，前端先跑規則，規則無法處理時才顯示提示與重試按鈕。國外地點天氣的網路逾時／上游錯誤例外：回 200 + `handled:true` 的「查不到」，`error_code` 為 `null`，僅內部 log 保留錯誤碼。
 - 端點不寫入訊息、不改 `context`；AI 訊息仍由前端呼叫 `POST /api/chat/message` 寫入。地區暫存縣市不寫入資料庫。
 - 重試由前端按鈕觸發，沿用同一個 `message_id`；後端不保存重試狀態、不自動重試、不排隊、不快取搜尋結果。
-- 設定：後端啟動時自動載入 `backend/.env`，既有環境變數優先。`LLM_ENABLED`（預設 `false`）、`GEMINI_API_KEY`、`LLM_MODEL`（預設 `gemini-3.5-flash-lite`）、`LLM_TIMEOUT_MS`（預設 8000）、`LLM_WEB_SEARCH`（預設 `false`）、`TAVILY_API_KEY`、`LLM_SEARCH_TIMEOUT_MS`（預設 15000）、`CWA_API_KEY`。Open-Meteo 不需要金鑰；缺少 `CWA_API_KEY` 時只降級潮汐。歷史固定最近 10 則、每輪最多 2 次工具呼叫，沒有環境變數可調。
+- 設定：後端啟動時自動載入 `backend/.env`，既有環境變數優先。`LLM_ENABLED`（預設 `false`）、`GEMINI_API_KEY`、`LLM_MODEL`（預設 `gemini-3.5-flash-lite`）、`LLM_TIMEOUT_MS`（預設 8000）、`LLM_WEB_SEARCH`（預設 `false`）、`TAVILY_API_KEY`、`LLM_SEARCH_TIMEOUT_MS`（預設 15000）、`CWA_API_KEY`。Open-Meteo 海況不需要金鑰；缺少 `CWA_API_KEY` 時天氣回「查不到即時天氣」、潮汐降級。歷史固定最近 10 則、每輪最多 2 次工具呼叫，沒有環境變數可調。
 - log 只記 request id、使用者 id、intent、token 數、耗時、工具名稱／耗時／錯誤碼；不記訊息、prompt、工具結果、搜尋結果或 API key。
 
 ### `PUT /api/conversations/:id/context`

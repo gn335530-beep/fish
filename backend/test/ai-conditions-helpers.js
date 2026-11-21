@@ -2,6 +2,7 @@
 
 const openMeteo = require("../lib/conditions/open-meteo");
 const cwaTide = require("../lib/conditions/cwa-tide");
+const { forecastPayload, fakeForecast } = require("./ai-cwa-helpers");
 
 function weatherPayload(overrides) {
   const payload = {
@@ -62,6 +63,8 @@ function fakeOpenMeteo(options) {
     if (settings.weatherError) throw settings.weatherError;
     return jsonResponse(settings.weather === undefined ? weatherPayload() : settings.weather);
   });
+  /* 天氣題已改用 CWA；預設仍注入假預報，避免測試誤連真實網路。 */
+  fakeForecast(settings.forecast || {});
   return state;
 }
 
@@ -151,7 +154,9 @@ module.exports = {
   weatherPayload: weatherPayload,
   marinePayload: marinePayload,
   tidePayload: tidePayload,
+  forecastPayload: forecastPayload,
   fakeOpenMeteo: fakeOpenMeteo,
+  fakeForecast: fakeForecast,
   fakeTide: fakeTide,
   taipeiDate: taipeiDate,
   timeoutError: timeoutError,

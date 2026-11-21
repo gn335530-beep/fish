@@ -5,7 +5,8 @@ const guard = require("./guard");
 const localGuard = require("./local-guard");
 const evidence = require("./evidence");
 const { safeSources, NO_SOURCE_TEXT } = require("./sources");
-const { TIDE_MISSING_TEXT, needsTideNote, withNotes, assertWeatherOnly } = require("./reply-output");
+const { TIDE_MISSING_TEXT, TEMP_MISSING_TEXT, needsTideNote, needsTemperatureNote,
+  withNotes, assertWeatherOnly } = require("./reply-output");
 const { llmError } = require("./error");
 
 const INTENTS = [
@@ -139,9 +140,9 @@ function normalizeOutput(parsed, options) {
     throw invalidOutput();
   }
   const notes = [];
-  if (!platform && parsed.intent !== "PRODUCT_RECOMMEND" &&
-    needsTideNote(replyText, localResults)) {
-    notes.push(TIDE_MISSING_TEXT);
+  if (!platform && parsed.intent !== "PRODUCT_RECOMMEND") {
+    if (needsTemperatureNote(replyText, localResults)) notes.push(TEMP_MISSING_TEXT);
+    if (needsTideNote(replyText, localResults)) notes.push(TIDE_MISSING_TEXT);
   }
   /* 要求來源但沒有任何後端來源時，明確說明沒有。 */
   if (!platform && options.includeSources === true && !sources.length &&

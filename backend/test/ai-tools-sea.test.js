@@ -146,7 +146,9 @@ test("部分資料缺失時逐項說明；兩邊都失敗時明確說查不到",
 });
 
 test("海況工具存在時，天氣問題仍只查天氣、不回海況", async function () {
-  const upstream = c.fakeOpenMeteo();
+  h.reset({ CWA_API_KEY: "test-key" });
+  const openMeteo = c.fakeOpenMeteo();
+  const upstream = c.fakeForecast();
   h.useSequence([
     { tool_calls: [c.conditionsCall("weather")] },
     c.finalChat("新北市今天多雲，現在 27°C。\n今天 26–31°C，降雨機率 40%，東南風 3 級。")
@@ -159,6 +161,6 @@ test("海況工具存在時，天氣問題仍只查天氣、不回海況", async
   assert.equal(data.tool_results.local.mode, "weather");
   assert.equal(data.tool_results.local.marine, undefined);
   assert.equal(upstream.urls.length, 1);
-  assert.doesNotMatch(upstream.urls[0], /marine-api/);
+  assert.equal(openMeteo.urls.length, 0);
   assert.doesNotMatch(data.reply_text, /浪|海況|潮汐/);
 });

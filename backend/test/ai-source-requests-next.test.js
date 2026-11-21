@@ -36,8 +36,8 @@ test.afterEach(function () {
 });
 
 test("下一句只要求來源時重查上一則工具，不呼叫模型", async function () {
-  h.reset();
-  const upstream = c.fakeOpenMeteo();
+  h.reset({ CWA_API_KEY: "test-key" });
+  const upstream = c.fakeForecast();
   h.useSequence([
     { tool_calls: [c.conditionsCall("weather")] },
     c.finalChat("高雄今天多雲，現在 27°C。")

@@ -46,6 +46,8 @@ function localText(local) {
     sea_area: local.sea_area,
     forecast_days: weather && Array.isArray(weather.days) ? weather.days.length : null,
     weather: weather,
+    observation: local.observation || null,
+    observation_error: local.observation_error || null,
     marine: local.marine || null,
     tide: local.tide || null,
     errors: local.errors || null

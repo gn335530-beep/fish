@@ -35,9 +35,9 @@ test.afterEach(function () {
   regionStore.clear();
 });
 
-test("同一則天氣問題要求來源時附 Open-Meteo 來源", async function () {
+test("同一則天氣問題要求來源時附中央氣象署天氣預報來源", async function () {
   h.reset({ CWA_API_KEY: "test-key" });
-  c.fakeOpenMeteo();
+  c.fakeForecast();
   h.useSequence([
     { tool_calls: [c.conditionsCall("weather")] },
     c.finalChat("高雄今天多雲，現在 27°C。")
@@ -48,7 +48,7 @@ test("同一則天氣問題要求來源時附 Open-Meteo 來源", async function
   const data = (await h.reply(room.id, message.id)).body.data;
   assert.equal(data.handled, true, JSON.stringify(data));
   assert.equal(data.sources.length, 1);
-  assert.match(data.sources[0].title, /Open-Meteo/);
+  assert.match(data.sources[0].title, /中央氣象署天氣預報/);
   assert.match(data.sources[0].url, /^https:/);
   assert.doesNotMatch(data.reply_text, /https?:\/\//);
 });
