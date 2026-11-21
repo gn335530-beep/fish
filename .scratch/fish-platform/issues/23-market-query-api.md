@@ -4,7 +4,7 @@
 
 **Blocked by:** 22
 
-**Status:** ready-for-human
+**Status:** resolved
 
 - [x] 縣市有資料 → `scope = "city"`，平均價為該縣市市場以交易量加權；元／台斤換算正確（1237 → 742.2）。
 - [x] 縣市無資料但全國有 → `scope = "national"`，標示「全國平均」。

@@ -4,7 +4,7 @@
 
 **Blocked by:** 26、27
 
-**Status:** ready-for-human
+**Status:** resolved
 
 - [x] 輸入「我要賣花枝」→ 第一次回覆列出重量、尾數、處理方式、照片，不問價格。
 - [x] 使用者可一次輸入多個欄位；若仍缺，一次問一個。

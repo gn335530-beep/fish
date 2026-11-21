@@ -4,7 +4,7 @@
 
 **Blocked by:** 23、24、28
 
-**Status:** ready-for-human
+**Status:** resolved
 
 - [x] 非價格欄位齊了 → 行情卡含平均價、7／30 個交易日走勢、期間最高／最低（由 history 計算）、縣市或全國平均、交易日期、來源、養殖價格（若）、依重量試算的參考整批、新鮮批發參考；資料含 `weight_kg`、`weight_taijin`、`estimated_total`、`history`，`estimated_total` 標「參考」。
 - [x] 若尚未提供售價，卡片後問「請問要販賣多少錢？（可回覆每台斤價格或整批價格）」；若已提供售價，不再問，直接顯示草稿／確認發布。

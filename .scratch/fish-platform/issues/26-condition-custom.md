@@ -4,7 +4,7 @@
 
 **Blocked by:** 無
 
-**Status:** ready-for-human
+**Status:** resolved
 
 - [x] `POST /api/products/create` 接受任何非空、≤20 字的處理方式；空白回 400 `MISSING_CONDITION`，過長回 400 `FIELD_TOO_LONG`。
 - [x] 不再回 `INVALID_CONDITION`；沒有固定枚舉。

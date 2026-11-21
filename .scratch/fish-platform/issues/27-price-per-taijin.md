@@ -4,7 +4,7 @@
 
 **Blocked by:** 無
 
-**Status:** ready-for-human
+**Status:** resolved
 
 - [x] 商品建立 API 接受 `price` 與／或 `price_per_taijin`；至少一個 > 0；都沒有回 400 `MISSING_PRICE`；有值但 ≤ 0 回 400 `INVALID_PRICE`。
 - [x] 只填整批 → `price_per_taijin = null`、`price_auto = false`。

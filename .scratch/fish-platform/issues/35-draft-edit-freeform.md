@@ -4,7 +4,7 @@
 
 **Blocked by:** 無
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] 草稿卡沒有 `edit-slot` 按鈕與「修改」列，只留「確認上架／修改草稿／取消上架」。
 - [x] 按「修改草稿」後助手用文字問欄位，列出魚種、總重、尾數、處理方式、照片、售價。

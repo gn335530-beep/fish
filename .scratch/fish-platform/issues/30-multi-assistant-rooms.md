@@ -4,7 +4,7 @@
 
 **Blocked by:** 無
 
-**Status:** ready-for-human
+**Status:** resolved
 
 - [x] `POST /api/conversations/assistant` 每次建立一間新的助手房；登入後若沒有助手房才自動建立。
 - [x] 助手房唯一鍵改為獨立 `id`；每間有自己的 context／draft；舊的 `type + user_ids[0]` 不再限制一間。

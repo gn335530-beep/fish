@@ -4,7 +4,7 @@
 
 **Blocked by:** 06（魚種單一來源）
 
-**Status:** ready-for-human
+**Status:** resolved
 
 - [x] `species_market_codes` 有 28 筆系統魚種的主要新鮮代碼；每筆有 `code`、`official_name`、`species_id`、`is_aquaculture`、`category`、`aliases`。
 - [x] `1xxx` 只允許海鱸（1073）、虱目魚（1041）、鰻魚（1031）；其餘魚種用 `2xxx`／`4xxx`／`5xxx`；`3xxx` 凍結與 `6xxx` 加工一律不出現在對照表。

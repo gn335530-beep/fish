@@ -4,7 +4,7 @@
 
 **Blocked by:** 無
 
-**Status:** ready-for-human
+**Status:** resolved
 
 - [x] 註冊表單有縣市欄位，未填不能送出。
 - [x] API 接受 `city`；缺填回 400 `MISSING_REGION`，不在清單回 400 `INVALID_REGION`。

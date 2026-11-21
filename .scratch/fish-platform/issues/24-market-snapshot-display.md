@@ -4,7 +4,7 @@
 
 **Blocked by:** 23
 
-**Status:** ready-for-human
+**Status:** resolved
 
 - [x] 在高雄市上架石斑後，商品含 `market_snapshot`（`price_per_kg`、`price_per_taijin`、交易日期、來源、`source_url`、抓取時間、養殖旗標、`scope`／`region`、`quality`）。
 - [x] 商品卡與詳情頁的行情資訊都來自快照；商品改價不影響快照。

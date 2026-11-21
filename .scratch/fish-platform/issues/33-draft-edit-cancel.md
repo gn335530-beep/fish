@@ -4,7 +4,7 @@
 
 **Blocked by:** 29、31
 
-**Status:** ready-for-human
+**Status:** resolved
 
 - [x] 草稿卡按鈕文字為「修改草稿」。
 - [x] 按下後助手回「請問要修改哪個選項？」，列出六個選項。

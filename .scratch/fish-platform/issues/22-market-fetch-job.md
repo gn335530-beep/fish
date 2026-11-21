@@ -4,7 +4,7 @@
 
 **Blocked by:** 21
 
-**Status:** ready-for-human
+**Status:** resolved
 
 - [x] 第一次透過 CLI 或抓取服務抓某魚種會打上游並寫入 `market_prices`；第二次在 TTL 內不再打上游。
 - [x] 上游以 `TypeNo`、`StartDate`／`EndDate` 篩選；`TypeNo` 不支援逗號多代碼，逐碼抓；回傳的 `品種代碼` 必須等於請求代碼。

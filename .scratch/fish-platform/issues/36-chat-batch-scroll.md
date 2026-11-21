@@ -4,7 +4,7 @@
 
 **Blocked by:** 無
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] 訊息節點帶 `data-seq`，可定位到指定訊息。
 - [x] 面板提供批次滾動：整批放得下 → 滾到底；放不下 → 第一則對齊頂端。

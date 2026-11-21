@@ -4,7 +4,7 @@
 
 **Blocked by:** 30
 
-**Status:** ready-for-human
+**Status:** resolved
 
 - [x] `DELETE /api/conversations/:id`：助手房任何時候可刪，刪除該房訊息與 `context`；交易房只有在房內沒有 `CONFIRMED` 訂單，且目前訂單為 `CANCELLED`（或全部訂單皆 `CANCELLED`）時可刪，否則 409 `DEAL_NOT_DELETABLE`。
 - [x] 刪除交易房一併移除訊息、該房所有 `deals` 與訂單項目；交易紀錄不再顯示。

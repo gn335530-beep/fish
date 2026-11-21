@@ -4,7 +4,7 @@
 
 **Blocked by:** 29、32
 
-**Status:** ready-for-human
+**Status:** resolved
 
 - [x] 登入／註冊頁左側（兩個 tab 都顯示）有法規告知：販賣魚貨（一支釣）需依照法規申請相關合法證照；未申請可依法開罰新臺幣三萬元以上三十萬元以下罰鍰。
 - [x] 「漁業法」連結指向 `https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode=M0050001`，另開新視窗。
