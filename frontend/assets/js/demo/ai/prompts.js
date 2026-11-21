@@ -49,7 +49,7 @@ export function batchFollowupPrompt(missing) {
   if (details.length) {
     let text = "請問你要販售魚種的" + joinLabels(details.map(function (slot) {
       return DETAIL_LABELS[slot];
-    })) + "（可以一次告訴我）。";
+    })) + "。";
     if (details.indexOf("condition") !== -1) text += "處理方式例如：活體、放血冰鎮。";
     return text;
   }

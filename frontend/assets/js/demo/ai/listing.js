@@ -37,7 +37,8 @@ export function normalize(context) {
     selected_product_id: source.selected_product_id || null,
     editing: source.editing || null,
     market_quoted: source.market_quoted === true,
-    detail_asked: source.detail_asked === true
+    detail_asked: source.detail_asked === true,
+    basic_mode: source.basic_mode === true
   });
 }
 

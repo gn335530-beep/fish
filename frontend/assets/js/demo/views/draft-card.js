@@ -6,6 +6,9 @@ export function renderDraftCard(card, publishing) {
   const draft = card.draft || {};
   const busy = publishing ? ' aria-busy="true"' : "";
   const disabled = publishing ? " disabled" : "";
+  const editButton = card.hide_edit
+    ? ""
+    : '<button type="button" data-action="edit-draft"' + disabled + '>修改草稿</button>';
   return '<div class="fm-card fm-card--draft"' + busy + '>' +
     '<b>上架草稿</b>' +
     '<dl>' +
@@ -19,7 +22,7 @@ export function renderDraftCard(card, publishing) {
     '<div class="fm-card__acts">' +
     '<button type="button" class="fm-card__primary" data-action="publish"' + disabled + '>' +
     (publishing ? "上架中…" : "確認上架") + '</button>' +
-    '<button type="button" data-action="edit-draft"' + disabled + '>修改草稿</button>' +
+    editButton +
     '<button type="button" data-action="cancel-listing"' + disabled + '>取消上架</button>' +
     '</div>' +
     '</div>';

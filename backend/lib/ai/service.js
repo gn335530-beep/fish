@@ -14,6 +14,7 @@ const toolLoop = require("./tool-loop");
 const { logReply } = require("./log");
 const { failure, mapError, webFailureCode } = require("./result");
 const { llmError } = require("./error");
+const listing = require("./listing");
 const { directReply, foreignWeatherFailure, localFallback, replySuffix, NO_PRODUCTS_TEXT } =
   require("./reply-output");
 
@@ -39,6 +40,9 @@ async function reply(options) {
     return failure("LLM_NOT_CONFIGURED", false);
   }
 
+  if (listing.isListingContext(options.context)) {
+    return listing.reply(options, config, baseLog, started);
+  }
   const webEnabled = config.webSearch && Boolean(config.tavilyApiKey);
   const text = options.message.text;
   const preflight = await sourceRequest.preflight({

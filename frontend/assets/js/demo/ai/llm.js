@@ -7,6 +7,7 @@ import { mergeDraft } from "./draft.js";
 import { draftSlots } from "./llm-slots.js";
 import { applyLlmEdit, platformReply } from "./platform.js";
 import { handleText } from "./service.js";
+import { isBasicModeError, enterBasicMode, applyListingReply } from "./listing-llm.js";
 
 const RECOMMEND_BLOCKERS = [INTENT.SELL, INTENT.MARKET, INTENT.CANCEL, INTENT.EDIT];
 const FALLBACK = /你是想賣魚，還是想找魚/;
@@ -35,6 +36,15 @@ export async function handleMessage(context, text, user, llm) {
   const llmIntent = llm && llm.handled ? llm.intent : null;
 
   if (ctx.mode === "listing" && ctx.draft) {
+    if (isBasicModeError(llm) && !ctx.basic_mode) {
+      return { origin: "rules", result: await enterBasicMode(ctx, userText, user) };
+    }
+    if (ctx.basic_mode) {
+      return { origin: "rules", result: await handleText(ctx, userText, user) };
+    }
+    if (llm && llm.handled && llm.listing) {
+      return { origin: "rules", result: await applyListingReply(ctx, llm.listing) };
+    }
     if (llmIntent === INTENT.CANCEL && !ctx.editing && !ctx.choosing_edit &&
       !isCancelListing(userText)) {
       return { origin: "rules", result: requestCancel(ctx) };

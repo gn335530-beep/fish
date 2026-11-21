@@ -114,6 +114,14 @@ function contextSummary(context) {
   }
   if (source.selected_product_id) out.selected_product_id = String(source.selected_product_id);
   if (source.editing && source.editing.slot) out.editing = { slot: String(source.editing.slot) };
+  /* listing context 的修正歷史、使用者確認字串與待同意縮短版，只送模型需要的欄位。 */
+  if (Array.isArray(source.correction_history)) {
+    out.correction_history = source.correction_history.slice(-20);
+  }
+  if (Array.isArray(source.protected_names)) {
+    out.protected_names = source.protected_names.slice(-20);
+  }
+  if (source.condition_proposal) out.condition_proposal = String(source.condition_proposal).slice(0, 60);
   /* 白名單欄位裡的每個字串都套用同一套遮蔽規則，含草稿與商品摘要。 */
   return redactFields(out);
 }

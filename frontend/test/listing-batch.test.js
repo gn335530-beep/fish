@@ -9,7 +9,7 @@ const service = await import("../assets/js/demo/ai/service.js");
 const editing = await import("../assets/js/demo/ai/editing.js");
 
 const USER = { seller_terms_accepted_at: "2026-10-27T00:00:00.000Z" };
-const BATCH = "請問你要販售魚種的尾數、處理方式，與一張商品照片（可以一次告訴我）。處理方式例如：活體、放血冰鎮。";
+const BATCH = "請問你要販售魚種的尾數、處理方式，與一張商品照片。處理方式例如：活體、放血冰鎮。";
 
 function textOf(result) {
   return result.replies.map(function (reply) { return reply.text || ""; }).join("\n");
