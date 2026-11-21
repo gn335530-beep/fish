@@ -6,6 +6,10 @@ const places = require("../conditions/places");
 const PLATFORM = /(我要賣|想賣|上架|販售|下架|取消上架|修改草稿|改尾數|改價格|行情|均價|平均價|魚價|售價|價錢|價格|多少錢)/;
 const PRODUCT = /(推薦|想找|想買|預算|有什麼[^？?]{0,20}(魚|海鮮)|附近有什麼|找[^。？！]{0,8}(魚|海鮮)|挑[^。？！]{0,8}(魚|海鮮))/;
 
+function isPlatformText(text) {
+  return PLATFORM.test(String(text || ""));
+}
+
 function forceToolFor(text, options) {
   const value = String(text || "");
   const webEnabled = Boolean(options && options.webEnabled);
@@ -27,4 +31,4 @@ function forceToolFor(text, options) {
   return null;
 }
 
-module.exports = { forceToolFor: forceToolFor };
+module.exports = { forceToolFor: forceToolFor, isPlatformText: isPlatformText };

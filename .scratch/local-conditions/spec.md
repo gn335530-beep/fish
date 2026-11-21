@@ -1,7 +1,7 @@
 # 助手在地區性天氣與海況
 
 **Source:** 2026-11-17 對話中的 grilling 與設計收斂；tickets 01–09。
-**Status:** ready-for-agent
+**Status:** resolved
 
 ## 背景
 

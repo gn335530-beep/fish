@@ -83,5 +83,6 @@ function promptLine(place) {
 module.exports = {
   prepare: prepare,
   dateLine: dateLine,
-  promptLine: promptLine
+  promptLine: promptLine,
+  cityInText: cityInText
 };

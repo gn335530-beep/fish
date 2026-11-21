@@ -6,6 +6,7 @@ const { forceToolFor } = require("./classify");
 const localContext = require("./local-context");
 const questions = require("./question-types");
 const advice = require("./fishing-advice");
+const sourceRequest = require("./source-request");
 const { historyFor, contextSummary } = require("./history");
 const { parseOutput, normalizeOutput, finalIntent, isPlatformIntent } = require("./validate");
 const tools = require("./tools");
@@ -13,47 +14,8 @@ const toolLoop = require("./tool-loop");
 const { logReply } = require("./log");
 const { failure, mapError } = require("./result");
 const { llmError } = require("./error");
-
-const NO_PRODUCTS_TEXT = "目前沒有符合條件的商品，可以換個魚種、地區或預算再試。";
-
-function replySuffix(intent, replyText, scope) {
-  return intent === "PRODUCT_RECOMMEND" && replyText &&
-    String(replyText).indexOf(scope) === -1
-    ? "（查詢範圍：" + scope + "）"
-    : "";
-}
-
-/* 地區反問與暫存確認不呼叫模型；回傳統一結構，前端照常寫入 AI 訊息。 */
-function directReply(baseLog, started, text, toolResults) {
-  logReply(Object.assign({}, baseLog, {
-    intent: "CHAT",
-    tokens: { input: 0, output: 0, total: 0 },
-    duration_ms: Date.now() - started,
-    error_code: null,
-    tools: []
-  }));
-  return {
-    handled: true,
-    intent: "CHAT",
-    slots: {},
-    reply_text: text,
-    sources: [],
-    tool_results: toolResults || {},
-    error_code: null,
-    retryable: false
-  };
-}
-
-function localFailureText(local) {
-  if (!local) return "";
-  if (local.error === "NO_REGION") return "你所在的縣市是哪裡？";
-  if (local.error === "NO_SEA_AREA") return "你想問哪個海域？";
-  if (local.mode === "weather" && !local.weather) return "查不到即時天氣，請稍後再試。";
-  if (local.mode === "sea" && !local.marine && !local.weather) {
-    return "查不到海況與天氣，請稍後再試。";
-  }
-  return "";
-}
+const { directReply, withSourceNote, localFailureText, replySuffix, NO_PRODUCTS_TEXT } =
+  require("./reply-output");
 
 async function reply(options) {
   const started = Date.now();
@@ -77,9 +39,37 @@ async function reply(options) {
     return failure("LLM_NOT_CONFIGURED", false);
   }
 
+  const webEnabled = config.webSearch && Boolean(config.tavilyApiKey);
+  const text = options.message.text;
+  const wantsSources = sourceRequest.isRequest(text);
+  if (wantsSources && sourceRequest.isOnlyRequest(text)) {
+    const answer = await sourceRequest.previousReply({
+      conversationId: options.conversation.id,
+      anchor: options.message,
+      user: options.user,
+      ctx: {
+        timeoutMs: config.timeoutMs,
+        webEnabled: webEnabled,
+        tavilyApiKey: config.tavilyApiKey,
+        cwaApiKey: config.cwaApiKey
+      }
+    });
+    return directReply(baseLog, started, answer.text, {}, {
+      sources: answer.sources,
+      intent: answer.intent
+    });
+  }
+
+  const foreignWeather = questions.hasForeignPlace(text) &&
+    (questions.isWeatherQuestion(text) || questions.isSeaTopicQuestion(text));
+  if (foreignWeather && !webEnabled) {
+    return directReply(baseLog, started,
+      withSourceNote("查不到國外地點天氣，請稍後再試。", wantsSources));
+  }
+
   const local = localContext.prepare({
     conversationId: options.conversation.id,
-    text: options.message.text,
+    text: text,
     user: options.user
   });
   if (local.askCity) return directReply(baseLog, started, "你所在的縣市是哪裡？");
@@ -88,9 +78,11 @@ async function reply(options) {
     return directReply(baseLog, started, "好的，已記住你在" + local.ackCity + "。想問天氣、海況或在地資訊嗎？");
   }
 
-  const webEnabled = config.webSearch && Boolean(config.tavilyApiKey);
-  const forceTool = forceToolFor(options.message.text, { webEnabled: webEnabled });
-  const wantsAdvice = questions.isFishingQuestion(options.message.text);
+  const sourceKind = wantsSources ? (sourceRequest.kindFor(text) || "web") : "";
+  const forceTool = wantsSources && sourceKind === "web"
+    ? (webEnabled ? "web_search" : null)
+    : forceToolFor(text, { webEnabled: webEnabled });
+  const wantsAdvice = questions.isFishingQuestion(text);
   const localPlace = local.seaArea || local.city;
   const input = {
     model: config.model,
@@ -120,15 +112,24 @@ async function reply(options) {
       }
     }, report);
 
+    if (foreignWeather && !loop.webResults.length) {
+      return directReply(baseLog, started,
+        withSourceNote("查不到國外地點天氣，請稍後再試。", wantsSources));
+    }
+
     const parsed = parseOutput(loop.raw.text);
     if (!isPlatformIntent(parsed.intent)) {
       if (wantsAdvice) {
         const missing = advice.missingText(loop.toolResults.local);
-        if (missing) return directReply(baseLog, started, missing, { local: loop.toolResults.local });
+        if (missing) {
+          return directReply(baseLog, started, withSourceNote(missing, wantsSources),
+            { local: loop.toolResults.local });
+        }
       }
       const localFailure = localFailureText(loop.toolResults.local);
       if (localFailure) {
-        return directReply(baseLog, started, localFailure, { local: loop.toolResults.local });
+        return directReply(baseLog, started, withSourceNote(localFailure, wantsSources),
+          { local: loop.toolResults.local });
       }
     }
 
@@ -147,12 +148,21 @@ async function reply(options) {
 
     intent = finalIntent(parsed.intent, loop.webResults);
     const scope = loop.productRegion || "全省";
+    const includeSources = wantsSources && !isPlatformIntent(parsed.intent);
+    const sources = includeSources
+      ? sourceRequest.sourcesForTurn({
+        local: loop.toolResults.local,
+        webResults: loop.webResults
+      })
+      : [];
     const output = normalizeOutput(Object.assign({}, parsed, { intent: intent }), {
       userText: options.message.text,
       toolResults: loop.toolResults,
       toolNames: report.toolRuns.filter(function (run) { return !run.error_code; })
         .map(function (run) { return run.name; }),
       webResults: loop.webResults,
+      includeSources: includeSources,
+      sources: sources,
       replySuffix: replySuffix(intent, parsed.reply_text, scope)
     });
     if (loop.toolResults.market && loop.toolResults.market.found === false) {

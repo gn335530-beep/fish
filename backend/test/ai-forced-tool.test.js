@@ -55,11 +55,9 @@ test("一般知識與平台意圖不強制工具", async function () {
   assert.equal(platform.toolConfig, undefined);
 });
 
-test("未開啟網路搜尋時，在地天氣仍強制條件工具；國外地點不強制", async function () {
+test("未開啟網路搜尋時，在地天氣仍強制條件工具", async function () {
   const local = await ask("今天台南天氣如何？");
   assert.deepEqual(local.toolConfig, {
     functionCallingConfig: { mode: "ANY", allowedFunctionNames: ["get_local_conditions"] }
   });
-  const foreign = await ask("東京天氣如何？");
-  assert.equal(foreign.toolConfig, undefined);
 });

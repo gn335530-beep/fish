@@ -47,7 +47,7 @@ python -m http.server 8000 --directory frontend
 | `LLM_SEARCH_TIMEOUT_MS` | `15000` | 該回合執行 `web_search` 後延長的總期限 |
 | `CWA_API_KEY` | 空 | 中央氣象署開放資料金鑰；缺少時只降級潮汐，不影響天氣與海況 |
 
-在地天氣與海況使用 Open-Meteo Weather／Marine API，不需要金鑰；潮汐使用中央氣象署 F-A0021-001 開放資料。天氣、海況與潮汐上游也受同一個回覆期限約束。地區暫存縣市只存在記憶體，重啟後遺失。
+在地天氣與海況使用 Open-Meteo Weather／Marine API，不需要金鑰；潮汐使用中央氣象署 F-A0021-001 開放資料。`CWA_API_KEY` 可到[氣象資料開放平臺](https://opendata.cwa.gov.tw/)註冊會員後取得授權碼。天氣、海況與潮汐上游也受同一個回覆期限約束。地區暫存縣市只存在記憶體，重啟後遺失。
 
 - `POST /api/ai/reply` 只接受助手房與該房參與者；不寫入訊息、不修改 `context`。歷史以 `message_id` 為錨點，含它在內的最近 10 則；較新的訊息不會進入模型。
 - 後端只送最近對話與白名單 context；手機、市話（含 `+886` 國際碼、括號或分隔區碼、4 碼區碼）、Email、身分證與具行政區錨點的地址會先換成 `[已遮蔽]`，一般文字中的「路」「弄」「市區」不觸發遮蔽，不送頭像或個人檔案。地區問題只把縣市放進 prompt 與 Open-Meteo 查詢，不送區或地址；潮汐只送代表潮位站名稱給中央氣象署。
@@ -57,13 +57,13 @@ python -m http.server 8000 --directory frontend
 - 唯讀工具：`get_market_price`（官方行情）、`search_products`（公開商品，最多 5 筆）、`get_local_conditions`（台灣縣市天氣、海域海況與潮汐）、`web_search`（Tavily basic search）。每輪最多 2 次；模型不能寫入商品、訂單或評價。
 - 第一輪依問題類型強制工具：在地天氣／海況／適合釣魚 → `get_local_conditions`；國外地點天氣、時效性／新聞 → `web_search`；商品推薦／找魚 → `search_products`；平台意圖與一般知識不強制。工具結果回來後恢復自動輸出 JSON。
 - 地區相關問題預設使用設定頁縣市，訊息中的明確縣市優先；非地區問題不送縣市。system prompt 固定帶目前日期（Asia/Taipei）。沒有有效縣市時直接問「你所在的縣市是哪裡？」，回答只暫存在該助手房 30 分鐘，不寫回個人設定，刪除對話時清除。海況優先使用明確海域，否則縣市主要海域；內陸縣市會問「你想問哪個海域？」。`LLM_ENABLED=false` 或缺少金鑰時維持靜默 fallback，不建立暫存。
-- 天氣只回天氣，海況回浪況、海域天氣與潮汐；數字只來自當輪 Open-Meteo／CWA 結果。上游逾時、無資料或格式錯誤時只說明缺少什麼，不產生數字；缺少 `CWA_API_KEY` 時顯示「潮汐暫無資料」。適合釣魚的問題使用完整海況包，資料不足時不做判斷，並拒絕絕對保證用語與固定免責句。AI 文字氣泡保留換行。
-- 所有 AI 回覆預設不附來源卡；`sources` 固定為空陣列，回覆文字中的 http／https URL 一律移除。平台行情卡「資料來源：農業部 漁業署」與商品卡內容維持不變。
+- 天氣只回天氣，海況回浪況、海域天氣與潮汐；數字只來自當輪 Open-Meteo／CWA 結果。上游逾時、無資料或格式錯誤時只說明缺少什麼，不產生數字；缺少 `CWA_API_KEY` 時顯示「潮汐暫無資料」。適合釣魚的問題使用完整海況包，資料不足時不做判斷，並拒絕絕對保證用語與固定免責句。國外地點天氣走 Tavily，不用台灣天氣／海況／潮汐資料；網路停用或查無結果時明確說「查不到國外地點天氣」。AI 文字氣泡保留換行。
+- 所有 AI 回覆預設不附來源卡；回覆文字中的 http／https URL 一律移除。只有使用者明確要求連結、網址、來源、出處、哪裡看、哪個網站、資料哪來、引用或查證時，才重跑對應工具並回傳最多 3 個合法來源；下一句只要求來源時依最近一則問題重查，不暫存來源。平台意圖不附網路來源卡；行情卡「資料來源：農業部 漁業署」與商品卡內容維持不變。
 - `search_products` 回空陣列時，後端把 `PRODUCT_RECOMMEND` 轉成 `CHAT`，只回目前沒有符合條件的商品，不產生商品卡。商品筆數 `N` 的依據是工具回傳的 `count`。
 - `tool_results` 只由後端工具產生：`market` 是給行情卡的完整官方資料（含歷史），模型看到的行情結果只含平均價、交易日期與識別欄位；`products` 是公開商品；`local` 是天氣、海況與潮汐；模型自行提供的內容一律忽略。
-- `WEB` 的網路資料仍由後端 `web_search` 產生並用於意圖與數字防護，但 `sources` 預設固定為空陣列；模型自稱 `CHAT` 但成功使用 `web_search` 時仍升級為 `WEB`。`LLM_WEB_SEARCH` 關閉時模型不提供此工具。
+- `WEB` 的網路資料由後端 `web_search` 產生並用於意圖與數字防護；模型自稱 `CHAT` 但成功使用 `web_search` 時仍升級為 `WEB`。`LLM_WEB_SEARCH` 關閉時模型不提供此工具，國外地點天氣直接回查不到。
 - log 只記 request id、使用者 id、intent、token 數、耗時、工具名稱／耗時／錯誤碼，不記訊息或工具結果。
-- 目前是 **soft launch beta**：不強制邀請名單、不承諾 SLA；Gemini 免費層內容可能被 Google 用於改善產品，Tavily 也會收到該次查詢，在地天氣／海況會把縣市或海域座標送給 Open-Meteo，潮汐會把代表潮位站名稱送給中央氣象署；免費層每月 1,000 credits 是硬限制。取捨與遷移路徑見 `docs/adr/0011-hybrid-llm-assistant.md`。
+- 目前是 **soft launch beta**：不強制邀請名單、不承諾 SLA；Gemini 免費層內容可能被 Google 用於改善產品，Tavily 也會收到該次查詢，在地天氣／海況會把縣市或海域座標送給 Open-Meteo，潮汐會把代表潮位站名稱送給中央氣象署；免費層每月 1,000 credits 是硬限制。取捨與遷移路徑見 `docs/adr/0011-hybrid-llm-assistant.md` 與 [ADR-0013](../docs/adr/0013-local-conditions-and-hidden-sources.md)。
 
 ## 目錄
 

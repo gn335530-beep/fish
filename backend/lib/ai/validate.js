@@ -3,6 +3,7 @@
 const { isPlainObject } = require("./json");
 const guard = require("./guard");
 const evidence = require("./evidence");
+const { safeSources } = require("./sources");
 const { llmError } = require("./error");
 
 const INTENTS = [
@@ -116,6 +117,7 @@ function normalizeOutput(parsed, options) {
   const slots = sanitizeSlots(parsed.slots);
   /* 模型提供的 sources 一律丟棄；後端預設不回傳來源。 */
   if (parsed.tool_results != null && !isPlainObject(parsed.tool_results)) throw invalidOutput();
+  const sources = options.includeSources === true ? safeSources(options.sources) : [];
 
   let replyText = parsed.reply_text == null ? null : parsed.reply_text;
   if (replyText !== null && typeof replyText !== "string") throw invalidOutput();
@@ -132,6 +134,13 @@ function normalizeOutput(parsed, options) {
     replyText = null;
   } else if (REPLY_INTENTS.indexOf(parsed.intent) !== -1 && !replyText) {
     throw invalidOutput();
+  }
+  /* 要求來源但沒有任何後端來源時，明確說明沒有。 */
+  if (!platform && options.includeSources === true && !sources.length) {
+    const note = "目前沒有可提供的來源。";
+    replyText = replyText && replyText.length + note.length + 1 <= MAX_REPLY
+      ? replyText + "\n" + note
+      : note;
   }
 
   const officialText = evidence.officialText(options.toolResults, options.toolNames);
@@ -159,8 +168,8 @@ function normalizeOutput(parsed, options) {
     intent: parsed.intent,
     slots: slots,
     reply_text: replyText,
-    /* 預設不顯示來源卡；後端仍保留 webResults 供意圖與數字防護使用。 */
-    sources: [],
+    /* 只有使用者明確要求來源時才回傳後端工具產生的來源。 */
+    sources: sources,
     tool_results: options.toolResults || {}
   };
 }
