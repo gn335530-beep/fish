@@ -1,4 +1,4 @@
-/* WEB 升級：模型自稱 CHAT 但成功使用 web_search 時，後端改回 WEB 並附來源。 */
+/* WEB 升級：模型自稱 CHAT 但成功使用 web_search 時，後端改回 WEB；預設不附來源。 */
 
 const test = require("node:test");
 const assert = require("node:assert/strict");
@@ -50,7 +50,7 @@ test.beforeEach(function () {
 });
 test.afterEach(function () { web.resetFetcher(); });
 
-test("模型回 CHAT 但成功使用 web_search 時升級為 WEB 並附最多 3 個來源", async function () {
+test("模型回 CHAT 但成功使用 web_search 時升級為 WEB，預設不附來源", async function () {
   h.useSequence([{ tool_calls: [webCall()] }, output()]);
   const room = await h.createRoom(tokens.buyer);
   const message = await h.sendUser(room.id, "今天高雄天氣如何");
@@ -58,12 +58,10 @@ test("模型回 CHAT 但成功使用 web_search 時升級為 WEB 並附最多 3 
   const data = (await h.reply(room.id, message.id)).body.data;
   assert.equal(data.handled, true, JSON.stringify(data));
   assert.equal(data.intent, "WEB");
-  assert.equal(data.sources.length, 3);
-  assert.equal(data.sources[0].title, "中央氣象署");
-  assert.match(data.sources[0].url, /^https:/);
+  assert.deepEqual(data.sources, []);
 });
 
-test("同一輪兩次 web_search 時，先前的合法來源仍保留", async function () {
+test("同一輪兩次 web_search 時，預設仍不附來源", async function () {
   let calls = 0;
   web.setFetcher(async function () {
     calls += 1;
@@ -83,7 +81,7 @@ test("同一輪兩次 web_search 時，先前的合法來源仍保留", async fu
   const data = (await h.reply(room.id, message.id)).body.data;
   assert.equal(data.handled, true, JSON.stringify(data));
   assert.equal(data.intent, "WEB");
-  assert.equal(data.sources.length, 3);
+  assert.deepEqual(data.sources, []);
 });
 
 test("沒有網路結果的 CHAT 維持 CHAT 且不帶來源", async function () {

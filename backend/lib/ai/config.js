@@ -20,6 +20,7 @@ function llmConfig() {
     timeoutMs: positive(process.env.LLM_TIMEOUT_MS, DEFAULT_TIMEOUT_MS),
     webSearch: truthy(process.env.LLM_WEB_SEARCH),
     tavilyApiKey: process.env.TAVILY_API_KEY || "",
+    cwaApiKey: process.env.CWA_API_KEY || "",
     searchTimeoutMs: positive(process.env.LLM_SEARCH_TIMEOUT_MS, 15000)
   };
 }

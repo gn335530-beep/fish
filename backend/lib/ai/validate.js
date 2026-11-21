@@ -10,9 +10,9 @@ const INTENTS = [
 ];
 const PLATFORM_INTENTS = ["SELL", "BUY", "MARKET", "CANCEL", "EDIT"];
 const REPLY_INTENTS = ["CHAT", "WEB", "PRODUCT_RECOMMEND"];
-const SOURCE_INTENTS = ["WEB"];
 const EDIT_FIELDS = ["fish_species", "quantity", "condition", "photo_url", "price"];
 const MAX_REPLY = 500;
+const URL_RE = /https?:\/\/[^\s<>"'，。！？；：、（）【】\u4e00-\u9fff]+/gi;
 
 function invalidOutput() {
   return llmError("LLM_INVALID_OUTPUT");
@@ -44,6 +44,17 @@ function parseOutput(raw) {
 
 function validString(value, max) {
   return typeof value === "string" && value.trim() !== "" && value.length <= max;
+}
+
+/* 來源預設隱藏：模型自填的連結一律從文字移除，避免出現在畫面或 API。 */
+function stripUrls(text) {
+  return String(text || "")
+    .replace(URL_RE, "")
+    .replace(/[ \t]+([，。！？；：、])/g, "$1")
+    .replace(/[ \t]{2,}/g, " ")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }
 
 function sanitizeSlots(raw) {
@@ -104,7 +115,7 @@ function normalizeOutput(parsed, options) {
 
   let replyText = parsed.reply_text == null ? null : parsed.reply_text;
   if (replyText !== null && typeof replyText !== "string") throw invalidOutput();
-  if (replyText !== null) replyText = replyText.trim() || null;
+  if (replyText !== null) replyText = stripUrls(replyText) || null;
   /* 查詢範圍後綴只在加入後仍不超過上限時附加；超限就省略，保留原回覆。 */
   if (replyText && options.replySuffix &&
     replyText.length + options.replySuffix.length <= MAX_REPLY) {
@@ -144,7 +155,8 @@ function normalizeOutput(parsed, options) {
     intent: parsed.intent,
     slots: slots,
     reply_text: replyText,
-    sources: platform || SOURCE_INTENTS.indexOf(parsed.intent) === -1 ? [] : (options.sources || []),
+    /* 預設不顯示來源卡；後端仍保留 webResults 供意圖與數字防護使用。 */
+    sources: [],
     tool_results: options.toolResults || {}
   };
 }

@@ -1,6 +1,6 @@
 /* Open-Meteo 讀取：天氣與海況各自一個端點；測試以 setFetcher 注入假回應。 */
 
-const { abortSignal } = require("../deadline");
+const { fetchJson } = require("./fetch-json");
 const { weatherSummary, marineSummary } = require("./normalize");
 
 const WEATHER_URL = "https://api.open-meteo.com/v1/forecast";
@@ -18,32 +18,6 @@ function resetFetcher() {
 
 function fetchImpl() {
   return fetcher || fetch;
-}
-
-function reasonError(reason) {
-  const error = new Error(reason);
-  error.reason = reason;
-  return error;
-}
-
-async function fetchJson(url, timeoutMs) {
-  const request = abortSignal(timeoutMs);
-  if (request.signal === null) throw reasonError("UPSTREAM_TIMEOUT");
-  try {
-    const response = await fetchImpl()(url, { signal: request.signal });
-    if (!response.ok) throw reasonError("UPSTREAM_UNAVAILABLE");
-    try {
-      return await response.json();
-    } catch (error) {
-      throw reasonError("NO_DATA");
-    }
-  } catch (error) {
-    if (error && error.reason) throw error;
-    if (error && error.name === "AbortError") throw reasonError("UPSTREAM_TIMEOUT");
-    throw reasonError("UPSTREAM_UNAVAILABLE");
-  } finally {
-    request.clear();
-  }
 }
 
 function weatherUrl(coords) {
@@ -71,11 +45,17 @@ function marineUrl(coords) {
 }
 
 async function weatherAt(coords, timeoutMs) {
-  return weatherSummary(await fetchJson(weatherUrl(coords), timeoutMs));
+  return weatherSummary(await fetchJson(weatherUrl(coords), {
+    timeoutMs: timeoutMs,
+    fetcher: fetchImpl()
+  }));
 }
 
 async function marineAt(coords, timeoutMs) {
-  return marineSummary(await fetchJson(marineUrl(coords), timeoutMs));
+  return marineSummary(await fetchJson(marineUrl(coords), {
+    timeoutMs: timeoutMs,
+    fetcher: fetchImpl()
+  }));
 }
 
 module.exports = {

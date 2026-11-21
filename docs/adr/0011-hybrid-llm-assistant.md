@@ -10,13 +10,13 @@
 
 - **混合式架構，不把平台動作交給模型。** 模型只回傳 `intent`、`slots`、`reply_text` 與唯讀工具結果；上架草稿、行情卡、商品卡、訂單、協議與取消流程仍由既有規則引擎驗證與執行。
 - **模型只負責三類文字：** 一般知識（`CHAT`）、有時效性的網路回答（`WEB`）與平台商品推薦（`PRODUCT_RECOMMEND`）。平台意圖（`SELL`、`BUY`、`MARKET`、`CANCEL`、`EDIT`）不產生模型文字，避免同一輪出現兩套答案。
-- **只有唯讀工具。** `get_market_price`、`search_products`、`web_search`、`get_local_conditions`（Open-Meteo 天氣與海況）由後端執行；模型不能建立、修改、發布、下架或刪除商品，也不能建立訂單、送出協議或寫評價。每輪最多 2 次工具呼叫。
+- **只有唯讀工具。** `get_market_price`、`search_products`、`web_search`、`get_local_conditions`（Open-Meteo 天氣與海況、中央氣象署潮汐）由後端執行；模型不能建立、修改、發布、下架或刪除商品，也不能建立訂單、送出協議或寫評價。每輪最多 2 次工具呼叫。
 - **平台數字嚴格防護。** 價格、尾數、行情、庫存與日期只能來自使用者訊息或工具結果；模型自行產生的數字、商品卡或來源一律丟棄並 fallback。
 - **外部內容視為不可信資料。** 網頁結果中的指令不得改變平台規則、揭露 system prompt 或觸發寫入；平台資料與網路資料在 UI 上清楚分開。
 - **助手房才能使用模型。** 交易房完全不呼叫 LLM；歷史只取助手房最近 10 則使用者／助手訊息，卡片以一行摘要取代，電話、Email、身分證字號與地址先遮蔽。
 - **免費層 beta。** 使用 Google AI Studio（Gemini Developer API）免費層與 Tavily 免費層；`LLM_ENABLED` 預設關閉，`LLM_WEB_SEARCH` 預設關閉，缺少金鑰時不呼叫外部服務。模型與逾時可用環境變數更換。
 - **錯誤分流。** 逾時、5xx、格式錯誤、數字防護失敗與未設定時靜默回到規則；Gemini 429、Tavily 429 與 Tavily 額度用完時，先跑規則，規則無法處理才顯示提示與重試按鈕。重試沿用同一個 `message_id`，不重寫使用者訊息；不自動排隊、不自動重試、不快取搜尋結果。
-- **soft launch，不是正式上線。** 不強制邀請名單、不設 app 層使用額度、不承諾 SLA。免費層內容可能被 Google 用於改善產品，Tavily 也會收到該次搜尋查詢，在地天氣／海況會把縣市或海域座標送給 Open-Meteo；這些限制寫在 README 與 beta 說明，不在 UI 顯示。
+- **soft launch，不是正式上線。** 不強制邀請名單、不設 app 層使用額度、不承諾 SLA。免費層內容可能被 Google 用於改善產品，Tavily 也會收到該次搜尋查詢，在地天氣／海況會把縣市或海域座標送給 Open-Meteo，潮汐會把代表潮位站名稱送給中央氣象署；這些限制寫在 README 與 beta 說明，不在 UI 顯示。
 
 ## 取捨
 
@@ -50,6 +50,6 @@
 
 - 平台動作仍由規則引擎驗證；模型只能提供 intent、slots 與文字。
 - 後端端點 `POST /api/ai/reply` 不寫訊息、不改 context；AI 訊息仍由前端用既有訊息端點寫入。
-- 新增 `sources` 卡片型別；配額提示是 transient UI 狀態，不寫入訊息。
+- 新增 `sources` 卡片型別；目前預設不顯示，`sources` 固定為空陣列，回覆文字中的 URL 會移除。配額提示是 transient UI 狀態，不寫入訊息。
 - `LLM_ENABLED=false`、缺少金鑰或外部服務失敗時，助手房仍可用規則完成上架、找魚與行情。
 - 免費層限制與資料使用方式只寫在 README／beta 說明，不在 UI 顯示。

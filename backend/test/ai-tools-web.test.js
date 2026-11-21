@@ -71,9 +71,7 @@ test("只有開啟網路搜尋且設定金鑰時才提供 web_search，搜尋後
   const data = (await h.reply(run.room.id, run.message.id)).body.data;
   assert.equal(data.handled, true, JSON.stringify(data));
   assert.equal(data.intent, "WEB");
-  assert.equal(data.sources.length, 3);
-  assert.equal(data.sources[0].title, "中央氣象署");
-  assert.match(data.sources[0].url, /^https:/);
+  assert.deepEqual(data.sources, []);
   assert.equal(tavily.calls.length, 1);
   assert.equal(h.calls[0].tools.some(function (tool) { return tool.name === "web_search"; }), true);
   assert.equal(h.calls[0].timeoutMs, 8000);

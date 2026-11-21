@@ -1,6 +1,7 @@
 /* 在地氣象測試共用：假 Open-Meteo 回應與助手回覆工具。 */
 
 const openMeteo = require("../lib/conditions/open-meteo");
+const cwaTide = require("../lib/conditions/cwa-tide");
 
 function weatherPayload(overrides) {
   const payload = {
@@ -70,15 +71,72 @@ function timeoutError() {
   return error;
 }
 
-function finalChat(text) {
+function taipeiDate(offsetMs) {
+  const time = Date.now() + (offsetMs || 0) + 8 * 3600 * 1000;
+  return new Date(time).toISOString().slice(0, 10);
+}
+
+function tideTime(date, time, type) {
   return {
-    text: JSON.stringify({
+    dataTime: date + " " + time + ":00",
+    parameter: [{ parameterName: "潮汐", parameterValue: type }]
+  };
+}
+
+function tideDay(date, times) {
+  return {
+    startTime: date + " 00:00:00",
+    endTime: date + " 23:59:59",
+    weatherElement: [
+      { elementName: "農曆", elementValue: "10/2" },
+      {
+        elementName: "1日潮汐",
+        time: times.map(function (row) { return tideTime(date, row[0], row[1]); })
+      }
+    ]
+  };
+}
+
+function tidePayload(overrides) {
+  const today = taipeiDate(0);
+  const tomorrow = taipeiDate(24 * 3600 * 1000);
+  const payload = {
+    success: "true",
+    records: {
+      location: [{
+        locationName: "基隆市中正區",
+        stationId: "001701",
+        validTime: [
+          tideDay(today, [["03:05", "乾潮"], ["09:12", "滿潮"], ["15:20", "乾潮"], ["21:30", "滿潮"]]),
+          tideDay(tomorrow, [["04:10", "乾潮"], ["10:20", "滿潮"], ["16:30", "乾潮"], ["22:40", "滿潮"]])
+        ]
+      }]
+    }
+  };
+  return Object.assign({}, payload, overrides || {});
+}
+
+function fakeTide(options) {
+  const settings = options || {};
+  const state = { urls: [], headers: [] };
+  cwaTide.setFetcher(async function (url, request) {
+    state.urls.push(url);
+    state.headers.push(request && request.headers);
+    if (settings.error) throw settings.error;
+    return jsonResponse(settings.payload === undefined ? tidePayload() : settings.payload);
+  });
+  return state;
+}
+
+function finalChat(text, overrides) {
+  return {
+    text: JSON.stringify(Object.assign({
       intent: "CHAT",
       slots: {},
       reply_text: text,
       sources: [],
       tool_results: {}
-    })
+    }, overrides || {}))
   };
 }
 
@@ -92,7 +150,10 @@ function conditionsCall(mode, extra) {
 module.exports = {
   weatherPayload: weatherPayload,
   marinePayload: marinePayload,
+  tidePayload: tidePayload,
   fakeOpenMeteo: fakeOpenMeteo,
+  fakeTide: fakeTide,
+  taipeiDate: taipeiDate,
   timeoutError: timeoutError,
   finalChat: finalChat,
   conditionsCall: conditionsCall

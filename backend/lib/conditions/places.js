@@ -75,6 +75,20 @@ const SEA_ALIASES = [
   ["巴士海峽", ["巴士海峽"]]
 ];
 
+/* 代表潮位站取自中央氣象署潮汐預報的 NSea 分區；location 是潮汐開放資料的地點名稱。 */
+const TIDE_STATIONS = {
+  "臺灣北部海面": { name: "基隆", location: "基隆市中正區", fallback: "基隆市中正" },
+  "臺灣海峽北部": { name: "香山", location: "新竹市香山區", fallback: "新竹市香山" },
+  "臺灣海峽南部": { name: "鼓山", location: "高雄市鼓山區", fallback: "高雄市鼓山" },
+  "臺灣東北部海面": { name: "蘇澳", location: "宜蘭縣蘇澳鎮", fallback: "宜蘭縣蘇澳" },
+  "臺灣東部海面": { name: "花蓮", location: "花蓮縣花蓮市", fallback: "花蓮縣花蓮" },
+  "臺灣東南部海面": { name: "成功", location: "臺東縣成功鎮", fallback: "臺東縣成功" },
+  "澎湖海面": { name: "馬公", location: "澎湖縣馬公市", fallback: "澎湖縣馬公" },
+  "金門海面": { name: "金城", location: "金門縣金城鎮", fallback: "金門縣金城" },
+  "馬祖海面": { name: "南竿", location: "連江縣南竿鄉", fallback: "連江縣南竿" },
+  "巴士海峽": { name: "恆春", location: "屏東縣恆春鎮", fallback: "屏東縣恆春" }
+};
+
 function normalizeKey(value) {
   return normalizeArea(value).trim();
 }
@@ -115,10 +129,15 @@ function coordsForSea(area) {
   return SEA_COORDS[area] || null;
 }
 
+function tideStationForSea(area) {
+  return TIDE_STATIONS[area] || null;
+}
+
 module.exports = {
   cityCoords: coordsForCity,
   seaCoords: coordsForSea,
   seaAreaForCity: seaAreaForCity,
   seaAreaInText: seaAreaInText,
-  normalizeSeaArea: canonicalSea
+  normalizeSeaArea: canonicalSea,
+  tideStationForSea: tideStationForSea
 };

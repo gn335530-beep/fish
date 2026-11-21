@@ -87,13 +87,13 @@
 - 端點**不寫訊息、不改 context**；AI 文字仍由前端用 `POST /api/chat/message` 寫入。
 - `SELL`／`BUY`／`MARKET`／`CANCEL`／`EDIT` 不產生 `reply_text`，前端只把 slots 交給既有規則。
 - `CHAT`／`WEB`／`PRODUCT_RECOMMEND` 才寫 LLM 文字；`PRODUCT_RECOMMEND` 另附商品卡並把 context 切到 `shopping`。
-- 唯讀工具：官方行情、平台公開商品（最多 5 筆）、在地天氣／海況（Open-Meteo）、Tavily 網路搜尋（最多 3 個來源）。每輪最多 2 次工具呼叫，工具結果只由後端產生。
+- 唯讀工具：官方行情、平台公開商品（最多 5 筆）、在地天氣／海況／潮汐（Open-Meteo＋CWA）、Tavily 網路搜尋。每輪最多 2 次工具呼叫，工具結果只由後端產生。
 - 地區問題使用設定頁縣市，訊息中的明確縣市優先；非地區問題不送縣市。沒有縣市時直接回「你所在的縣市是哪裡？」且不呼叫模型；回答只暫存在該助手房 30 分鐘，刪除對話時清除，不寫回個人設定。海況優先使用明確海域，內陸縣市會反問「你想問哪個海域？」。
-- 天氣只回天氣，海況回浪況與海域天氣；數字只來自當輪工具結果，資料缺失時只說明缺少什麼。AI 文字保留換行。
-- `WEB` 的 `sources` 由 Tavily 結果產生，最多 3 個合法 URL；`CHAT` 永遠 `sources: []`，平台答案也不顯示來源。模型自稱 `CHAT` 但成功使用 `web_search` 時，回應會升級為 `WEB` 並附來源。
+- 天氣只回天氣，海況回浪況、海域天氣與潮汐；數字只來自當輪工具結果，資料缺失時只說明缺少什麼。適合釣魚的問題使用完整海況包並可給一般建議；資料不足時不做判斷。AI 文字保留換行。
+- `sources` 預設固定為空陣列，不顯示資料來源卡；回覆文字中的 http／https URL 由後端移除。`WEB` 仍會在成功使用網路資料時標記；平台行情卡與商品卡來源標示不變。
 - 逾時、5xx、格式錯誤或平台數字無依據時回 HTTP 200 + `handled:false`，前端安靜 fallback；429／額度錯誤 `retryable:true`。前端先跑規則，規則無法處理才顯示提示與「重試」；重試沿用同一個 `message_id`，不重寫使用者訊息，較新的訊息也不會進入該次歷史，不自動重試或快取搜尋結果。
-- `LLM_TIMEOUT_MS` 是一次回覆的總期限（預設 8000，含模型、工具、行情與氣象上游）；該回合執行 `web_search` 後改用 `LLM_SEARCH_TIMEOUT_MS`（預設 15000）。在地天氣與海況不使用 Tavily。
-- 後端啟動時自動載入 `backend/.env`，既有環境變數優先。`LLM_ENABLED` 預設 `false`；另可設 `GEMINI_API_KEY`、`LLM_MODEL`、`LLM_TIMEOUT_MS`、`LLM_WEB_SEARCH`、`TAVILY_API_KEY`、`LLM_SEARCH_TIMEOUT_MS`。歷史固定最近 10 則、每輪最多 2 次工具呼叫。
+- `LLM_TIMEOUT_MS` 是一次回覆的總期限（預設 8000，含模型、工具、行情、氣象與潮汐上游）；該回合執行 `web_search` 後改用 `LLM_SEARCH_TIMEOUT_MS`（預設 15000）。在地天氣與海況不使用 Tavily。
+- 後端啟動時自動載入 `backend/.env`，既有環境變數優先。`LLM_ENABLED` 預設 `false`；另可設 `GEMINI_API_KEY`、`LLM_MODEL`、`LLM_TIMEOUT_MS`、`LLM_WEB_SEARCH`、`TAVILY_API_KEY`、`LLM_SEARCH_TIMEOUT_MS`、`CWA_API_KEY`。缺少 `CWA_API_KEY` 時只降級潮汐。歷史固定最近 10 則、每輪最多 2 次工具呼叫。
 - 交易房不得呼叫此端點；後端也會回 409。
 
 ## 3. 商品回應欄位

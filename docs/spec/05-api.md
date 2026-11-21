@@ -398,7 +398,7 @@
 
 ### `POST /api/ai/reply`
 
-> **Beta**：LLM 預設關閉；`LLM_ENABLED=true` 且設定 `GEMINI_API_KEY` 才會呼叫外部模型。支援一般文字回覆（`CHAT`）、`WEB` 文字、平台意圖 slots 與唯讀工具（官方行情、平台商品、Tavily 網路搜尋、在地天氣／海況）。地區問題會使用設定縣市或訊息中的明確縣市；缺縣市時直接反問，不呼叫模型。配額錯誤會回 `retryable:true`，前端先跑規則，必要時顯示提示與重試。
+> **Beta**：LLM 預設關閉；`LLM_ENABLED=true` 且設定 `GEMINI_API_KEY` 才會呼叫外部模型。支援一般文字回覆（`CHAT`）、`WEB` 文字、平台意圖 slots、在地天氣／海況／潮汐與釣魚建議；來源卡預設不回傳，回覆文字中的 URL 一律移除。地區問題會使用設定縣市或訊息中的明確縣市；缺縣市時直接反問，不呼叫模型。配額錯誤會回 `retryable:true`，前端先跑規則，必要時顯示提示與重試。
 
 ```json
 { "conversation_id": "conv_...", "message_id": "msg_...",
@@ -422,20 +422,21 @@
 
 - `intent`：`SELL`／`BUY`／`MARKET`／`CANCEL`／`EDIT`／`CHAT`／`WEB`／`PRODUCT_RECOMMEND`／`UNKNOWN`。
 - 平台意圖（`SELL`、`BUY`、`MARKET`、`CANCEL`、`EDIT`）不產生 `reply_text`，前端交由既有規則完成；`CHAT`／`WEB`／`PRODUCT_RECOMMEND` 才寫入文字。
-- 唯讀工具：`get_market_price`（官方行情）、`search_products`（公開商品，最多 5 筆）、`get_local_conditions`（台灣縣市天氣或海域海況）、`web_search`（Tavily basic search）。每輪最多 2 次工具呼叫；模型不能使用寫入工具。工具結果視為不可信資料，平台數字、天氣與海況數字只能來自使用者訊息或後端工具結果。
-- 第一輪依問題類型強制工具：在地天氣／海況 → `get_local_conditions`；國外地點天氣、時效性／新聞 → `web_search`；商品推薦／找魚 → `search_products`；平台意圖與一般知識不強制。工具結果回來後恢復自動輸出 JSON。
+- 唯讀工具：`get_market_price`（官方行情）、`search_products`（公開商品，最多 5 筆）、`get_local_conditions`（台灣縣市天氣或海域海況＋潮汐）、`web_search`（Tavily basic search）。每輪最多 2 次工具呼叫；模型不能使用寫入工具。工具結果視為不可信資料，平台數字、天氣、海況與潮汐數字只能來自使用者訊息或後端工具結果。
+- 第一輪依問題類型強制工具：在地天氣／海況／適合釣魚 → `get_local_conditions`；國外地點天氣、時效性／新聞 → `web_search`；商品推薦／找魚 → `search_products`；平台意圖與一般知識不強制。工具結果回來後恢復自動輸出 JSON。
 - 地區上下文只用於地區相關問題：預設設定頁縣市，訊息中明確縣市優先；非地區問題不把縣市放進 prompt 或工具查詢。system prompt 固定帶目前日期（Asia/Taipei）。沒有有效縣市時回 200 + `handled:true`、`intent:CHAT`、`reply_text:"你所在的縣市是哪裡？"`，不呼叫模型；使用者回答的縣市只暫存在後端記憶體（同一對話、30 分鐘、刪除對話時清除），不寫回個人設定。只使用縣市，不使用區或地址。`LLM_ENABLED=false` 或缺少金鑰時仍回靜默 fallback，不建立暫存。
-- 天氣問題的 `get_local_conditions` 結果只含天氣現象、現在氣溫、今日高低溫、降雨機率、風速風向與 7 日預報；海況結果含浪高、浪向、浪週期、海溫、海域天氣與風速陣風。海況優先使用訊息中的明確海域，否則縣市主要海域；內陸縣市或無法對應時回 200 + `intent:CHAT`、`reply_text:"你想問哪個海域？"`，不呼叫模型。上游逾時、無資料或格式錯誤時只回缺少什麼，不產生數字。
+- 天氣問題的 `get_local_conditions` 結果只含天氣現象、現在氣溫、今日高低溫、降雨機率、風速風向與 7 日預報；海況結果含浪高、浪向、浪週期、海溫、海域天氣、風速陣風與當日滿潮／乾潮時間。海況優先使用訊息中的明確海域，否則縣市主要海域；內陸縣市或無法對應時回 200 + `intent:CHAT`、`reply_text:"你想問哪個海域？"`，不呼叫模型。缺少 `CWA_API_KEY`、潮汐逾時或無資料時顯示「潮汐暫無資料」；上游逾時、無資料或格式錯誤時只回缺少什麼，不產生數字。
+- 使用者問「適合釣魚嗎／要注意什麼」時，使用天氣、海況與潮汐的完整海況包，可回偏適合、需注意或偏不適合；資料不足時只說明缺少哪一項，不做適合／不適合判斷。絕對保證用語與固定免責句會使整則回覆回 `LLM_GUARD_REJECTED`；單純天氣或海況不自動產生釣魚建議。
 - `search_products` 回空陣列時，後端把 `PRODUCT_RECOMMEND` 轉成 `CHAT`，只回目前沒有符合條件的商品，不產生商品卡。商品筆數 `N` 的依據是工具回傳的 `count`。
-- 每次回覆只有一個請求期限：一般 8 秒（`LLM_TIMEOUT_MS`）；該輪執行 `web_search` 後延長為 15 秒（`LLM_SEARCH_TIMEOUT_MS`）。期限同時套用模型呼叫、每個工具與行情／氣象上游；工具開始前剩餘時間已用盡就不再呼叫下游，逾時回 `LLM_TIMEOUT` 靜默 fallback。
-- `tool_results` 可含 `market`（給前端行情卡的完整官方資料，含 7／30 交易日歷史、品質旗標、抓取時間與來源 URL）、`products`（公開商品陣列）與 `local`（天氣／海況工具結果）；`PRODUCT_RECOMMEND` 的文字與商品卡只由工具結果產生，模型不能自行改寫。回覆未提到查詢範圍時，後端在最終文字後補上「（查詢範圍：縣市）」；加入後會超過 500 字就省略後綴，回覆仍成功。
+- 每次回覆只有一個請求期限：一般 8 秒（`LLM_TIMEOUT_MS`）；該輪執行 `web_search` 後延長為 15 秒（`LLM_SEARCH_TIMEOUT_MS`）。期限同時套用模型呼叫、每個工具與行情／氣象／潮汐上游；工具開始前剩餘時間已用盡就不再呼叫下游，逾時回 `LLM_TIMEOUT` 靜默 fallback。
+- `tool_results` 可含 `market`（給前端行情卡的完整官方資料，含 7／30 交易日歷史、品質旗標、抓取時間與來源 URL）、`products`（公開商品陣列）與 `local`（天氣／海況／潮汐工具結果）；`PRODUCT_RECOMMEND` 的文字與商品卡只由工具結果產生，模型不能自行改寫。回覆未提到查詢範圍時，後端在最終文字後補上「（查詢範圍：縣市）」；加入後會超過 500 字就省略後綴，回覆仍成功。
 - 模型看到的 `get_market_price` 結果只有是否查到、官方代碼、官方名稱、地區、交易日期、每公斤與每台斤平均價與養殖標記；歷史、品質、抓取時間與來源 URL 不進模型，也不進數字防護證據池。
-- `sources` 只在 `WEB` 出現，由後端從 `web_search` 結果產生，最多 3 個合法 URL；模型自稱 `CHAT` 但成功使用 `web_search` 時，最終 intent 升級為 `WEB` 並附來源。`CHAT` 永遠不帶來源；平台答案也不顯示來源。
-- 平台數字（價格、尾數、行情、庫存）與天氣／海況數字必須出現在使用者訊息或工具結果中，否則整則回覆丟棄，回 `handled:false` + `LLM_GUARD_REJECTED`。
+- `sources` 預設固定為空陣列；`web_search` 仍會產生後端來源供意圖與數字防護使用，但預設不回傳。模型自稱 `CHAT` 但成功使用 `web_search` 時，最終 intent 仍升級為 `WEB`。模型自行提供的來源與回覆文字中的 http／https URL 一律丟棄或移除；平台行情卡與商品卡的來源標示不受影響。
+- 平台數字（價格、尾數、行情、庫存）與天氣／海況／潮汐數字必須出現在使用者訊息或工具結果中，否則整則回覆丟棄，回 `handled:false` + `LLM_GUARD_REJECTED`。
 - 失敗一律 HTTP 200：`LLM_DISABLED`、`LLM_NOT_CONFIGURED`、`LLM_TIMEOUT`、`LLM_UPSTREAM_ERROR`、`LLM_INVALID_OUTPUT`、`LLM_GUARD_REJECTED` 為靜默 fallback；`LLM_RATE_LIMITED`、`SEARCH_RATE_LIMITED`、`SEARCH_QUOTA_EXHAUSTED` 為 `retryable:true`，前端先跑規則，規則無法處理時才顯示提示與重試按鈕。
 - 端點不寫入訊息、不改 `context`；AI 訊息仍由前端呼叫 `POST /api/chat/message` 寫入。地區暫存縣市不寫入資料庫。
 - 重試由前端按鈕觸發，沿用同一個 `message_id`；後端不保存重試狀態、不自動重試、不排隊、不快取搜尋結果。
-- 設定：後端啟動時自動載入 `backend/.env`，既有環境變數優先。`LLM_ENABLED`（預設 `false`）、`GEMINI_API_KEY`、`LLM_MODEL`（預設 `gemini-3.5-flash-lite`）、`LLM_TIMEOUT_MS`（預設 8000）、`LLM_WEB_SEARCH`（預設 `false`）、`TAVILY_API_KEY`、`LLM_SEARCH_TIMEOUT_MS`（預設 15000）。Open-Meteo 不需要金鑰。歷史固定最近 10 則、每輪最多 2 次工具呼叫，沒有環境變數可調。
+- 設定：後端啟動時自動載入 `backend/.env`，既有環境變數優先。`LLM_ENABLED`（預設 `false`）、`GEMINI_API_KEY`、`LLM_MODEL`（預設 `gemini-3.5-flash-lite`）、`LLM_TIMEOUT_MS`（預設 8000）、`LLM_WEB_SEARCH`（預設 `false`）、`TAVILY_API_KEY`、`LLM_SEARCH_TIMEOUT_MS`（預設 15000）、`CWA_API_KEY`。Open-Meteo 不需要金鑰；缺少 `CWA_API_KEY` 時只降級潮汐。歷史固定最近 10 則、每輪最多 2 次工具呼叫，沒有環境變數可調。
 - log 只記 request id、使用者 id、intent、token 數、耗時、工具名稱／耗時／錯誤碼；不記訊息、prompt、工具結果、搜尋結果或 API key。
 
 ### `PUT /api/conversations/:id/context`
@@ -796,7 +797,7 @@
 | `LLM_TIMEOUT` | 200 | AI 回覆（模型、工具或行情上游逾時，靜默 fallback） |
 | `LLM_UPSTREAM_ERROR` | 200 | AI 回覆（模型或行情上游 5xx／連線失敗） |
 | `LLM_INVALID_OUTPUT` | 200 | AI 回覆（JSON、schema、長度不合格，或模型使用未提供的工具） |
-| `LLM_GUARD_REJECTED` | 200 | AI 回覆（平台數字無依據或工具呼叫超過上限） |
+| `LLM_GUARD_REJECTED` | 200 | AI 回覆（平台／氣象數字無依據、釣魚建議用語不合格或工具呼叫超過上限） |
 | `LLM_RATE_LIMITED` | 200 | AI 回覆（模型 429，`retryable:true`） |
 | `SEARCH_RATE_LIMITED` | 200 | AI 回覆（Tavily 429，`retryable:true`） |
 | `SEARCH_QUOTA_EXHAUSTED` | 200 | AI 回覆（Tavily 額度用完，`retryable:true`） |

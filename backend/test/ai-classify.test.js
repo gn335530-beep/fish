@@ -11,6 +11,7 @@ test("台灣天氣與海況強制在地條件工具；國外地點與時效性�
   assert.equal(forceToolFor("今天台南天氣如何？", web), "get_local_conditions");
   assert.equal(forceToolFor("現在氣溫幾度", web), "get_local_conditions");
   assert.equal(forceToolFor("高雄今天海況如何？", web), "get_local_conditions");
+  assert.equal(forceToolFor("今天適合釣魚嗎？", web), "get_local_conditions");
   assert.equal(forceToolFor("東北部海面浪況如何？", web), "get_local_conditions");
   assert.equal(forceToolFor("最新漁業新聞", web), "web_search");
   assert.equal(forceToolFor("東京天氣如何？", web), "web_search");

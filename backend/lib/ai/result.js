@@ -29,14 +29,7 @@ function mapError(error) {
   return { code: "LLM_UPSTREAM_ERROR", retryable: false };
 }
 
-function sourcesOf(results) {
-  return (results || []).slice(0, 3).map(function (row) {
-    return { title: row.title, url: row.url };
-  });
-}
-
 module.exports = {
   failure: failure,
-  mapError: mapError,
-  sourcesOf: sourcesOf
+  mapError: mapError
 };
