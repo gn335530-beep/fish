@@ -69,7 +69,7 @@ test("潮汐逾時且模型漏寫時，後端補上潮汐暫無資料", async fu
 });
 
 test("潮汐無資料或格式錯誤且模型漏寫時，後端補上潮汐暫無資料", async function () {
-  for (const payload of [{ records: { location: [] } }, {}]) {
+  for (const payload of [{ records: { TideForecasts: [] } }, {}]) {
     h.reset({ CWA_API_KEY: "test-key" });
     c.fakeOpenMeteo();
     c.fakeTide({ payload: payload });

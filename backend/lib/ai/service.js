@@ -1,13 +1,9 @@
 /* AI 回覆流程：開關、設定、歷史、輸出驗證、log 與錯誤映射；工具迴圈見 tool-loop。 */
 
 const { llmConfig } = require("./config");
-const { SYSTEM_PROMPT } = require("./prompt");
-const { forceToolForTurn } = require("./classify");
 const localContext = require("./local-context");
-const questions = require("./question-types");
 const advice = require("./fishing-advice");
 const sourceRequest = require("./source-request");
-const { historyFor, contextSummary } = require("./history");
 const { parseOutput, normalizeOutput, finalIntent, isPlatformIntent } = require("./validate");
 const tools = require("./tools");
 const toolLoop = require("./tool-loop");
@@ -17,6 +13,7 @@ const { llmError } = require("./error");
 const listing = require("./listing");
 const { directReply, foreignWeatherFailure, localFallback, replySuffix, NO_PRODUCTS_TEXT } =
   require("./reply-output");
+const { prepareTurn } = require("./prepare");
 
 async function reply(options) {
   const started = Date.now();
@@ -44,54 +41,9 @@ async function reply(options) {
     return listing.reply(options, config, baseLog, started);
   }
   const webEnabled = config.webSearch && Boolean(config.tavilyApiKey);
-  const text = options.message.text;
-  const preflight = await sourceRequest.preflight({
-    conversationId: options.conversation.id,
-    anchor: options.message,
-    text: text,
-    user: options.user,
-    ctx: {
-      timeoutMs: config.timeoutMs,
-      webEnabled: webEnabled,
-      tavilyApiKey: config.tavilyApiKey,
-      cwaApiKey: config.cwaApiKey
-    }
-  });
-  if (preflight.direct) {
-    return directReply(baseLog, started, preflight.direct.text, {}, {
-      sources: preflight.direct.sources, intent: preflight.direct.intent
-    });
-  }
-  const wantsSources = preflight.wantsSources;
-  const foreignWeather = preflight.foreignWeather;
-
-  const local = localContext.prepare({
-    conversationId: options.conversation.id,
-    text: text,
-    user: options.user
-  });
-  if (local.askCity) return directReply(baseLog, started, "你所在的縣市是哪裡？");
-  if (local.askSea) return directReply(baseLog, started, "你想問哪個海域？");
-  if (local.ackCity) {
-    return directReply(baseLog, started, "好的，已記住你在" + local.ackCity + "。想問天氣、海況或在地資訊嗎？");
-  }
-
-  const sourceKind = wantsSources ? sourceRequest.sourceKindFor(text) : "";
-  const forceTool = forceToolForTurn(text, {
-    webEnabled: webEnabled,
-    wantsSources: wantsSources,
-    sourceKind: sourceKind
-  });
-  const wantsAdvice = questions.isFishingQuestion(text);
-  const localPlace = local.seaArea || local.city;
-  const input = {
-    model: config.model,
-    timeoutMs: config.timeoutMs,
-    system: SYSTEM_PROMPT + localContext.dateLine() +
-      (local.active && localPlace ? localContext.promptLine(localPlace) : ""),
-    context: contextSummary(options.context),
-    messages: historyFor(options.conversation.id, options.message)
-  };
+  const prepared = await prepareTurn(options, config, webEnabled, baseLog, started);
+  if (prepared.reply) return prepared.reply;
+  const { input, local, wantsSources, foreignWeather, wantsAdvice, forceTool } = prepared;
 
   try {
     const loop = await toolLoop.run(input, {
@@ -99,6 +51,7 @@ async function reply(options) {
       searchTimeoutMs: config.searchTimeoutMs,
       toolDefs: tools.definitions({ webEnabled: webEnabled, localEnabled: !foreignWeather }),
       forceTool: forceTool,
+      prefillTool: config.prefillTool,
       toolCtx: {
         user: options.user,
         webEnabled: webEnabled,

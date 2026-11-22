@@ -59,7 +59,7 @@ CASES.forEach(function (target) {
     expect(geometry.source.right, "來源固定在右側").toBeGreaterThan(geometry.card.left + geometry.card.width * 0.5);
     expect(geometry.date.bottom, "日期在來源上方").toBeLessThanOrEqual(geometry.source.top + 1);
 
-    await expect(page.locator(".fm-market__label")).toHaveText("近" + target.days + "個交易日");
+    await expect(page.locator(".fm-market__label")).toHaveText("近" + target.days + "日");
     await expect(page.locator(".fm-market__date")).toHaveText("2026-10-22");
     await expect(page.locator(".fm-market__source")).toHaveText("資料來源：農業部 漁業署");
 

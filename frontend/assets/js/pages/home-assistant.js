@@ -42,8 +42,8 @@
           '<div class="ha-market"><div class="ha-market__head"><b>行情卡</b><span>花枝</span></div>' +
           '<div class="ha-market__price"><b>31.4</b><span>元／台斤</span></div>' +
           '<div class="ha-market__meta">高雄市平均 · 2026-10-22 · 農業部漁產品交易行情</div>' +
-          '<div class="ha-market__meta">近 7 個交易日</div>' +
-          '<svg viewBox="0 0 100 32" preserveAspectRatio="none" role="img" aria-label="花枝近 7 個交易日行情走勢">' +
+          '<div class="ha-market__meta">近 7 日</div>' +
+          '<svg viewBox="0 0 100 32" preserveAspectRatio="none" role="img" aria-label="花枝近 7 日行情走勢">' +
           '<polyline points="0,30 16,26 33,24 50,27 66,20 83,15 100,8" fill="none" stroke="currentColor" stroke-width="1.6" vector-effect="non-scaling-stroke"></polyline>' +
           '</svg><div class="ha-market__range"><span>最高 31.4</span><span>最低 30.1</span></div>' +
           '<div class="ha-market__note">資料來源：農業部 漁業署</div></div>';

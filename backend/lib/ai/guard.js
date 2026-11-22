@@ -47,13 +47,20 @@ function assertSlotsGrounded(slots, pool) {
   }
 }
 
+/* 列表編號（如「4. 煮湯」「1.清蒸 2.紅燒」）不是平台數字，不應被數字防護擋下。
+   只移除「數字後緊接列表符號（.、)、）且不是小數」的編號，其餘數字仍受接地檢查。 */
+function stripListMarkers(text) {
+  return String(text || "").replace(/\d+(?=[.、)）](?!\d))/g, " ");
+}
+
 function assertReplyGrounded(replyText, pool, userText, options) {
   if (!replyText) return;
   const strict = options && options.strict === true;
   const platformClaim = PLATFORM_CLAIM.test(replyText);
-  numbersIn(replyText).forEach(function (number) {
+  const guardedText = stripListMarkers(replyText);
+  numbersIn(guardedText).forEach(function (number) {
     if (isGrounded(number, pool)) return;
-    if (strict || platformClaim || (number > 3 && !hasGeneralUnit(number, replyText))) {
+    if (strict || platformClaim || (number > 3 && !hasGeneralUnit(number, guardedText))) {
       throw guardRejected();
     }
   });

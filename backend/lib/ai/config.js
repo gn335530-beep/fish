@@ -21,7 +21,8 @@ function llmConfig() {
     webSearch: truthy(process.env.LLM_WEB_SEARCH),
     tavilyApiKey: process.env.TAVILY_API_KEY || "",
     cwaApiKey: process.env.CWA_API_KEY || "",
-    searchTimeoutMs: positive(process.env.LLM_SEARCH_TIMEOUT_MS, 15000)
+    searchTimeoutMs: positive(process.env.LLM_SEARCH_TIMEOUT_MS, 15000),
+    prefillTool: truthy(process.env.LLM_PREFILL_TOOL)
   };
 }
 

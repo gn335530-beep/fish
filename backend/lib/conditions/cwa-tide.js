@@ -21,10 +21,17 @@ function tideUrl(locationName, apiKey) {
   return API_URL + "?" + params.toString();
 }
 
+/* 新版回應：records.TideForecasts[].Location（單一物件）→ 攤平成陣列。 */
 function locationsOf(payload) {
-  const location = payload && payload.records && payload.records.location;
-  if (Array.isArray(location)) return location;
-  return location ? [location] : [];
+  const groups = payload && payload.records && payload.records.TideForecasts;
+  if (!Array.isArray(groups)) return [];
+  const rows = [];
+  groups.forEach(function (group) {
+    const location = group && group.Location;
+    if (Array.isArray(location)) Array.prototype.push.apply(rows, location);
+    else if (location) rows.push(location);
+  });
+  return rows;
 }
 
 function pickLocation(payload, station) {
@@ -32,7 +39,7 @@ function pickLocation(payload, station) {
   if (!rows.length) return null;
   const wanted = String(station.location || "").replace(/臺/g, "台");
   return rows.find(function (row) {
-    const name = String(row.locationName || "").replace(/臺/g, "台");
+    const name = String(row.LocationName || "").replace(/臺/g, "台");
     return name === wanted || name.indexOf(wanted) !== -1 || wanted.indexOf(name) !== -1;
   }) || null;
 }
@@ -43,33 +50,27 @@ function tideType(text) {
   return "";
 }
 
-function addTime(days, item) {
-  const match = TIME_RE.exec(String(item && item.dataTime || ""));
-  if (!match) return;
-  const parameters = Array.isArray(item.parameter) ? item.parameter : [];
-  const tide = parameters.find(function (row) {
-    return row.parameterName === "潮汐" || String(row.parameterName || "").indexOf("潮") !== -1;
+/* 每日 TimePeriods.Daily：Date 為日期，Time[].Tide 為滿潮／乾潮、DateTime 為 ISO。 */
+function addDaily(days, daily) {
+  const date = String(daily && daily.Date || "");
+  if (!date) return;
+  (Array.isArray(daily.Time) ? daily.Time : []).forEach(function (item) {
+    const type = tideType(item && item.Tide);
+    if (!type) return;
+    const match = TIME_RE.exec(String(item && item.DateTime || ""));
+    if (!match) return;
+    const day = days[date] || { date: date, high: [], low: [] };
+    day[type].push({ time: match[4] + ":" + match[5] });
+    days[date] = day;
   });
-  const type = tideType(tide && tide.parameterValue);
-  if (!type) return;
-  const date = match[1] + "-" + match[2] + "-" + match[3];
-  const time = match[4] + ":" + match[5];
-  const day = days[date] || { date: date, high: [], low: [] };
-  day[type].push({ time: time });
-  days[date] = day;
 }
 
 function summarize(payload, station) {
   const location = pickLocation(payload, station);
   if (!location) throw reasonError("NO_DATA");
   const days = {};
-  (Array.isArray(location.validTime) ? location.validTime : []).forEach(function (span) {
-    (Array.isArray(span.weatherElement) ? span.weatherElement : []).forEach(function (element) {
-      (Array.isArray(element.time) ? element.time : []).forEach(function (item) {
-        addTime(days, item);
-      });
-    });
-  });
+  const daily = location.TimePeriods && location.TimePeriods.Daily;
+  (Array.isArray(daily) ? daily : []).forEach(function (row) { addDaily(days, row); });
   const today = days[taipeiDate()] || null;
   const tomorrow = days[taipeiDate(Date.now() + 24 * 3600 * 1000)] || null;
   if (!today || (!today.high.length && !today.low.length)) throw reasonError("NO_DATA");
@@ -91,8 +92,8 @@ function summarize(payload, station) {
   }
   return {
     station: station.name,
-    location: location.locationName || station.location,
-    station_id: location.stationId || null,
+    location: location.LocationName || station.location,
+    station_id: location.LocationId || location.stationId || null,
     today: clean(today),
     tomorrow: clean(tomorrow)
   };

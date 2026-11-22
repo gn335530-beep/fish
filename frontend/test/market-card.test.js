@@ -62,7 +62,7 @@ test("行情卡顯示標題、魚種、平均價、範圍、日期、走勢與�
   assert.match(text, /200 元\/台斤/);
   assert.match(text, /\(高雄市平均\)/);
   assert.match(text, /2026-10-22/);
-  assert.match(text, /近7個交易日/);
+  assert.match(text, /近7日/);
   assert.match(text, /最高 210/);
   assert.match(text, /最低 190/);
   assert.match(text, /資料來源：農業部 漁業署/);
@@ -172,7 +172,7 @@ test("垂直縮放由渲染輸出的自訂屬性控制", function () {
 test("切換 7／30 日不會重置重量", function () {
   update({ marketWeights: { msg_1: "2" }, marketDays: { msg_1: 30 } });
   const html = renderCard(card(), "msg_1");
-  assert.match(html, /近30個交易日/);
+  assert.match(html, /近30日/);
   assert.match(html, /data-market-weight="msg_1" value="2"/);
   assert.match(html, /data-market-ref="msg_1">NT\$400</);
 });

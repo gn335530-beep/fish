@@ -61,7 +61,7 @@ export function renderMarketCard(card, messageId) {
     '<div class="fm-market__days">' + dayButton(messageId, 7, days === 7) + dayButton(messageId, 30, days === 30) + '</div>' +
     chartMarkup(card, days) +
     '<span class="fm-market__date">' + escapeHtml(card.trade_date || "") + '</span>' +
-    '<span class="fm-market__label">近' + days + '個交易日</span>' +
+    '<span class="fm-market__label">近' + days + '日</span>' +
     '<span class="fm-market__weight-label">重量</span>' +
     '<input class="fm-market__weight" type="number" min="0" step="0.1" inputmode="decimal" data-market-weight="' +
     id + '" value="' + escapeHtml(weightOf(messageId)) + '" aria-label="重量">' +

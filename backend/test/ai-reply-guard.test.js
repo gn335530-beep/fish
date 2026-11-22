@@ -70,6 +70,26 @@ test("一般知識的數字不受平台數字防護影響", async function () {
   }));
   assert.equal(weight.handled, true);
   assert.equal(weight.error_code, null);
+
+  const list = await ask("吳郭魚適合怎麼料理", output({
+    reply_text: "吳郭魚適合：\n1. 清蒸\n2. 紅燒\n3. 乾煎\n4. 煮湯"
+  }));
+  assert.equal(list.handled, true);
+  assert.equal(list.error_code, null);
+
+  const sameline = await ask("吳郭魚適合怎麼料理", output({
+    reply_text: "吳郭魚適合：1.清蒸 2.紅燒 3.乾煎 4.煮湯"
+  }));
+  assert.equal(sameline.handled, true);
+  assert.equal(sameline.error_code, null);
+});
+
+test("列表編號只免列表位置，其餘相同數字仍受接地檢查", async function () {
+  const data = await ask("吳郭魚適合怎麼料理", output({
+    reply_text: "4. 煮湯，每台斤 4 元。"
+  }));
+  assert.equal(data.handled, false);
+  assert.equal(data.error_code, "LLM_GUARD_REJECTED");
 });
 
 test("回覆文字宣稱平台價格但不能溯源時丟棄整則回覆", async function () {

@@ -18,6 +18,7 @@ function setEnv(overrides) {
   delete process.env.LLM_WEB_SEARCH;
   delete process.env.TAVILY_API_KEY;
   delete process.env.CWA_API_KEY;
+  delete process.env.LLM_PREFILL_TOOL;
   Object.keys(overrides || {}).forEach(function (key) {
     if (overrides[key] === null) delete process.env[key];
     else process.env[key] = String(overrides[key]);

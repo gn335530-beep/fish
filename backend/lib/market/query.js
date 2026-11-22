@@ -3,6 +3,7 @@
 const repository = require("./repository");
 const markets = require("./markets");
 const { round1 } = require("../round");
+const { addDays } = require("./dates");
 const { KG_PER_TAIJIN } = require("../units");
 
 function taijinPrice(pricePerKg) {
@@ -52,10 +53,12 @@ function responseSource(rows) {
 
 function historyFor(code, scope, region, endDate, days) {
   const names = scope === "city" ? verifiedMarketsFor(region) : null;
-  const dates = repository.tradeDatesForCode(code, endDate).slice().reverse();
+  const from = addDays(endDate, -(days - 1));
+  const dates = repository.tradeDatesForCode(code, endDate).filter(function (date) {
+    return date >= from;
+  });
   const points = [];
   for (const tradeDate of dates) {
-    if (points.length >= days) break;
     const rows = repository.pricesForCode(code, tradeDate).filter(function (row) {
       return names === null || names.indexOf(row.market_name) !== -1;
     });
@@ -67,7 +70,7 @@ function historyFor(code, scope, region, endDate, days) {
       price_per_taijin: taijinPrice(avg)
     });
   }
-  return points.reverse();
+  return points;
 }
 
 function identityOf(mapping) {

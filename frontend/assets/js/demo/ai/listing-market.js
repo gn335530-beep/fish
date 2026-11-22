@@ -14,7 +14,7 @@ export async function quoteForDraft(draft, user) {
 
   let data;
   try {
-    /* 一次取 30 個交易日；7 日卡直接從同一份歷史取最後 7 筆。 */
+    /* 一次取 30 個日曆天；7 日卡直接從同一份歷史取近 7 天。 */
     data = draft.species_code
       ? await getMarketQuoteByCode(draft.species_code, region || null, 30)
       : await getMarketQuote(draft.fish_species, region || null, 30);

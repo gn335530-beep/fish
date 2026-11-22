@@ -1,4 +1,4 @@
-/* 行情查詢 API（歷史與錯誤）：7／30 交易日序列、查無資料與參數契約。 */
+/* 行情查詢 API（歷史與錯誤）：7／30 天（日曆天）交易分布、查無資料與參數契約。 */
 
 const test = require("node:test");
 const assert = require("node:assert/strict");
@@ -13,7 +13,7 @@ test.beforeEach(function () {
   seedGrouperCatalog();
 });
 
-test("include=history 回最近 N 個有交易的日期，依日期升冪", async function () {
+test("include=history 回最近 N 個日曆天內的交易日，依日期升冪", async function () {
   const rows = [];
   for (let i = 39; i >= 0; i -= 1) {
     rows.push(raw({
@@ -35,6 +35,20 @@ test("include=history 回最近 N 個有交易的日期，依日期升冪", asyn
 
   const seven = await getPrices("code=2201&region=高雄市&date=2026-10-22&include=history&days=7");
   assert.equal(seven.body.data.history.length, 7);
+});
+
+test("日曆天範圍只回範圍內的交易日，不硬湊固定筆數", async function () {
+  const rows = [
+    raw({ "交易日期": "1151012", "平均價": 100, "交易量": 1 }),
+    raw({ "交易日期": "1151022", "平均價": 200, "交易量": 1 })
+  ];
+  useRows(rows);
+
+  const res = await getPrices("code=2201&region=高雄市&date=2026-10-22&include=history&days=30");
+  const history = res.body.data.history;
+  assert.equal(history.length, 2);
+  assert.equal(history[0].trade_date, "2026-10-12");
+  assert.equal(history[1].trade_date, "2026-10-22");
 });
 
 test("查無交易資料回 NO_TRADE_DATA，且不得帶價格欄位", async function () {

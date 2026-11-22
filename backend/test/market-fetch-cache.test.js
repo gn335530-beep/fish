@@ -99,7 +99,7 @@ test("最近交易日視窗內的查無資料可 negative cache", async function
   assert.equal(fetcher.calls, 1);
 });
 
-test("日期範圍換算成民國年，30 個交易日抓足夠日曆日", async function () {
+test("日期範圍換算成民國年，30 天抓 30 個日曆日", async function () {
   const end = "2026-10-22";
   const fetcher = useRows([]);
   await fetchService.ensureHistory(mapping, end, 30);
@@ -111,7 +111,7 @@ test("日期範圍換算成民國年，30 個交易日抓足夠日曆日", async
   const startMatch = url.match(/StartDate=(\d{7})/);
   const startIso = Number(startMatch[1].slice(0, 3)) + 1911 + "-" +
     startMatch[1].slice(3, 5) + "-" + startMatch[1].slice(5, 7);
-  assert.ok(startIso <= addDays(end, -42), "30 個交易日至少需 42 個日曆日");
+  assert.equal(startIso, addDays(end, -36), "30 天範圍從 endDate 往前 36 天開始（29 天 + 7 天緩衝）");
 
   assert.equal(
     upstream.buildUrl({ code: 2201, from: "2026-10-01", to: "2026-10-22" }),

@@ -55,6 +55,28 @@ test("歷史只取最近 10 則使用者／助手訊息，卡片以一行摘要�
   assert.doesNotMatch(serialized, /"card"|"product_id"/);
 });
 
+test("歷史中的長文字回覆截短，避免模型重複先前內容", async function () {
+  const room = await h.createRoom();
+  await h.sendUser(room.id, "吳郭魚適合怎麼料理？");
+  await h.sendAi(room.id, { text: "吳郭魚肉質鮮甜，" + "甲".repeat(200) });
+  await h.sendAi(room.id, { text: "收到。" });
+  const current = await h.sendUser(room.id, "那石斑魚呢？");
+
+  const result = await h.reply(room.id, current.id);
+  assert.equal(result.body.data.handled, true);
+
+  const input = h.calls[0];
+  const assistant = input.messages.find(function (message) {
+    return message.role === "assistant" && message.text.indexOf("吳郭魚肉質鮮甜") === 0;
+  });
+  assert.ok(assistant, "歷史應含截短後的助手回覆");
+  assert.equal(assistant.text.length, 120);
+  const kept = input.messages.find(function (message) {
+    return message.role === "assistant" && message.text === "收到。";
+  });
+  assert.ok(kept, "短助手回覆應保留");
+});
+
 test("訊息與 context 的電話、Email、身分證與地址先遮蔽再送 provider", async function () {
   const room = await h.createRoom();
   await h.sendUser(

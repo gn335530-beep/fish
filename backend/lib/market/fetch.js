@@ -101,10 +101,11 @@ async function ensureDate(mapping, date, options) {
   return performFetch(mapping, from, date, { timeoutMs: options && options.timeoutMs });
 }
 
-/* 行情卡歷史：從 endDate 往回抓足夠日曆日，確保涵蓋 N 個交易日。 */
+/* 行情卡歷史：從 endDate 往回抓 N 個日曆日；抓取範圍多留 7 天緩衝，
+   涵蓋休市日、資料落後與 endDate 到最新交易日之間的空檔。 */
 async function ensureHistory(mapping, endDate, days, options) {
   const to = endDate || todayIso();
-  const from = addDays(to, -(days * 2 + 7));
+  const from = addDays(to, -(days - 1 + DATE_LOOKBACK_DAYS));
   const state = repository.getState(mapping.code);
   if (cache.stateCovers(state, from, to) && cache.hasBackingData(state, mapping, from, to)) {
     return cache.result(state.last_status);
@@ -121,7 +122,7 @@ async function ensureHistory(mapping, endDate, days, options) {
 function forceFetch(mapping, options) {
   if (options.days) {
     const to = options.date || todayIso();
-    return performFetch(mapping, addDays(to, -(options.days * 2 + 7)), to, {
+    return performFetch(mapping, addDays(to, -(options.days - 1 + DATE_LOOKBACK_DAYS)), to, {
       timeoutMs: options.timeoutMs
     });
   }

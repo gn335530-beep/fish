@@ -49,6 +49,22 @@ async function run(input, options, report) {
   let productRegion = null;
   let finalRaw = null;
 
+  /* 在地天氣／海況：後端已知工具與參數（mode、縣市、海域），直接執行並預填結果，
+     省一次模型決策回合。web_search／search_products 仍要模型產生查詢或魚種，不預填。
+     預設關閉，由 LLM_PREFILL_TOOL 開啟。 */
+  if (options.prefillTool && options.forceTool === "get_local_conditions" &&
+    options.toolCtx && options.toolCtx.local) {
+    const remaining = deadline - Date.now();
+    if (remaining <= 0) throw llmError("LLM_TIMEOUT");
+    const ctx = Object.assign({}, options.toolCtx, { timeoutMs: remaining });
+    const result = await runTool({ name: "get_local_conditions", args: {} }, ctx, report);
+    toolResults.local = result;
+    toolRounds.push({
+      calls: [],
+      results: [{ name: "get_local_conditions", id: null, result: tools.modelResult("get_local_conditions", result) }]
+    });
+  }
+
   for (let round = 0; round <= MAX_TOOL_CALLS; round++) {
     if (Date.now() >= deadline) throw llmError("LLM_TIMEOUT");
     /* 強制工具只用在第一輪；工具結果回來後讓模型自由輸出 JSON。 */

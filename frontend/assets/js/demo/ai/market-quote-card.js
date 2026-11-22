@@ -12,10 +12,27 @@ function statsOf(history) {
   return { high: Math.max.apply(null, prices), low: Math.min.apply(null, prices) };
 }
 
+function daysBefore(iso, days) {
+  const date = new Date(String(iso) + "T00:00:00.000Z");
+  if (isNaN(date.getTime())) return "";
+  date.setUTCDate(date.getUTCDate() - days);
+  return date.toISOString().slice(0, 10);
+}
+
+/* 近 N 個日曆天內的交易日，不是固定 N 筆（週末休市日不補）。 */
+function lastDays(history, days) {
+  if (!history.length) return [];
+  const latest = history[history.length - 1].trade_date;
+  const from = daysBefore(latest, days - 1);
+  return history.filter(function (point) {
+    return point.trade_date >= from;
+  });
+}
+
 export function buildMarketQuoteCard(data, options) {
   const opts = options || {};
   const history = data.history || [];
-  const seven = history.slice(-7);
+  const seven = lastDays(history, 7);
   const short = statsOf(seven);
   const wide = statsOf(history);
   const weightKg = Number(opts.weightKg) || 0;

@@ -8,6 +8,9 @@ const DRAFT_KEYS = [
 ];
 
 const HISTORY_LIMIT = 10;
+/* 歷史只留必要上下文：助手長回覆截短，降低模型重複先前內容與 token 用量。 */
+const MAX_ASSISTANT_HISTORY = 120;
+const MAX_USER_HISTORY = 300;
 
 function oneLine(value) {
   return String(value == null ? "" : value).replace(/\s+/g, " ").trim();
@@ -42,7 +45,9 @@ function cardSummary(card) {
 function messageLine(message) {
   if (message.type === "card") return cardSummary(message.card);
   if (message.type !== "text") return "";
-  return oneLine(message.text);
+  const max = message.sender_id === "ai" ? MAX_ASSISTANT_HISTORY : MAX_USER_HISTORY;
+  const text = oneLine(message.text);
+  return text.length <= max ? text : text.slice(0, max);
 }
 
 function isDialogMessage(message) {

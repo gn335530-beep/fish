@@ -88,7 +88,7 @@ test("缺少 CWA_API_KEY 時不呼叫潮汐，海況仍可用且標記潮汐暫�
 test("潮汐無資料或逾時時標記原因，不編造時間", async function () {
   h.reset({ CWA_API_KEY: "test-key" });
   c.fakeOpenMeteo();
-  let tide = c.fakeTide({ payload: { records: { location: [] } } });
+  let tide = c.fakeTide({ payload: { records: { TideForecasts: [] } } });
   h.useSequence([
     { tool_calls: [c.conditionsCall("sea")] },
     c.finalChat("海況浪高 1.5 公尺。\n潮汐暫無資料。")

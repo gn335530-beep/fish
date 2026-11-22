@@ -35,6 +35,14 @@ test("海域別名取最長匹配，避免東北部被當成北部", function ()
   assert.equal(places.seaAreaInText("北部海面浪況"), "臺灣北部海面");
 });
 
+test("normalizeSeaArea 不認識的海域名稱回空字串，不擲錯", function () {
+  assert.equal(places.normalizeSeaArea("高雄外海"), "");
+  assert.equal(places.normalizeSeaArea("臺灣海峽"), "");
+  assert.equal(places.normalizeSeaArea("亂寫的海域"), "");
+  assert.equal(places.normalizeSeaArea(""), "");
+  assert.equal(places.normalizeSeaArea("北部海面"), "臺灣北部海面");
+});
+
 test("海況使用縣市主要海域的 Marine 與 Weather，回覆含浪況、風與天氣", async function () {
   const upstream = c.fakeOpenMeteo();
   h.useSequence([

@@ -433,15 +433,15 @@
 - 使用者問「適合釣魚嗎／要注意什麼」時，使用天氣、海況與潮汐的完整海況包，可回偏適合、需注意或偏不適合；資料不足時只說明缺少哪一項，不做適合／不適合判斷。絕對保證用語與固定免責句會使整則回覆回 `LLM_GUARD_REJECTED`；單純天氣或海況不自動產生釣魚建議。
 - `search_products` 回空陣列時，後端把 `PRODUCT_RECOMMEND` 轉成 `CHAT`，只回目前沒有符合條件的商品，不產生商品卡。商品筆數 `N` 的依據是工具回傳的 `count`。
 - 每次回覆只有一個請求期限：一般 8 秒（`LLM_TIMEOUT_MS`）；該輪執行 `web_search` 後延長為 15 秒（`LLM_SEARCH_TIMEOUT_MS`）。期限同時套用模型呼叫、每個工具與行情／氣象／潮汐上游；工具開始前剩餘時間已用盡就不再呼叫下游。模型或行情上游逾時回 `LLM_TIMEOUT` 靜默 fallback；國外地點天氣的網路逾時或上游錯誤回 `handled:true` 的「查不到」；在地天氣、海況、潮汐上游逾時回缺少資料的說明或「潮汐暫無資料」。
-- `tool_results` 可含 `market`（給前端行情卡的完整官方資料，含 7／30 交易日歷史、品質旗標、抓取時間與來源 URL）、`products`（公開商品陣列）與 `local`（天氣／海況／潮汐工具結果與後端來源；天氣含 `observation` 與 `observation_error`）；`PRODUCT_RECOMMEND` 的文字與商品卡只由工具結果產生，模型不能自行改寫。回覆未提到查詢範圍時，後端在最終文字後補上「（查詢範圍：縣市）」；加入後會超過 500 字就省略後綴，回覆仍成功。
+- `tool_results` 可含 `market`（給前端行情卡的完整官方資料，含 7／30 日曆天歷史、品質旗標、抓取時間與來源 URL）、`products`（公開商品陣列）與 `local`（天氣／海況／潮汐工具結果與後端來源；天氣含 `observation` 與 `observation_error`）；`PRODUCT_RECOMMEND` 的文字與商品卡只由工具結果產生，模型不能自行改寫。回覆未提到查詢範圍時，後端在最終文字後補上「（查詢範圍：縣市）」；加入後會超過 500 字就省略後綴，回覆仍成功。
 - 模型看到的 `get_market_price` 結果只有是否查到、官方代碼、官方名稱、地區、交易日期、每公斤與每台斤平均價與養殖標記；歷史、品質、抓取時間與來源 URL 不進模型，也不進數字防護證據池。
 - `sources` 預設為空陣列。使用者明確要求「連結、網址、來源、出處、哪裡看、哪個網站、資料哪來、引用、查證」時，後端重跑對應工具並回傳最多 3 個合法 http／https URL：同一則要求就在同一則給；下一句只要求來源時，以來源詞語為主判定，移除來源關鍵詞、指示詞、語氣詞、主題詞（例如天氣、海況、潮汐、新聞）與常見動詞後沒有新的問題內容就算純來源請求，依最近一則使用者問題重查天氣、海況或網路工具，不呼叫模型、不暫存來源。「來源是哪個網站」「這則的來源」「資料哪來，有網址嗎」都算。平台意圖永遠不產生網路來源卡；非平台回覆沒有來源時，`reply_text` 明確加上「目前沒有可提供的來源。」。
 - 模型自稱 `CHAT` 但成功使用 `web_search` 時，最終 intent 仍升級為 `WEB`。模型自行提供的來源與回覆文字中的 http／https URL 一律丟棄或移除；平台行情卡與商品卡的來源標示不受影響。
-- 平台數字（價格、尾數、行情、庫存）與天氣／海況／潮汐數字必須出現在使用者訊息或工具結果中，否則整則回覆丟棄，回 `handled:false` + `LLM_GUARD_REJECTED`。使用在地工具時另檢查單位：帶「度」「℃」「%」「級」「公尺」「米」「秒」「節」的數字必須出現在對應工具欄位，不能靠一般單位例外或小於等於 3 放行；日期與潮汐時間必須是工具結果中的同一組，不能只靠其中的數字出現。工具依據包含預報天數，讓「未來 7 天」有來源；一般知識的數字防護不變。
+- 平台數字（價格、尾數、行情、庫存）與天氣／海況／潮汐數字必須出現在使用者訊息或工具結果中，否則整則回覆丟棄，回 `handled:false` + `LLM_GUARD_REJECTED`。使用在地工具時另檢查單位：帶「度」「℃」「%」「級」「公尺」「米」「秒」「節」的數字必須出現在對應工具欄位，不能靠一般單位例外或小於等於 3 放行；日期與潮汐時間必須是工具結果中的同一組，不能只靠其中的數字出現。工具依據包含預報天數，讓「未來 7 天」有來源；一般知識的數字防護不變。條列編號（數字後緊接列表符號 `.`、`、`、`)`、`）` 且非小數，如「4. 煮湯」「1.清蒸 2.紅燒」）不是平台數字，不進接地檢查；其餘相同數字仍須接地。
 - 失敗一律 HTTP 200：`LLM_DISABLED`、`LLM_NOT_CONFIGURED`、`LLM_TIMEOUT`、`LLM_UPSTREAM_ERROR`、`LLM_INVALID_OUTPUT`、`LLM_GUARD_REJECTED` 為靜默 fallback；`LLM_RATE_LIMITED`、`SEARCH_RATE_LIMITED`、`SEARCH_QUOTA_EXHAUSTED` 為 `retryable:true`，前端先跑規則，規則無法處理時才顯示提示與重試按鈕。國外地點天氣的網路逾時／上游錯誤例外：回 200 + `handled:true` 的「查不到」，`error_code` 為 `null`，僅內部 log 保留錯誤碼。
 - 端點不寫入訊息、不改 `context`；AI 訊息仍由前端呼叫 `POST /api/chat/message` 寫入。地區暫存縣市不寫入資料庫。
 - 重試由前端按鈕觸發，沿用同一個 `message_id`；後端不保存重試狀態、不自動重試、不排隊、不快取搜尋結果。
-- 設定：後端啟動時自動載入 `backend/.env`，既有環境變數優先。`LLM_ENABLED`（預設 `false`）、`GEMINI_API_KEY`、`LLM_MODEL`（預設 `gemini-3.5-flash-lite`）、`LLM_TIMEOUT_MS`（預設 8000）、`LLM_WEB_SEARCH`（預設 `false`）、`TAVILY_API_KEY`、`LLM_SEARCH_TIMEOUT_MS`（預設 15000）、`CWA_API_KEY`。Open-Meteo 海況不需要金鑰；缺少 `CWA_API_KEY` 時天氣回「查不到即時天氣」、潮汐降級。歷史固定最近 10 則、每輪最多 2 次工具呼叫，沒有環境變數可調。
+- 設定：後端啟動時自動載入 `backend/.env`，既有環境變數優先。`LLM_ENABLED`（預設 `false`）、`GEMINI_API_KEY`、`LLM_MODEL`（預設 `gemini-3.5-flash-lite`）、`LLM_TIMEOUT_MS`（預設 8000）、`LLM_WEB_SEARCH`（預設 `false`）、`TAVILY_API_KEY`、`LLM_SEARCH_TIMEOUT_MS`（預設 15000）、`LLM_PREFILL_TOOL`（預設 `false`，在地天氣／海況由後端直接執行 `get_local_conditions` 並預填結果，省一次模型決策回合）、`CWA_API_KEY`。Open-Meteo 海況不需要金鑰；缺少 `CWA_API_KEY` 時天氣回「查不到即時天氣」、潮汐降級。歷史固定最近 10 則，助手回覆截短到 120 字、使用者訊息 300 字；每輪最多 2 次工具呼叫。system prompt 明示只回答最新一句、不重複先前回覆與話題，使用者明確要延續（例如「第二個」「那另外一種」）時才參照先前回覆。
 - log 只記 request id、使用者 id、intent、token 數、耗時、工具名稱／耗時／錯誤碼；不記訊息、prompt、工具結果、搜尋結果或 API key。
 
 ### `PUT /api/conversations/:id/context`
@@ -690,7 +690,7 @@
 | --- | --- | --- | --- |
 | GET | `/api/market/codes?q=` | 公開 | 官方代碼字典；省略 `q` 回完整字典 |
 | GET | `/api/market/quote?q=&region=&date=&include=history&days=7` | 公開 | 名稱→代碼→價格；多候選回 `AMBIGUOUS_SPECIES` |
-| GET | `/api/market/prices?code=&region=&date=&include=history&days=7` | 公開 | 代碼查價；`include=history` 加回歷史；`days` 為最近 7 或 30 個交易日 |
+| GET | `/api/market/prices?code=&region=&date=&include=history&days=7` | 公開 | 代碼查價；`include=history` 加回歷史；`days` 為最近 7 或 30 個日曆天 |
 | GET | `/api/market/markets` | 公開 | 市場對照表（唯讀，21 筆） |
 
 - `region` 省略 → 全國平均，回應 `region: null`、`scope: "national"`；`region` 無效 → 400 `INVALID_REGION`。縣市比對前把「臺」正規化為「台」。
@@ -719,7 +719,7 @@
 - `price_per_kg`／`price_per_taijin` 都是平均價，不是範圍；四捨五入到小數 1 位。
 - `found:false` 只回 `found`、`reason`、`species_code`、`official_name`、`is_aquaculture`，不得帶 `price_per_kg`／`price_per_taijin` 或任何價格數字。
 - `scope = "national"` 時保留請求的 `region`，前端顯示「全國平均」。
-- `include=history` 只回該次查詢的 `scope`（縣市或全國）每日平均價；`days` 是最近 N 個交易日（7 或 30），回傳最多 N 筆有交易的日期；抓取時需涵蓋足夠日曆日。未帶 `include=history` 時省略 `history` 欄位。
+- `include=history` 只回該次查詢的 `scope`（縣市或全國）每日平均價；`days` 是最近 N 個日曆天（7 或 30），回傳該範圍內所有有交易的日期（週末休市日不會補到 N 筆）；抓取時往回抓 N 個日曆天並多留 7 天緩衝，涵蓋休市日與資料落後。未帶 `include=history` 時省略 `history` 欄位。
 - `is_aquaculture: true` 時，助手行情查詢成功一律回行情卡；卡片不顯示「養殖價格」標記。
 - `summary` 端點已移除；走勢改用 `include=history`。
 
@@ -832,7 +832,7 @@
 | `price` 是上架整批售價，`price_per_taijin` 是每台斤售價，`unit_price` 是每尾均價 | 三個都要標清楚；不要把整批價乘以尾數 |
 | `price_auto: true` 只會出現在舊資料 | 新商品一律 `false`；畫面不顯示「自動計算」 |
 | 行情查詢回的是平均價數字，不是 low／avg／high 物件 | `data.price_per_kg`、`data.price_per_taijin` 直接是 number |
-| 行情卡走勢要帶 `include=history`；沒有 `summary` 端點 | 用 `days=7` 或 `days=30`（最近 7／30 個交易日） |
+| 行情卡走勢要帶 `include=history`；沒有 `summary` 端點 | 用 `days=7` 或 `days=30`（最近 7／30 個日曆天） |
 | `is_aquaculture: true` | 行情查詢成功時回行情卡；卡片不顯示「養殖價格」標記 |
 | 助手房可以有多間 | 每間有自己的 `context` 與草稿；不要假設只有一間 |
 | 交易房任何狀態都能刪 | 未成交訂單與訊息會移除；已成交訂單與評價保留，之後再交易開新房間 |

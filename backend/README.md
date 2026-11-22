@@ -45,6 +45,7 @@ python -m http.server 8000 --directory frontend
 | `LLM_WEB_SEARCH` | `false` | `true` 且設定 Tavily 金鑰才提供網路搜尋工具 |
 | `TAVILY_API_KEY` | 空 | Tavily 金鑰；缺少時不提供 `web_search` |
 | `LLM_SEARCH_TIMEOUT_MS` | `15000` | 該回合執行 `web_search` 後延長的總期限 |
+| `LLM_PREFILL_TOOL` | `false` | `true` 時在地天氣／海況由後端直接執行 `get_local_conditions` 並預填結果，省一次模型決策回合（web_search／search_products 仍需模型產生查詢或魚種） |
 | `CWA_API_KEY` | 空 | 中央氣象署開放資料金鑰；缺少時天氣回「查不到即時天氣」、潮汐降級，海況仍可用 |
 
 一般天氣使用中央氣象署 F-D0047-091 預報與 O-A0001-001 自動氣象站；海況使用 Open-Meteo Weather／Marine API，不需要金鑰；潮汐使用中央氣象署 F-A0021-001 開放資料。`CWA_API_KEY` 可到[氣象資料開放平臺](https://opendata.cwa.gov.tw/)註冊會員後取得授權碼。天氣、海況與潮汐上游也受同一個回覆期限約束；天氣預報失敗、逾時或缺少金鑰時回「查不到即時天氣」，不 fallback 回 Open-Meteo。地區暫存縣市只存在記憶體，重啟後遺失。

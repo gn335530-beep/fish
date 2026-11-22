@@ -113,9 +113,10 @@ function normalizeKey(value) {
 function canonicalSea(value) {
   const key = normalizeKey(value);
   if (!key) return "";
-  return SEA_ALIASES.find(function (row) {
-    return row[1].some(function (alias) { return normalizeKey(alias) === key; });
-  })[0] || "";
+  const row = SEA_ALIASES.find(function (entry) {
+    return entry[1].some(function (alias) { return normalizeKey(alias) === key; });
+  });
+  return row ? row[0] : "";
 }
 
 function seaAreaInText(text) {

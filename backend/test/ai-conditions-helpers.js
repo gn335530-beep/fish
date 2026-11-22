@@ -81,23 +81,15 @@ function taipeiDate(offsetMs) {
 }
 
 function tideTime(date, time, type) {
-  return {
-    dataTime: date + " " + time + ":00",
-    parameter: [{ parameterName: "潮汐", parameterValue: type }]
-  };
+  return { DateTime: date + "T" + time + ":00+08:00", Tide: type };
 }
 
 function tideDay(date, times) {
   return {
-    startTime: date + " 00:00:00",
-    endTime: date + " 23:59:59",
-    weatherElement: [
-      { elementName: "農曆", elementValue: "10/2" },
-      {
-        elementName: "1日潮汐",
-        time: times.map(function (row) { return tideTime(date, row[0], row[1]); })
-      }
-    ]
+    Date: date,
+    LunarDate: "10/2",
+    TideRange: "大",
+    Time: times.map(function (row) { return tideTime(date, row[0], row[1]); })
   };
 }
 
@@ -107,13 +99,17 @@ function tidePayload(overrides) {
   const payload = {
     success: "true",
     records: {
-      location: [{
-        locationName: "基隆市中正區",
-        stationId: "001701",
-        validTime: [
-          tideDay(today, [["03:05", "乾潮"], ["09:12", "滿潮"], ["15:20", "乾潮"], ["21:30", "滿潮"]]),
-          tideDay(tomorrow, [["04:10", "乾潮"], ["10:20", "滿潮"], ["16:30", "乾潮"], ["22:40", "滿潮"]])
-        ]
+      TideForecasts: [{
+        Location: {
+          LocationId: "10015050",
+          LocationName: "基隆市中正區",
+          TimePeriods: {
+            Daily: [
+              tideDay(today, [["03:05", "乾潮"], ["09:12", "滿潮"], ["15:20", "乾潮"], ["21:30", "滿潮"]]),
+              tideDay(tomorrow, [["04:10", "乾潮"], ["10:20", "滿潮"], ["16:30", "乾潮"], ["22:40", "滿潮"]])
+            ]
+          }
+        }
       }]
     }
   };
@@ -144,6 +140,17 @@ function finalChat(text, overrides) {
   };
 }
 
+/* useJson 用的純輸出物件（非 {text} 包裝）。 */
+function finalOutput(text, overrides) {
+  return Object.assign({
+    intent: "CHAT",
+    slots: {},
+    reply_text: text,
+    sources: [],
+    tool_results: {}
+  }, overrides || {});
+}
+
 function conditionsCall(mode, extra) {
   return {
     name: "get_local_conditions",
@@ -164,5 +171,6 @@ module.exports = {
   taipeiDate: taipeiDate,
   timeoutError: timeoutError,
   finalChat: finalChat,
+  finalOutput: finalOutput,
   conditionsCall: conditionsCall
 };
