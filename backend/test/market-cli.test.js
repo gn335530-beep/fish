@@ -28,7 +28,7 @@ const SAMPLE = [{
 }];
 
 test.before(async function () {
-  dbFile = createDb();
+  dbFile = seededDb();
   server = http.createServer(function (req, res) {
     requests += 1;
     const url = new URL(req.url, "http://127.0.0.1");
@@ -69,6 +69,35 @@ function run(args, file) {
   });
 }
 
+/* CLI 會先要求官方魚種代碼字典可用，否則直接回「尚未同步」；測試 DB 先種一份。 */
+function seedCatalogFile(file) {
+  const db = JSON.parse(fs.readFileSync(file, "utf8"));
+  db.market_species_catalog = [{
+    id: "msc_2201",
+    species_code: 2201,
+    official_name: "石斑魚",
+    aliases: [],
+    category: "2",
+    is_aquaculture: false,
+    last_seen_date: "2026-10-22"
+  }];
+  db.market_catalog_state = [{
+    id: "catalog",
+    last_status: "ok",
+    last_synced_at: new Date().toISOString(),
+    last_attempt_at: new Date().toISOString(),
+    last_row_count: 1,
+    last_error: null,
+    last_error_at: null
+  }];
+  fs.writeFileSync(file, JSON.stringify(db, null, 2));
+  return file;
+}
+
+function seededDb() {
+  return seedCatalogFile(createDb());
+}
+
 test("CLI 用代碼抓行情、重跑不重複打上游、--status 可看狀態", async function () {
   const first = await run(["2201", "--date", "2026-10-22"]);
   assert.equal(first.status, 0, first.stderr);
@@ -99,7 +128,7 @@ test("CLI 用代碼抓行情、重跑不重複打上游、--status 可看狀態"
 });
 
 test("CLI 指定星期日會回補最近交易日", async function () {
-  const coldDb = createDb();
+  const coldDb = seededDb();
   const before = requests;
   const result = await run(["2201", "--date", "2026-10-25"], coldDb);
 
@@ -114,7 +143,7 @@ test("CLI 指定星期日會回補最近交易日", async function () {
 });
 
 test("CLI 可用名稱查詢", async function () {
-  const named = await run(["石斑魚", "--date", "2026-10-22"], createDb());
+  const named = await run(["石斑魚", "--date", "2026-10-22"], seededDb());
   assert.equal(named.status, 0, named.stderr);
   assert.match(named.stdout, /"species_code": 2201/);
 });

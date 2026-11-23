@@ -85,7 +85,7 @@ test("浪向不能在工具沒有支持時自行改寫", async function () {
 });
 
 test("日期與潮汐時間同一句時必須是同一筆潮汐事件", async function () {
-  const data = await seaReply("2026-11-23 滿潮 09:12。");
+  const data = await seaReply(c.taipeiDate(0) + " 滿潮 10:20。");
 
   assert.equal(data.handled, false, JSON.stringify(data));
   assert.equal(data.error_code, "LLM_GUARD_REJECTED");
