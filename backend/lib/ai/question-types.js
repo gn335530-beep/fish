@@ -10,7 +10,6 @@ const LOCAL_NEWS = /((在地|地方)(的)?(新聞|消息))/;
 const REGIONAL_INFO = /(颱風|交通|路況|活動)/;
 const LOCAL_INFO = /(新聞|即時|最新|在地)/;
 const NEARBY = /(附近|這裡|這邊)/;
-const TEMPORAL = /(今天|今日|現在|目前)/;
 const FOREIGN = /(東京|大阪|京都|北海道|沖繩|首爾|釜山|北京|上海|廈門|香港|澳門|新加坡|曼谷|雪梨|倫敦|巴黎|紐約|洛杉磯|溫哥華|多倫多|日本|韓國|中國|美國|加拿大|英國|法國|德國|澳洲|紐西蘭|泰國|越南|菲律賓|馬來西亞|印尼)/;
 
 const PLACE_QUERY = /([\u4e00-\u9fff]{1,15}?)(?:的)?(?:天氣|氣象|氣溫|溫度|下雨|降雨|海況|浪況)/;
@@ -50,10 +49,6 @@ function isRegionQuestion(text) {
     NEARBY.test(value) || LOCAL_NEWS.test(value) || REGIONAL_INFO.test(value);
 }
 
-function isTemporalQuestion(text) {
-  return TEMPORAL.test(String(text || ""));
-}
-
 /* 有明確地名但不是台灣縣市時走網路；沒有地名的「今天天氣」仍用設定縣市。 */
 function hasForeignPlace(text) {
   const source = normalizeArea(text);
@@ -81,6 +76,5 @@ module.exports = {
   isTideQuestion: isTideQuestion,
   isSeaTopicQuestion: isSeaTopicQuestion,
   isRegionQuestion: isRegionQuestion,
-  isTemporalQuestion: isTemporalQuestion,
   hasForeignPlace: hasForeignPlace
 };

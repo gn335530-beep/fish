@@ -17,7 +17,9 @@ function modeOf(args, ctx) {
 }
 
 function cityOf(args, ctx) {
-  return regionValue(args.city) || (ctx.local && ctx.local.city) || "";
+  return regionValue(args.city) ||
+    (ctx.local && ctx.local.city) ||
+    regionValue(ctx.user && ctx.user.city) || "";
 }
 
 function settled(rows, index) {

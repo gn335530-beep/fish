@@ -67,10 +67,6 @@ async function reply(options) {
     }
 
     const parsed = parseOutput(loop.raw.text);
-    /* 非地區問題誤用在地工具：不採用模型文字，回到安全 fallback。 */
-    if (loop.toolResults.local && !local.usesLocalTool && !isPlatformIntent(parsed.intent)) {
-      throw llmError("LLM_GUARD_REJECTED");
-    }
     if (!isPlatformIntent(parsed.intent)) {
       const fallback = localFallback(loop.toolResults.local, {
         wantsAdvice: wantsAdvice,

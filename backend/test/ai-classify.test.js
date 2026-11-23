@@ -33,3 +33,9 @@ test("平台意圖與一般知識不強制工具", function () {
   assert.equal(forceToolFor("吳郭魚口感如何？", web), null);
   assert.equal(forceToolFor("吳郭魚怎麼煎？", web), null);
 });
+
+test("時效性字眼不再強制網路搜尋，交給模型判斷", function () {
+  assert.equal(forceToolFor("今天海上情況", web), null);
+  assert.equal(forceToolFor("今天發生什麼事", web), null);
+  assert.equal(forceToolFor("現在發生什麼事", noWeb), null);
+});

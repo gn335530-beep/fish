@@ -168,7 +168,7 @@ test("LLM 關閉時不反問也不建立暫存，維持靜默 fallback", async f
   assert.equal(regionStore.cityOf(room.id), "");
 });
 
-test("非地區問題即使模型呼叫在地工具，也不反問縣市，改走安全 fallback", async function () {
+test("非地區問題若模型自行呼叫在地工具，無縣市時反問縣市", async function () {
   withoutCity();
   const upstream = c.fakeOpenMeteo();
   h.useSequence([
@@ -179,9 +179,8 @@ test("非地區問題即使模型呼叫在地工具，也不反問縣市，改�
   const message = await h.sendUser(room.id, "吳郭魚怎麼煎？");
 
   const data = (await h.reply(room.id, message.id)).body.data;
-  assert.equal(data.handled, false, JSON.stringify(data));
-  assert.equal(data.error_code, "LLM_GUARD_REJECTED");
-  assert.equal(data.reply_text, null);
+  assert.equal(data.handled, true, JSON.stringify(data));
+  assert.equal(data.reply_text, "你所在的縣市是哪裡？");
   assert.equal(upstream.urls.length, 0);
 });
 

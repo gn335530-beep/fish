@@ -27,7 +27,6 @@ function forceToolFor(text, options) {
   }
   if (questions.isLocalInfoQuestion(value)) return webEnabled ? "web_search" : null;
   if (PRODUCT.test(value)) return "search_products";
-  if (questions.isTemporalQuestion(value) && webEnabled) return "web_search";
   return null;
 }
 

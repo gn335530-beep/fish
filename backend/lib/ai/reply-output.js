@@ -42,7 +42,8 @@ function foreignWeatherFailure(wantsSources) {
 }
 
 function tideMissing(local) {
-  return Boolean(local && local.found === true && local.mode === "sea" && !local.tide);
+  return Boolean(local && local.found === true && local.mode === "sea" &&
+    local.sea_area && !local.tide);
 }
 
 function needsTideNote(replyText, local) {

@@ -71,7 +71,7 @@ test("平台問題即使模型呼叫在地工具，也不反問縣市", async fu
   assert.equal(upstream.urls.length, 0);
 });
 
-test("帶明確縣市的非地區問題若模型呼叫在地工具仍安全 fallback", async function () {
+test("非地區問題若模型自行呼叫在地工具，不再拒絕，改以設定縣市查詢", async function () {
   const upstream = c.fakeOpenMeteo();
   const room = await h.createRoom(tokens.buyer);
 
@@ -82,9 +82,8 @@ test("帶明確縣市的非地區問題若模型呼叫在地工具仍安全 fall
     ]);
     const message = await h.sendUser(room.id, text);
     const data = (await h.reply(room.id, message.id)).body.data;
-    assert.equal(data.handled, false, JSON.stringify(data));
-    assert.equal(data.error_code, "LLM_GUARD_REJECTED");
-    assert.equal(data.reply_text, null);
+    assert.equal(data.handled, true, JSON.stringify(data));
+    assert.equal(data.reply_text, "查不到即時天氣，請稍後再試。");
   }
   assert.equal(upstream.urls.length, 0);
 });
