@@ -2,7 +2,8 @@
 
 import { getMarketQuote, getMarketQuoteByCode } from "../../api/market.js";
 import { findRegion, normalizeCityName } from "../../shared/regions.js";
-import { ensureCatalog, findSpeciesMention } from "./species-catalog.js";
+import { ensureCatalog, findSpeciesMention, findCatalogName } from "./species-catalog.js";
+import { hintedSpecies } from "./llm-slots.js";
 import { buildMarketQuoteCard } from "./market-quote-card.js";
 import { INTENT } from "./intents.js";
 import { detectIntent } from "./rules.js";
@@ -98,29 +99,30 @@ export async function marketReply(text, user, context, hints) {
   }
 
   const rest = withoutRegion(source);
-  let name = findSpeciesMention(rest);
-  let catalogOk = true;
-  if (!name) {
-    catalogOk = await ensureCatalog();
-    name = findSpeciesMention(rest);
-  }
-  const hintedName = hints && hints.fish_species
-    ? (findSpeciesMention(hints.fish_species) || String(hints.fish_species).trim())
-    : "";
-
-  const codeMatch = source.match(/(?:^|[^\d])(\d{2,6})(?:[^\d]|$)/);
-  const hintedCode = hints && hints.species_code ? String(hints.species_code) : null;
+  const hint = hintedSpecies(hints);
   const requestedRegion = findRegion(source) ||
     findRegion((hints && hints.region) || "") ||
     normalizeCityName((user && user.city) || "").trim();
 
-  if (!name && hintedCode) {
-    return quoteFor(hintedCode, true, ctx, requestedRegion);
+  /* 模型給了官方代碼就依代碼查價，最精確；名稱與規則式抽取只是 fallback。 */
+  if (hint.code) {
+    return quoteFor(hint.code, true, ctx, requestedRegion);
   }
+
+  let name = hint.name;
+  let catalogOk = true;
+  if (!name) {
+    name = findSpeciesMention(rest);
+    if (!name) {
+      catalogOk = await ensureCatalog();
+      name = findCatalogName(rest);
+    }
+  }
+
+  const codeMatch = source.match(/(?:^|[^\d])(\d{2,6})(?:[^\d]|$)/);
   if (!name && codeMatch) {
     return quoteFor(codeMatch[1], true, ctx, requestedRegion);
   }
-  if (!name && hintedName) name = hintedName;
   if (!name) {
     if (!catalogOk) {
       return replyWith(ctx, [{ text: "目前無法取得官方魚種代碼，請稍後再試。" }]);

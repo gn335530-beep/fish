@@ -2,7 +2,8 @@
 
 import { listProducts } from "../../api/products.js";
 import { findRegion, normalizeCityName } from "../../shared/regions.js";
-import { ensureCatalog, findCatalogName } from "./species-catalog.js";
+import { ensureCatalog, findCatalogName, findCatalogNameByCode } from "./species-catalog.js";
+import { hintedSpecies } from "./llm-slots.js";
 
 export function productCard(product) {
   return {
@@ -63,7 +64,10 @@ function scoped(scope, text) {
 export async function shoppingReply(text, user, hints) {
   const scope = scopeOf(text, user, hints);
   await ensureCatalog();
-  const name = findCatalogName(text) || findCatalogName((hints && hints.fish_species) || "");
+  const hint = hintedSpecies(hints);
+  /* 模型的官方代碼優先，解析成官方名稱後才篩選；沒有代碼才退回名稱與規則式抽取。 */
+  const name = (hint.code ? findCatalogNameByCode(hint.code) : "") ||
+    hint.name || findCatalogName(text);
   const rows = await listProducts({ limit: 100 });
 
   let matched = rows.slice();

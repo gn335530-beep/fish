@@ -94,3 +94,36 @@ test("LLM_GUARD_REJECTED 時前端 fallback，不寫入訊息", async function (
   assert.doesNotMatch(assistantText(), /999|花枝每台斤/);
   assert.match(assistantText(), /你是想賣魚，還是想找魚/);
 });
+
+test("SELL slots 保留官方代碼，魚種與代碼都寫進草稿", async function () {
+  aiReply = {
+    handled: true,
+    intent: "SELL",
+    slots: { fish_species: "鬼頭刀", species_code: 2101, quantity: 2, condition: "放血冰鎮" },
+    reply_text: null,
+    sources: [],
+    tool_results: {}
+  };
+
+  await flow.submitText("我要賣鬼頭刀 2 尾 放血冰鎮");
+
+  const context = store.state.room.context;
+  assert.equal(context.draft.fish_species, "鬼頭刀");
+  assert.equal(context.draft.species_code, 2101);
+  assert.equal(context.draft.quantity, 2);
+});
+
+test("SELL 模型沒回魚種時仍用規則式抽取", async function () {
+  aiReply = {
+    handled: true,
+    intent: "SELL",
+    slots: { quantity: 2, condition: "放血冰鎮" },
+    reply_text: null,
+    sources: [],
+    tool_results: {}
+  };
+
+  await flow.submitText("我要賣花枝 2 尾 放血冰鎮");
+
+  assert.equal(store.state.room.context.draft.fish_species, "花枝");
+});

@@ -35,6 +35,16 @@ test("土魠魚用個人檔案縣市查價，回覆行情卡而非文字", async
   assert.match(url, /days=30/);
 });
 
+test("規則式 fallback 從「想要知道…的價格」抽出正確魚種", async function () {
+  const result = await handleText(null, "我想要知道土魠的價格", { city: "高雄市" });
+  const card = cardOf(result);
+  assert.ok(card, "應有行情卡");
+  assert.equal(card.species_name, "土魠");
+  const url = decodeURIComponent(marketCalls()[0]);
+  assert.match(url, /q=土魠/);
+  assert.doesNotMatch(url, /知道土魠/);
+});
+
 test("吳郭魚與鮭魚等不在舊清單的魚種也能查詢", async function () {
   setMarket(quote({ species_code: 1051, official_name: "吳郭魚" }));
   const first = await handleText(null, "吳郭魚多少錢", { city: "高雄市" });

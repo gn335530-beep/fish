@@ -61,6 +61,24 @@ test("明確行情由既有規則完成，不寫入重複 AI 文字", async func
   assert.doesNotMatch(latestAssistantText(), /AI 的行情回答/);
 });
 
+test("行情魚種以 LLM 優先，不採規則式誤抽", async function () {
+  aiReply = {
+    handled: true,
+    intent: "MARKET",
+    slots: { fish_species: "土魠", region: "高雄市" },
+    reply_text: "AI 的行情回答",
+    sources: [],
+    tool_results: {}
+  };
+
+  await flow.submitText("我想要知道土魠的價格");
+
+  const quote = requests.find(function (entry) { return entry.path.indexOf("/api/market/quote") === 0; });
+  const url = decodeURIComponent(quote.path);
+  assert.match(url, /q=土魠/);
+  assert.doesNotMatch(url, /知道土魠/);
+});
+
 test("找魚由既有規則完成，不寫入重複 AI 文字", async function () {
   aiReply = {
     handled: true,
@@ -79,6 +97,26 @@ test("找魚由既有規則完成，不寫入重複 AI 文字", async function (
   });
   assert.equal(cards.length, 1);
   assert.equal(cards[0].card.product_id, "prd_a");
+});
+
+test("導購魚種以 LLM 優先，不採規則式抽取", async function () {
+  aiReply = {
+    handled: true,
+    intent: "BUY",
+    slots: { fish_species: "黑鯛" },
+    reply_text: "AI 的找魚回答",
+    sources: [],
+    tool_results: {}
+  };
+
+  await flow.submitText("幫我找石斑");
+
+  assert.doesNotMatch(latestAssistantText(), /AI 的找魚回答/);
+  const cards = store.state.messages.filter(function (message) {
+    return message.card && message.card.type === "product";
+  });
+  assert.equal(cards.length, 1);
+  assert.equal(cards[0].card.product_id, "prd_b");
 });
 
 test("規則判為 BUY 但後端回 CHAT 時仍採用模型文字", async function () {

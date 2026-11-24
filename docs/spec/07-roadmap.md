@@ -114,13 +114,13 @@
 | R-1 | 文件與程式對齊 | `backend/README.md`、`docs/api/README.md`、`docs/spec/05-api.md` | ✅ 2026-10-25 已對齊：README 與 API 文件只列實際端點，舊商品端點與 dead 函式已移除 |
 | R-2 | 瀏覽頁改接 `GET /api/products` | `frontend/assets/js/app/08-api-init.js`、`api/fish-mapper.js`、`app/01-data.js`、`pages/products.js`、`pages/index.js` | ✅ 已拆除 `GET /api/fish/data` 與靜態 `CATCH`；商品詳情頁已移除 |
 | R-3 | 修訊息權限漏洞 | `backend/routes/chat-messages.js` | ✅ 2026-10-25 已修正：一律驗參與者（不再因 `sender_type:"ai"` 跳過）；`context` 僅限助手房且必須是物件 |
-| R-4 | 移除購物車 | `pages/cart.html`、`assets/js/pages/cart.js`、`assets/js/app/02-cart-account.js`（`haisen_cart_v1`）、各頁導覽列入口、`PUT /api/fish/data/:id` | 交易改走交易房 |
-| R-5 | 移除手動上架表單 | `pages/seller.html`、`assets/js/pages/seller-*.js`、`assets/css/seller.css` | 唯一入口是對話上架 |
+| R-4 | 移除購物車 | `pages/cart.html`、`assets/js/pages/cart.js`、`assets/js/app/02-cart-account.js`（`haisen_cart_v1`）、各頁導覽列入口、`PUT /api/fish/data/:id` | ✅ 交易改走交易房；`cart.html` 與 `cart.js` 已移除 |
+| R-5 | 移除手動上架表單 | `pages/seller.html`、`assets/js/pages/seller-*.js`、`assets/css/seller.css` | ✅ 唯一入口是對話上架；`seller.html` 已移除 |
 | R-6 | 移除舊「聊聊」入口與死分頁 | `assets/js/app/02-cart-account.js`（nav）、`07-drawer-panels.js`、`05-listings.js`、`assets/css/features.css` 的 `.chat`、`chat-auth.css` | ✅ 2026-10-25：個人抽屜改為「個人資訊」＋「交易紀錄」。✅ 2026-11-10：改以個人資訊頁「聊聊」按鈕提供交易房入口，不再是舊分頁 |
-| R-7 | 移除或封存 `report.html` | `pages/report.html` | 內容與現況不符；若要留，移到 `docs/` |
-| R-8 | 移除未使用的 API 函式與狀態 | `api/fish.js`（`createFish`、`deleteFish`）、`api/auth.js`（`updateProfile` 未接 UI）、`demo/store.js`（`busy`、`resetRoom`）、`demo/views/panel.js`（`setTitle`、`clearInput`、`focusInput`） | |
+| R-7 | 移除或封存 `report.html` | `pages/report.html` | ✅ 已移除，全 repo 已無 `report.html` |
+| R-8 | 移除未使用的 API 函式與狀態 | `api/fish.js`（`createFish`、`deleteFish`）、`demo/store.js`（`busy`、`resetRoom`）、`demo/views/panel.js`（`setTitle`、`clearInput`、`focusInput`） | ✅ 已移除 `api/fish.js` 與上述未用函式；`updateProfile` 現已被設定頁使用（原「未接 UI」註記已過時） |
 | R-9 | 魚種單一來源 | `backend/lib/market/catalog-*.js`、前端 `species-catalog.js` | ✅ 固定魚種清單已移除，改由官方代碼字典提供 |
-| R-10 | UI 改名與錯字 | 全站 | 「海人直送」→「一支釣」；「紅鰹」→「紅魽」；縣市用字統一為「台」，比對時容納舊資料的「臺」 |
+| R-10 | UI 改名與錯字 | 全站 | ✅ 已全面改為「一支釣」；縣市統一「台」並容納「臺」；倉庫原本就無「紅鰹」字樣 |
 | R-11 | 逾時掃描補齊 | `backend/routes/chat.js`、未來的 deals 路由 | ✅ 2026-10-25：`GET /api/conversations` 與 `GET /api/deals/:id` 都會 `sweepExpired()` |
 | R-12 | 檔案行數 | `pages/index.html`（175）、`pages/cart.html`、`pages/seller.html` | ✅ 2026-11-10：`index.html` 已低於 200 行；`cart.html` 與 `seller.html` 已隨 R-4／R-5 移除 |
 | R-13 | 安全性（若要上正式環境） | `routes/auth.js`、`lib/auth.js`、`app.js` | 密碼雜湊、Token 持久化、CORS 收斂、上傳驗證實際檔頭 |
@@ -129,16 +129,16 @@
 
 | ID | 缺陷 | 位置 | 修法 |
 | --- | --- | --- | --- |
-| B-1 | 商品卡顯示「今日 2026-10-20T05:40:00+08:00 釣獲」 | `api/fish-mapper.js` | 舊格式轉換時把 ISO 轉成日期時間；R-2 後自然消失 |
-| B-2 | API 商品被預設地區篩選濾掉 | `pages/products.js` | R-2 一併處理 |
+| B-1 | ✅ 商品卡顯示「今日 2026-10-20T05:40:00+08:00 釣獲」 | `api/fish-mapper.js` | R-2 後自然消失 |
+| B-2 | ✅ API 商品被預設地區篩選濾掉 | `pages/products.js` | R-2 一併處理 |
 | B-3 | 詳情頁相簿只有一張主圖 | `pages/product-detail.js`、`.html` | ✅ 已隨商品詳情頁移除；商品卡只顯示一張主圖 |
-| B-4 | 購物車金額 = 每台斤價 × 尾數 | `pages/cart.js` | R-4 移除後消失 |
-| B-5 | 未登入也能「訂單成立」 | `pages/cart.js` | R-4 |
-| B-6 | 抽屜點「聊聊」顯示釣客資訊 | `07-drawer-panels.js` | R-6；新入口改由個人資訊頁「聊聊」提供 |
-| B-7 | 首頁今日漁獲固定四個 key | `pages/index.js` | R-2 後改依 API 結果排序取前 N |
+| B-4 | ✅ 購物車金額 = 每台斤價 × 尾數 | `pages/cart.js` | R-4 移除後消失 |
+| B-5 | ✅ 未登入也能「訂單成立」 | `pages/cart.js` | R-4 移除後消失 |
+| B-6 | ✅ 抽屜點「聊聊」顯示釣客資訊 | `07-drawer-panels.js` | R-6；新入口改由個人資訊頁「聊聊」提供 |
+| B-7 | ✅ 首頁今日漁獲固定四個 key | `pages/index.js` | R-2 後改依 API 結果排序取前 N |
 | B-8 | ✅ 商品參考價用示意行情算（#24 已修正） | `routes/products.js` | 2026-10-28 起移除商品行情快照與示意行情 |
-| B-9 | 上傳只驗 MIME 字串，未驗檔案內容 | `routes/uploads.js` | 讀 magic number；非必要 |
-| B-10 | 登入頁左側寫「隔日清晨低溫直送」，與面交規則不符 | `pages/login.html` | #34 刪除「隔日清晨低溫直送」 |
+| B-9 | 上傳只驗 MIME 字串，未驗檔案內容 | `routes/uploads.js` | 讀 magic number；非必要。併入 R-13 的上傳檔頭驗證 |
+| B-10 | ✅ 登入頁左側寫「隔日清晨低溫直送」，與面交規則不符 | `pages/login.html` | #34 已刪除「隔日清晨低溫直送」 |
 
 ## 5. 里程碑
 
@@ -301,11 +301,11 @@
 
 | 風險 | 影響 | 對策 |
 | --- | --- | --- |
-| `db.json` 單檔、無併發控制 | 兩個請求同時寫入可能互相覆寫 | 開發階段接受；上正式環境前換資料庫 |
-| Token 只存記憶體 | 後端重啟全員登出 | 開發階段接受 |
-| 沒有自動化測試 | 每次改動靠手動走腳本 | 交易房與導購已有 `node:test`（`npm test`）；其餘仍靠手動腳本 |
-| 沒有備份 | `db.json` 損毀即全失 | 開發時定期複製；納入 `.gitignore` 判斷 |
-| 魚種三份複本 | 改名／新增要改三處 | R-9 |
+| `db.json` 單檔、無併發控制 | 兩個請求同時寫入可能互相覆寫 | 開發階段接受；Postgres 遷移 spec 已就緒（`.scratch/postgres-migration/`），待實作 |
+| Token 只存記憶體 | 後端重啟全員登出 | 開發階段接受；正式上線前納入 R-13（Token 持久化） |
+| 自動化測試覆蓋不均 | 少數邊角仍靠手動走腳本 | ✅ 交易、導購、行情、商品生命週期與 AI 已有 `node:test` 覆蓋；e2e 視覺驗收仍靠 Playwright 腳本 |
+| 沒有備份 | `db.json` 損毀即全失 | 開發時定期複製；Postgres 遷移後由 volume 提供持久化（待實作） |
+| 魚種三份複本 | 改名／新增要改三處 | ✅ R-9 已解決；改由官方代碼字典單一來源 |
 
 ### 待確認
 
@@ -323,4 +323,4 @@
 | 交易房刪除 | 房間與訊息直接刪除；未成交訂單與項目清除，已成交訂單、項目與評價保留；之後再交易開新房間 | 已定 |
 | 每台斤與整批不一致 | 兩者都保留，整批可為折扣 | 已定 |
 | 販賣確認 | 每位使用者一次永久；不因版本重問 | 已定 |
-| 登入頁「低溫直送」 | 與面交規則不符 | 已納入 #34，刪除 |
+| 登入頁「低溫直送」 | 與面交規則不符 | ✅ 已定：已刪除（#34） |

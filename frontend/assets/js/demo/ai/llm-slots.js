@@ -25,3 +25,17 @@ export function slotHints(llm) {
     region: slots.region
   };
 }
+
+/* 正規化 hints 內的魚種槽位：名稱 trim；代碼只接受非空正整數。 */
+function speciesCode(value) {
+  const text = value === undefined || value === null ? "" : String(value).trim();
+  return /^\d+$/.test(text) && Number(text) > 0 ? text : "";
+}
+
+export function hintedSpecies(hints) {
+  const raw = hints || {};
+  return {
+    name: raw.fish_species ? String(raw.fish_species).trim() : "",
+    code: speciesCode(raw.species_code)
+  };
+}

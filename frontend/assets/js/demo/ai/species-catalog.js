@@ -46,6 +46,16 @@ export function findCatalogName(text) {
   return best;
 }
 
+/* 以官方代碼找官方名稱；字典沒有時回空字串。 */
+export function findCatalogNameByCode(code) {
+  const target = String(code == null ? "" : code);
+  if (!target) return "";
+  const row = rows.find(function (item) {
+    return String(item.species_code) === target;
+  });
+  return row ? row.official_name : "";
+}
+
 /* 優先保留使用者句子裡的完整魚名，避免只抓到「石斑」而漏掉「龍膽石斑」。 */
 export function findSpeciesMention(text) {
   const guessed = guessUnknownSpecies(text);
